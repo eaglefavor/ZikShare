@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="80" fill="#F97316"/>
+  <g transform="translate(256, 270)" fill="none" stroke="white" stroke-width="24" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Shopping bag -->
+    <path d="M-100,30 L-80,-70 L80,-70 L100,30 L100,100 Q100,120 80,120 L-80,120 Q-100,120 -100,100 Z" fill="rgba(255,255,255,0.15)" stroke="white"/>
+    <!-- Bag handle -->
+    <path d="M-40,-70 L-40,-110 Q-40,-150 0,-150 Q40,-150 40,-110 L40,-70"/>
+    <!-- Graduation cap -->
+    <polygon points="0,-200 -70,-165 0,-130 70,-165" fill="white" stroke="none"/>
+    <line x1="0" y1="-200" x2="0" y2="-145" stroke="white" stroke-width="8"/>
+    <circle cx="0" cy="-143" r="5" fill="white" stroke="none"/>
+  </g>
+</svg>

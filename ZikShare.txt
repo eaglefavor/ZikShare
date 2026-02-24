@@ -1,0 +1,186 @@
+﻿
+
+ZikShare: Master Build Plan & Technical Specification
+
+1. Product Overview & Philosophy
+
+What is ZikShare?
+ZikShare is a hyper-local, Progressive Web Application (PWA) designed exclusively for the Nnamdi Azikiwe University (UNIZIK) ecosystem. It is a peer-to-peer campus marketplace where students can buy and sell fairly used, new, or "urgent" items (textbooks, electronics, furniture, hostel appliances).
+
+The Philosophy & Core Pillars:
+
+Trust Over Everything: The UNIZIK environment suffers from a high "trust deficit" regarding online transactions. ZikShare combats this by acting as a walled garden: only verified UNIZIK students can list items, and the UI actively promotes "Safe Meetup Zones" (e.g., Garba Square, Chisco Park).
+
+Frictionless "Urgent 2k" Liquidity: Students often need cash fast. Listing an item must take less than 60 seconds. The app must feel faster than posting a WhatsApp status.
+
+Data-Light & Storage-Friendly (PWA): Students often have low-end Android devices with limited storage and rely on unstable mobile networks (especially in areas like Ifite). A PWA bypasses the app store, takes up less than 5MB, and works offline or on 2G/3G networks via aggressive caching.
+
+2. UI/UX Design System
+
+The app must feel like a native mobile application, not a website. It must be strictly Mobile-First.
+
+2.1 Color Palette & Branding
+
+Primary Brand Color: UNIZIK Gold/Orange (#F97316 - Tailwind orange-500). Used for primary actions, CTA buttons, active states.
+
+Secondary/Accent: Deep Campus Green (#166534 - Tailwind green-800). Used sparingly for trust badges, verified ticks, and success states.
+
+Background: Off-White/Stone (#F5F5F4 - Tailwind stone-100). Reduces eye strain compared to pure white.
+
+Card/Surface: Pure White (#FFFFFF) with very soft shadows (shadow-sm).
+
+Text: Slate-800 for primary text, Slate-500 for secondary text.
+
+2.2 Typography
+
+Primary Font: Inter or system-ui. Clean, highly legible on low-resolution screens.
+
+Scale: Use standard Tailwind text scales. Heavily utilize font-semibold for item titles and prices to make them scannable.
+
+2.3 Key UI Components & Layouts
+
+Navigation: Native-style Bottom Navigation Bar on mobile (Home, Search, Post/Add, Messages, Profile). Hidden on scroll down, revealed on scroll up.
+
+Image Handling: Horizontal swipeable image carousels for item details. Crucial: Implement Skeleton Loaders for all images to prevent layout shifts on slow networks.
+
+Cards: Items are displayed in a 2-column masonry or grid layout on mobile. Each card shows: Image, Title, Price (bolded, formatted in Naira ₦), and a "Condition" tag (e.g., "Fairly Used").
+
+Safe Meetup Badge: A prominent UI element on the item detail page suggesting safe places to meet on campus.
+
+3. Technical Architecture & Tools
+
+Instruct the coding agent to strictly use this stack:
+
+Frontend Framework: React 18+ via Vite (Fast, lightweight).
+
+Styling: Tailwind CSS (for rapid, consistent UI development).
+
+Icons: Lucide React or Phosphor Icons.
+
+Backend / Database: Firebase (Firestore, Firebase Auth, Firebase Storage). Why? Built-in offline persistence, real-time sync, and generous free tier.
+
+PWA Implementation: Vite PWA Plugin (vite-plugin-pwa) utilizing Workbox.
+
+State Management: React Context API (for Auth/User state) + Zustand (for UI state/cart/filters) to keep bundle size small. Avoid Redux.
+
+Routing: React Router DOM (v6).
+
+4. Database Schema (Firestore)
+
+Collection: users
+
+uid (String, Primary Key)
+
+displayName (String)
+
+email (String, must end in @unizik.edu.ng for verified status)
+
+phoneNumber (String)
+
+department (String)
+
+isVerified (Boolean)
+
+createdAt (Timestamp)
+
+Collection: listings
+
+id (String)
+
+sellerId (String, ref to users)
+
+title (String)
+
+description (String)
+
+price (Number)
+
+category (String: Electronics, Fashion, Books, Hostel, Services)
+
+condition (String: Brand New, Like New, Fairly Used)
+
+images (Array of Strings - Firebase Storage URLs)
+
+status (String: Active, Sold, Reserved)
+
+createdAt (Timestamp)
+
+searchKeywords (Array of Strings - for simple querying)
+
+5. Step-by-Step Build Plan (For the AI Developer)
+
+When prompting the AI to build, feed it these phases sequentially. Do not ask it to build everything at once.
+
+Phase 1: Project Setup & PWA Foundation
+
+Initialize Vite + React + Tailwind project.
+
+Configure vite-plugin-pwa. Set up the manifest.json with ZikShare branding, theme colors, and icons.
+
+Implement the App Shell: Create the routing structure and the Mobile Bottom Navigation Bar.
+
+Acceptance Criteria: The app runs, can be "Installed" to the home screen via Chrome/Safari, and caches the basic UI shell for offline viewing.
+
+Phase 2: Firebase Integration & Authentication
+
+Set up Firebase Auth and Firestore.
+
+Build the Login/Registration screens.
+
+Core Logic: Implement Google Sign-In and Email/Password.
+
+Verification Logic: Create a UI prompt encouraging users to verify their student status. (For MVP, just visually badge users who sign up with a .edu.ng email).
+
+Acceptance Criteria: Users can log in, log out, and user data is saved to the users Firestore collection.
+
+Phase 3: The Core Marketplace (Read & Write)
+
+Create Listing Flow: Build the UI to add a new item. Must include image upload.
+
+Critical Developer Instruction: Implement client-side image compression (e.g., using browser-image-compression) before uploading to Firebase Storage to save users' data and reduce cloud costs.
+
+Home Feed: Fetch active listings from Firestore. Display them in the 2-column grid.
+
+Item Detail View: Build the page showing full item details, seller info, and the "Contact Seller" button.
+
+Acceptance Criteria: A user can upload an item with an image, and it immediately appears on the global feed.
+
+Phase 4: Search, Filters & Categories
+
+Implement a sticky search bar at the top of the Home feed.
+
+Build category chips (Electronics, Books, etc.) that filter the Firestore query.
+
+Acceptance Criteria: Users can filter the feed by category and search for specific items (e.g., "Generator").
+
+Phase 5: Communication (The "WhatsApp Bridge")
+
+Note: Building a full in-app chat is complex for V1 and users prefer WhatsApp anyway.
+
+Implement the "Contact Seller" button logic.
+
+When clicked, generate a dynamic WhatsApp API link: https://wa.me/<SellerPhone>?text=Hi, I saw your listing for <ItemTitle> on ZikShare. Is it still available?
+
+Acceptance Criteria: Clicking contact redirects smoothly to the seller's WhatsApp with a pre-filled contextual message.
+
+Phase 6: PWA Offline Polish & Optimizations
+
+Configure Firestore offline persistence (enableIndexedDbPersistence). This allows students to browse previously loaded listings even when their network drops in Ifite.
+
+Add offline fallback UI (e.g., "You are offline, showing cached items").
+
+Implement Skeleton Loaders for all images and feed items while Firestore is fetching.
+
+6. Strict Developer Guardrails (Prompting Rules)
+
+When passing this document to the coding agent, append these strict instructions:
+
+"Strictly Single-File Component constraints do not apply to your architecture, but when generating code for me, provide complete, runnable files."
+
+"Always handle loading and error states." In a low-bandwidth environment, users must know the app is working. Use spinners and toast notifications extensively.
+
+"Do not use heavy libraries." E.g., Use native Intl.NumberFormat for Naira formatting instead of downloading a currency formatting library. Use native fetch or Firebase SDK instead of Axios.
+
+"Mobile-first means Mobile-ONLY for styling initially." Assume the viewport is 390x844 (iPhone 12) or standard Android. Add md: Tailwind breakpoints only for basic desktop scaling, but prioritize the mobile bottom-nav layout.
+
+"Security Rules:" Ensure you provide basic Firebase Security Rules preventing users from editing or deleting items they do not own.

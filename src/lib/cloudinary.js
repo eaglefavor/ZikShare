@@ -19,12 +19,17 @@ const UPLOAD_URL = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`
  */
 export async function uploadImage(file, onProgress) {
     // Step 1: Compress the image client-side
-    const compressedFile = await imageCompression(file, {
-        maxSizeMB: 0.5,           // Max 500KB per image — saves mobile data
-        maxWidthOrHeight: 1024,   // Max dimension
-        useWebWorker: true,
-        fileType: 'image/webp',   // WebP for smaller size
-    })
+    let compressedFile
+    try {
+        compressedFile = await imageCompression(file, {
+            maxSizeMB: 0.5,           // Max 500KB per image — saves mobile data
+            maxWidthOrHeight: 1024,   // Max dimension
+            useWebWorker: false,      // Disabled for mobile compatibility
+        })
+    } catch (compressionError) {
+        console.warn('Compression failed, using original file:', compressionError)
+        compressedFile = file // Fallback to original file
+    }
 
     // Step 2: Upload to Cloudinary via unsigned preset
     const formData = new FormData()
@@ -38,7 +43,9 @@ export async function uploadImage(file, onProgress) {
     })
 
     if (!response.ok) {
-        throw new Error(`Image upload failed: ${response.statusText}`)
+        const errorBody = await response.text().catch(() => 'Unknown error')
+        console.error('Cloudinary upload error:', response.status, errorBody)
+        throw new Error(`Image upload failed (${response.status}): ${errorBody}`)
     }
 
     const data = await response.json()

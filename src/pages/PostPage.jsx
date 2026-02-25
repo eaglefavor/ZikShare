@@ -80,7 +80,7 @@ export default function PostPage() {
             setTimeout(() => navigate('/'), 2000)
         } catch (err) {
             console.error('Post error:', err)
-            setError(err.message || 'Failed to create listing. Please try again.')
+            setError(err.message || 'Failed to create listing. Check your connection and try again.')
         } finally {
             setLoading(false)
         }

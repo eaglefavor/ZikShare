@@ -10,7 +10,7 @@ const conditions = ['Brand New', 'Like New', 'Fairly Used']
 
 export default function PostPage() {
     const navigate = useNavigate()
-    const { user, isAuthenticated } = useAuth()
+    const { user, session, isAuthenticated } = useAuth()
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
     const [price, setPrice] = useState('')
@@ -72,7 +72,7 @@ export default function PostPage() {
                 category,
                 condition,
                 images: imageUrls,
-                sellerId: user.id,
+                sellerId: session.user.id,
                 status: 'Active',
             })
 

@@ -195,6 +195,7 @@ export default function HomePage() {
 
             {/* Quick Stats Banner */}
             <div
+                onClick={() => navigate('/search')}
                 style={{
                     margin: '0.75rem 1rem',
                     padding: '0.75rem 1rem',
@@ -204,6 +205,7 @@ export default function HomePage() {
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.75rem',
+                    cursor: 'pointer',
                 }}
             >
                 <div
@@ -233,6 +235,7 @@ export default function HomePage() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.625rem' }}>
                     <h2 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700 }}>Categories</h2>
                     <button
+                        onClick={() => navigate('/search')}
                         style={{
                             background: 'none',
                             border: 'none',
@@ -292,6 +295,7 @@ export default function HomePage() {
                         <h2 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700 }}>Trending Now</h2>
                     </div>
                     <button
+                        onClick={() => navigate('/search')}
                         style={{
                             background: 'none',
                             border: 'none',
@@ -310,7 +314,7 @@ export default function HomePage() {
 
                 {isLoading ? (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
-                        {[1,2,3,4].map(i => <SkeletonCard key={i} />)}
+                        {[1, 2, 3, 4].map(i => <SkeletonCard key={i} />)}
                     </div>
                 ) : error ? (
                     <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.8125rem' }}>

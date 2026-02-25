@@ -1,17 +1,28 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { User, Settings, LogIn, LogOut, ShieldCheck, Package, Heart, HelpCircle, ChevronRight, Loader2 } from 'lucide-react'
+import { getMyListings } from '../lib/database'
 
 const menuItems = [
-    { icon: Package, label: 'My Listings', badge: '3' },
-    { icon: Heart, label: 'Saved Items', badge: null },
-    { icon: Settings, label: 'Settings', badge: null },
-    { icon: HelpCircle, label: 'Help & Support', badge: null },
+    { icon: Package, label: 'My Listings', path: '/profile/listings', badgeKey: 'listings' },
+    { icon: Heart, label: 'Saved Items', path: '/profile/saved', badge: null },
+    { icon: Settings, label: 'Settings', path: '/profile/settings', badge: null },
+    { icon: HelpCircle, label: 'Help & Support', path: '/profile/help', badge: null },
 ]
 
 export default function ProfilePage() {
-    const { user, isAuthenticated, isVerified, loading, signOut } = useAuth()
+    const { user, session, isAuthenticated, isVerified, loading, signOut } = useAuth()
     const navigate = useNavigate()
+    const [listingCount, setListingCount] = useState(null)
+
+    useEffect(() => {
+        if (isAuthenticated && session?.user?.id) {
+            getMyListings(session.user.id)
+                .then(data => setListingCount(data?.length || 0))
+                .catch(() => setListingCount(null))
+        }
+    }, [isAuthenticated, session])
 
     const handleSignOut = async () => {
         try {
@@ -163,6 +174,7 @@ export default function ProfilePage() {
                 {/* Verification Prompt (guests & unverified) */}
                 {(!isAuthenticated || !isVerified) && (
                     <div
+                        onClick={() => navigate(isAuthenticated ? '/profile/settings' : '/login')}
                         style={{
                             marginTop: '1rem',
                             padding: '0.875rem 1rem',
@@ -172,6 +184,8 @@ export default function ProfilePage() {
                             display: 'flex',
                             alignItems: 'center',
                             gap: '0.75rem',
+                            cursor: 'pointer',
+                            transition: 'background-color 0.15s ease',
                         }}
                     >
                         <ShieldCheck size={20} color="var(--color-campus-green)" />
@@ -189,47 +203,51 @@ export default function ProfilePage() {
 
                 {/* Menu Items */}
                 <div style={{ marginTop: '1.25rem' }}>
-                    {menuItems.map(({ icon: ItemIcon, label, badge }) => (
-                        <button
-                            key={label}
-                            style={{
-                                width: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '0.75rem',
-                                padding: '0.875rem 0.5rem',
-                                borderRadius: '0.625rem',
-                                border: 'none',
-                                backgroundColor: 'transparent',
-                                cursor: 'pointer',
-                                fontFamily: 'inherit',
-                                transition: 'background-color 0.15s ease',
-                                borderBottom: '1px solid var(--color-border)',
-                            }}
-                            onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--color-background)')}
-                            onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
-                        >
-                            <ItemIcon size={18} color="var(--color-text-secondary)" />
-                            <span style={{ flex: 1, textAlign: 'left', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--color-text-primary)' }}>
-                                {label}
-                            </span>
-                            {badge && (
-                                <span
-                                    style={{
-                                        padding: '0.125rem 0.5rem',
-                                        borderRadius: '9999px',
-                                        backgroundColor: '#DBEAFE',
-                                        color: '#1E40AF',
-                                        fontSize: '0.6875rem',
-                                        fontWeight: 600,
-                                    }}
-                                >
-                                    {badge}
+                    {menuItems.map(({ icon: ItemIcon, label, path, badgeKey }) => {
+                        const badgeValue = badgeKey === 'listings' && listingCount !== null ? String(listingCount) : null
+                        return (
+                            <button
+                                key={label}
+                                onClick={() => navigate(path)}
+                                style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.75rem',
+                                    padding: '0.875rem 0.5rem',
+                                    borderRadius: '0.625rem',
+                                    border: 'none',
+                                    backgroundColor: 'transparent',
+                                    cursor: 'pointer',
+                                    fontFamily: 'inherit',
+                                    transition: 'background-color 0.15s ease',
+                                    borderBottom: '1px solid var(--color-border)',
+                                }}
+                                onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--color-background)')}
+                                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                            >
+                                <ItemIcon size={18} color="var(--color-text-secondary)" />
+                                <span style={{ flex: 1, textAlign: 'left', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--color-text-primary)' }}>
+                                    {label}
                                 </span>
-                            )}
-                            <ChevronRight size={16} color="var(--color-text-muted)" />
-                        </button>
-                    ))}
+                                {badgeValue && (
+                                    <span
+                                        style={{
+                                            padding: '0.125rem 0.5rem',
+                                            borderRadius: '9999px',
+                                            backgroundColor: '#DBEAFE',
+                                            color: '#1E40AF',
+                                            fontSize: '0.6875rem',
+                                            fontWeight: 600,
+                                        }}
+                                    >
+                                        {badgeValue}
+                                    </span>
+                                )}
+                                <ChevronRight size={16} color="var(--color-text-muted)" />
+                            </button>
+                        )
+                    })}
                 </div>
             </div>
         </div>

@@ -8,6 +8,10 @@ import MessagesPage from './pages/MessagesPage'
 import ProfilePage from './pages/ProfilePage'
 import LoginPage from './pages/LoginPage'
 import ItemDetailPage from './pages/ItemDetailPage'
+import MyListingsPage from './pages/MyListingsPage'
+import SavedItemsPage from './pages/SavedItemsPage'
+import SettingsPage from './pages/SettingsPage'
+import HelpPage from './pages/HelpPage'
 
 function App() {
   return (
@@ -17,6 +21,10 @@ function App() {
           {/* Full-screen pages (no bottom nav) */}
           <Route path="/login" element={<LoginPage />} />
           <Route path="/item/:id" element={<ItemDetailPage />} />
+          <Route path="/profile/listings" element={<MyListingsPage />} />
+          <Route path="/profile/saved" element={<SavedItemsPage />} />
+          <Route path="/profile/settings" element={<SettingsPage />} />
+          <Route path="/profile/help" element={<HelpPage />} />
 
           {/* Pages with bottom nav */}
           <Route

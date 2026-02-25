@@ -3,6 +3,7 @@ import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, ChevronLe
 import { useState } from 'react'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListing } from '../lib/database'
+import { isSaved as checkSaved, toggleSaved } from '../lib/savedItems'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
@@ -16,7 +17,12 @@ export default function ItemDetailPage() {
     const { id } = useParams()
     const navigate = useNavigate()
     const [currentImage, setCurrentImage] = useState(0)
-    const [isSaved, setIsSaved] = useState(false)
+    const [isSaved, setIsSaved] = useState(() => checkSaved(id))
+
+    const handleToggleSave = () => {
+        const nowSaved = toggleSaved(id)
+        setIsSaved(nowSaved)
+    }
 
     const { data: item, isLoading, error } = useCachedQuery(
         `listing-${id}`,
@@ -107,7 +113,7 @@ export default function ItemDetailPage() {
                         <button onClick={handleShare} style={{ width: '2.25rem', height: '2.25rem', borderRadius: '9999px', backgroundColor: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
                             <Share2 size={16} />
                         </button>
-                        <button onClick={() => setIsSaved(!isSaved)} style={{ width: '2.25rem', height: '2.25rem', borderRadius: '9999px', backgroundColor: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
+                        <button onClick={handleToggleSave} style={{ width: '2.25rem', height: '2.25rem', borderRadius: '9999px', backgroundColor: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
                             <Heart size={16} fill={isSaved ? '#EF4444' : 'none'} color={isSaved ? '#EF4444' : '#1E293B'} />
                         </button>
                     </div>

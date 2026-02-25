@@ -11,22 +11,37 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         // Get initial session
-        supabase.auth.getSession().then(async ({ data: { session } }) => {
-            setSession(session)
-            if (session?.user) {
-                await handleUserLogin(session.user)
+        supabase.auth.getSession().then(async ({ data: { session: s } }) => {
+            setSession(s)
+            if (s?.user) {
+                try {
+                    await handleUserLogin(s.user)
+                } catch (err) {
+                    console.error('Initial login error:', err)
+                }
             }
+            setLoading(false)
+        }).catch(() => {
             setLoading(false)
         })
 
-        // Listen for auth changes
+        // Listen for auth changes (sign-in, sign-out, token refresh)
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event, session) => {
-                setSession(session)
-                if (event === 'SIGNED_IN' && session?.user) {
-                    await handleUserLogin(session.user)
-                } else if (event === 'SIGNED_OUT') {
+            async (event, newSession) => {
+                setSession(newSession)
+
+                if (event === 'SIGNED_OUT') {
                     setUser(null)
+                    return
+                }
+
+                // Handle SIGNED_IN and TOKEN_REFRESHED — reload user from DB
+                if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && newSession?.user) {
+                    try {
+                        await handleUserLogin(newSession.user)
+                    } catch (err) {
+                        console.error('Auth state change error:', err)
+                    }
                 }
             }
         )
@@ -35,11 +50,10 @@ export function AuthProvider({ children }) {
     }, [])
 
     async function handleUserLogin(authUser) {
+        // Try to load existing profile from DB first (preserves Settings edits)
         try {
-            // Try to load existing profile from DB first
             const existing = await getUser(authUser.id)
             if (existing) {
-                // User already exists — use their saved profile (preserves Settings edits)
                 setUser(existing)
                 return
             }
@@ -109,6 +123,20 @@ export function AuthProvider({ children }) {
         setUser(prev => prev ? { ...prev, ...updates } : prev)
     }
 
+    /**
+     * Force-reload the user profile from the database.
+     * Useful after settings changes to ensure everything is in sync.
+     */
+    async function refreshUser() {
+        if (!session?.user?.id) return
+        try {
+            const fresh = await getUser(session.user.id)
+            if (fresh) setUser(fresh)
+        } catch (err) {
+            console.warn('Could not refresh user:', err.message)
+        }
+    }
+
     const value = {
         user,
         session,
@@ -120,6 +148,7 @@ export function AuthProvider({ children }) {
         signInWithGoogle,
         signOut,
         updateUser,
+        refreshUser,
     }
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

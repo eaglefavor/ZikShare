@@ -6,7 +6,7 @@ import { upsertUser } from '../lib/database'
 
 export default function SettingsPage() {
     const navigate = useNavigate()
-    const { user, isAuthenticated, updateUser } = useAuth()
+    const { user, isAuthenticated, updateUser, refreshUser } = useAuth()
     const [displayName, setDisplayName] = useState(user?.displayName || '')
     const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '')
     const [department, setDepartment] = useState(user?.department || '')
@@ -37,8 +37,9 @@ export default function SettingsPage() {
                 isVerified: user.isVerified,
                 createdAt: user.createdAt,
             })
-            // Update in-memory state so ProfilePage reflects changes immediately
+            // Update in-memory state immediately + reload from DB for full sync
             updateUser(updates)
+            await refreshUser()
             setSaved(true)
             setTimeout(() => setSaved(false), 3000)
         } catch (err) {

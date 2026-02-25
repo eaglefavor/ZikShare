@@ -1,21 +1,14 @@
-import { Search, SlidersHorizontal, ChevronRight, MapPin, ShieldCheck, Zap, TrendingUp } from 'lucide-react'
+import { Search, SlidersHorizontal, ChevronRight, MapPin, ShieldCheck, Zap, TrendingUp, Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useCachedQuery } from '../hooks/useCachedQuery'
+import { getListings } from '../lib/database'
 
 const categories = [
-    { name: 'Electronics', emoji: '📱', color: '#3B82F6', count: 42 },
-    { name: 'Books', emoji: '📚', color: '#8B5CF6', count: 67 },
-    { name: 'Fashion', emoji: '👕', color: '#EC4899', count: 35 },
-    { name: 'Hostel', emoji: '🏠', color: '#10B981', count: 28 },
-    { name: 'Services', emoji: '🔧', color: '#F59E0B', count: 19 },
-]
-
-const mockListings = [
-    { id: 1, title: 'Engineering Textbook', price: 3500, condition: 'Fairly Used', image: null },
-    { id: 2, title: 'HP Laptop Charger', price: 8000, condition: 'Brand New', image: null },
-    { id: 3, title: 'Reading Lamp', price: 2000, condition: 'Like New', image: null },
-    { id: 4, title: 'Scientific Calculator', price: 5500, condition: 'Fairly Used', image: null },
-    { id: 5, title: 'Mini Fridge', price: 25000, condition: 'Fairly Used', image: null },
-    { id: 6, title: 'Phone Stand + Ring Light', price: 4500, condition: 'Brand New', image: null },
+    { name: 'Electronics', emoji: '📱', color: '#3B82F6' },
+    { name: 'Books', emoji: '📚', color: '#8B5CF6' },
+    { name: 'Fashion', emoji: '👕', color: '#EC4899' },
+    { name: 'Hostel', emoji: '🏠', color: '#10B981' },
+    { name: 'Services', emoji: '🔧', color: '#F59E0B' },
 ]
 
 function formatNaira(amount) {
@@ -37,7 +30,8 @@ function ConditionBadge({ condition }) {
 
 function ListingCard({ listing, navigate }) {
     const placeholderColors = ['#DBEAFE', '#E0E7FF', '#D9F99D', '#FBCFE8', '#E9D5FF', '#FDE68A']
-    const bgColor = placeholderColors[listing.id % placeholderColors.length]
+    const bgColor = placeholderColors[(listing.id?.charCodeAt?.(0) || 0) % placeholderColors.length]
+    const imageUrl = listing.images?.[0]
 
     return (
         <div
@@ -69,9 +63,14 @@ function ListingCard({ listing, navigate }) {
                     justifyContent: 'center',
                     fontSize: '2rem',
                     position: 'relative',
+                    overflow: 'hidden',
                 }}
             >
-                📦
+                {imageUrl ? (
+                    <img src={imageUrl} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                    '📦'
+                )}
                 <div style={{ position: 'absolute', top: '0.5rem', left: '0.5rem' }}>
                     <ConditionBadge condition={listing.condition} />
                 </div>
@@ -98,8 +97,25 @@ function ListingCard({ listing, navigate }) {
     )
 }
 
+function SkeletonCard() {
+    return (
+        <div style={{ borderRadius: '0.75rem', overflow: 'hidden', backgroundColor: 'white', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <div className="skeleton" style={{ width: '100%', height: '140px' }} />
+            <div style={{ padding: '0.75rem' }}>
+                <div className="skeleton" style={{ width: '80%', height: '0.875rem', borderRadius: '0.25rem', marginBottom: '0.5rem' }} />
+                <div className="skeleton" style={{ width: '50%', height: '1rem', borderRadius: '0.25rem' }} />
+            </div>
+        </div>
+    )
+}
+
 export default function HomePage() {
     const navigate = useNavigate()
+    const { data: listings, isLoading, error } = useCachedQuery(
+        'listings-home',
+        () => getListings({ limit: 20 }),
+        { ttl: 5 * 60 * 1000 } // 5 min cache
+    )
 
     return (
         <div>
@@ -206,7 +222,7 @@ export default function HomePage() {
                 <div style={{ flex: 1 }}>
                     <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 700 }}>Urgent Deals 🔥</p>
                     <p style={{ margin: 0, fontSize: '0.6875rem', opacity: 0.85 }}>
-                        12 items listed in the last hour
+                        {listings?.length || 0} items available now
                     </p>
                 </div>
                 <ChevronRight size={18} style={{ opacity: 0.7 }} />
@@ -263,15 +279,12 @@ export default function HomePage() {
                             <p style={{ margin: 0, fontSize: '0.6875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
                                 {cat.name}
                             </p>
-                            <p style={{ margin: 0, fontSize: '0.5625rem', color: 'var(--color-text-muted)' }}>
-                                {cat.count} items
-                            </p>
                         </div>
                     ))}
                 </div>
             </section>
 
-            {/* Trending Listings */}
+            {/* Listings */}
             <section style={{ padding: '1.25rem 1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
@@ -295,17 +308,28 @@ export default function HomePage() {
                     </button>
                 </div>
 
-                <div
-                    style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(2, 1fr)',
-                        gap: '0.75rem',
-                    }}
-                >
-                    {mockListings.map(listing => (
-                        <ListingCard key={listing.id} listing={listing} navigate={navigate} />
-                    ))}
-                </div>
+                {isLoading ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+                        {[1,2,3,4].map(i => <SkeletonCard key={i} />)}
+                    </div>
+                ) : error ? (
+                    <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.8125rem' }}>
+                        <p>Unable to load listings right now.</p>
+                        <p style={{ fontSize: '0.6875rem' }}>Check your connection and try again.</p>
+                    </div>
+                ) : listings?.length > 0 ? (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+                        {listings.map(listing => (
+                            <ListingCard key={listing.id} listing={listing} navigate={navigate} />
+                        ))}
+                    </div>
+                ) : (
+                    <div style={{ padding: '2rem', textAlign: 'center', color: 'var(--color-text-muted)', fontSize: '0.8125rem' }}>
+                        <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🛒</p>
+                        <p style={{ fontWeight: 600 }}>No listings yet</p>
+                        <p style={{ fontSize: '0.6875rem' }}>Be the first to post something!</p>
+                    </div>
+                )}
             </section>
 
             {/* Safe Meetup Zone Banner */}

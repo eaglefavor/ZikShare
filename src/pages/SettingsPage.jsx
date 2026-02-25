@@ -6,7 +6,7 @@ import { upsertUser } from '../lib/database'
 
 export default function SettingsPage() {
     const navigate = useNavigate()
-    const { user, isAuthenticated } = useAuth()
+    const { user, isAuthenticated, updateUser } = useAuth()
     const [displayName, setDisplayName] = useState(user?.displayName || '')
     const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '')
     const [department, setDepartment] = useState(user?.department || '')
@@ -25,15 +25,20 @@ export default function SettingsPage() {
         setSaved(false)
 
         try {
-            await upsertUser({
-                uid: user.uid,
-                email: user.email,
+            const updates = {
                 displayName: displayName.trim(),
                 phoneNumber: phoneNumber.trim(),
                 department: department.trim(),
+            }
+            await upsertUser({
+                uid: user.uid,
+                email: user.email,
+                ...updates,
                 isVerified: user.isVerified,
                 createdAt: user.createdAt,
             })
+            // Update in-memory state so ProfilePage reflects changes immediately
+            updateUser(updates)
             setSaved(true)
             setTimeout(() => setSaved(false), 3000)
         } catch (err) {

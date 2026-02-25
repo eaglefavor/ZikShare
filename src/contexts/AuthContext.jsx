@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import supabase from '../lib/supabase'
-import { upsertUser } from '../lib/database'
+import { getUser, upsertUser } from '../lib/database'
 
 const AuthContext = createContext(null)
 
@@ -11,10 +11,10 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         // Get initial session
-        supabase.auth.getSession().then(({ data: { session } }) => {
+        supabase.auth.getSession().then(async ({ data: { session } }) => {
             setSession(session)
             if (session?.user) {
-                handleUserLogin(session.user)
+                await handleUserLogin(session.user)
             }
             setLoading(false)
         })
@@ -35,6 +35,19 @@ export function AuthProvider({ children }) {
     }, [])
 
     async function handleUserLogin(authUser) {
+        try {
+            // Try to load existing profile from DB first
+            const existing = await getUser(authUser.id)
+            if (existing) {
+                // User already exists — use their saved profile (preserves Settings edits)
+                setUser(existing)
+                return
+            }
+        } catch (err) {
+            console.warn('Could not fetch existing user:', err.message)
+        }
+
+        // First-time user — create a new profile
         const isVerified = authUser.email?.endsWith('.edu.ng') || false
         const userData = {
             uid: authUser.id,
@@ -88,6 +101,14 @@ export function AuthProvider({ children }) {
         setSession(null)
     }
 
+    /**
+     * Update the in-memory user state.
+     * Call this after saving settings to the database so the UI reflects changes immediately.
+     */
+    function updateUser(updates) {
+        setUser(prev => prev ? { ...prev, ...updates } : prev)
+    }
+
     const value = {
         user,
         session,
@@ -98,6 +119,7 @@ export function AuthProvider({ children }) {
         signUpWithEmail,
         signInWithGoogle,
         signOut,
+        updateUser,
     }
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

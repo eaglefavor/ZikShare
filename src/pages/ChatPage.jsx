@@ -4,6 +4,7 @@ import { ArrowLeft, Send, Phone, Loader2, AlertTriangle, X } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getConversation, getMessages, sendMessage, subscribeToMessages } from '../lib/messaging'
 import { getUser } from '../lib/database'
+import { markConversationRead } from '../lib/readStatus'
 
 function timeLabel(iso) {
     const d = new Date(iso)
@@ -55,6 +56,9 @@ export default function ChatPage() {
                 const msgs = await getMessages(conversationId)
                 setMessages(msgs)
 
+                // Mark as read
+                markConversationRead(conversationId)
+
                 // Load the other user's profile
                 const otherId = conv.buyerId === myId ? conv.sellerId : conv.buyerId
                 const other = await getUser(otherId)
@@ -68,10 +72,11 @@ export default function ChatPage() {
             // Subscribe to real-time messages
             unsubscribe = subscribeToMessages(conversationId, (newMsg) => {
                 setMessages(prev => {
-                    // Avoid duplicates
                     if (prev.some(m => m.id === newMsg.id)) return prev
                     return [...prev, newMsg]
                 })
+                // Mark as read since user is viewing the chat
+                markConversationRead(conversationId)
             })
         }
 

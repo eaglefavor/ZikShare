@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { Home, Search, PlusCircle, MessageCircle, User } from 'lucide-react'
+import { useAuth } from '../contexts/AuthContext'
+import { getConversations } from '../lib/messaging'
+import { countUnread } from '../lib/readStatus'
 
 const navItems = [
     { path: '/', icon: Home, label: 'Home' },
@@ -12,9 +15,12 @@ const navItems = [
 
 export default function BottomNav() {
     const [isVisible, setIsVisible] = useState(true)
+    const [unreadCount, setUnreadCount] = useState(0)
     const lastScrollY = useRef(0)
     const location = useLocation()
+    const { session, isAuthenticated } = useAuth()
 
+    // Hide/show on scroll
     useEffect(() => {
         const handleScroll = () => {
             const currentScrollY = window.scrollY
@@ -35,6 +41,28 @@ export default function BottomNav() {
     useEffect(() => {
         setIsVisible(true)
     }, [location.pathname])
+
+    // Fetch unread count
+    useEffect(() => {
+        if (!isAuthenticated || !session?.user?.id) {
+            setUnreadCount(0)
+            return
+        }
+
+        async function checkUnread() {
+            try {
+                const convs = await getConversations(session.user.id)
+                setUnreadCount(countUnread(convs))
+            } catch {
+                // Silently fail
+            }
+        }
+
+        checkUnread()
+        // Re-check every 15 seconds
+        const interval = setInterval(checkUnread, 15000)
+        return () => clearInterval(interval)
+    }, [isAuthenticated, session, location.pathname])
 
     return (
         <nav
@@ -122,11 +150,38 @@ export default function BottomNav() {
                                         <Icon size={22} strokeWidth={2.5} />
                                     </span>
                                 ) : (
-                                    <Icon
-                                        size={22}
-                                        strokeWidth={isActive ? 2.5 : 1.8}
-                                        style={{ transition: 'stroke-width 0.2s ease' }}
-                                    />
+                                    <span style={{ position: 'relative', display: 'flex' }}>
+                                        <Icon
+                                            size={22}
+                                            strokeWidth={isActive ? 2.5 : 1.8}
+                                            style={{ transition: 'stroke-width 0.2s ease' }}
+                                        />
+                                        {/* Unread badge for Messages */}
+                                        {path === '/messages' && unreadCount > 0 && (
+                                            <span
+                                                style={{
+                                                    position: 'absolute',
+                                                    top: '-0.3rem',
+                                                    right: '-0.5rem',
+                                                    minWidth: '1rem',
+                                                    height: '1rem',
+                                                    borderRadius: '9999px',
+                                                    backgroundColor: '#EF4444',
+                                                    color: 'white',
+                                                    fontSize: '0.5625rem',
+                                                    fontWeight: 700,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    padding: '0 0.2rem',
+                                                    border: '2px solid white',
+                                                    lineHeight: 1,
+                                                }}
+                                            >
+                                                {unreadCount > 9 ? '9+' : unreadCount}
+                                            </span>
+                                        )}
+                                    </span>
                                 )}
                                 {path !== '/post' && (
                                     <span

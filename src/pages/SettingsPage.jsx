@@ -85,12 +85,15 @@ export default function SettingsPage() {
 
                 {/* Phone */}
                 <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ fontSize: '0.8125rem', fontWeight: 600, display: 'block', marginBottom: '0.375rem' }}>Phone Number (WhatsApp)</label>
-                    <input type="tel" placeholder="e.g., 2348012345678" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value)} maxLength={15}
+                    <label style={{ fontSize: '0.8125rem', fontWeight: 600, display: 'block', marginBottom: '0.375rem' }}>Phone Number (WhatsApp) *</label>
+                    <input type="tel" placeholder="2348012345678" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ''))} maxLength={15}
                         style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
                         onFocus={e => (e.target.style.borderColor = 'var(--color-brand)')}
                         onBlur={e => (e.target.style.borderColor = 'var(--color-border)')} />
-                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>Include country code (e.g., 234...). Buyers will reach you via WhatsApp.</p>
+                    <div style={{ marginTop: '0.375rem', padding: '0.5rem 0.625rem', borderRadius: '0.5rem', backgroundColor: '#EFF6FF', border: '1px solid #DBEAFE' }}>
+                        <p style={{ margin: 0, fontSize: '0.625rem', color: '#1E40AF', fontWeight: 600 }}>📱 Format: country code + number, no spaces or "+"</p>
+                        <p style={{ margin: '0.25rem 0 0', fontSize: '0.6875rem', color: '#1E40AF', fontFamily: 'monospace' }}>✅ 2348012345678 &nbsp; ❌ +2348012345678</p>
+                    </div>
                 </div>
 
                 {/* Department */}

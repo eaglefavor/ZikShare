@@ -31,6 +31,24 @@ export async function getListing(id) {
         .single()
 
     if (error) throw error
+
+    // If the FK join didn't return seller info, fetch it separately
+    if (data && !data.users && data.sellerId) {
+        try {
+            const seller = await getUser(data.sellerId)
+            if (seller) {
+                data.users = {
+                    displayName: seller.displayName,
+                    isVerified: seller.isVerified,
+                    phoneNumber: seller.phoneNumber,
+                    department: seller.department,
+                }
+            }
+        } catch (e) {
+            console.warn('Could not fetch seller info:', e.message)
+        }
+    }
+
     return data
 }
 

@@ -38,9 +38,9 @@ export function countUnread(conversations) {
     let count = 0
     for (const conv of conversations) {
         const lastRead = map[conv.id]
+        // Count as unread if never read, or if lastMessageAt is after our read timestamp
         if (!lastRead || new Date(conv.lastMessageAt) > new Date(lastRead)) {
-            // Only count if there's actually a message
-            if (conv.lastMessage) count++
+            count++
         }
     }
     return count

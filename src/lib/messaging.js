@@ -32,11 +32,23 @@ export async function getOrCreateConversation(listingId, buyerId, sellerId) {
  * Get all conversations for a user (as buyer or seller), with listing info.
  */
 export async function getConversations(userId) {
-    const { data, error } = await supabase
+    // Try with listing join first
+    let { data, error } = await supabase
         .from('conversations')
         .select('*, listings!listingId(title, price, images, category)')
         .or(`buyerId.eq.${userId},sellerId.eq.${userId}`)
         .order('lastMessageAt', { ascending: false })
+
+    // Fall back to simple query if join fails
+    if (error) {
+        const result = await supabase
+            .from('conversations')
+            .select('*')
+            .or(`buyerId.eq.${userId},sellerId.eq.${userId}`)
+            .order('lastMessageAt', { ascending: false })
+        data = result.data
+        error = result.error
+    }
 
     if (error) throw error
     return data || []
@@ -46,11 +58,22 @@ export async function getConversations(userId) {
  * Get a single conversation by ID.
  */
 export async function getConversation(conversationId) {
-    const { data, error } = await supabase
+    let { data, error } = await supabase
         .from('conversations')
         .select('*, listings!listingId(title, price, images, category, sellerId)')
         .eq('id', conversationId)
         .single()
+
+    // Fall back to simple query if join fails
+    if (error) {
+        const result = await supabase
+            .from('conversations')
+            .select('*')
+            .eq('id', conversationId)
+            .single()
+        data = result.data
+        error = result.error
+    }
 
     if (error) throw error
     return data
@@ -84,12 +107,15 @@ export async function sendMessage(conversationId, senderId, text) {
 
     if (error) throw error
 
-    // Update conversation preview (fire-and-forget)
-    supabase
-        .from('conversations')
-        .update({ lastMessage: text, lastMessageAt: new Date().toISOString() })
-        .eq('id', conversationId)
-        .then(() => { })
+    // Update conversation preview
+    try {
+        await supabase
+            .from('conversations')
+            .update({ lastMessage: text, lastMessageAt: new Date().toISOString() })
+            .eq('id', conversationId)
+    } catch (err) {
+        console.warn('Failed to update conversation preview:', err.message)
+    }
 
     return data
 }

@@ -12,6 +12,7 @@ import MyListingsPage from './pages/MyListingsPage'
 import SavedItemsPage from './pages/SavedItemsPage'
 import SettingsPage from './pages/SettingsPage'
 import HelpPage from './pages/HelpPage'
+import ChatPage from './pages/ChatPage'
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
           <Route path="/profile/saved" element={<SavedItemsPage />} />
           <Route path="/profile/settings" element={<SettingsPage />} />
           <Route path="/profile/help" element={<HelpPage />} />
+          <Route path="/chat/:conversationId" element={<ChatPage />} />
 
           {/* Pages with bottom nav */}
           <Route

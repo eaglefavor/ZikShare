@@ -1,9 +1,12 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock } from 'lucide-react'
+import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, AlertTriangle } from 'lucide-react'
 import { useState } from 'react'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListing } from '../lib/database'
+import { getUser } from '../lib/database'
 import { isSaved as checkSaved, toggleSaved } from '../lib/savedItems'
+import { getOrCreateConversation } from '../lib/messaging'
+import { useAuth } from '../contexts/AuthContext'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
@@ -28,8 +31,11 @@ function timeAgo(iso) {
 export default function ItemDetailPage() {
     const { id } = useParams()
     const navigate = useNavigate()
+    const { session, isAuthenticated } = useAuth()
     const [currentImage, setCurrentImage] = useState(0)
     const [isSaved, setIsSaved] = useState(() => checkSaved(id))
+    const [showCallSheet, setShowCallSheet] = useState(false)
+    const [contacting, setContacting] = useState(false)
 
     const handleToggleSave = () => {
         const nowSaved = toggleSaved(id)
@@ -46,6 +52,24 @@ export default function ItemDetailPage() {
         'Brand New': 'condition-new',
         'Like New': 'condition-like-new',
         'Fairly Used': 'condition-used',
+    }
+
+    const handleContactSeller = async () => {
+        if (!isAuthenticated) {
+            navigate('/login')
+            return
+        }
+        if (contacting) return
+        setContacting(true)
+        try {
+            const conv = await getOrCreateConversation(id, session.user.id, item.sellerId)
+            navigate(`/chat/${conv.id}`)
+        } catch (err) {
+            console.error('Failed to start conversation:', err)
+            alert('Failed to start conversation. Please try again.')
+        } finally {
+            setContacting(false)
+        }
     }
 
     if (isLoading) {
@@ -76,26 +100,8 @@ export default function ItemDetailPage() {
 
     const seller = item.users || {}
     const images = item.images?.length ? item.images : [null]
-    const phoneNumber = seller.phoneNumber || ''
-
-    const whatsappUrl = phoneNumber
-        ? `https://wa.me/${phoneNumber}?text=${encodeURIComponent(`Hi, I saw your listing for "${item.title}" on ZikShare. Is it still available?`)}`
-        : null
-
-    const callUrl = phoneNumber ? `tel:${phoneNumber}` : null
-
-    const quickMessages = [
-        'Is this still available?',
-        'What\'s the last price?',
-        'Can we meet today?',
-    ]
-
-    const handleQuickMessage = (msg) => {
-        if (phoneNumber) {
-            const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(msg + ` (Re: "${item.title}" on ZikShare)`)}`
-            window.open(url, '_blank')
-        }
-    }
+    const sellerPhone = seller.phoneNumber || ''
+    const isOwnListing = session?.user?.id === item.sellerId
 
     const handleShare = async () => {
         if (navigator.share) {
@@ -112,23 +118,10 @@ export default function ItemDetailPage() {
         <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-background)', paddingBottom: '5.5rem' }}>
             {/* Image Carousel */}
             <div style={{ position: 'relative' }}>
-                <div
-                    style={{
-                        width: '100%',
-                        height: '300px',
-                        backgroundColor: placeholderColors[currentImage % placeholderColors.length],
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        fontSize: '4rem',
-                        overflow: 'hidden',
-                    }}
-                >
+                <div style={{ width: '100%', height: '300px', backgroundColor: placeholderColors[currentImage % placeholderColors.length], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem', overflow: 'hidden' }}>
                     {images[currentImage] ? (
                         <img src={images[currentImage]} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                        '📦'
-                    )}
+                    ) : '📦'}
                 </div>
 
                 {/* Top navigation overlay */}
@@ -146,14 +139,14 @@ export default function ItemDetailPage() {
                     </div>
                 </div>
 
-                {/* Photo count badge */}
+                {/* Photo count */}
                 {images.length > 1 && (
-                    <div style={{ position: 'absolute', bottom: '0.75rem', right: '0.75rem', padding: '0.25rem 0.625rem', borderRadius: '9999px', backgroundColor: 'rgba(0,0,0,0.6)', color: 'white', fontSize: '0.6875rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                    <div style={{ position: 'absolute', bottom: '0.75rem', right: '0.75rem', padding: '0.25rem 0.625rem', borderRadius: '9999px', backgroundColor: 'rgba(0,0,0,0.6)', color: 'white', fontSize: '0.6875rem', fontWeight: 600 }}>
                         📷 {currentImage + 1}/{images.length}
                     </div>
                 )}
 
-                {/* Image dots */}
+                {/* Dots */}
                 {images.length > 1 && (
                     <div style={{ position: 'absolute', bottom: '0.75rem', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '0.375rem' }}>
                         {images.map((_, i) => (
@@ -162,7 +155,7 @@ export default function ItemDetailPage() {
                     </div>
                 )}
 
-                {/* Carousel arrows */}
+                {/* Arrows */}
                 {currentImage > 0 && (
                     <button onClick={() => setCurrentImage(currentImage - 1)} style={{ position: 'absolute', left: '0.5rem', top: '50%', transform: 'translateY(-50%)', width: '2rem', height: '2rem', borderRadius: '9999px', backgroundColor: 'rgba(255,255,255,0.8)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                         <ChevronLeft size={16} />
@@ -177,7 +170,6 @@ export default function ItemDetailPage() {
 
             {/* Price & Title Card */}
             <div style={{ padding: '1rem', backgroundColor: 'white', borderRadius: '1rem 1rem 0 0', marginTop: '-0.75rem', position: 'relative' }}>
-                {/* Location & Time */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.6875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
                     <MapPin size={12} />
                     <span>UNIZIK Campus</span>
@@ -193,64 +185,17 @@ export default function ItemDetailPage() {
                     <span className={`condition-badge ${condClass[item.condition] || ''}`}>{item.condition}</span>
                 </div>
 
-                {/* Call + WhatsApp buttons — always visible */}
-                <div style={{ display: 'flex', gap: '0.625rem', marginBottom: '1rem' }}>
-                    {callUrl ? (
-                        <a href={callUrl} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'white', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: 'var(--color-text-primary)', transition: 'background-color 0.15s' }}>
-                            <Phone size={16} />
-                            Call
-                        </a>
-                    ) : (
-                        <button disabled style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-background)', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: 'var(--color-text-muted)' }}>
-                            <Phone size={16} />
-                            Call
+                {/* Action Buttons */}
+                {!isOwnListing && (
+                    <div style={{ display: 'flex', gap: '0.625rem', marginBottom: '0.5rem' }}>
+                        <button onClick={() => setShowCallSheet(true)} style={{ flex: 0, width: '3.5rem', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'white', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: 'var(--color-text-primary)' }}>
+                            <Phone size={18} />
                         </button>
-                    )}
-                    {whatsappUrl ? (
-                        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #22C55E, #16A34A)', color: 'white', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(34,197,94,0.3)' }}>
+                        <button onClick={handleContactSeller} disabled={contacting} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: contacting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(59,130,246,0.3)', opacity: contacting ? 0.7 : 1 }}>
                             <MessageCircle size={16} />
-                            WhatsApp
-                        </a>
-                    ) : (
-                        <button disabled style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', backgroundColor: '#BBF7D0', color: 'white', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                            <MessageCircle size={16} />
-                            WhatsApp
+                            {contacting ? 'Opening chat...' : 'Chat with Seller'}
                         </button>
-                    )}
-                </div>
-            </div>
-
-            {/* Quick Messages Section */}
-            <div style={{ margin: '0.5rem 0', padding: '1rem', backgroundColor: 'white' }}>
-                <p style={{ margin: '0 0 0.625rem', fontSize: '0.8125rem', fontWeight: 700 }}>Chat with the seller</p>
-                <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
-                    {quickMessages.map((msg, i) => (
-                        <button
-                            key={i}
-                            onClick={() => handleQuickMessage(msg)}
-                            disabled={!phoneNumber}
-                            style={{
-                                padding: '0.375rem 0.75rem',
-                                borderRadius: '9999px',
-                                border: '1px solid var(--color-brand)',
-                                backgroundColor: 'transparent',
-                                fontSize: '0.6875rem',
-                                fontWeight: 600,
-                                fontFamily: 'inherit',
-                                cursor: phoneNumber ? 'pointer' : 'not-allowed',
-                                color: phoneNumber ? 'var(--color-brand)' : 'var(--color-text-muted)',
-                                opacity: phoneNumber ? 1 : 0.5,
-                                transition: 'all 0.15s ease',
-                            }}
-                        >
-                            {msg}
-                        </button>
-                    ))}
-                </div>
-                {!phoneNumber && (
-                    <p style={{ margin: 0, fontSize: '0.625rem', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
-                        Seller hasn't added their phone number yet
-                    </p>
+                    </div>
                 )}
             </div>
 
@@ -262,7 +207,7 @@ export default function ItemDetailPage() {
                 </div>
             )}
 
-            {/* Item Details */}
+            {/* Item Details Grid */}
             <div style={{ margin: '0.5rem 0', padding: '1rem', backgroundColor: 'white' }}>
                 <h3 style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', fontWeight: 700 }}>Details</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
@@ -314,29 +259,68 @@ export default function ItemDetailPage() {
                 </div>
             </div>
 
-            {/* Sticky Bottom CTA — always visible */}
-            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '0.625rem 1rem', backgroundColor: 'white', borderTop: '1px solid var(--color-border)', display: 'flex', gap: '0.625rem', zIndex: 50, paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))' }}>
-                {callUrl ? (
-                    <a href={callUrl} style={{ width: '3.5rem', height: '3rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: 'var(--color-text-primary)' }}>
+            {/* Sticky Bottom CTA */}
+            {!isOwnListing && (
+                <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '0.625rem 1rem', backgroundColor: 'white', borderTop: '1px solid var(--color-border)', display: 'flex', gap: '0.625rem', zIndex: 50, paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))' }}>
+                    <button onClick={() => setShowCallSheet(true)} style={{ width: '3.5rem', height: '3rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-primary)' }}>
                         <Phone size={20} />
-                    </a>
-                ) : (
-                    <div style={{ width: '3.5rem', height: '3rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-background)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }}>
-                        <Phone size={20} />
+                    </button>
+                    <button onClick={handleContactSeller} disabled={contacting} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontSize: '0.9375rem', fontWeight: 700, fontFamily: 'inherit', cursor: contacting ? 'not-allowed' : 'pointer', textAlign: 'center', boxShadow: '0 4px 12px rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', opacity: contacting ? 0.7 : 1 }}>
+                        <MessageCircle size={18} />
+                        {contacting ? 'Opening...' : 'Contact Seller'}
+                    </button>
+                </div>
+            )}
+
+            {/* Call Bottom Sheet */}
+            {showCallSheet && (
+                <>
+                    <div onClick={() => setShowCallSheet(false)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100 }} />
+                    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 101, backgroundColor: 'white', borderRadius: '1rem 1rem 0 0', padding: '1.25rem 1rem', paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom, 0px))', animation: 'slideUp 0.25s ease-out' }}>
+                        <style>{`@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }`}</style>
+
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: 700 }}>
+                                    {(seller.displayName || 'S').charAt(0).toUpperCase()}
+                                </div>
+                                <div>
+                                    <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700 }}>{seller.displayName || 'Seller'}</p>
+                                    {seller.department && <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>{seller.department}</p>}
+                                </div>
+                            </div>
+                            <button onClick={() => setShowCallSheet(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', display: 'flex' }}>
+                                <X size={20} color="var(--color-text-muted)" />
+                            </button>
+                        </div>
+
+                        {sellerPhone ? (
+                            <div style={{ padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                                <div>
+                                    <p style={{ margin: 0, fontSize: '1.125rem', fontWeight: 700, fontFamily: 'monospace', letterSpacing: '0.02em' }}>{sellerPhone}</p>
+                                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>Charged at your operator's rate</p>
+                                </div>
+                                <a href={`tel:${sellerPhone}`} style={{ padding: '0.625rem 1.25rem', borderRadius: '0.625rem', border: '2px solid var(--color-campus-green)', backgroundColor: 'transparent', color: 'var(--color-campus-green)', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                    <Phone size={16} />
+                                    Mobile call
+                                </a>
+                            </div>
+                        ) : (
+                            <div style={{ padding: '1rem', borderRadius: '0.75rem', backgroundColor: '#FEF2F2', border: '1px solid #FECACA', textAlign: 'center', marginBottom: '1rem' }}>
+                                <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600, color: '#DC2626' }}>Phone number not available</p>
+                                <p style={{ margin: '0.25rem 0 0', fontSize: '0.6875rem', color: '#DC2626' }}>Use the in-app chat to contact this seller.</p>
+                            </div>
+                        )}
+
+                        <div style={{ padding: '0.75rem', borderRadius: '0.625rem', backgroundColor: '#FEF3C7', border: '1px solid #FCD34D' }}>
+                            <p style={{ margin: 0, fontSize: '0.625rem', color: '#92400E', lineHeight: 1.4 }}>
+                                <strong>❗ Never pay in advance!</strong> Even for delivery.<br />
+                                <strong>✅ Inform the seller</strong> you got their number on ZikShare.
+                            </p>
+                        </div>
                     </div>
-                )}
-                {whatsappUrl ? (
-                    <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #22C55E, #16A34A)', color: 'white', fontSize: '0.9375rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', textDecoration: 'none', textAlign: 'center', boxShadow: '0 4px 12px rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                        <MessageCircle size={18} />
-                        Contact Seller
-                    </a>
-                ) : (
-                    <a href={`https://wa.me/?text=${encodeURIComponent(`Hi, I saw your listing for "${item.title}" on ZikShare. Is it still available?`)}`} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #22C55E, #16A34A)', color: 'white', fontSize: '0.9375rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', textDecoration: 'none', textAlign: 'center', boxShadow: '0 4px 12px rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                        <MessageCircle size={18} />
-                        Contact Seller
-                    </a>
-                )}
-            </div>
+                </>
+            )}
         </div>
     )
 }

@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react'
+import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock } from 'lucide-react'
 import { useState } from 'react'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListing } from '../lib/database'
@@ -11,6 +11,18 @@ function formatNaira(amount) {
 
 function formatDate(iso) {
     return new Intl.DateTimeFormat('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(iso))
+}
+
+function timeAgo(iso) {
+    const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
+    if (seconds < 60) return 'just now'
+    const minutes = Math.floor(seconds / 60)
+    if (minutes < 60) return `${minutes}m ago`
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return `${hours}h ago`
+    const days = Math.floor(hours / 24)
+    if (days < 7) return `${days}d ago`
+    return formatDate(iso)
 }
 
 export default function ItemDetailPage() {
@@ -68,7 +80,22 @@ export default function ItemDetailPage() {
 
     const whatsappUrl = phoneNumber
         ? `https://wa.me/${phoneNumber}?text=${encodeURIComponent(`Hi, I saw your listing for "${item.title}" on ZikShare. Is it still available?`)}`
-        : '#'
+        : null
+
+    const callUrl = phoneNumber ? `tel:${phoneNumber}` : null
+
+    const quickMessages = [
+        'Is this still available?',
+        'What\'s the last price?',
+        'Can we meet today?',
+    ]
+
+    const handleQuickMessage = (msg) => {
+        if (phoneNumber) {
+            const url = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(msg + ` (Re: "${item.title}" on ZikShare)`)}`
+            window.open(url, '_blank')
+        }
+    }
 
     const handleShare = async () => {
         if (navigator.share) {
@@ -82,13 +109,13 @@ export default function ItemDetailPage() {
     const placeholderColors = ['#DBEAFE', '#E0E7FF', '#D1FAE5']
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-background)' }}>
+        <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-background)', paddingBottom: '5.5rem' }}>
             {/* Image Carousel */}
             <div style={{ position: 'relative' }}>
                 <div
                     style={{
                         width: '100%',
-                        height: '280px',
+                        height: '300px',
                         backgroundColor: placeholderColors[currentImage % placeholderColors.length],
                         display: 'flex',
                         alignItems: 'center',
@@ -105,7 +132,7 @@ export default function ItemDetailPage() {
                 </div>
 
                 {/* Top navigation overlay */}
-                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', background: 'linear-gradient(to bottom, rgba(0,0,0,0.15), transparent)' }}>
+                <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', background: 'linear-gradient(to bottom, rgba(0,0,0,0.25), transparent)' }}>
                     <button onClick={() => navigate(-1)} style={{ width: '2.25rem', height: '2.25rem', borderRadius: '9999px', backgroundColor: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
                         <ArrowLeft size={18} />
                     </button>
@@ -119,11 +146,18 @@ export default function ItemDetailPage() {
                     </div>
                 </div>
 
+                {/* Photo count badge */}
+                {images.length > 1 && (
+                    <div style={{ position: 'absolute', bottom: '0.75rem', right: '0.75rem', padding: '0.25rem 0.625rem', borderRadius: '9999px', backgroundColor: 'rgba(0,0,0,0.6)', color: 'white', fontSize: '0.6875rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                        📷 {currentImage + 1}/{images.length}
+                    </div>
+                )}
+
                 {/* Image dots */}
                 {images.length > 1 && (
                     <div style={{ position: 'absolute', bottom: '0.75rem', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '0.375rem' }}>
                         {images.map((_, i) => (
-                            <button key={i} onClick={() => setCurrentImage(i)} style={{ width: currentImage === i ? '1.25rem' : '0.375rem', height: '0.375rem', borderRadius: '9999px', border: 'none', cursor: 'pointer', backgroundColor: currentImage === i ? 'var(--color-brand)' : 'rgba(255,255,255,0.6)', transition: 'all 0.2s ease' }} />
+                            <button key={i} onClick={() => setCurrentImage(i)} style={{ width: currentImage === i ? '1.25rem' : '0.375rem', height: '0.375rem', borderRadius: '9999px', border: 'none', cursor: 'pointer', backgroundColor: currentImage === i ? 'white' : 'rgba(255,255,255,0.5)', transition: 'all 0.2s ease' }} />
                         ))}
                     </div>
                 )}
@@ -141,48 +175,138 @@ export default function ItemDetailPage() {
                 )}
             </div>
 
-            {/* Content */}
+            {/* Price & Title Card */}
             <div style={{ padding: '1rem', backgroundColor: 'white', borderRadius: '1rem 1rem 0 0', marginTop: '-0.75rem', position: 'relative' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                    <p className="price-tag" style={{ margin: 0, fontSize: '1.375rem' }}>{formatNaira(item.price)}</p>
+                {/* Location & Time */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.6875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
+                    <MapPin size={12} />
+                    <span>UNIZIK Campus</span>
+                    <span>•</span>
+                    <Clock size={12} />
+                    <span>{timeAgo(item.createdAt)}</span>
+                </div>
+
+                <h1 style={{ margin: '0 0 0.5rem', fontSize: '1.0625rem', fontWeight: 700, lineHeight: 1.3 }}>{item.title}</h1>
+
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                    <p className="price-tag" style={{ margin: 0, fontSize: '1.5rem' }}>{formatNaira(item.price)}</p>
                     <span className={`condition-badge ${condClass[item.condition] || ''}`}>{item.condition}</span>
                 </div>
 
-                <h1 style={{ margin: '0 0 0.375rem', fontSize: '1.0625rem', fontWeight: 700, lineHeight: 1.3 }}>{item.title}</h1>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.6875rem', color: 'var(--color-text-muted)', marginBottom: '1rem' }}>
-                    <span>{item.category}</span>
-                    <span>•</span>
-                    <span>Listed {formatDate(item.createdAt)}</span>
+                {/* Call + WhatsApp buttons — always visible */}
+                <div style={{ display: 'flex', gap: '0.625rem', marginBottom: '1rem' }}>
+                    {callUrl ? (
+                        <a href={callUrl} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'white', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: 'var(--color-text-primary)', transition: 'background-color 0.15s' }}>
+                            <Phone size={16} />
+                            Call
+                        </a>
+                    ) : (
+                        <button disabled style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-background)', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: 'var(--color-text-muted)' }}>
+                            <Phone size={16} />
+                            Call
+                        </button>
+                    )}
+                    {whatsappUrl ? (
+                        <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #22C55E, #16A34A)', color: 'white', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(34,197,94,0.3)' }}>
+                            <MessageCircle size={16} />
+                            WhatsApp
+                        </a>
+                    ) : (
+                        <button disabled style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', backgroundColor: '#BBF7D0', color: 'white', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                            <MessageCircle size={16} />
+                            WhatsApp
+                        </button>
+                    )}
                 </div>
+            </div>
 
-                {item.description && (
-                    <div style={{ marginBottom: '1.25rem' }}>
-                        <h3 style={{ margin: '0 0 0.375rem', fontSize: '0.875rem', fontWeight: 600 }}>Description</h3>
-                        <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>{item.description}</p>
-                    </div>
+            {/* Quick Messages Section */}
+            <div style={{ margin: '0.5rem 0', padding: '1rem', backgroundColor: 'white' }}>
+                <p style={{ margin: '0 0 0.625rem', fontSize: '0.8125rem', fontWeight: 700 }}>Chat with the seller</p>
+                <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+                    {quickMessages.map((msg, i) => (
+                        <button
+                            key={i}
+                            onClick={() => handleQuickMessage(msg)}
+                            disabled={!phoneNumber}
+                            style={{
+                                padding: '0.375rem 0.75rem',
+                                borderRadius: '9999px',
+                                border: '1px solid var(--color-brand)',
+                                backgroundColor: 'transparent',
+                                fontSize: '0.6875rem',
+                                fontWeight: 600,
+                                fontFamily: 'inherit',
+                                cursor: phoneNumber ? 'pointer' : 'not-allowed',
+                                color: phoneNumber ? 'var(--color-brand)' : 'var(--color-text-muted)',
+                                opacity: phoneNumber ? 1 : 0.5,
+                                transition: 'all 0.15s ease',
+                            }}
+                        >
+                            {msg}
+                        </button>
+                    ))}
+                </div>
+                {!phoneNumber && (
+                    <p style={{ margin: 0, fontSize: '0.625rem', color: 'var(--color-text-muted)', fontStyle: 'italic' }}>
+                        Seller hasn't added their phone number yet
+                    </p>
                 )}
+            </div>
 
-                {/* Seller Card */}
-                <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: 'var(--color-background)', border: '1px solid var(--color-border)', marginBottom: '1rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <div style={{ width: '2.75rem', height: '2.75rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1rem', fontWeight: 700 }}>
-                            {(seller.displayName || 'S').charAt(0)}
-                        </div>
-                        <div style={{ flex: 1 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600 }}>{seller.displayName || 'Seller'}</p>
-                                {seller.isVerified && <ShieldCheck size={14} color="var(--color-campus-green)" />}
-                            </div>
-                            {seller.department && (
-                                <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>{seller.department}</p>
-                            )}
-                        </div>
+            {/* Description */}
+            {item.description && (
+                <div style={{ margin: '0.5rem 0', padding: '1rem', backgroundColor: 'white' }}>
+                    <h3 style={{ margin: '0 0 0.375rem', fontSize: '0.875rem', fontWeight: 700 }}>Description</h3>
+                    <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{item.description}</p>
+                </div>
+            )}
+
+            {/* Item Details */}
+            <div style={{ margin: '0.5rem 0', padding: '1rem', backgroundColor: 'white' }}>
+                <h3 style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', fontWeight: 700 }}>Details</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
+                    <div>
+                        <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600 }}>{item.condition}</p>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Condition</p>
+                    </div>
+                    <div>
+                        <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600 }}>{item.category}</p>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Category</p>
+                    </div>
+                    <div>
+                        <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600 }}>{formatDate(item.createdAt)}</p>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Listed</p>
+                    </div>
+                    <div>
+                        <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600 }}>{item.status || 'Active'}</p>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</p>
                     </div>
                 </div>
+            </div>
 
-                {/* Safe Meetup */}
-                <div style={{ padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '1.5rem' }}>
+            {/* Seller Card */}
+            <div style={{ margin: '0.5rem 0', padding: '1rem', backgroundColor: 'white' }}>
+                <h3 style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', fontWeight: 700 }}>Seller</h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <div style={{ width: '3rem', height: '3rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.125rem', fontWeight: 700, flexShrink: 0 }}>
+                        {(seller.displayName || 'S').charAt(0).toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                            <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700 }}>{seller.displayName || 'Seller'}</p>
+                            {seller.isVerified && <ShieldCheck size={14} color="var(--color-campus-green)" />}
+                        </div>
+                        {seller.department && (
+                            <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>{seller.department}</p>
+                        )}
+                    </div>
+                </div>
+            </div>
+
+            {/* Safe Meetup */}
+            <div style={{ margin: '0.5rem 0 1rem', padding: '1rem', backgroundColor: 'white' }}>
+                <div style={{ padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                     <MapPin size={16} color="#166534" />
                     <p style={{ margin: 0, fontSize: '0.6875rem', color: '#166534', lineHeight: 1.3 }}>
                         <strong>Safe Meetup:</strong> Meet at Garba Square, Chisco Park, or the Student Center.
@@ -190,15 +314,29 @@ export default function ItemDetailPage() {
                 </div>
             </div>
 
-            {/* Sticky CTA */}
-            {phoneNumber && (
-                <div style={{ position: 'sticky', bottom: 0, left: 0, right: 0, padding: '0.75rem 1rem', backgroundColor: 'white', borderTop: '1px solid var(--color-border)', display: 'flex', gap: '0.75rem' }}>
-                    <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #22C55E, #16A34A)', color: 'white', fontSize: '0.9375rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', textDecoration: 'none', textAlign: 'center', boxShadow: '0 4px 12px rgba(34, 197, 94, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+            {/* Sticky Bottom CTA — always visible */}
+            <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '0.625rem 1rem', backgroundColor: 'white', borderTop: '1px solid var(--color-border)', display: 'flex', gap: '0.625rem', zIndex: 50, paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))' }}>
+                {callUrl ? (
+                    <a href={callUrl} style={{ width: '3.5rem', height: '3rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', textDecoration: 'none', color: 'var(--color-text-primary)' }}>
+                        <Phone size={20} />
+                    </a>
+                ) : (
+                    <div style={{ width: '3.5rem', height: '3rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-background)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-text-muted)' }}>
+                        <Phone size={20} />
+                    </div>
+                )}
+                {whatsappUrl ? (
+                    <a href={whatsappUrl} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #22C55E, #16A34A)', color: 'white', fontSize: '0.9375rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', textDecoration: 'none', textAlign: 'center', boxShadow: '0 4px 12px rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                         <MessageCircle size={18} />
                         Contact Seller
                     </a>
-                </div>
-            )}
+                ) : (
+                    <a href={`https://wa.me/?text=${encodeURIComponent(`Hi, I saw your listing for "${item.title}" on ZikShare. Is it still available?`)}`} target="_blank" rel="noopener noreferrer" style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #22C55E, #16A34A)', color: 'white', fontSize: '0.9375rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', textDecoration: 'none', textAlign: 'center', boxShadow: '0 4px 12px rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                        <MessageCircle size={18} />
+                        Contact Seller
+                    </a>
+                )}
+            </div>
         </div>
     )
 }

@@ -1,4 +1,25 @@
-import { useState } from 'react'
+import re
+
+with open('src/pages/PostPage.jsx', 'r') as f:
+    content = f.read()
+
+# Remove the listingType state
+content = re.sub(r'const \[listingType, setListingType\] = useState\([^\)]+\)', '', content)
+
+# Remove the toggle UI completely
+content = re.sub(r'\{\/\* Listing Type Toggle \*\/\}.*?Digital PDF.*?\<\/div\>\s*\<\/div\>', '', content, flags=re.DOTALL)
+
+# Make it one upload form.
+# The user said "all items uploaded are surely digital, so just combine it into one 'Upload an Item' page."
+# We will require a PDF, and optionally allow photos? No, they probably want to upload a cover photo + PDF.
+
+# Let's completely rewrite the PostPage return and handleSubmit
+# The bug "uploading... stuck" is caused by `user.uid` being undefined. We replaced it with `user?.uid || session?.user?.id` earlier.
+# Wait, I already fixed that bug in the previous command.
+
+# Now let's redesign PostPage.jsx.
+
+new_post_page = """import { useState } from 'react'
 import { Camera, X, FileText, Loader2, CheckCircle, UploadCloud } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
@@ -276,3 +297,7 @@ export default function PostPage() {
         </div>
     )
 }
+"""
+
+with open('src/pages/PostPage.jsx', 'w') as f:
+    f.write(new_post_page)

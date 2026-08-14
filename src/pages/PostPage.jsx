@@ -2,7 +2,8 @@ import { useState } from 'react'
 import { Camera, X, Loader2, CheckCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { createListing } from '../lib/database'
+import { createListing, createDigitalProduct } from '../lib/database'
+import supabase from '../lib/supabase'
 import { uploadImage } from '../lib/cloudinary'
 
 const categories = ['Electronics', 'Books', 'Fashion', 'Hostel', 'Services']
@@ -15,7 +16,9 @@ export default function PostPage() {
     const [description, setDescription] = useState('')
     const [price, setPrice] = useState('')
     const [category, setCategory] = useState('')
-    const [condition, setCondition] = useState('')
+    const [condition, setCondition] = useState('Fairly Used')
+    const [listingType, setListingType] = useState('Physical Item')
+    const [pdfFile, setPdfFile] = useState(null)
     const [photos, setPhotos] = useState([]) // File[]
     const [previews, setPreviews] = useState([]) // data URLs
     const [loading, setLoading] = useState(false)
@@ -57,24 +60,51 @@ export default function PostPage() {
         setError('')
 
         try {
-            // Upload images to Cloudinary
-            const imageUrls = []
-            for (const photo of photos) {
-                const url = await uploadImage(photo)
-                imageUrls.push(url)
-            }
+            if (listingType === 'Digital PDF') {
+                if (!pdfFile) {
+                    setError('Please select a PDF file.')
+                    setLoading(false)
+                    return
+                }
 
-            // Create listing in Supabase
-            await createListing({
-                title,
-                description,
-                price: parseFloat(price),
-                category,
-                condition,
-                images: imageUrls,
-                sellerId: session.user.id,
-                status: 'Active',
-            })
+                // Upload PDF
+                const fileName = `pdfs/${user.uid}/${crypto.randomUUID()}.pdf`;
+                const { error: uploadError } = await supabase.storage.from('digital-originals').upload(fileName, pdfFile, { contentType: 'application/pdf' });
+                if (uploadError) throw uploadError;
+
+                await createDigitalProduct({
+                    title,
+                    description,
+                    price: parseFloat(price) * 100, // stored in kobo
+                    category,
+                    original_storage_path: fileName,
+                    file_size_bytes: pdfFile.size,
+                    seller_id: user.uid,
+                    status: 'active'
+                });
+            } else {
+
+
+                // Upload images
+                const imageUrls = []
+                for (const photo of photos) {
+                    const url = await uploadImage(photo)
+                    imageUrls.push(url)
+                }
+
+                // Create listing in Supabase
+                await createListing({
+                    title,
+                    description,
+                    price: parseFloat(price),
+                    category,
+                    condition,
+                    images: imageUrls,
+                    sellerId: user.uid,
+                    status: 'Active',
+                    searchKeywords: title.toLowerCase().split(' ')
+                })
+            }
 
             setSuccess(true)
             setTimeout(() => navigate('/'), 2000)
@@ -124,7 +154,28 @@ export default function PostPage() {
             </header>
 
             <form onSubmit={handleSubmit} style={{ padding: '1rem' }}>
-                {/* Photos */}
+                {/* Listing Type Toggle */}
+                <div style={{ marginBottom: '1.25rem' }}>
+                    <label style={{ fontSize: '0.8125rem', fontWeight: 600, display: 'block', marginBottom: '0.5rem' }}>Type *</label>
+                    <div style={{ display: 'flex', gap: '0.5rem', backgroundColor: 'var(--color-background)', padding: '0.25rem', borderRadius: '0.75rem' }}>
+                        <button type="button" onClick={() => setListingType('Physical Item')} style={{ flex: 1, padding: '0.5rem', borderRadius: '0.5rem', border: 'none', fontSize: '0.8125rem', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', backgroundColor: listingType === 'Physical Item' ? 'white' : 'transparent', color: listingType === 'Physical Item' ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', boxShadow: listingType === 'Physical Item' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}>
+                            Physical Item
+                        </button>
+                        <button type="button" onClick={() => setListingType('Digital PDF')} style={{ flex: 1, padding: '0.5rem', borderRadius: '0.5rem', border: 'none', fontSize: '0.8125rem', fontWeight: 600, fontFamily: 'inherit', cursor: 'pointer', backgroundColor: listingType === 'Digital PDF' ? 'white' : 'transparent', color: listingType === 'Digital PDF' ? 'var(--color-text-primary)' : 'var(--color-text-secondary)', boxShadow: listingType === 'Digital PDF' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none', transition: 'all 0.2s' }}>
+                            Digital PDF
+                        </button>
+                    </div>
+                </div>
+
+                {listingType === 'Digital PDF' ? (
+                    <div style={{ marginBottom: '1.25rem' }}>
+                        <label style={{ fontSize: '0.8125rem', fontWeight: 600, display: 'block', marginBottom: '0.5rem' }}>
+                            PDF File *
+                        </label>
+                        <input type="file" accept=".pdf" onChange={(e) => setPdfFile(e.target.files[0])} style={{ width: '100%', padding: '0.625rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem' }} />
+                        {pdfFile && <p style={{ fontSize: '0.75rem', color: 'var(--color-text-secondary)', marginTop: '0.25rem' }}>Selected: {pdfFile.name}</p>}
+                    </div>
+                ) : (
                 <div style={{ marginBottom: '1.25rem' }}>
                     <label style={{ fontSize: '0.8125rem', fontWeight: 600, display: 'block', marginBottom: '0.5rem' }}>
                         Photos <span style={{ color: 'var(--color-text-muted)', fontWeight: 400 }}>(up to 4)</span>
@@ -147,6 +198,8 @@ export default function PostPage() {
                         )}
                     </div>
                 </div>
+
+                                )}
 
                 {/* Title */}
                 <div style={{ marginBottom: '1rem' }}>

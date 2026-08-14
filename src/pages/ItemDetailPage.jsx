@@ -3,7 +3,9 @@ import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, Ch
 import { useState } from 'react'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListing } from '../lib/database'
-import { getUser } from '../lib/database'
+import PaystackCheckout from '../components/PaystackCheckout'
+
+
 import { isSaved as checkSaved, toggleSaved } from '../lib/savedItems'
 import { getOrCreateConversation } from '../lib/messaging'
 import { useAuth } from '../contexts/AuthContext'
@@ -262,13 +264,29 @@ export default function ItemDetailPage() {
             {/* Sticky Bottom CTA */}
             {!isOwnListing && (
                 <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '0.625rem 1rem', backgroundColor: 'white', borderTop: '1px solid var(--color-border)', display: 'flex', gap: '0.625rem', zIndex: 50, paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))' }}>
-                    <button onClick={() => setShowCallSheet(true)} style={{ width: '3.5rem', height: '3rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-primary)' }}>
-                        <Phone size={20} />
-                    </button>
-                    <button onClick={handleContactSeller} disabled={contacting} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontSize: '0.9375rem', fontWeight: 700, fontFamily: 'inherit', cursor: contacting ? 'not-allowed' : 'pointer', textAlign: 'center', boxShadow: '0 4px 12px rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', opacity: contacting ? 0.7 : 1 }}>
-                        <MessageCircle size={18} />
-                        {contacting ? 'Opening...' : 'Contact Seller'}
-                    </button>
+                    {item.isDigital ? (
+                        session?.user ? (
+                            <PaystackCheckout
+                              product={item}
+                              user={session?.user}
+                              onSuccess={(ref) => navigate(`/payment/success?ref=${ref}`)}
+                            />
+                        ) : (
+                            <button onClick={() => navigate('/login')} style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.9375rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' }}>
+                                Login to Purchase
+                            </button>
+                        )
+                    ) : (
+                        <>
+                            <button onClick={() => setShowCallSheet(true)} style={{ width: '3.5rem', height: '3rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-primary)' }}>
+                                <Phone size={20} />
+                            </button>
+                            <button onClick={handleContactSeller} disabled={contacting} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontSize: '0.9375rem', fontWeight: 700, fontFamily: 'inherit', cursor: contacting ? 'not-allowed' : 'pointer', textAlign: 'center', boxShadow: '0 4px 12px rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', opacity: contacting ? 0.7 : 1 }}>
+                                <MessageCircle size={18} />
+                                {contacting ? 'Opening...' : 'Contact Seller'}
+                            </button>
+                        </>
+                    )}
                 </div>
             )}
 

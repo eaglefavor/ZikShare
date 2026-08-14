@@ -13,6 +13,7 @@ import SavedItemsPage from './pages/SavedItemsPage'
 import SettingsPage from './pages/SettingsPage'
 import HelpPage from './pages/HelpPage'
 import ChatPage from './pages/ChatPage'
+import PaymentSuccess from './pages/PaymentSuccess'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Routes>
           {/* Full-screen pages (no bottom nav) */}
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/item/:id" element={<ItemDetailPage />} />
           <Route path="/profile/listings" element={<MyListingsPage />} />
           <Route path="/profile/saved" element={<SavedItemsPage />} />

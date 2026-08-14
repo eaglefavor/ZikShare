@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, FileText } from 'lucide-react'
+import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, FileText, ShieldAlert, ChevronRight as ChevronRightIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListing } from '../lib/database'
@@ -65,7 +65,8 @@ export default function ItemDetailPage() {
         if (contacting) return
         setContacting(true)
         try {
-            const conv = await getOrCreateConversation(id, session.user.id, item.sellerId)
+            const sellerUid = item.sellerId || item.seller_id
+            const conv = await getOrCreateConversation(id, session.user.id, sellerUid)
             navigate(`/chat/${conv.id}`)
         } catch (err) {
             console.error('Failed to start conversation:', err)
@@ -102,6 +103,7 @@ export default function ItemDetailPage() {
     }
 
     const seller = item.users || {}
+    const sellerId = item.sellerId || item.seller_id || seller.uid
     const images = item.images?.length ? item.images : [null]
     const sellerPhone = seller.phoneNumber || ''
     const currentUserId = session?.user?.id
@@ -259,9 +261,25 @@ export default function ItemDetailPage() {
                 </div>
             </div>
 
-            {/* Seller Card */}
-            <div style={{ margin: '0.5rem 0', padding: '1rem', backgroundColor: 'white' }}>
-                <h3 style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', fontWeight: 700 }}>Seller</h3>
+            {/* Clickable Seller Card (routes to /seller/:id) */}
+            <div 
+                onClick={() => sellerId && navigate(`/seller/${sellerId}`)}
+                style={{ 
+                    margin: '0.5rem 0', 
+                    padding: '1rem', 
+                    backgroundColor: 'white', 
+                    cursor: sellerId ? 'pointer' : 'default',
+                    transition: 'background-color 0.15s ease'
+                }}
+            >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                    <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700 }}>Seller</h3>
+                    {sellerId && (
+                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-brand)', display: 'flex', alignItems: 'center', gap: '0.125rem' }}>
+                            View Store <ChevronRightIcon size={14} />
+                        </span>
+                    )}
+                </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                     <div style={{ width: '3rem', height: '3rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.125rem', fontWeight: 700, flexShrink: 0 }}>
                         {(seller.displayName || 'S').charAt(0).toUpperCase()}
@@ -278,13 +296,16 @@ export default function ItemDetailPage() {
                 </div>
             </div>
 
-            {/* Safe Meetup (Physical Items) or Instant Delivery Badge (Digital Items) */}
+            {/* Safe Meetup (Physical Items) or Anti-Piracy Notice (Digital Items) */}
             <div style={{ margin: '0.5rem 0 1rem', padding: '1rem', backgroundColor: 'white' }}>
                 {item.isDigital ? (
-                    <div style={{ padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                        <FileText size={18} color="#2563EB" />
-                        <p style={{ margin: 0, fontSize: '0.6875rem', color: '#1E40AF', lineHeight: 1.3 }}>
-                            <strong>Instant Access:</strong> Encrypted PDF copy is instantly available for download after payment.
+                    <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: '#FEF2F2', border: '1.5px solid #FECACA', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <ShieldAlert size={18} color="#DC2626" />
+                            <strong style={{ fontSize: '0.75rem', color: '#991B1B', textTransform: 'uppercase' }}>Watermarked & Traceable Copy</strong>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '0.6875rem', color: '#7F1D1D', lineHeight: 1.4 }}>
+                            This PDF is permanently stamped with your <strong>Full Name</strong> and <strong>UNIZIK Reg Number</strong> on every page upon purchase.
                         </p>
                     </div>
                 ) : (

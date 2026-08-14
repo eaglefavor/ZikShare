@@ -31,7 +31,6 @@ export async function getListing(id) {
         .single()
 
     if (!error && data) {
-        // If the FK join didn't return seller info, fetch it separately
         if (!data.users && data.sellerId) {
             try {
                 const seller = await getUser(data.sellerId)
@@ -157,6 +156,52 @@ export async function getMyListings(userId) {
     const combined = [...physical, ...digital]
     combined.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
     return combined
+}
+
+// ── Public Seller Profile & Catalog ──
+
+export async function getSellerPublicProfile(sellerId) {
+    const [userRes, physicalRes, digitalRes] = await Promise.all([
+        getUser(sellerId).catch(() => null),
+        supabase
+            .from('listings')
+            .select('*')
+            .eq('sellerId', sellerId)
+            .eq('status', 'Active')
+            .order('createdAt', { ascending: false }),
+        supabase
+            .from('digital_products')
+            .select('*')
+            .eq('seller_id', sellerId)
+            .eq('status', 'active')
+            .order('created_at', { ascending: false }),
+    ])
+
+    const seller = userRes || { uid: sellerId, displayName: 'Seller' }
+    const physical = (physicalRes.data || []).map(p => ({
+        ...p,
+        isDigital: false,
+    }))
+    const digital = (digitalRes.data || []).map(d => ({
+        ...d,
+        isDigital: true,
+        sellerId: d.seller_id,
+        createdAt: d.created_at,
+        condition: 'Digital PDF',
+        images: d.cover_image_url ? [d.cover_image_url] : [],
+        priceInKobo: d.price,
+        price: d.price / 100,
+    }))
+
+    const listings = [...physical, ...digital].sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+
+    return {
+        seller,
+        listings,
+        totalListings: listings.length,
+        digitalCount: digital.length,
+        physicalCount: physical.length,
+    }
 }
 
 // ── Users ──
@@ -287,12 +332,10 @@ export async function getSellerAnalytics(userId) {
     const totalDigital = digitalProducts.length
     const activeListings = physicalListings.filter(l => l.status === 'Active').length + digitalProducts.filter(d => d.status === 'active').length
 
-    // Calculate revenue from completed orders
     const completedOrders = orders.filter(o => o.status === 'delivered' || o.status === 'success' || o.status === 'ready')
     const totalEarningsKobo = completedOrders.reduce((sum, o) => sum + (o.seller_settlement || o.amount || 0), 0)
     const totalSalesCount = completedOrders.length
 
-    // Top selling digital materials
     const productSalesMap = {}
     completedOrders.forEach(o => {
         if (o.product_id) {

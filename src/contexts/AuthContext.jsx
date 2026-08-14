@@ -10,6 +10,23 @@ export function isUnizikEmail(email) {
            /@([a-z0-9-]+\.)*unizik\.edu\.ng$/i.test(normalized)
 }
 
+export function deriveNameFromEmail(email) {
+    if (!email) return 'UNIZIK STUDENT'
+    const username = email.split('@')[0] || ''
+    const cleaned = username
+        .replace(/^[0-9]+[._-]/g, '')
+        .replace(/[._-]+/g, ' ')
+        .trim()
+
+    if (!cleaned) return username.toUpperCase()
+
+    return cleaned
+        .split(' ')
+        .filter(Boolean)
+        .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+        .join(' ')
+}
+
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
@@ -28,10 +45,17 @@ export function AuthProvider({ children }) {
             throw new Error('Access Restricted: Only official UNIZIK student emails (@unizik.edu.ng) are allowed.')
         }
 
+        const googleName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || ''
+
         // Try to load existing profile from DB first
         try {
             const existing = await getUser(authUser.id)
             if (existing) {
+                // If existing account has missing or short name but Google provided the full name, sync it
+                if (googleName && (!existing.displayName || existing.displayName === 'Student' || existing.displayName === 'UNIZIK Student' || existing.displayName.length <= 3)) {
+                    existing.displayName = googleName
+                    await upsertUser(existing).catch(() => {})
+                }
                 setUser(existing)
                 return
             }
@@ -39,11 +63,11 @@ export function AuthProvider({ children }) {
             console.warn('Could not fetch existing user:', err.message)
         }
 
-        // First-time user — create a verified UNIZIK student profile
+        // First-time user — create a verified UNIZIK student profile with full Google name
         const userData = {
             uid: authUser.id,
             email: authUser.email,
-            displayName: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'UNIZIK Student',
+            displayName: googleName || deriveNameFromEmail(authUser.email) || 'UNIZIK Student',
             phoneNumber: authUser.phone || '',
             department: '',
             isVerified: true, // All validated UNIZIK emails are verified
@@ -168,6 +192,7 @@ export function AuthProvider({ children }) {
         updateUser,
         refreshUser,
         isUnizikEmail,
+        deriveNameFromEmail,
     }
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

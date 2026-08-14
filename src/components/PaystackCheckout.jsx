@@ -12,10 +12,6 @@ export function deriveNameFromEmail(email) {
   if (!email) return 'UNIZIK STUDENT'
   const username = email.split('@')[0] || ''
   
-  // Clean student email prefixes:
-  // e.g. "chidi.okeke" -> "Chidi Okeke"
-  // e.g. "2021174092.ifeanyi" -> "Ifeanyi"
-  // e.g. "amaka_nwosu" -> "Amaka Nwosu"
   const cleaned = username
     .replace(/^[0-9]+[._-]/g, '') // remove leading matric numbers if any
     .replace(/[._-]+/g, ' ')
@@ -32,6 +28,19 @@ export function deriveNameFromEmail(email) {
     .join(' ')
 }
 
+export function getBuyerWatermarkName(user) {
+  if (!user) return 'UNIZIK STUDENT'
+  
+  // 1. Check verified full account name from Google OAuth or registration
+  const fullName = user.displayName || user.user_metadata?.full_name || user.user_metadata?.name
+  if (fullName && fullName !== 'Student' && fullName !== 'UNIZIK Student' && fullName.trim().length > 1) {
+    return fullName.trim()
+  }
+
+  // 2. Fallback to parsing from student email prefix
+  return deriveNameFromEmail(user.email)
+}
+
 const PaystackCheckout = ({ product, user, onSuccess }) => {
   const [showModal, setShowModal] = useState(false)
   const [regNumber, setRegNumber] = useState('')
@@ -39,8 +48,8 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
   const [creatingOrder, setCreatingOrder] = useState(false)
   const [inputError, setInputError] = useState('')
 
-  // Strictly derive non-editable buyer name from student email
-  const buyerName = useMemo(() => deriveNameFromEmail(user?.email), [user?.email])
+  // Strictly get full account name from Google / User profile
+  const buyerName = useMemo(() => getBuyerWatermarkName(user), [user])
 
   // Price conversion
   const priceInKobo = product.priceInKobo || Math.round((product.price || 0) * 100)
@@ -62,7 +71,7 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
       watermark_text: watermarkText,
       custom_fields: [
         { display_name: 'Product', variable_name: 'product_name', value: product.title },
-        { display_name: 'Buyer Name (Derived)', variable_name: 'buyer_name', value: buyerName },
+        { display_name: 'Buyer Name (Verified)', variable_name: 'buyer_name', value: buyerName },
         { display_name: 'Reg Number', variable_name: 'reg_number', value: regNumber.trim().toUpperCase() },
         { display_name: 'Seller', variable_name: 'seller_id', value: product.seller_id || product.sellerId }
       ]
@@ -203,14 +212,14 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
                 </p>
               </div>
 
-              {/* NON-EDITABLE Watermark Name derived from student email */}
+              {/* Verified Account Name (Auto-Populated from Google / Account Profile) */}
               <div style={{ marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
                   <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0F172A' }}>
                     Buyer Name (Watermark Stamp)
                   </label>
                   <span style={{ fontSize: '0.625rem', color: '#059669', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem', backgroundColor: '#ECFDF5', padding: '0.125rem 0.375rem', borderRadius: '0.25rem' }}>
-                    <Lock size={10} /> Locked to Email
+                    <Lock size={10} /> Verified Account Name
                   </span>
                 </div>
                 <div style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', backgroundColor: '#F1F5F9', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxSizing: 'border-box' }}>
@@ -222,7 +231,7 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
                   </span>
                 </div>
                 <p style={{ margin: '0.25rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>
-                  Automatically extracted from your verified UNIZIK student email. Cannot be edited.
+                  Fetched from your authenticated UNIZIK account profile ({user?.email})
                 </p>
               </div>
 

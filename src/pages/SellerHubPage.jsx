@@ -1,14 +1,16 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { 
     ArrowLeft, TrendingUp, DollarSign, ShoppingBag, Package, FileText, 
     Share2, Plus, Edit3, Trash2, CheckCircle2, AlertCircle, ExternalLink, 
-    Download, Clock, Building2, User, Loader2, Sparkles, RefreshCw, Eye
+    Download, Clock, Building2, User, Loader2, Sparkles, RefreshCw, Eye,
+    ShieldCheck, Check
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getSellerAnalytics, updateListing, deleteListing, upsertUser } from '../lib/database'
 import EditListingModal from '../components/EditListingModal'
 import { invalidateCacheByPrefix } from '../lib/cache'
+import { NIGERIAN_BANKS, resolveBankAccount } from '../lib/paystack'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount || 0)
@@ -18,15 +20,6 @@ function formatDate(iso) {
     if (!iso) return 'Recent'
     return new Intl.DateTimeFormat('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(iso))
 }
-
-const NIGERIAN_BANKS = [
-    'Access Bank', 'Citibank', 'Ecobank Nigeria', 'Fidelity Bank', 'First Bank of Nigeria',
-    'First City Monument Bank (FCMB)', 'Guaranty Trust Bank (GTBank)', 'Heritage Bank',
-    'Keystone Bank', 'Kuda Bank', 'Moniepoint MFB', 'OPay', 'Palmpay', 'Polaris Bank',
-    'Providus Bank', 'Stanbic IBTC Bank', 'Standard Chartered Bank', 'Sterling Bank',
-    'SunTrust Bank', 'Union Bank of Nigeria', 'United Bank for Africa (UBA)', 'Unity Bank',
-    'Wema Bank (ALAT)', 'Zenith Bank'
-]
 
 export default function SellerHubPage() {
     const { session, user, isAuthenticated, refreshUser } = useAuth()
@@ -41,8 +34,11 @@ export default function SellerHubPage() {
 
     // Payout form state
     const [bankName, setBankName] = useState('')
+    const [bankCode, setBankCode] = useState('')
     const [accountNumber, setAccountNumber] = useState('')
     const [accountName, setAccountName] = useState('')
+    const [resolvingAccount, setResolvingAccount] = useState(false)
+    const [accountVerified, setAccountVerified] = useState(false)
     const [savingPayout, setSavingPayout] = useState(false)
     const [payoutSuccess, setPayoutSuccess] = useState(false)
     const [payoutError, setPayoutError] = useState('')
@@ -66,6 +62,15 @@ export default function SellerHubPage() {
                 setBankName(data.userProfile.bank_name || '')
                 setAccountNumber(data.userProfile.account_number || '')
                 setAccountName(data.userProfile.account_name || '')
+                if (data.userProfile.bank_code) {
+                    setBankCode(data.userProfile.bank_code)
+                } else if (data.userProfile.bank_name) {
+                    const match = NIGERIAN_BANKS.find(b => b.name === data.userProfile.bank_name)
+                    if (match) setBankCode(match.code)
+                }
+                if (data.userProfile.account_name) {
+                    setAccountVerified(true)
+                }
             }
         } catch (err) {
             console.error('Failed to load seller hub:', err)
@@ -74,8 +79,54 @@ export default function SellerHubPage() {
         }
     }
 
+    // Auto-resolve account name when bank and 10 digits are present
+    const handleResolve = useCallback(async (accNum, bCode) => {
+        if (!accNum || accNum.length !== 10 || !bCode) return
+        setResolvingAccount(true)
+        setPayoutError('')
+        setAccountVerified(false)
+
+        try {
+            const res = await resolveBankAccount(accNum, bCode)
+            if (res.success && res.accountName) {
+                setAccountName(res.accountName)
+                setAccountVerified(true)
+                setPayoutError('')
+            } else {
+                setAccountName('')
+                setAccountVerified(false)
+                setPayoutError(res.error || 'Could not verify account name. Please check account number and bank.')
+            }
+        } catch (err) {
+            setPayoutError(err.message || 'Error resolving bank account.')
+            setAccountVerified(false)
+        } finally {
+            setResolvingAccount(false)
+        }
+    }, [])
+
+    const handleBankChange = (e) => {
+        const selectedCode = e.target.value
+        setBankCode(selectedCode)
+        const bankObj = NIGERIAN_BANKS.find(b => b.code === selectedCode)
+        setBankName(bankObj ? bankObj.name : '')
+        setAccountVerified(false)
+        if (accountNumber && accountNumber.length === 10 && selectedCode) {
+            handleResolve(accountNumber, selectedCode)
+        }
+    }
+
+    const handleAccountNumberChange = (e) => {
+        const clean = e.target.value.replace(/[^0-9]/g, '').slice(0, 10)
+        setAccountNumber(clean)
+        setAccountVerified(false)
+        if (clean.length === 10 && bankCode) {
+            handleResolve(clean, bankCode)
+        }
+    }
+
     const handleShareStore = async () => {
-        const url = window.location.origin
+        const url = `${window.location.origin}/seller/${currentUserId}`
         const shareData = {
             title: `${user?.displayName || 'Student'}'s Store on ZikShare`,
             text: `Browse study materials and listings from ${user?.displayName || 'me'} on ZikShare UNIZIK!`,
@@ -95,6 +146,15 @@ export default function SellerHubPage() {
             setPayoutError('Please enter a valid 10-digit NUBAN account number.')
             return
         }
+        if (!bankCode || !bankName) {
+            setPayoutError('Please select your bank.')
+            return
+        }
+        if (!accountName) {
+            setPayoutError('Please wait for account name verification.')
+            return
+        }
+
         setSavingPayout(true)
         setPayoutError('')
         setPayoutSuccess(false)
@@ -102,104 +162,86 @@ export default function SellerHubPage() {
         try {
             await upsertUser({
                 uid: currentUserId,
-                email: session?.user?.email || user?.email || '',
-                displayName: user?.displayName || 'Seller',
                 bank_name: bankName,
+                bank_code: bankCode,
                 account_number: accountNumber,
                 account_name: accountName,
-                isVerified: user?.isVerified || false,
-                createdAt: user?.createdAt || new Date().toISOString()
             })
-            await refreshUser()
             setPayoutSuccess(true)
-            setTimeout(() => setPayoutSuccess(false), 3500)
+            await refreshUser()
+            setTimeout(() => setPayoutSuccess(false), 4000)
         } catch (err) {
-            console.error('Payout save error:', err)
-            setPayoutError('Failed to save bank details. Please try again.')
+            setPayoutError(err.message || 'Failed to save payout settings.')
         } finally {
             setSavingPayout(false)
         }
     }
 
-    const handleToggleStatus = async (item) => {
-        const isCurrentlyActive = (item.status === 'Active' || item.status === 'active')
-        const nextStatus = isCurrentlyActive ? 'Sold' : (item.isDigital ? 'active' : 'Active')
+    const handleToggleStatus = async (listing) => {
         try {
-            await updateListing(item.id, { status: nextStatus })
+            const nextStatus = listing.status === 'Active' || listing.status === 'active' ? 'Sold' : 'Active'
+            await updateListing(listing.id, { status: nextStatus })
             setAnalytics(prev => ({
                 ...prev,
-                listings: prev.listings.map(l => l.id === item.id ? { ...l, status: nextStatus } : l)
+                listings: prev.listings.map(l => l.id === listing.id ? { ...l, status: nextStatus } : l)
             }))
             invalidateCacheByPrefix('listings')
-            invalidateCacheByPrefix(`listing-${item.id}`)
+            invalidateCacheByPrefix('digital')
         } catch (err) {
-            alert('Failed to update listing status.')
+            alert('Failed to update listing status: ' + err.message)
         }
     }
 
-    if (!isAuthenticated) {
-        return (
-            <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-background)' }}>
-                <header style={{ padding: '1rem', backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}><ArrowLeft size={20} /></button>
-                    <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 700 }}>Seller Hub</h1>
-                </header>
-                <div style={{ padding: '4rem 1rem', textAlign: 'center' }}>
-                    <div style={{ width: '4.5rem', height: '4.5rem', borderRadius: '9999px', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem' }}>
-                        <ShoppingBag size={32} color="#2563EB" />
-                    </div>
-                    <h2 style={{ margin: '0 0 0.5rem', fontSize: '1.25rem', fontWeight: 700 }}>Sign In to access Seller Hub</h2>
-                    <p style={{ margin: '0 0 1.5rem', fontSize: '0.875rem', color: 'var(--color-text-secondary)' }}>Track sales, manage study materials, and manage payouts.</p>
-                    <button onClick={() => navigate('/login')} style={{ padding: '0.875rem 2.5rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontSize: '0.9375rem', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(59,130,246,0.35)' }}>
-                        Sign In Now
-                    </button>
-                </div>
-            </div>
-        )
-    }
-
     const filteredListings = (analytics?.listings || []).filter(item => {
-        const matchesSearch = !searchQuery || item.title?.toLowerCase().includes(searchQuery.toLowerCase())
-        if (!matchesSearch) return false
-        if (inventoryFilter === 'Digital') return item.isDigital || item.original_storage_path
-        if (inventoryFilter === 'Physical') return !item.isDigital && !item.original_storage_path
-        if (inventoryFilter === 'Inactive') return item.status === 'Sold' || item.status === 'inactive'
-        return true
+        const matchesCategory = 
+            inventoryFilter === 'All' ? true :
+            inventoryFilter === 'Digital' ? item.isDigital :
+            inventoryFilter === 'Physical' ? !item.isDigital :
+            inventoryFilter === 'Inactive' ? (item.status === 'Sold' || item.status === 'inactive') : true
+
+        const matchesSearch = !searchQuery || 
+            item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            item.category?.toLowerCase().includes(searchQuery.toLowerCase())
+
+        return matchesCategory && matchesSearch
     })
+
+    const tabs = [
+        { id: 'analytics', label: 'Analytics', icon: TrendingUp },
+        { id: 'inventory', label: `Inventory (${analytics?.totalListings || 0})`, icon: Package },
+        { id: 'orders', label: `Orders (${analytics?.totalSalesCount || 0})`, icon: ShoppingBag },
+        { id: 'payout', label: 'Payouts', icon: Building2 },
+    ]
 
     return (
         <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', paddingBottom: '5rem' }}>
-            {/* Top Navigation Bar */}
-            <header style={{ position: 'sticky', top: 0, zIndex: 40, backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', padding: '0.875rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backdropFilter: 'blur(10px)' }}>
+            {/* Header Toolbar */}
+            <header style={{ position: 'sticky', top: 0, zIndex: 40, backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', padding: '0.875rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <button onClick={() => navigate('/profile')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
+                    <button onClick={() => navigate('/profile')} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem', color: 'var(--color-text-primary)' }}>
                         <ArrowLeft size={20} />
                     </button>
                     <div>
-                        <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                            Seller Hub <Sparkles size={16} color="#EAB308" />
+                        <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                            Seller Hub <Sparkles size={16} color="#F59E0B" />
                         </h1>
-                        <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>{user?.displayName || 'Store Dashboard'}</p>
+                        <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>UNIZIK Merchant Dashboard</span>
                     </div>
                 </div>
+
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button onClick={handleShareStore} style={{ padding: '0.5rem 0.75rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', backgroundColor: 'white', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                        <Share2 size={14} /> Share
+                    <button onClick={handleShareStore} title="Share your public catalog link" style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        <Share2 size={16} color="var(--color-text-primary)" />
                     </button>
-                    <button onClick={() => navigate('/post')} style={{ padding: '0.5rem 0.875rem', borderRadius: '0.625rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.375rem', boxShadow: '0 2px 8px rgba(59,130,246,0.3)' }}>
-                        <Plus size={14} /> Upload
+                    <button onClick={() => navigate('/post')} style={{ padding: '0.375rem 0.875rem', borderRadius: '0.625rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.375rem', boxShadow: '0 2px 8px rgba(59,130,246,0.3)' }}>
+                        <Plus size={16} /> New Material
                     </button>
                 </div>
             </header>
 
             {/* Navigation Tabs */}
-            <div style={{ backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', display: 'flex', padding: '0 0.5rem', overflowX: 'auto' }} className="hide-scrollbar">
-                {[
-                    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-                    { id: 'inventory', label: `Inventory (${analytics?.totalListings || 0})`, icon: Package },
-                    { id: 'orders', label: `Sales & Orders (${analytics?.orders?.length || 0})`, icon: ShoppingBag },
-                    { id: 'payout', label: 'Payout Settings', icon: Building2 },
-                ].map(tab => {
+            <div style={{ display: 'flex', backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', padding: '0 0.5rem', overflowX: 'auto' }} className="hide-scrollbar">
+                {tabs.map(tab => {
                     const Icon = tab.icon
                     const isActive = activeTab === tab.id
                     return (
@@ -207,18 +249,20 @@ export default function SellerHubPage() {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             style={{
-                                padding: '0.875rem 1rem',
+                                flex: 1,
+                                minWidth: '5.5rem',
+                                padding: '0.75rem 0.5rem',
                                 border: 'none',
-                                borderBottom: isActive ? '2px solid var(--color-brand)' : '2px solid transparent',
+                                borderBottom: isActive ? '2.5px solid var(--color-brand)' : '2.5px solid transparent',
                                 backgroundColor: 'transparent',
                                 color: isActive ? 'var(--color-brand)' : 'var(--color-text-secondary)',
                                 fontWeight: isActive ? 700 : 500,
-                                fontSize: '0.8125rem',
-                                fontFamily: 'inherit',
+                                fontSize: '0.75rem',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.5rem',
+                                justifyContent: 'center',
+                                gap: '0.375rem',
                                 whiteSpace: 'nowrap',
                                 transition: 'all 0.2s',
                             }}
@@ -400,7 +444,7 @@ export default function SellerHubPage() {
                                                     {/* Thumbnail */}
                                                     <div style={{ width: '4.5rem', height: '4.5rem', borderRadius: '0.75rem', overflow: 'hidden', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: '1px solid var(--color-border)' }}>
                                                         {imageUrl ? (
-                                                            <img src={imageUrl} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                             <img src={imageUrl} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                         ) : (
                                                             <span style={{ fontSize: '1.75rem' }}>{isDigital ? '📄' : '📦'}</span>
                                                         )}
@@ -525,50 +569,62 @@ export default function SellerHubPage() {
                             <form onSubmit={handleSavePayout}>
                                 {/* Bank Selector */}
                                 <div style={{ marginBottom: '1rem' }}>
-                                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.375rem' }}>Bank Name</label>
+                                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.375rem' }}>Select Bank *</label>
                                     <select
-                                        value={bankName}
-                                        onChange={(e) => setBankName(e.target.value)}
+                                        value={bankCode}
+                                        onChange={handleBankChange}
                                         required
                                         style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem', fontFamily: 'inherit', outline: 'none', backgroundColor: 'white', boxSizing: 'border-box' }}
                                     >
                                         <option value="">Select your bank...</option>
                                         {NIGERIAN_BANKS.map(b => (
-                                            <option key={b} value={b}>{b}</option>
+                                            <option key={b.code} value={b.code}>{b.name}</option>
                                         ))}
                                     </select>
                                 </div>
 
                                 {/* Account Number */}
                                 <div style={{ marginBottom: '1rem' }}>
-                                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.375rem' }}>NUBAN Account Number (10 Digits)</label>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
+                                        <label style={{ fontSize: '0.75rem', fontWeight: 700 }}>NUBAN Account Number (10 Digits) *</label>
+                                        {resolvingAccount && (
+                                            <span style={{ fontSize: '0.6875rem', color: 'var(--color-brand)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                <Loader2 size={12} className="animate-spin" /> Verifying account with NIBSS...
+                                            </span>
+                                        )}
+                                    </div>
                                     <input
                                         type="tel"
                                         maxLength={10}
                                         placeholder="0123456789"
                                         value={accountNumber}
-                                        onChange={(e) => setAccountNumber(e.target.value.replace(/[^0-9]/g, ''))}
+                                        onChange={handleAccountNumberChange}
                                         required
-                                        style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem', fontFamily: 'monospace', letterSpacing: '0.05em', outline: 'none', boxSizing: 'border-box' }}
+                                        style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: `1px solid ${accountVerified ? '#10B981' : 'var(--color-border)'}`, fontSize: '0.875rem', fontFamily: 'monospace', letterSpacing: '0.05em', outline: 'none', boxSizing: 'border-box' }}
                                     />
                                 </div>
 
-                                {/* Account Name */}
+                                {/* Auto-Resolved Account Name */}
                                 <div style={{ marginBottom: '1.25rem' }}>
-                                    <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.375rem' }}>Account Holder Name</label>
-                                    <input
-                                        type="text"
-                                        placeholder="e.g. Victor Chukwudebelu"
-                                        value={accountName}
-                                        onChange={(e) => setAccountName(e.target.value)}
-                                        required
-                                        style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
-                                    />
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
+                                        <label style={{ fontSize: '0.75rem', fontWeight: 700 }}>Verified Account Name</label>
+                                        {accountVerified && (
+                                            <span style={{ fontSize: '0.625rem', color: '#166534', backgroundColor: '#DCFCE7', padding: '0.125rem 0.375rem', borderRadius: '0.25rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                <Check size={10} strokeWidth={3} /> Verified
+                                            </span>
+                                        )}
+                                    </div>
+                                    <div style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', backgroundColor: accountVerified ? '#F0FDF4' : '#F8FAFC', border: `1px solid ${accountVerified ? '#BBF7D0' : 'var(--color-border)'}`, minHeight: '2.5rem', display: 'flex', alignItems: 'center', boxSizing: 'border-box' }}>
+                                        <span style={{ fontSize: '0.8125rem', fontWeight: accountVerified ? 800 : 500, color: accountVerified ? '#166534' : 'var(--color-text-muted)' }}>
+                                            {resolvingAccount ? 'Resolving account holder name...' : accountName || 'Enter 10 digits and select bank to resolve name'}
+                                        </span>
+                                    </div>
                                 </div>
 
                                 {payoutError && (
-                                    <div style={{ padding: '0.625rem 0.875rem', borderRadius: '0.625rem', backgroundColor: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontSize: '0.75rem', fontWeight: 600, marginBottom: '1rem' }}>
-                                        {payoutError}
+                                    <div style={{ padding: '0.625rem 0.875rem', borderRadius: '0.625rem', backgroundColor: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontSize: '0.75rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                        <AlertCircle size={14} style={{ flexShrink: 0 }} />
+                                        <span>{payoutError}</span>
                                     </div>
                                 )}
 
@@ -580,27 +636,36 @@ export default function SellerHubPage() {
 
                                 <button
                                     type="submit"
-                                    disabled={savingPayout}
+                                    disabled={savingPayout || resolvingAccount || !accountVerified}
                                     style={{
                                         width: '100%',
                                         padding: '0.875rem',
                                         borderRadius: '0.75rem',
                                         border: 'none',
-                                        background: 'linear-gradient(135deg, #10B981, #059669)',
+                                        background: (!accountVerified || savingPayout) ? '#94A3B8' : 'linear-gradient(135deg, #10B981, #059669)',
                                         color: 'white',
                                         fontSize: '0.875rem',
                                         fontWeight: 700,
                                         fontFamily: 'inherit',
-                                        cursor: savingPayout ? 'not-allowed' : 'pointer',
+                                        cursor: (!accountVerified || savingPayout) ? 'not-allowed' : 'pointer',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
                                         gap: '0.5rem',
-                                        boxShadow: '0 4px 12px rgba(16,185,129,0.3)'
+                                        boxShadow: accountVerified ? '0 4px 12px rgba(16,185,129,0.3)' : 'none'
                                     }}
                                 >
-                                    {savingPayout ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
-                                    <span>Save Settlement Details</span>
+                                    {savingPayout ? (
+                                        <>
+                                            <Loader2 size={18} className="animate-spin" />
+                                            <span>Saving Settlement Account...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <CheckCircle2 size={18} />
+                                            <span>Save Settlement Details</span>
+                                        </>
+                                    )}
                                 </button>
                             </form>
                         </div>

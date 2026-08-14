@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Search as SearchIcon, X, SlidersHorizontal, ChevronDown } from 'lucide-react'
+import { Search as SearchIcon, X, SlidersHorizontal } from 'lucide-react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
-import { getListings } from '../lib/database'
+import { getListings, getDigitalProducts } from '../lib/database'
 
-const categories = ['All', 'Electronics', 'Books', 'Fashion', 'Hostel', 'Services']
-const conditions = ['All', 'Brand New', 'Like New', 'Fairly Used']
+const categories = ['All', 'Electronics', 'Books', 'Fashion', 'Hostel', 'Services', 'Engineering', 'Science', 'Past Questions', 'Notes']
+const conditions = ['All', 'Brand New', 'Like New', 'Fairly Used', 'Digital PDF']
 const sortOptions = [
     { value: 'newest', label: 'Newest First' },
     { value: 'price-low', label: 'Price: Low → High' },
@@ -30,27 +30,47 @@ export default function SearchPage() {
     const fetchResults = useCallback(async () => {
         setIsLoading(true)
         try {
-            const data = await getListings({
-                category: activeCategory,
-                search: query || undefined,
-                limit: 30,
-            })
-            let sorted = data || []
+            const [physical, digital] = await Promise.all([
+                getListings({
+                    category: activeCategory,
+                    search: query || undefined,
+                    limit: 30,
+                }).catch(() => []),
+                getDigitalProducts({
+                    category: activeCategory,
+                    search: query || undefined,
+                    limit: 30,
+                }).catch(() => [])
+            ])
+
+            const digitalTagged = (digital || []).map(d => ({
+                ...d,
+                isDigital: true,
+                createdAt: d.created_at,
+                sellerId: d.seller_id,
+                condition: 'Digital PDF',
+                images: d.cover_image_url ? [d.cover_image_url] : [],
+                priceInKobo: d.price,
+                price: d.price / 100,
+            }))
+
+            let combined = [...(physical || []), ...digitalTagged]
 
             // Client-side condition filter
             if (conditionFilter !== 'All') {
-                sorted = sorted.filter(item => item.condition === conditionFilter)
+                combined = combined.filter(item => item.condition === conditionFilter)
             }
 
             // Client-side sort
             if (sortBy === 'price-low') {
-                sorted = [...sorted].sort((a, b) => a.price - b.price)
+                combined.sort((a, b) => a.price - b.price)
             } else if (sortBy === 'price-high') {
-                sorted = [...sorted].sort((a, b) => b.price - a.price)
+                combined.sort((a, b) => b.price - a.price)
+            } else {
+                combined.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
             }
-            // 'newest' is already the default server order
 
-            setResults(sorted)
+            setResults(combined)
         } catch (err) {
             console.error('Search error:', err)
             setResults([])
@@ -94,7 +114,7 @@ export default function SearchPage() {
                         <SearchIcon size={16} color="var(--color-brand)" />
                         <input
                             type="text"
-                            placeholder="Search items, books, electronics..."
+                            placeholder="Search items, notes, electronics..."
                             value={query}
                             onChange={e => setQuery(e.target.value)}
                             autoFocus
@@ -257,7 +277,12 @@ export default function SearchPage() {
                         {results.map(item => {
                             const placeholderColors = ['#DBEAFE', '#E0E7FF', '#D9F99D', '#FBCFE8', '#E9D5FF', '#FDE68A']
                             const bgColor = placeholderColors[(item.id?.charCodeAt?.(0) || 0) % placeholderColors.length]
-                            const condMap = { 'Brand New': 'condition-new', 'Like New': 'condition-like-new', 'Fairly Used': 'condition-used' }
+                            const condMap = {
+                                'Brand New': 'condition-new',
+                                'Like New': 'condition-like-new',
+                                'Fairly Used': 'condition-used',
+                                'Digital PDF': 'condition-like-new',
+                            }
                             const imageUrl = item.images?.[0]
 
                             return (
@@ -279,10 +304,10 @@ export default function SearchPage() {
                                         {imageUrl ? (
                                             <img src={imageUrl} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                         ) : (
-                                            '📦'
+                                            item.isDigital ? '📄' : '📦'
                                         )}
                                         <div style={{ position: 'absolute', top: '0.5rem', left: '0.5rem' }}>
-                                            <span className={`condition-badge ${condMap[item.condition] || 'condition-used'}`}>{item.condition}</span>
+                                            <span className={`condition-badge ${condMap[item.condition] || 'condition-used'}`}>{item.condition || 'Available'}</span>
                                         </div>
                                     </div>
                                     <div style={{ padding: '0.75rem' }}>

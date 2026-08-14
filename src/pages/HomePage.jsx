@@ -1,4 +1,4 @@
-import { Search, SlidersHorizontal, ChevronRight, MapPin, ShieldCheck, Zap, TrendingUp, Loader2 } from 'lucide-react'
+import { Search, SlidersHorizontal, ChevronRight, MapPin, ShieldCheck, Zap, TrendingUp } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListings, getDigitalProducts } from '../lib/database'
@@ -24,8 +24,9 @@ function ConditionBadge({ condition }) {
         'Brand New': 'condition-new',
         'Like New': 'condition-like-new',
         'Fairly Used': 'condition-used',
+        'Digital PDF': 'condition-like-new',
     }
-    return <span className={`condition-badge ${classMap[condition] || 'condition-used'}`}>{condition}</span>
+    return <span className={`condition-badge ${classMap[condition] || 'condition-used'}`}>{condition || 'Available'}</span>
 }
 
 function ListingCard({ listing, navigate }) {
@@ -69,7 +70,7 @@ function ListingCard({ listing, navigate }) {
                 {imageUrl ? (
                     <img src={imageUrl} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                    '📦'
+                    listing.isDigital ? '📄' : '📦'
                 )}
                 <div style={{ position: 'absolute', top: '0.5rem', left: '0.5rem' }}>
                     <ConditionBadge condition={listing.condition} />
@@ -115,15 +116,24 @@ export default function HomePage() {
         'listings-home',
         async () => {
             const [physical, digital] = await Promise.all([
-                getListings({ limit: 20 }),
-                getDigitalProducts({ limit: 20 })
+                getListings({ limit: 20 }).catch(() => []),
+                getDigitalProducts({ limit: 20 }).catch(() => [])
             ])
             // Tag digital products
-            const digitalTagged = digital.map(d => ({ ...d, isDigital: true, createdAt: d.created_at, sellerId: d.seller_id }))
+            const digitalTagged = (digital || []).map(d => ({
+                ...d,
+                isDigital: true,
+                createdAt: d.created_at,
+                sellerId: d.seller_id,
+                condition: 'Digital PDF',
+                images: d.cover_image_url ? [d.cover_image_url] : [],
+                priceInKobo: d.price,
+                price: d.price / 100, // normalized to Naira for display
+            }))
 
             // Merge and sort
-            const merged = [...(physical || []), ...(digitalTagged || [])]
-            merged.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            const merged = [...(physical || []), ...digitalTagged]
+            merged.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
             return merged.slice(0, 20)
         },
         { ttl: 5 * 60 * 1000 } // 5 min cache

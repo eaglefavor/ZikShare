@@ -1,11 +1,9 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, AlertTriangle } from 'lucide-react'
+import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, FileText } from 'lucide-react'
 import { useState } from 'react'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListing } from '../lib/database'
 import PaystackCheckout from '../components/PaystackCheckout'
-
-
 import { isSaved as checkSaved, toggleSaved } from '../lib/savedItems'
 import { getOrCreateConversation } from '../lib/messaging'
 import { useAuth } from '../contexts/AuthContext'
@@ -15,10 +13,12 @@ function formatNaira(amount) {
 }
 
 function formatDate(iso) {
+    if (!iso) return 'Recent'
     return new Intl.DateTimeFormat('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(iso))
 }
 
 function timeAgo(iso) {
+    if (!iso) return 'recently'
     const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
     if (seconds < 60) return 'just now'
     const minutes = Math.floor(seconds / 60)
@@ -54,6 +54,7 @@ export default function ItemDetailPage() {
         'Brand New': 'condition-new',
         'Like New': 'condition-like-new',
         'Fairly Used': 'condition-used',
+        'Digital PDF': 'condition-like-new',
     }
 
     const handleContactSeller = async () => {
@@ -103,7 +104,8 @@ export default function ItemDetailPage() {
     const seller = item.users || {}
     const images = item.images?.length ? item.images : [null]
     const sellerPhone = seller.phoneNumber || ''
-    const isOwnListing = session?.user?.id === item.sellerId
+    const currentUserId = session?.user?.id
+    const isOwnListing = currentUserId && (currentUserId === item.sellerId || currentUserId === item.seller_id)
 
     const handleShare = async () => {
         if (navigator.share) {
@@ -118,11 +120,16 @@ export default function ItemDetailPage() {
 
     return (
         <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-background)', paddingBottom: '5.5rem' }}>
-            {/* Image Carousel */}
+            {/* Image Carousel / Banner */}
             <div style={{ position: 'relative' }}>
                 <div style={{ width: '100%', height: '300px', backgroundColor: placeholderColors[currentImage % placeholderColors.length], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem', overflow: 'hidden' }}>
                     {images[currentImage] ? (
                         <img src={images[currentImage]} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : item.isDigital ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', color: '#3B82F6' }}>
+                            <FileText size={56} />
+                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-secondary)' }}>PDF Material</span>
+                        </div>
                     ) : '📦'}
                 </div>
 
@@ -184,20 +191,36 @@ export default function ItemDetailPage() {
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                     <p className="price-tag" style={{ margin: 0, fontSize: '1.5rem' }}>{formatNaira(item.price)}</p>
-                    <span className={`condition-badge ${condClass[item.condition] || ''}`}>{item.condition}</span>
+                    <span className={`condition-badge ${condClass[item.condition] || 'condition-like-new'}`}>{item.condition || 'Available'}</span>
                 </div>
 
                 {/* Action Buttons */}
                 {!isOwnListing && (
-                    <div style={{ display: 'flex', gap: '0.625rem', marginBottom: '0.5rem' }}>
-                        <button onClick={() => setShowCallSheet(true)} style={{ flex: 0, width: '3.5rem', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'white', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: 'var(--color-text-primary)' }}>
-                            <Phone size={18} />
-                        </button>
-                        <button onClick={handleContactSeller} disabled={contacting} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: contacting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(59,130,246,0.3)', opacity: contacting ? 0.7 : 1 }}>
-                            <MessageCircle size={16} />
-                            {contacting ? 'Opening chat...' : 'Chat with Seller'}
-                        </button>
-                    </div>
+                    item.isDigital ? (
+                        <div style={{ marginBottom: '0.5rem' }}>
+                            {session?.user ? (
+                                <PaystackCheckout
+                                    product={item}
+                                    user={session.user}
+                                    onSuccess={(ref) => navigate(`/payment/success?ref=${ref}`)}
+                                />
+                            ) : (
+                                <button onClick={() => navigate('/login')} style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.9375rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' }}>
+                                    Login to Purchase
+                                </button>
+                            )}
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', gap: '0.625rem', marginBottom: '0.5rem' }}>
+                            <button onClick={() => setShowCallSheet(true)} style={{ flex: 0, width: '3.5rem', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'white', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: 'var(--color-text-primary)' }}>
+                                <Phone size={18} />
+                            </button>
+                            <button onClick={handleContactSeller} disabled={contacting} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: contacting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(59,130,246,0.3)', opacity: contacting ? 0.7 : 1 }}>
+                                <MessageCircle size={16} />
+                                {contacting ? 'Opening chat...' : 'Chat with Seller'}
+                            </button>
+                        </div>
+                    )
                 )}
             </div>
 
@@ -214,8 +237,8 @@ export default function ItemDetailPage() {
                 <h3 style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', fontWeight: 700 }}>Details</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                     <div>
-                        <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600 }}>{item.condition}</p>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Condition</p>
+                        <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600 }}>{item.condition || (item.isDigital ? 'Digital PDF' : 'Used')}</p>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Type / Condition</p>
                     </div>
                     <div>
                         <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600 }}>{item.category}</p>
@@ -226,8 +249,12 @@ export default function ItemDetailPage() {
                         <p style={{ margin: '0.125rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Listed</p>
                     </div>
                     <div>
-                        <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600 }}>{item.status || 'Active'}</p>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Status</p>
+                        <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600 }}>
+                            {item.file_size_bytes ? `${(item.file_size_bytes / 1024 / 1024).toFixed(1)} MB` : (item.status || 'Active')}
+                        </p>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                            {item.file_size_bytes ? 'File Size' : 'Status'}
+                        </p>
                     </div>
                 </div>
             </div>
@@ -251,14 +278,23 @@ export default function ItemDetailPage() {
                 </div>
             </div>
 
-            {/* Safe Meetup */}
+            {/* Safe Meetup (Physical Items) or Instant Delivery Badge (Digital Items) */}
             <div style={{ margin: '0.5rem 0 1rem', padding: '1rem', backgroundColor: 'white' }}>
-                <div style={{ padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                    <MapPin size={16} color="#166534" />
-                    <p style={{ margin: 0, fontSize: '0.6875rem', color: '#166534', lineHeight: 1.3 }}>
-                        <strong>Safe Meetup:</strong> Meet at Garba Square, Chisco Park, or the Student Center.
-                    </p>
-                </div>
+                {item.isDigital ? (
+                    <div style={{ padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                        <FileText size={18} color="#2563EB" />
+                        <p style={{ margin: 0, fontSize: '0.6875rem', color: '#1E40AF', lineHeight: 1.3 }}>
+                            <strong>Instant Access:</strong> Encrypted PDF copy is instantly available for download after payment.
+                        </p>
+                    </div>
+                ) : (
+                    <div style={{ padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                        <MapPin size={16} color="#166534" />
+                        <p style={{ margin: 0, fontSize: '0.6875rem', color: '#166534', lineHeight: 1.3 }}>
+                            <strong>Safe Meetup:</strong> Meet at Garba Square, Chisco Park, or the Student Center.
+                        </p>
+                    </div>
+                )}
             </div>
 
             {/* Sticky Bottom CTA */}
@@ -267,9 +303,9 @@ export default function ItemDetailPage() {
                     {item.isDigital ? (
                         session?.user ? (
                             <PaystackCheckout
-                              product={item}
-                              user={session?.user}
-                              onSuccess={(ref) => navigate(`/payment/success?ref=${ref}`)}
+                                product={item}
+                                user={session.user}
+                                onSuccess={(ref) => navigate(`/payment/success?ref=${ref}`)}
                             />
                         ) : (
                             <button onClick={() => navigate('/login')} style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.9375rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' }}>

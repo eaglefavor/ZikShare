@@ -2,11 +2,34 @@ import { useState } from 'react'
 import { Camera, X, FileText, Loader2, CheckCircle, UploadCloud } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { createDigitalProduct } from '../lib/database'
+import { createDigitalProduct, upsertUser } from '../lib/database'
 import supabase from '../lib/supabase'
 import { uploadImage } from '../lib/cloudinary'
+import { invalidateCacheByPrefix } from '../lib/cache'
 
 const categories = ['Engineering', 'Science', 'Arts', 'Medical', 'Past Questions', 'Notes', 'Other']
+
+function generateUUID() {
+    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+        try {
+            return crypto.randomUUID();
+        } catch {
+            // fallback
+        }
+    }
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        const r = (Math.random() * 16) | 0;
+        const v = c === 'x' ? r : (r & 0x3) | 0x8;
+        return v.toString(16);
+    });
+}
+
+function withTimeout(promise, ms = 45000, errorMsg = 'Upload timed out. Please check your internet connection.') {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error(errorMsg)), ms)),
+    ]);
+}
 
 export default function PostPage() {
     const navigate = useNavigate()
@@ -19,11 +42,12 @@ export default function PostPage() {
     const [coverPhoto, setCoverPhoto] = useState(null)
     const [preview, setPreview] = useState(null)
     const [loading, setLoading] = useState(false)
+    const [uploadStep, setUploadStep] = useState('')
     const [success, setSuccess] = useState(false)
     const [error, setError] = useState('')
 
     const handlePhotoAdd = (e) => {
-        const file = e.target.files[0]
+        const file = e.target.files?.[0]
         if (!file) return
         setCoverPhoto(file)
         const reader = new FileReader()
@@ -37,77 +61,124 @@ export default function PostPage() {
         setPreview(null)
     }
 
+    const handlePdfSelect = (e) => {
+        const file = e.target.files?.[0]
+        if (!file) return
+        if (file.size > 50 * 1024 * 1024) {
+            setError('PDF file is too large (maximum size is 50MB).')
+            return
+        }
+        setPdfFile(file)
+        setError('')
+    }
+
     const handleSubmit = async (e) => {
         e.preventDefault()
-        console.log("[DEBUG] Form Submitted");
-        console.log("[DEBUG] Current State:", { title, price, category, isAuthenticated, user, session });
 
         if (!isAuthenticated) {
-            console.log("[DEBUG] Not authenticated, redirecting to login");
             navigate('/login')
             return
         }
-        if (!title || !price || !category || !pdfFile) {
-            console.log("[DEBUG] Validation failed: missing required fields");
-            setError('Please fill in all required fields and select a PDF file.')
+        if (!title.trim() || !price || !category || !pdfFile) {
+            setError('Please fill in all required fields (title, price, category, and PDF file).')
             return
         }
 
-        console.log("[DEBUG] Setting loading state to true");
+        const numericPrice = parseFloat(price)
+        if (isNaN(numericPrice) || numericPrice <= 0) {
+            setError('Please enter a valid price in Naira.')
+            return
+        }
+
         setLoading(true)
         setError('')
+        setUploadStep('Preparing upload...')
 
         try {
-            const currentUserId = (session?.user?.id || user?.id);
-            console.log("[DEBUG] Evaluated currentUserId:", currentUserId);
+            const currentUserId = session?.user?.id || user?.uid || user?.id
 
             if (!currentUserId) {
-                console.error("[DEBUG] Error: No valid currentUserId found");
-                throw new Error("Not authenticated");
+                throw new Error('Your session expired. Please sign in again.')
             }
 
-            // Upload PDF
-            const fileName = `pdfs/${currentUserId}/${crypto.randomUUID()}.pdf`;
-            console.log("[DEBUG] Attempting to upload PDF to path:", fileName);
+            // Ensure user profile exists in public.users to prevent foreign key errors
+            try {
+                await upsertUser({
+                    uid: currentUserId,
+                    email: session?.user?.email || user?.email || '',
+                    displayName: user?.displayName || session?.user?.email?.split('@')[0] || 'Student',
+                    phoneNumber: user?.phoneNumber || '',
+                    department: user?.department || '',
+                    isVerified: user?.isVerified || false,
+                    createdAt: user?.createdAt || new Date().toISOString(),
+                })
+            } catch (userSyncErr) {
+                console.warn('Could not sync user before upload:', userSyncErr.message)
+            }
 
-            const { data: uploadData, error: uploadError } = await supabase.storage.from('digital-originals').upload(fileName, pdfFile, { contentType: 'application/pdf' });
+            // Upload Cover Photo if provided
+            let coverUrl = null
+            if (coverPhoto) {
+                setUploadStep('Uploading cover photo...')
+                try {
+                    coverUrl = await uploadImage(coverPhoto)
+                } catch (imgErr) {
+                    console.warn('Cover photo upload failed, proceeding without it:', imgErr.message)
+                }
+            }
+
+            // Upload PDF to Supabase Storage
+            setUploadStep('Uploading PDF document...')
+            const fileUuid = generateUUID()
+            const fileName = `pdfs/${currentUserId}/${fileUuid}.pdf`
+
+            const uploadPromise = supabase.storage
+                .from('digital-originals')
+                .upload(fileName, pdfFile, {
+                    contentType: 'application/pdf',
+                    upsert: true,
+                })
+
+            const { error: uploadError } = await withTimeout(
+                uploadPromise,
+                45000,
+                'PDF upload timed out after 45 seconds. Check your internet connection.'
+            )
 
             if (uploadError) {
-                console.error("[DEBUG] Supabase Storage upload error:", uploadError);
-                throw uploadError;
-            }
-            console.log("[DEBUG] PDF uploaded successfully:", uploadData);
-
-            let coverUrl = null;
-            if (coverPhoto) {
-                console.log("[DEBUG] Attempting to upload cover photo");
-                coverUrl = await uploadImage(coverPhoto);
-                console.log("[DEBUG] Cover photo uploaded successfully:", coverUrl);
+                console.error('Storage upload error:', uploadError)
+                throw new Error(`Storage upload failed: ${uploadError.message || 'Check storage bucket permissions'}`)
             }
 
-            console.log("[DEBUG] Attempting to create digital product in database");
-            const productData = await createDigitalProduct({
-                title,
-                description,
-                price: parseFloat(price) * 100, // stored in kobo
-                category,
-                original_storage_path: fileName,
-                file_size_bytes: pdfFile.size,
-                seller_id: currentUserId,
-                status: 'active',
-                cover_image_url: coverUrl
-            });
-            console.log("[DEBUG] Digital product created successfully:", productData);
+            // Create product entry in database
+            setUploadStep('Saving material listing...')
+            await withTimeout(
+                createDigitalProduct({
+                    title: title.trim(),
+                    description: description.trim(),
+                    price: Math.round(numericPrice * 100), // stored in kobo
+                    category,
+                    original_storage_path: fileName,
+                    file_size_bytes: pdfFile.size,
+                    seller_id: currentUserId,
+                    status: 'active',
+                    cover_image_url: coverUrl,
+                }),
+                15000,
+                'Database save timed out. Please try again.'
+            )
 
-            console.log("[DEBUG] Setting success state");
+            // Clear cache so new listing appears immediately
+            invalidateCacheByPrefix('listings')
+
             setSuccess(true)
-            setTimeout(() => navigate('/'), 2000)
+            setTimeout(() => navigate('/'), 1800)
         } catch (err) {
-            console.error('[DEBUG] Post error caught in catch block:', err);
-            setError(err.message || 'Failed to create listing. Check your connection and try again.')
+            console.error('Post error:', err)
+            setError(err?.message || 'Failed to upload material. Please try again.')
         } finally {
-            console.log("[DEBUG] Finally block reached, setting loading to false");
             setLoading(false)
+            setUploadStep('')
         }
     }
 
@@ -192,7 +263,7 @@ export default function PostPage() {
                                     {pdfFile ? `${(pdfFile.size / 1024 / 1024).toFixed(2)} MB` : 'Max 50MB'}
                                 </p>
                             </div>
-                            <input type="file" accept=".pdf" onChange={(e) => setPdfFile(e.target.files[0])} className="hidden" />
+                            <input type="file" accept=".pdf,application/pdf" onChange={handlePdfSelect} className="hidden" />
                         </label>
                     </div>
 
@@ -223,7 +294,7 @@ export default function PostPage() {
                                     value={price}
                                     onChange={e => setPrice(e.target.value)}
                                     required
-                                    min="0"
+                                    min="1"
                                     className="w-full pl-10 pr-4 py-3.5 rounded-2xl border border-gray-200 bg-gray-50 focus:bg-white focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 transition-all outline-none text-sm font-medium"
                                 />
                             </div>
@@ -285,7 +356,7 @@ export default function PostPage() {
                             {loading ? (
                                 <>
                                     <Loader2 className="w-5 h-5 animate-spin" />
-                                    <span>Uploading & Encrypting...</span>
+                                    <span>{uploadStep || 'Uploading material...'}</span>
                                 </>
                             ) : (
                                 <>

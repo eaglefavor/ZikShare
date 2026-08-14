@@ -6,7 +6,7 @@ import { upsertUser } from '../lib/database'
 
 export default function SettingsPage() {
     const navigate = useNavigate()
-    const { user, isAuthenticated, updateUser, refreshUser } = useAuth()
+    const { user, session, isAuthenticated, updateUser, refreshUser } = useAuth()
     const [displayName, setDisplayName] = useState(user?.displayName || '')
     const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '')
     const [department, setDepartment] = useState(user?.department || '')
@@ -25,17 +25,22 @@ export default function SettingsPage() {
         setSaved(false)
 
         try {
+            const currentUserId = user?.uid || user?.id || session?.user?.id;
+            if (!currentUserId) {
+                throw new Error('Not authenticated')
+            }
+
             const updates = {
                 displayName: displayName.trim(),
                 phoneNumber: phoneNumber.trim(),
                 department: department.trim(),
             }
             await upsertUser({
-                uid: user.uid,
-                email: user.email,
+                uid: currentUserId,
+                email: user?.email || session?.user?.email,
                 ...updates,
-                isVerified: user.isVerified,
-                createdAt: user.createdAt,
+                isVerified: user?.isVerified || false,
+                createdAt: user?.createdAt || new Date().toISOString(),
             })
             // Update in-memory state immediately + reload from DB for full sync
             updateUser(updates)

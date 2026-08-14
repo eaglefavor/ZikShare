@@ -2,31 +2,45 @@ import { usePaystackPayment } from 'react-paystack'
 import { useState, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
 import { calculatePaystackFeeAndTotal, PAYSTACK_PUBLIC_KEY } from '../lib/paystack'
-import { ShieldAlert, X, FileText, CheckCircle2, Lock, ArrowRight, Loader2 } from 'lucide-react'
+import { ShieldAlert, X, FileText, Lock, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react'
 
 function formatNaira(amount) {
   return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount || 0)
 }
 
-function deriveNameFromEmail(email, fallbackName) {
-  if (fallbackName && fallbackName !== 'Student' && fallbackName.trim().length > 0) {
-    return fallbackName
+export function deriveNameFromEmail(email) {
+  if (!email) return 'UNIZIK STUDENT'
+  const username = email.split('@')[0] || ''
+  
+  // Clean student email prefixes:
+  // e.g. "chidi.okeke" -> "Chidi Okeke"
+  // e.g. "2021174092.ifeanyi" -> "Ifeanyi"
+  // e.g. "amaka_nwosu" -> "Amaka Nwosu"
+  const cleaned = username
+    .replace(/^[0-9]+[._-]/g, '') // remove leading matric numbers if any
+    .replace(/[._-]+/g, ' ')
+    .trim()
+
+  if (!cleaned) {
+    return username.toUpperCase()
   }
-  if (!email) return 'UNIZIK Student'
-  const username = email.split('@')[0]
-  // Convert "chidi.okeke" or "john_doe" or "victor12" into Title Case "Chidi Okeke"
-  const clean = username.replace(/[0-9]/g, '').replace(/[._-]/g, ' ').trim()
-  if (!clean) return username.toUpperCase()
-  return clean.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ')
+
+  return cleaned
+    .split(' ')
+    .filter(Boolean)
+    .map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(' ')
 }
 
 const PaystackCheckout = ({ product, user, onSuccess }) => {
   const [showModal, setShowModal] = useState(false)
   const [regNumber, setRegNumber] = useState('')
-  const [buyerName, setBuyerName] = useState(() => deriveNameFromEmail(user?.email, user?.displayName))
   const [acknowledged, setAcknowledged] = useState(false)
   const [creatingOrder, setCreatingOrder] = useState(false)
   const [inputError, setInputError] = useState('')
+
+  // Strictly derive non-editable buyer name from student email
+  const buyerName = useMemo(() => deriveNameFromEmail(user?.email), [user?.email])
 
   // Price conversion
   const priceInKobo = product.priceInKobo || Math.round((product.price || 0) * 100)
@@ -48,7 +62,7 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
       watermark_text: watermarkText,
       custom_fields: [
         { display_name: 'Product', variable_name: 'product_name', value: product.title },
-        { display_name: 'Buyer Name', variable_name: 'buyer_name', value: buyerName },
+        { display_name: 'Buyer Name (Derived)', variable_name: 'buyer_name', value: buyerName },
         { display_name: 'Reg Number', variable_name: 'reg_number', value: regNumber.trim().toUpperCase() },
         { display_name: 'Seller', variable_name: 'seller_id', value: product.seller_id || product.sellerId }
       ]
@@ -70,10 +84,6 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
     e.preventDefault()
     if (!regNumber.trim()) {
       setInputError('Please enter your UNIZIK Registration Number.')
-      return
-    }
-    if (!buyerName.trim()) {
-      setInputError('Please confirm your full name.')
       return
     }
     if (!acknowledged) {
@@ -186,31 +196,37 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
                   </h4>
                 </div>
                 <p style={{ margin: 0, fontSize: '0.75rem', color: '#7F1D1D', lineHeight: 1.5, fontWeight: 600 }}>
-                  Every page of this encrypted PDF will be <strong>permanently watermarked</strong> with your <strong>Full Name</strong> and <strong>Registration Number</strong>.
+                  Every page of this encrypted PDF will be <strong>permanently watermarked</strong> with your <strong>Full Name ({buyerName})</strong> and <strong>Registration Number</strong>.
                 </p>
                 <p style={{ margin: '0.5rem 0 0', fontSize: '0.6875rem', color: '#991B1B', lineHeight: 1.4 }}>
                   Distributing, sharing on WhatsApp/Telegram, or re-uploading this document anywhere will expose your identity and Registration Number, resulting in academic disciplinary actions.
                 </p>
               </div>
 
-              {/* Form inputs */}
+              {/* NON-EDITABLE Watermark Name derived from student email */}
               <div style={{ marginBottom: '1rem' }}>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.375rem', color: '#0F172A' }}>
-                  Your Full Name (Watermark Name) *
-                </label>
-                <input
-                  type="text"
-                  value={buyerName}
-                  onChange={(e) => setBuyerName(e.target.value)}
-                  placeholder="e.g. Chidi Okeke"
-                  required
-                  style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
-                />
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0F172A' }}>
+                    Buyer Name (Watermark Stamp)
+                  </label>
+                  <span style={{ fontSize: '0.625rem', color: '#059669', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem', backgroundColor: '#ECFDF5', padding: '0.125rem 0.375rem', borderRadius: '0.25rem' }}>
+                    <Lock size={10} /> Locked to Email
+                  </span>
+                </div>
+                <div style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', backgroundColor: '#F1F5F9', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxSizing: 'border-box' }}>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 800, color: '#0F172A' }}>
+                    {buyerName}
+                  </span>
+                  <span style={{ fontSize: '0.6875rem', color: '#64748B', fontFamily: 'monospace' }}>
+                    {user?.email}
+                  </span>
+                </div>
                 <p style={{ margin: '0.25rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>
-                  Derived from your registered account email ({user?.email})
+                  Automatically extracted from your verified UNIZIK student email. Cannot be edited.
                 </p>
               </div>
 
+              {/* Registration Number Input */}
               <div style={{ marginBottom: '1.25rem' }}>
                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.375rem', color: '#0F172A' }}>
                   UNIZIK Registration Number *

@@ -31,39 +31,16 @@ export const NIGERIAN_BANKS = [
 ];
 
 /**
- * Resolves a Nigerian bank account number via Vercel serverless / Paystack API
+ * Resolves a Nigerian bank account number via Supabase Edge Function
  * @param {string} accountNumber 10-digit NUBAN
  * @param {string} bankCode CBN bank code
  * @returns {Promise<{ success: boolean, accountName?: string, error?: string }>}
  */
 export async function resolveBankAccount(accountNumber, bankCode) {
   if (!accountNumber || accountNumber.length !== 10 || !bankCode) {
-    return { success: false, error: 'Enter a valid 10-digit NUBAN account number.' };
+    return { success: false, error: 'Enter a valid 10-digit NUBAN account number and select a bank.' };
   }
 
-  // 1. Direct Vercel Serverless Function (/api/resolve-bank)
-  try {
-    const res = await fetch(
-      `/api/resolve-bank?account_number=${encodeURIComponent(accountNumber.trim())}&bank_code=${encodeURIComponent(bankCode.trim())}`
-    );
-    if (res.ok) {
-      const json = await res.json();
-      if (json?.status && json?.data?.account_name) {
-        return {
-          success: true,
-          accountName: json.data.account_name,
-          accountNumber: json.data.account_number,
-        };
-      }
-      if (json?.message) {
-        return { success: false, error: json.message };
-      }
-    }
-  } catch (apiErr) {
-    console.warn('Vercel API route lookup failed, attempting fallback:', apiErr);
-  }
-
-  // 2. Fallback to Supabase Edge Function
   try {
     const { data, error } = await supabase.functions.invoke('resolve-bank-account', {
       body: {
@@ -72,21 +49,25 @@ export async function resolveBankAccount(accountNumber, bankCode) {
       },
     });
 
-    if (!error && data?.status && data?.data?.account_name) {
+    if (error) {
+      return { success: false, error: error.message || 'Failed to invoke resolve-bank-account edge function' };
+    }
+
+    if (data?.status && data?.data?.account_name) {
       return {
         success: true,
         accountName: data.data.account_name,
         accountNumber: data.data.account_number,
       };
     }
-  } catch (sbErr) {
-    console.warn('Supabase edge function fallback error:', sbErr);
-  }
 
-  return {
-    success: false,
-    error: 'Could not auto-verify with bank. Please tap "Edit Name Manually" to enter your account name.',
-  };
+    return {
+      success: false,
+      error: data?.message || 'Could not resolve account name for the selected bank.',
+    };
+  } catch (err) {
+    return { success: false, error: err.message || 'Error communicating with bank resolution function.' };
+  }
 }
 
 /**

@@ -31,7 +31,7 @@ export const NIGERIAN_BANKS = [
 ];
 
 /**
- * Resolves a Nigerian bank account number with strict 6s timeout
+ * Resolves a Nigerian bank account number via Vercel serverless / Paystack API
  * @param {string} accountNumber 10-digit NUBAN
  * @param {string} bankCode CBN bank code
  * @returns {Promise<{ success: boolean, accountName?: string, error?: string }>}
@@ -41,42 +41,52 @@ export async function resolveBankAccount(accountNumber, bankCode) {
     return { success: false, error: 'Enter a valid 10-digit NUBAN account number.' };
   }
 
-  const timeoutPromise = new Promise((resolve) =>
-    setTimeout(() => resolve({ success: false, error: 'Verification timed out. You can enter your account name manually.' }), 6000)
-  );
-
-  const resolvePromise = (async () => {
-    try {
-      const { data, error } = await supabase.functions.invoke('resolve-bank-account', {
-        body: {
-          account_number: accountNumber.trim(),
-          bank_code: bankCode.trim(),
-        },
-      });
-
-      if (error) {
-        return { success: false, error: error.message || 'Verification service not available. Please enter name manually.' };
-      }
-
-      if (data?.status && data?.data?.account_name) {
+  // 1. Direct Vercel Serverless Function (/api/resolve-bank)
+  try {
+    const res = await fetch(
+      `/api/resolve-bank?account_number=${encodeURIComponent(accountNumber.trim())}&bank_code=${encodeURIComponent(bankCode.trim())}`
+    );
+    if (res.ok) {
+      const json = await res.json();
+      if (json?.status && json?.data?.account_name) {
         return {
           success: true,
-          accountName: data.data.account_name,
-          accountNumber: data.data.account_number,
+          accountName: json.data.account_name,
+          accountNumber: json.data.account_number,
         };
       }
-
-      return {
-        success: false,
-        error: data?.message || 'Could not verify account name with bank. Please enter name manually.',
-      };
-    } catch (err) {
-      console.warn('Resolve bank exception:', err);
-      return { success: false, error: 'Could not auto-verify. Please enter your account name manually.' };
+      if (json?.message) {
+        return { success: false, error: json.message };
+      }
     }
-  })();
+  } catch (apiErr) {
+    console.warn('Vercel API route lookup failed, attempting fallback:', apiErr);
+  }
 
-  return Promise.race([resolvePromise, timeoutPromise]);
+  // 2. Fallback to Supabase Edge Function
+  try {
+    const { data, error } = await supabase.functions.invoke('resolve-bank-account', {
+      body: {
+        account_number: accountNumber.trim(),
+        bank_code: bankCode.trim(),
+      },
+    });
+
+    if (!error && data?.status && data?.data?.account_name) {
+      return {
+        success: true,
+        accountName: data.data.account_name,
+        accountNumber: data.data.account_number,
+      };
+    }
+  } catch (sbErr) {
+    console.warn('Supabase edge function fallback error:', sbErr);
+  }
+
+  return {
+    success: false,
+    error: 'Could not auto-verify with bank. Please tap "Edit Name Manually" to enter your account name.',
+  };
 }
 
 /**

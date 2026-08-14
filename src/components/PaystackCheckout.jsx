@@ -59,7 +59,8 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
 
   const handleOpenModal = () => {
     if (!user) {
-      alert('Please log in to purchase study materials.')
+      alert('Please sign in with your UNIZIK student email to purchase study materials.')
+      window.location.href = '/login'
       return
     }
     setShowModal(true)

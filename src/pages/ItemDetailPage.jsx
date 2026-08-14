@@ -207,8 +207,8 @@ export default function ItemDetailPage() {
                                     onSuccess={(ref) => navigate(`/payment/success?ref=${ref}`)}
                                 />
                             ) : (
-                                <button onClick={() => navigate('/login')} style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.9375rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' }}>
-                                    Login to Purchase
+                                <button onClick={() => navigate('/login')} style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.9375rem', fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>
+                                    <span>🔒 Sign in to Purchase PDF ({formatNaira(item.price)})</span>
                                 </button>
                             )}
                         </div>
@@ -329,8 +329,8 @@ export default function ItemDetailPage() {
                                 onSuccess={(ref) => navigate(`/payment/success?ref=${ref}`)}
                             />
                         ) : (
-                            <button onClick={() => navigate('/login')} style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.9375rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' }}>
-                                Login to Purchase
+                            <button onClick={() => navigate('/login')} style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.9375rem', fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>
+                                <span>🔒 Sign in to Purchase PDF ({formatNaira(item.price)})</span>
                             </button>
                         )
                     ) : (

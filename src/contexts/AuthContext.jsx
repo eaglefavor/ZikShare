@@ -2,15 +2,33 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import supabase from '../lib/supabase'
 import { getUser, upsertUser } from '../lib/database'
 
+export function isUnizikEmail(email) {
+    if (!email || typeof email !== 'string') return false
+    const normalized = email.trim().toLowerCase()
+    return normalized.endsWith('@unizik.edu.ng') ||
+           normalized.endsWith('.unizik.edu.ng') ||
+           /@([a-z0-9-]+\.)*unizik\.edu\.ng$/i.test(normalized)
+}
+
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
     const [user, setUser] = useState(null)
     const [session, setSession] = useState(null)
     const [loading, setLoading] = useState(true)
+    const [authError, setAuthError] = useState('')
 
     async function handleUserLogin(authUser) {
-        // Try to load existing profile from DB first (preserves Settings edits)
+        // Enforce UNIZIK student email domain restriction
+        if (!isUnizikEmail(authUser.email)) {
+            console.warn('Non-UNIZIK email rejected:', authUser.email)
+            await supabase.auth.signOut()
+            setUser(null)
+            setSession(null)
+            throw new Error('Access Restricted: Only official UNIZIK student emails (@unizik.edu.ng) are allowed.')
+        }
+
+        // Try to load existing profile from DB first
         try {
             const existing = await getUser(authUser.id)
             if (existing) {
@@ -21,15 +39,14 @@ export function AuthProvider({ children }) {
             console.warn('Could not fetch existing user:', err.message)
         }
 
-        // First-time user — create a new profile
-        const isVerified = authUser.email?.endsWith('.edu.ng') || false
+        // First-time user — create a verified UNIZIK student profile
         const userData = {
             uid: authUser.id,
             email: authUser.email,
-            displayName: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'Student',
+            displayName: authUser.user_metadata?.full_name || authUser.email?.split('@')[0] || 'UNIZIK Student',
             phoneNumber: authUser.phone || '',
             department: '',
-            isVerified,
+            isVerified: true, // All validated UNIZIK emails are verified
             createdAt: new Date().toISOString(),
         }
 
@@ -37,7 +54,6 @@ export function AuthProvider({ children }) {
             const savedUser = await upsertUser(userData)
             setUser(savedUser)
         } catch (err) {
-            // Still set basic user info even if upsert fails (offline scenario)
             setUser(userData)
             console.warn('Could not sync user to database:', err.message)
         }
@@ -46,36 +62,36 @@ export function AuthProvider({ children }) {
     useEffect(() => {
         // Get initial session
         supabase.auth.getSession().then((result) => {
-            const s = result?.data?.session || null;
+            const s = result?.data?.session || null
             setSession(s)
             if (s?.user) {
-                handleUserLogin(s.user).catch(err => console.error('Initial login error:', err));
+                handleUserLogin(s.user).catch(err => {
+                    console.error('Initial login error:', err.message)
+                    setAuthError(err.message)
+                })
             }
             setLoading(false)
         }).catch(() => {
             setLoading(false)
         })
 
-        // Listen for auth changes (sign-in, sign-out, token refresh)
-        supabase.auth.getSession().catch(err => {
-            console.error("Session error:", err);
-            setLoading(false);
-        });
+        // Listen for auth state changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, newSession) => {
-                setSession(newSession)
-
                 if (event === 'SIGNED_OUT') {
                     setUser(null)
+                    setSession(null)
                     return
                 }
 
-                // Handle SIGNED_IN and TOKEN_REFRESHED — reload user from DB
                 if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && newSession?.user) {
                     try {
                         await handleUserLogin(newSession.user)
+                        setSession(newSession)
+                        setAuthError('')
                     } catch (err) {
-                        console.error('Auth state change error:', err)
+                        console.error('Auth restriction:', err.message)
+                        setAuthError(err.message)
                     }
                 }
             }
@@ -84,17 +100,21 @@ export function AuthProvider({ children }) {
         return () => subscription.unsubscribe()
     }, [])
 
-
-
     async function signInWithEmail(email, password) {
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+        if (!isUnizikEmail(email)) {
+            throw new Error('Please sign in with your official UNIZIK email (@unizik.edu.ng).')
+        }
+        const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
         if (error) throw error
         return data
     }
 
     async function signUpWithEmail(email, password, displayName) {
+        if (!isUnizikEmail(email)) {
+            throw new Error('Registration is strictly restricted to UNIZIK student emails (e.g. yourname@unizik.edu.ng).')
+        }
         const { data, error } = await supabase.auth.signUp({
-            email,
+            email: email.trim().toLowerCase(),
             password,
             options: { data: { full_name: displayName } },
         })
@@ -105,7 +125,12 @@ export function AuthProvider({ children }) {
     async function signInWithGoogle() {
         const { data, error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
-            options: { redirectTo: window.location.origin },
+            options: {
+                redirectTo: window.location.origin,
+                queryParams: {
+                    hd: 'unizik.edu.ng' // Google Workspace domain hint
+                }
+            },
         })
         if (error) throw error
         return data
@@ -118,18 +143,10 @@ export function AuthProvider({ children }) {
         setSession(null)
     }
 
-    /**
-     * Update the in-memory user state.
-     * Call this after saving settings to the database so the UI reflects changes immediately.
-     */
     function updateUser(updates) {
         setUser(prev => prev ? { ...prev, ...updates } : prev)
     }
 
-    /**
-     * Force-reload the user profile from the database.
-     * Useful after settings changes to ensure everything is in sync.
-     */
     async function refreshUser() {
         if (!session?.user?.id) return
         try {
@@ -144,14 +161,16 @@ export function AuthProvider({ children }) {
         user,
         session,
         loading,
-        isAuthenticated: !!session,
-        isVerified: user?.isVerified || false,
+        authError,
+        isAuthenticated: !!session && !!user,
+        isVerified: true,
         signInWithEmail,
         signUpWithEmail,
         signInWithGoogle,
         signOut,
         updateUser,
         refreshUser,
+        isUnizikEmail,
     }
 
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

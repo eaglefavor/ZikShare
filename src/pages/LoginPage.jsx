@@ -1,7 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '../contexts/AuthContext'
-import { Mail, Lock, User, Eye, EyeOff, Loader2, ArrowLeft, ShieldCheck } from 'lucide-react'
+import { useAuth, isUnizikEmail } from '../contexts/AuthContext'
+import { Mail, Lock, User, Eye, EyeOff, Loader2, ArrowLeft, ShieldCheck, AlertCircle } from 'lucide-react'
 
 export default function LoginPage() {
     const [mode, setMode] = useState('login') // 'login' or 'register'
@@ -12,22 +12,35 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const navigate = useNavigate()
-    const { signInWithEmail, signUpWithEmail, signInWithGoogle } = useAuth()
+    const { signInWithEmail, signUpWithEmail, signInWithGoogle, authError } = useAuth()
+
+    useEffect(() => {
+        if (authError) {
+            setError(authError)
+        }
+    }, [authError])
 
     const handleSubmit = async (e) => {
         e.preventDefault()
         setError('')
+
+        const cleanEmail = email.trim().toLowerCase()
+        if (!isUnizikEmail(cleanEmail)) {
+            setError('Only official UNIZIK student emails (e.g. yourname@unizik.edu.ng or regNumber@students.unizik.edu.ng) are allowed on ZikShare.')
+            return
+        }
+
         setLoading(true)
 
         try {
             if (mode === 'login') {
-                await signInWithEmail(email, password)
+                await signInWithEmail(cleanEmail, password)
             } else {
-                await signUpWithEmail(email, password, displayName)
+                await signUpWithEmail(cleanEmail, password, displayName.trim())
             }
-            navigate('/profile')
+            navigate(-1)
         } catch (err) {
-            setError(err.message || 'Something went wrong. Please try again.')
+            setError(err.message || 'Authentication failed. Please check your credentials.')
         } finally {
             setLoading(false)
         }
@@ -38,7 +51,7 @@ export default function LoginPage() {
         try {
             await signInWithGoogle()
         } catch (err) {
-            setError(err.message || 'Google sign-in failed.')
+            setError(err.message || 'Google sign-in failed. Please use your UNIZIK Google account.')
         }
     }
 
@@ -69,13 +82,13 @@ export default function LoginPage() {
                     <ArrowLeft size={20} />
                 </button>
                 <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 700 }}>
-                    {mode === 'login' ? 'Welcome Back' : 'Create Account'}
+                    {mode === 'login' ? 'Student Sign In' : 'Create Student Account'}
                 </h1>
             </header>
 
-            <div style={{ padding: '1.5rem 1rem' }}>
+            <div style={{ padding: '1.5rem 1rem', maxWidth: '28rem', margin: '0 auto' }}>
                 {/* Logo */}
-                <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
                     <h2
                         style={{
                             margin: 0,
@@ -89,7 +102,26 @@ export default function LoginPage() {
                         ZikShare
                     </h2>
                     <p style={{ margin: '0.25rem 0 0', fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
-                        {mode === 'login' ? 'Sign in to your campus marketplace' : 'Join the UNIZIK marketplace'}
+                        Exclusive Marketplace for Nnamdi Azikiwe University
+                    </p>
+                </div>
+
+                {/* UNIZIK Email Requirement Banner */}
+                <div
+                    style={{
+                        padding: '0.75rem 1rem',
+                        borderRadius: '0.75rem',
+                        backgroundColor: '#EFF6FF',
+                        border: '1.5px solid #BFDBFE',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.625rem',
+                        marginBottom: '1.25rem',
+                    }}
+                >
+                    <ShieldCheck size={20} color="#2563EB" style={{ flexShrink: 0 }} />
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#1E40AF', lineHeight: 1.4 }}>
+                        <strong>UNIZIK Email Required:</strong> You must sign up with your official <strong>@unizik.edu.ng</strong> student email address.
                     </p>
                 </div>
 
@@ -113,8 +145,6 @@ export default function LoginPage() {
                         transition: 'all 0.2s ease',
                         boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
                     }}
-                    onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--color-background)')}
-                    onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'white')}
                 >
                     <svg width="18" height="18" viewBox="0 0 24 24">
                         <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
@@ -122,7 +152,7 @@ export default function LoginPage() {
                         <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
                         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                     </svg>
-                    Continue with Google
+                    Continue with UNIZIK Google Account
                 </button>
 
                 {/* Divider */}
@@ -135,7 +165,7 @@ export default function LoginPage() {
                     }}
                 >
                     <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border)' }} />
-                    <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>or</span>
+                    <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>or email</span>
                     <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border)' }} />
                 </div>
 
@@ -143,17 +173,21 @@ export default function LoginPage() {
                 {error && (
                     <div
                         style={{
-                            padding: '0.625rem 0.875rem',
+                            padding: '0.75rem 0.875rem',
                             borderRadius: '0.625rem',
                             backgroundColor: '#FEF2F2',
                             border: '1px solid #FECACA',
                             color: '#DC2626',
                             fontSize: '0.75rem',
-                            fontWeight: 500,
+                            fontWeight: 600,
                             marginBottom: '1rem',
+                            display: 'flex',
+                            alignItems: 'flex-start',
+                            gap: '0.375rem',
                         }}
                     >
-                        {error}
+                        <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '0.125rem' }} />
+                        <span>{error}</span>
                     </div>
                 )}
 
@@ -162,13 +196,13 @@ export default function LoginPage() {
                     {mode === 'register' && (
                         <div style={{ marginBottom: '0.875rem' }}>
                             <label style={{ fontSize: '0.8125rem', fontWeight: 600, display: 'block', marginBottom: '0.375rem' }}>
-                                Full Name
+                                Full Name *
                             </label>
                             <div style={{ position: 'relative' }}>
                                 <User size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
                                 <input
                                     type="text"
-                                    placeholder="e.g., Chike Obi"
+                                    placeholder="e.g. Chike Obi"
                                     value={displayName}
                                     onChange={e => setDisplayName(e.target.value)}
                                     required
@@ -192,13 +226,13 @@ export default function LoginPage() {
 
                     <div style={{ marginBottom: '0.875rem' }}>
                         <label style={{ fontSize: '0.8125rem', fontWeight: 600, display: 'block', marginBottom: '0.375rem' }}>
-                            Email
+                            UNIZIK Student Email *
                         </label>
                         <div style={{ position: 'relative' }}>
                             <Mail size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
                             <input
                                 type="email"
-                                placeholder="you@unizik.edu.ng"
+                                placeholder="name@unizik.edu.ng"
                                 value={email}
                                 onChange={e => setEmail(e.target.value)}
                                 required
@@ -217,11 +251,14 @@ export default function LoginPage() {
                                 onBlur={e => (e.target.style.borderColor = 'var(--color-border)')}
                             />
                         </div>
+                        <p style={{ margin: '0.25rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>
+                            Must end with <strong>@unizik.edu.ng</strong> or <strong>@students.unizik.edu.ng</strong>
+                        </p>
                     </div>
 
                     <div style={{ marginBottom: '1.25rem' }}>
                         <label style={{ fontSize: '0.8125rem', fontWeight: 600, display: 'block', marginBottom: '0.375rem' }}>
-                            Password
+                            Password *
                         </label>
                         <div style={{ position: 'relative' }}>
                             <Lock size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
@@ -293,7 +330,7 @@ export default function LoginPage() {
                         {loading ? (
                             <>
                                 <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
-                                {mode === 'login' ? 'Signing in...' : 'Creating account...'}
+                                {mode === 'login' ? 'Signing in...' : 'Creating UNIZIK account...'}
                             </>
                         ) : (
                             mode === 'login' ? 'Sign In' : 'Create Account'
@@ -326,25 +363,6 @@ export default function LoginPage() {
                         {mode === 'login' ? 'Sign Up' : 'Sign In'}
                     </button>
                 </p>
-
-                {/* Verification hint */}
-                <div
-                    style={{
-                        marginTop: '1.5rem',
-                        padding: '0.75rem 1rem',
-                        borderRadius: '0.75rem',
-                        backgroundColor: '#F0FDF4',
-                        border: '1px solid #BBF7D0',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.625rem',
-                    }}
-                >
-                    <ShieldCheck size={18} color="#166534" />
-                    <p style={{ margin: 0, fontSize: '0.6875rem', color: '#166534', lineHeight: 1.4 }}>
-                        <strong>Tip:</strong> Sign up with your <strong>@unizik.edu.ng</strong> email to get a verified student badge.
-                    </p>
-                </div>
             </div>
 
             <style>{`

@@ -127,9 +127,6 @@ export function AuthProvider({ children }) {
             provider: 'google',
             options: {
                 redirectTo: window.location.origin,
-                queryParams: {
-                    hd: 'unizik.edu.ng' // Google Workspace domain hint
-                }
             },
         })
         if (error) throw error

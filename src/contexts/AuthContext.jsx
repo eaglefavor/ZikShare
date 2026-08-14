@@ -9,46 +9,6 @@ export function AuthProvider({ children }) {
     const [session, setSession] = useState(null)
     const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        // Get initial session
-        supabase.auth.getSession().then(async ({ data: { session: s } }) => {
-            setSession(s)
-            if (s?.user) {
-                try {
-                    await handleUserLogin(s.user)
-                } catch (err) {
-                    console.error('Initial login error:', err)
-                }
-            }
-            setLoading(false)
-        }).catch(() => {
-            setLoading(false)
-        })
-
-        // Listen for auth changes (sign-in, sign-out, token refresh)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(
-            async (event, newSession) => {
-                setSession(newSession)
-
-                if (event === 'SIGNED_OUT') {
-                    setUser(null)
-                    return
-                }
-
-                // Handle SIGNED_IN and TOKEN_REFRESHED — reload user from DB
-                if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && newSession?.user) {
-                    try {
-                        await handleUserLogin(newSession.user)
-                    } catch (err) {
-                        console.error('Auth state change error:', err)
-                    }
-                }
-            }
-        )
-
-        return () => subscription.unsubscribe()
-    }, [])
-
     async function handleUserLogin(authUser) {
         // Try to load existing profile from DB first (preserves Settings edits)
         try {
@@ -82,6 +42,49 @@ export function AuthProvider({ children }) {
             console.warn('Could not sync user to database:', err.message)
         }
     }
+
+    useEffect(() => {
+        // Get initial session
+        supabase.auth.getSession().then((result) => {
+            const s = result?.data?.session || null;
+            setSession(s)
+            if (s?.user) {
+                handleUserLogin(s.user).catch(err => console.error('Initial login error:', err));
+            }
+            setLoading(false)
+        }).catch(() => {
+            setLoading(false)
+        })
+
+        // Listen for auth changes (sign-in, sign-out, token refresh)
+        supabase.auth.getSession().catch(err => {
+            console.error("Session error:", err);
+            setLoading(false);
+        });
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(
+            async (event, newSession) => {
+                setSession(newSession)
+
+                if (event === 'SIGNED_OUT') {
+                    setUser(null)
+                    return
+                }
+
+                // Handle SIGNED_IN and TOKEN_REFRESHED — reload user from DB
+                if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && newSession?.user) {
+                    try {
+                        await handleUserLogin(newSession.user)
+                    } catch (err) {
+                        console.error('Auth state change error:', err)
+                    }
+                }
+            }
+        )
+
+        return () => subscription.unsubscribe()
+    }, [])
+
+
 
     async function signInWithEmail(email, password) {
         const { data, error } = await supabase.auth.signInWithPassword({ email, password })

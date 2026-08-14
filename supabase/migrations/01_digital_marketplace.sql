@@ -27,8 +27,8 @@ CREATE TABLE IF NOT EXISTS public.digital_products (
     currency TEXT DEFAULT 'NGN',
 
     status TEXT DEFAULT 'active',
-
     sales_count INTEGER DEFAULT 0,
+    cover_image_url TEXT,
 
     created_at TIMESTAMPTZ DEFAULT NOW(),
     updated_at TIMESTAMPTZ DEFAULT NOW()
@@ -36,12 +36,15 @@ CREATE TABLE IF NOT EXISTS public.digital_products (
 
 ALTER TABLE public.digital_products ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Anyone can view active digital products" ON public.digital_products;
 CREATE POLICY "Anyone can view active digital products"
     ON public.digital_products FOR SELECT
     USING (status = 'active');
 
+DROP POLICY IF EXISTS "Sellers can manage their products" ON public.digital_products;
 CREATE POLICY "Sellers can manage their products"
     ON public.digital_products FOR ALL
+    TO authenticated
     USING (seller_id = auth.uid());
 
 -- ============================================
@@ -78,36 +81,64 @@ CREATE TABLE IF NOT EXISTS public.orders (
 
 ALTER TABLE public.orders ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Buyers see their own orders" ON public.orders;
 CREATE POLICY "Buyers see their own orders"
     ON public.orders FOR SELECT
+    TO authenticated
     USING (buyer_id = auth.uid());
 
+DROP POLICY IF EXISTS "Buyers can create pending orders" ON public.orders;
+CREATE POLICY "Buyers can create pending orders"
+    ON public.orders FOR INSERT
+    TO authenticated
+    WITH CHECK (buyer_id = auth.uid());
+
+DROP POLICY IF EXISTS "Sellers see orders for their products" ON public.orders;
 CREATE POLICY "Sellers see orders for their products"
     ON public.orders FOR SELECT
+    TO authenticated
     USING (seller_id = auth.uid());
 
 -- ============================================
--- 4. STORAGE POLICIES
+-- 4. STORAGE BUCKETS & POLICIES
 -- ============================================
--- Create buckets if they don't exist (assuming this will be run in the SQL editor directly by user or via migration tool)
-INSERT INTO storage.buckets (id, name, public) VALUES ('digital-originals', 'digital-originals', false) ON CONFLICT DO NOTHING;
-INSERT INTO storage.buckets (id, name, public) VALUES ('digital-orders', 'digital-orders', false) ON CONFLICT DO NOTHING;
+-- Create buckets
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('digital-originals', 'digital-originals', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
 
-CREATE POLICY "Sellers can upload originals"
+INSERT INTO storage.buckets (id, name, public) 
+VALUES ('digital-orders', 'digital-orders', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+-- Storage Policies for digital-originals
+DROP POLICY IF EXISTS "Authenticated users can upload to digital-originals" ON storage.objects;
+CREATE POLICY "Authenticated users can upload to digital-originals"
     ON storage.objects FOR INSERT
-    WITH CHECK (bucket_id = 'digital-originals' AND auth.uid() = owner);
+    TO authenticated
+    WITH CHECK (bucket_id = 'digital-originals');
 
-CREATE POLICY "Edge functions can read originals"
+DROP POLICY IF EXISTS "Public can view digital-originals" ON storage.objects;
+CREATE POLICY "Public can view digital-originals"
     ON storage.objects FOR SELECT
+    TO public
     USING (bucket_id = 'digital-originals');
 
-CREATE POLICY "Buyers can download their files"
+DROP POLICY IF EXISTS "Authenticated users can update in digital-originals" ON storage.objects;
+CREATE POLICY "Authenticated users can update in digital-originals"
+    ON storage.objects FOR UPDATE
+    TO authenticated
+    USING (bucket_id = 'digital-originals');
+
+-- Storage Policies for digital-orders
+DROP POLICY IF EXISTS "Authenticated users can upload to digital-orders" ON storage.objects;
+CREATE POLICY "Authenticated users can upload to digital-orders"
+    ON storage.objects FOR INSERT
+    TO authenticated
+    WITH CHECK (bucket_id = 'digital-orders');
+
+DROP POLICY IF EXISTS "Public can read digital-orders" ON storage.objects;
+CREATE POLICY "Public can read digital-orders"
     ON storage.objects FOR SELECT
-    USING (
-        bucket_id = 'digital-orders'
-        AND EXISTS (
-            SELECT 1 FROM public.orders
-            WHERE unique_storage_path = storage.objects.name
-            AND buyer_id = auth.uid()
-        )
-    );
+    TO public
+    USING (bucket_id = 'digital-orders');

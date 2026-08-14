@@ -147,6 +147,9 @@ export default function PostPage() {
 
             if (uploadError) {
                 console.error('Storage upload error:', uploadError)
+                if (uploadError.message?.toLowerCase().includes('bucket not found') || uploadError.statusCode === '404') {
+                    throw new Error("Storage bucket 'digital-originals' was not found in your Supabase project. Please run the SQL migration in Supabase SQL Editor to create it.")
+                }
                 throw new Error(`Storage upload failed: ${uploadError.message || 'Check storage bucket permissions'}`)
             }
 

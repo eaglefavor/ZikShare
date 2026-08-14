@@ -31,44 +31,52 @@ export const NIGERIAN_BANKS = [
 ];
 
 /**
- * Resolves a Nigerian bank account number via Paystack / Supabase Edge Function
+ * Resolves a Nigerian bank account number with strict 6s timeout
  * @param {string} accountNumber 10-digit NUBAN
  * @param {string} bankCode CBN bank code
  * @returns {Promise<{ success: boolean, accountName?: string, error?: string }>}
  */
 export async function resolveBankAccount(accountNumber, bankCode) {
   if (!accountNumber || accountNumber.length !== 10 || !bankCode) {
-    return { success: false, error: 'Invalid account number or bank code' };
+    return { success: false, error: 'Enter a valid 10-digit NUBAN account number.' };
   }
 
-  try {
-    const { data, error } = await supabase.functions.invoke('resolve-bank-account', {
-      body: {
-        account_number: accountNumber.trim(),
-        bank_code: bankCode.trim(),
-      },
-    });
+  const timeoutPromise = new Promise((resolve) =>
+    setTimeout(() => resolve({ success: false, error: 'Verification timed out. You can enter your account name manually.' }), 6000)
+  );
 
-    if (error) {
-      return { success: false, error: error.message || 'Verification service error' };
-    }
+  const resolvePromise = (async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke('resolve-bank-account', {
+        body: {
+          account_number: accountNumber.trim(),
+          bank_code: bankCode.trim(),
+        },
+      });
 
-    if (data?.status && data?.data?.account_name) {
+      if (error) {
+        return { success: false, error: error.message || 'Verification service not available. Please enter name manually.' };
+      }
+
+      if (data?.status && data?.data?.account_name) {
+        return {
+          success: true,
+          accountName: data.data.account_name,
+          accountNumber: data.data.account_number,
+        };
+      }
+
       return {
-        success: true,
-        accountName: data.data.account_name,
-        accountNumber: data.data.account_number,
+        success: false,
+        error: data?.message || 'Could not verify account name with bank. Please enter name manually.',
       };
+    } catch (err) {
+      console.warn('Resolve bank exception:', err);
+      return { success: false, error: 'Could not auto-verify. Please enter your account name manually.' };
     }
+  })();
 
-    return {
-      success: false,
-      error: data?.message || 'Could not resolve account with the selected bank.',
-    };
-  } catch (err) {
-    console.error('Resolve bank error:', err);
-    return { success: false, error: err.message || 'Network error resolving bank account' };
-  }
+  return Promise.race([resolvePromise, timeoutPromise]);
 }
 
 /**

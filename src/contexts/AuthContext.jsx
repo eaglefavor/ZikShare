@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import supabase from '../lib/supabase'
 import { getUser, upsertUser } from '../lib/database'
 
@@ -30,106 +30,169 @@ export function deriveNameFromEmail(email) {
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-    const [user, setUser] = useState(null)
-    const [session, setSession] = useState(null)
+    // Initialize user and session from local cache to prevent flash of unauthenticated state on refresh
+    const [session, setSession] = useState(() => {
+        try {
+            const cached = localStorage.getItem('zikshare_session')
+            return cached ? JSON.parse(cached) : null
+        } catch {
+            return null
+        }
+    })
+
+    const [user, setUser] = useState(() => {
+        try {
+            const cached = localStorage.getItem('zikshare_user')
+            return cached ? JSON.parse(cached) : null
+        } catch {
+            return null
+        }
+    })
+
     const [loading, setLoading] = useState(true)
     const [authError, setAuthError] = useState('')
+    const isHandlingLoginRef = useRef(false)
+
+    function saveUserLocally(userData) {
+        setUser(userData)
+        try {
+            if (userData) {
+                localStorage.setItem('zikshare_user', JSON.stringify(userData))
+            } else {
+                localStorage.removeItem('zikshare_user')
+            }
+        } catch {}
+    }
+
+    function saveSessionLocally(sessData) {
+        setSession(sessData)
+        try {
+            if (sessData) {
+                localStorage.setItem('zikshare_session', JSON.stringify(sessData))
+            } else {
+                localStorage.removeItem('zikshare_session')
+            }
+        } catch {}
+    }
 
     async function handleUserLogin(authUser) {
-        // Enforce UNIZIK student email domain restriction
-        if (!isUnizikEmail(authUser.email)) {
-            console.warn('Non-UNIZIK email rejected:', authUser.email)
-            await supabase.auth.signOut()
-            setUser(null)
-            setSession(null)
-            throw new Error('Access Restricted: Only official UNIZIK student emails (@unizik.edu.ng) are allowed.')
-        }
+        if (!authUser) return
 
         const googleName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || ''
+        const fallbackDisplayName = googleName || deriveNameFromEmail(authUser.email) || 'UNIZIK Student'
 
-        // Try to load existing profile from DB first
+        // Instant optimistic user state so isAuthenticated is true immediately
+        const optimisticUser = {
+            uid: authUser.id,
+            email: authUser.email,
+            displayName: fallbackDisplayName,
+            phoneNumber: authUser.phone || '',
+            department: '',
+            isVerified: true,
+            createdAt: new Date().toISOString(),
+        }
+
+        saveUserLocally(optimisticUser)
+
+        // Try to load full existing profile from DB
         try {
             const existing = await getUser(authUser.id)
             if (existing) {
-                // If existing account has missing or short name but Google provided the full name, sync it
                 if (googleName && (!existing.displayName || existing.displayName === 'Student' || existing.displayName === 'UNIZIK Student' || existing.displayName.length <= 3)) {
                     existing.displayName = googleName
                     await upsertUser(existing).catch(() => {})
                 }
-                setUser(existing)
-                return
+                saveUserLocally(existing)
+                return existing
             }
         } catch (err) {
             console.warn('Could not fetch existing user:', err.message)
         }
 
-        // First-time user — create a verified UNIZIK student profile with full Google name
-        const userData = {
-            uid: authUser.id,
-            email: authUser.email,
-            displayName: googleName || deriveNameFromEmail(authUser.email) || 'UNIZIK Student',
-            phoneNumber: authUser.phone || '',
-            department: '',
-            isVerified: true, // All validated UNIZIK emails are verified
-            createdAt: new Date().toISOString(),
-        }
-
+        // First-time DB sync
         try {
-            const savedUser = await upsertUser(userData)
-            setUser(savedUser)
+            const savedUser = await upsertUser(optimisticUser)
+            if (savedUser) saveUserLocally(savedUser)
+            return savedUser
         } catch (err) {
-            setUser(userData)
             console.warn('Could not sync user to database:', err.message)
+            return optimisticUser
         }
     }
 
     useEffect(() => {
-        // Get initial session
-        supabase.auth.getSession().then((result) => {
-            const s = result?.data?.session || null
-            setSession(s)
-            if (s?.user) {
-                handleUserLogin(s.user).catch(err => {
-                    console.error('Initial login error:', err.message)
-                    setAuthError(err.message)
-                })
+        let isMounted = true
+
+        async function initAuth() {
+            try {
+                const { data } = await supabase.auth.getSession()
+                const s = data?.session || null
+
+                if (s?.user && isMounted) {
+                    saveSessionLocally(s)
+                    await handleUserLogin(s.user)
+                } else if (isMounted) {
+                    saveSessionLocally(null)
+                    saveUserLocally(null)
+                }
+            } catch (err) {
+                console.error('Session init error:', err)
+            } finally {
+                if (isMounted) setLoading(false)
             }
-            setLoading(false)
-        }).catch(() => {
-            setLoading(false)
-        })
+        }
+
+        initAuth()
 
         // Listen for auth state changes
         const { data: { subscription } } = supabase.auth.onAuthStateChange(
             async (event, newSession) => {
-                if (event === 'SIGNED_OUT') {
-                    setUser(null)
-                    setSession(null)
+                if (!isMounted) return
+
+                if (event === 'SIGNED_OUT' || !newSession) {
+                    saveSessionLocally(null)
+                    saveUserLocally(null)
+                    setLoading(false)
                     return
                 }
 
-                if ((event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') && newSession?.user) {
-                    try {
-                        await handleUserLogin(newSession.user)
-                        setSession(newSession)
-                        setAuthError('')
-                    } catch (err) {
-                        console.error('Auth restriction:', err.message)
-                        setAuthError(err.message)
+                if (newSession?.user) {
+                    saveSessionLocally(newSession)
+                    if (!isHandlingLoginRef.current) {
+                        isHandlingLoginRef.current = true
+                        try {
+                            await handleUserLogin(newSession.user)
+                            setAuthError('')
+                        } catch (err) {
+                            console.error('Auth state error:', err.message)
+                        } finally {
+                            isHandlingLoginRef.current = false
+                        }
                     }
+                    setLoading(false)
                 }
             }
         )
 
-        return () => subscription.unsubscribe()
+        return () => {
+            isMounted = false
+            subscription.unsubscribe()
+        }
     }, [])
 
     async function signInWithEmail(email, password) {
         if (!isUnizikEmail(email)) {
             throw new Error('Please sign in with your official UNIZIK email (@unizik.edu.ng).')
         }
-        const { data, error } = await supabase.auth.signInWithPassword({ email: email.trim().toLowerCase(), password })
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: email.trim().toLowerCase(),
+            password,
+        })
         if (error) throw error
+        if (data?.session) {
+            saveSessionLocally(data.session)
+            await handleUserLogin(data.session.user)
+        }
         return data
     }
 
@@ -143,6 +206,10 @@ export function AuthProvider({ children }) {
             options: { data: { full_name: displayName } },
         })
         if (error) throw error
+        if (data?.session) {
+            saveSessionLocally(data.session)
+            await handleUserLogin(data.session.user)
+        }
         return data
     }
 
@@ -158,32 +225,40 @@ export function AuthProvider({ children }) {
     }
 
     async function signOut() {
-        const { error } = await supabase.auth.signOut()
-        if (error) throw error
-        setUser(null)
-        setSession(null)
+        try {
+            await supabase.auth.signOut()
+        } catch {}
+        saveUserLocally(null)
+        saveSessionLocally(null)
     }
 
     function updateUser(updates) {
-        setUser(prev => prev ? { ...prev, ...updates } : prev)
+        setUser(prev => {
+            const next = prev ? { ...prev, ...updates } : prev
+            saveUserLocally(next)
+            return next
+        })
     }
 
     async function refreshUser() {
-        if (!session?.user?.id) return
+        const uid = session?.user?.id || user?.uid || user?.id
+        if (!uid) return
         try {
-            const fresh = await getUser(session.user.id)
-            if (fresh) setUser(fresh)
+            const fresh = await getUser(uid)
+            if (fresh) saveUserLocally(fresh)
         } catch (err) {
             console.warn('Could not refresh user:', err.message)
         }
     }
+
+    const isAuthenticated = !!session?.user || !!user?.uid || !!user?.id
 
     const value = {
         user,
         session,
         loading,
         authError,
-        isAuthenticated: !!session && !!user,
+        isAuthenticated,
         isVerified: true,
         signInWithEmail,
         signUpWithEmail,

@@ -1,3 +1,5 @@
+export const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_live_3eda0ad1995bbe9c8f0767f24ab6f10b7d86a0f4';
+
 /**
  * Calculates Paystack fees and total charge amount to ensure the seller gets exactly their price.
  * Paystack fee is 1.5% + 100 NGN (100 NGN is waived if total is under 2500 NGN).

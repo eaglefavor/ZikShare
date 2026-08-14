@@ -1,7 +1,7 @@
 import { usePaystackPayment } from 'react-paystack';
 import { useMemo } from 'react';
 import { supabase } from '../lib/supabase';
-import { calculatePaystackFeeAndTotal } from '../lib/paystack';
+import { calculatePaystackFeeAndTotal, PAYSTACK_PUBLIC_KEY } from '../lib/paystack';
 
 const PaystackCheckout = ({ product, user, onSuccess }) => {
   // Ensure product price is converted to kobo for fee calculation
@@ -12,7 +12,7 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
     reference: `ZKS-${Date.now()}`, // eslint-disable-line react-hooks/exhaustive-deps
     email: user?.email || '',
     amount: totalToCharge,
-    publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_xxxxxxxxxx',
+    publicKey: PAYSTACK_PUBLIC_KEY,
     subaccount: product.users?.paystack_subaccount_code || undefined,
     metadata: {
       product_id: product.id,

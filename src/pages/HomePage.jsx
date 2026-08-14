@@ -1,7 +1,7 @@
 import { Search, SlidersHorizontal, ChevronRight, MapPin, ShieldCheck, Zap, TrendingUp, Loader2 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useCachedQuery } from '../hooks/useCachedQuery'
-import { getListings } from '../lib/database'
+import { getListings, getDigitalProducts } from '../lib/database'
 
 const categories = [
     { name: 'Electronics', emoji: '📱', color: '#3B82F6' },
@@ -111,11 +111,25 @@ function SkeletonCard() {
 
 export default function HomePage() {
     const navigate = useNavigate()
-    const { data: listings, isLoading, error } = useCachedQuery(
+    const { data, isLoading, error } = useCachedQuery(
         'listings-home',
-        () => getListings({ limit: 20 }),
+        async () => {
+            const [physical, digital] = await Promise.all([
+                getListings({ limit: 20 }),
+                getDigitalProducts({ limit: 20 })
+            ])
+            // Tag digital products
+            const digitalTagged = digital.map(d => ({ ...d, isDigital: true, createdAt: d.created_at, sellerId: d.seller_id }))
+
+            // Merge and sort
+            const merged = [...(physical || []), ...(digitalTagged || [])]
+            merged.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            return merged.slice(0, 20)
+        },
         { ttl: 5 * 60 * 1000 } // 5 min cache
     )
+
+    const listings = data;
 
     return (
         <div>

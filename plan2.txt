@@ -1,0 +1,13 @@
+Let's analyze what the user is asking.
+"This is a little document I stumbled upon, I like the idea and I want to ADPAT A SIMILAR OPTIONAL FEATURE INTO ZIKSHARE. This is not a photocopy but an adaptation to fit the current system we have. How we want to implement ours is: The sub account (seller) takes 100% Set percentage_charge: 0. Then we want to make sure the buyer bears pay stack percentage fees."
+
+1. Add a schema migration script (`add_digital_marketplace.sql` or similar, maybe just run it via Supabase API if possible, but actually since we don't have direct access to the live supabase project easily (no project id in env), I should create the `.sql` migration file for them to run, OR write it in `supabase/migrations/` if they use local supabase). Wait, the codebase doesn't have a `supabase` directory. I will create a `supabase/migrations` folder and add the SQL there.
+Wait, let me create a `digital_products.sql` file in the root that they can run.
+
+2. React implementation:
+We need to adapt `PostPage.jsx` to allow posting digital PDFs, or create a `PostDigitalPage.jsx`.
+It's better to adapt `PostPage.jsx` to have an option "Is this a digital product (PDF)?"
+If yes, it reveals a file upload instead of (or in addition to) photos.
+
+Wait, the current system has `items` (which might be what they call `listings`). Let's check `src/pages/PostPage.jsx` to see what table it uses.
+It seems it inserts into `listings` but let me grep `listings` vs `items` in `PostPage.jsx`.

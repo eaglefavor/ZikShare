@@ -9,6 +9,7 @@ import ProfilePage from './pages/ProfilePage'
 import LoginPage from './pages/LoginPage'
 import ItemDetailPage from './pages/ItemDetailPage'
 import MyListingsPage from './pages/MyListingsPage'
+import SellerHubPage from './pages/SellerHubPage'
 import SavedItemsPage from './pages/SavedItemsPage'
 import SettingsPage from './pages/SettingsPage'
 import HelpPage from './pages/HelpPage'
@@ -24,6 +25,7 @@ function App() {
           <Route path="/login" element={<LoginPage />} />
           <Route path="/payment/success" element={<PaymentSuccess />} />
           <Route path="/item/:id" element={<ItemDetailPage />} />
+          <Route path="/seller-hub" element={<SellerHubPage />} />
           <Route path="/profile/listings" element={<MyListingsPage />} />
           <Route path="/profile/saved" element={<SavedItemsPage />} />
           <Route path="/profile/settings" element={<SettingsPage />} />

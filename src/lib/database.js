@@ -96,9 +96,13 @@ export async function updateListing(id, updates) {
     if (data) return data
 
     // Try digital_products table
+    const digitalPayload = { ...updates }
+    if (digitalPayload.price !== undefined) {
+        digitalPayload.price = Math.round(Number(digitalPayload.price) * 100) // store in kobo
+    }
     const { data: dData, error: dError } = await supabase
         .from('digital_products')
-        .update(updates)
+        .update(digitalPayload)
         .eq('id', id)
         .select()
         .maybeSingle()
@@ -179,7 +183,6 @@ export async function upsertUser(user) {
     return data
 }
 
-
 // ── Digital Products ──
 
 export async function createDigitalProduct(product) {
@@ -242,4 +245,97 @@ export async function getDigitalProduct(id) {
     }
 
     return data
+}
+
+export async function updateDigitalProduct(id, updates) {
+    const payload = { ...updates, updated_at: new Date().toISOString() }
+    if (payload.price !== undefined) {
+        payload.price = Math.round(Number(payload.price) * 100) // Ensure kobo in DB
+    }
+
+    const { data, error } = await supabase
+        .from('digital_products')
+        .update(payload)
+        .eq('id', id)
+        .select()
+        .single()
+
+    if (error) throw error
+    return data
+}
+
+// ── Seller Analytics & Orders ──
+
+export async function getSellerAnalytics(userId) {
+    const [listingsRes, digitalRes, ordersRes, userProfile] = await Promise.all([
+        supabase.from('listings').select('*').eq('sellerId', userId),
+        supabase.from('digital_products').select('*').eq('seller_id', userId),
+        supabase.from('orders').select('*').eq('seller_id', userId).order('created_at', { ascending: false }),
+        getUser(userId).catch(() => null)
+    ])
+
+    const physicalListings = listingsRes.data || []
+    const digitalProducts = (digitalRes.data || []).map(d => ({
+        ...d,
+        isDigital: true,
+        priceInKobo: d.price,
+        price: d.price / 100,
+    }))
+    const orders = ordersRes.data || []
+
+    const totalPhysical = physicalListings.length
+    const totalDigital = digitalProducts.length
+    const activeListings = physicalListings.filter(l => l.status === 'Active').length + digitalProducts.filter(d => d.status === 'active').length
+
+    // Calculate revenue from completed orders
+    const completedOrders = orders.filter(o => o.status === 'delivered' || o.status === 'success' || o.status === 'ready')
+    const totalEarningsKobo = completedOrders.reduce((sum, o) => sum + (o.seller_settlement || o.amount || 0), 0)
+    const totalSalesCount = completedOrders.length
+
+    // Top selling digital materials
+    const productSalesMap = {}
+    completedOrders.forEach(o => {
+        if (o.product_id) {
+            productSalesMap[o.product_id] = (productSalesMap[o.product_id] || 0) + 1
+        }
+    })
+
+    const topProducts = digitalProducts
+        .map(p => ({
+            ...p,
+            sales_count: productSalesMap[p.id] || p.sales_count || 0,
+            revenue: (productSalesMap[p.id] || p.sales_count || 0) * p.price
+        }))
+        .sort((a, b) => b.sales_count - a.sales_count)
+
+    return {
+        totalEarningsNaira: totalEarningsKobo / 100,
+        totalSalesCount,
+        activeListings,
+        totalPhysical,
+        totalDigital,
+        totalListings: totalPhysical + totalDigital,
+        orders,
+        topProducts,
+        userProfile,
+        listings: [...physicalListings, ...digitalProducts].sort((a, b) => new Date(b.createdAt || b.created_at || 0) - new Date(a.createdAt || a.created_at || 0))
+    }
+}
+
+export async function getSellerOrders(userId) {
+    const { data, error } = await supabase
+        .from('orders')
+        .select('*, product:digital_products(title, category, price), buyer:users!buyer_id(displayName, email, phoneNumber, department)')
+        .eq('seller_id', userId)
+        .order('created_at', { ascending: false })
+
+    if (error) {
+        const simple = await supabase
+            .from('orders')
+            .select('*')
+            .eq('seller_id', userId)
+            .order('created_at', { ascending: false })
+        return simple.data || []
+    }
+    return data || []
 }

@@ -1,10 +1,15 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { User, Settings, LogIn, LogOut, ShieldCheck, Package, Heart, HelpCircle, ChevronRight, Loader2 } from 'lucide-react'
-import { getMyListings } from '../lib/database'
+import { User, Settings, LogIn, LogOut, ShieldCheck, Package, Heart, HelpCircle, ChevronRight, Loader2, TrendingUp, Sparkles } from 'lucide-react'
+import { getSellerAnalytics } from '../lib/database'
+
+function formatNaira(amount) {
+    return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount || 0)
+}
 
 const menuItems = [
+    { icon: TrendingUp, label: 'Seller Hub & Analytics', path: '/seller-hub', badgeKey: 'seller' },
     { icon: Package, label: 'My Listings', path: '/profile/listings', badgeKey: 'listings' },
     { icon: Heart, label: 'Saved Items', path: '/profile/saved', badge: null },
     { icon: Settings, label: 'Settings', path: '/profile/settings', badge: null },
@@ -14,15 +19,16 @@ const menuItems = [
 export default function ProfilePage() {
     const { user, session, isAuthenticated, isVerified, loading, signOut } = useAuth()
     const navigate = useNavigate()
-    const [listingCount, setListingCount] = useState(null)
+    const [sellerStats, setSellerStats] = useState(null)
 
     useEffect(() => {
-        if (isAuthenticated && session?.user?.id) {
-            getMyListings(session.user.id)
-                .then(data => setListingCount(data?.length || 0))
-                .catch(() => setListingCount(null))
+        const uid = session?.user?.id || user?.uid || user?.id
+        if (isAuthenticated && uid) {
+            getSellerAnalytics(uid)
+                .then(data => setSellerStats(data))
+                .catch(() => setSellerStats(null))
         }
-    }, [isAuthenticated, session])
+    }, [isAuthenticated, session, user])
 
     const handleSignOut = async () => {
         try {
@@ -171,6 +177,41 @@ export default function ProfilePage() {
                     </div>
                 )}
 
+                {/* Seller Hub Quick Card (for authenticated users) */}
+                {isAuthenticated && (
+                    <div
+                        onClick={() => navigate('/seller-hub')}
+                        style={{
+                            marginTop: '1rem',
+                            padding: '1rem',
+                            borderRadius: '0.875rem',
+                            background: 'linear-gradient(135deg, #0F172A, #1E293B)',
+                            color: 'white',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            boxShadow: '0 4px 14px rgba(15, 23, 42, 0.25)',
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.625rem', backgroundColor: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <TrendingUp size={20} color="white" />
+                            </div>
+                            <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                    <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700 }}>Seller Hub & Earnings</h3>
+                                    <Sparkles size={14} color="#FBBF24" />
+                                </div>
+                                <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: '#94A3B8' }}>
+                                    {sellerStats ? `${formatNaira(sellerStats.totalEarningsNaira)} earned • ${sellerStats.totalListings} listings` : 'Manage your sales & analytics'}
+                                </p>
+                            </div>
+                        </div>
+                        <ChevronRight size={18} color="#94A3B8" />
+                    </div>
+                )}
+
                 {/* Verification Prompt (guests & unverified) */}
                 {(!isAuthenticated || !isVerified) && (
                     <div
@@ -204,7 +245,13 @@ export default function ProfilePage() {
                 {/* Menu Items */}
                 <div style={{ marginTop: '1.25rem' }}>
                     {menuItems.map(({ icon: ItemIcon, label, path, badgeKey }) => {
-                        const badgeValue = badgeKey === 'listings' && listingCount !== null ? String(listingCount) : null
+                        let badgeValue = null
+                        if (badgeKey === 'listings' && sellerStats?.totalListings !== undefined) {
+                            badgeValue = String(sellerStats.totalListings)
+                        } else if (badgeKey === 'seller' && sellerStats?.totalSalesCount) {
+                            badgeValue = `${sellerStats.totalSalesCount} sales`
+                        }
+
                         return (
                             <button
                                 key={label}

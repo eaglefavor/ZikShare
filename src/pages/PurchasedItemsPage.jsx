@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, FileText, Lock, Download, Loader2, CheckCircle2, ShieldAlert, Sparkles } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getBuyerOrders, createSignedDownloadUrl, fulfillDigitalOrder } from '../lib/database'
+import { downloadWatermarkedPdf } from '../lib/pdfWatermark'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount || 0)
@@ -55,7 +56,15 @@ export default function PurchasedItemsPage() {
             const storagePath = activeOrder?.unique_storage_path || activeOrder?.product?.original_storage_path
             const url = await createSignedDownloadUrl(storagePath, 3600)
             if (url) {
-                window.open(url, '_blank')
+                const buyerName = user?.displayName || session?.user?.user_metadata?.full_name || 'UNIZIK STUDENT'
+                const regNumber = activeOrder?.watermark_text?.match(/REG NO: ([^|]+)/i)?.[1]?.trim() || 'STUDENT'
+                const title = activeOrder?.product?.title || 'ZikShare Study Material'
+
+                await downloadWatermarkedPdf(url, title, {
+                    buyerName,
+                    regNumber,
+                    orderId: activeOrder?.id
+                })
             } else {
                 alert('Could not generate download link. Please contact support.')
             }

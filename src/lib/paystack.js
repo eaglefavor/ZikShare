@@ -220,3 +220,48 @@ export async function verifyPaystackPayment(reference) {
     return { success: false, error: err.message };
   }
 }
+
+/**
+ * Initiates an instant bank transfer from merchant balance to the seller's bank account.
+ */
+export async function initiateSellerPayout({ sellerId, amountInNaira, reason }) {
+  if (!sellerId || !amountInNaira || amountInNaira <= 0) {
+    return { success: false, error: 'Valid seller ID and payout amount are required' };
+  }
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/initiate-seller-payout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({
+        seller_id: sellerId,
+        amount_in_naira: Number(amountInNaira),
+        reason: reason || 'ZikShare Earnings Payout',
+      }),
+    });
+
+    const result = await res.json();
+    if (result?.status) {
+      return {
+        success: true,
+        message: result.message || 'Payout transfer initiated successfully',
+        data: result.data,
+      };
+    }
+
+    return {
+      success: false,
+      error: result?.message || 'Payout transfer failed. Please verify bank details.',
+    };
+  } catch (err) {
+    console.error('Initiate payout network error:', err);
+    return {
+      success: false,
+      error: err.message || 'Network error communicating with payout service',
+    };
+  }
+}

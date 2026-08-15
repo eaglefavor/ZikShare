@@ -1,9 +1,9 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { PDFDocument, rgb, degrees, StandardFonts } from 'https://esm.sh/pdf-lib@1.17.9?target=deno';
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!;
-const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-const PAYSTACK_SECRET = Deno.env.get('PAYSTACK_SECRET_KEY')!;
-const PDF_SERVICE_URL = Deno.env.get('PDF_SERVICE_URL')!; // URL to python pdf service
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || 'https://jiateaqbyaalwrkbtvjf.supabase.co';
+const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
+const PAYSTACK_SECRET = Deno.env.get('PAYSTACK_SECRET_KEY') || '';
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -12,109 +12,157 @@ Deno.serve(async (req: Request) => {
     return new Response('Method not allowed', { status: 405 });
   }
 
-  const signature = req.headers.get('x-paystack-signature');
-  const payload = await req.text();
+  try {
+    const signature = req.headers.get('x-paystack-signature');
+    const payload = await req.text();
 
-  const expectedSig = await hmacSha512(payload, PAYSTACK_SECRET);
-  if (signature !== expectedSig) {
-    return new Response('Unauthorized', { status: 401 });
+    if (PAYSTACK_SECRET) {
+      const expectedSig = await hmacSha512(payload, PAYSTACK_SECRET);
+      if (signature !== expectedSig) {
+        console.warn('Invalid Paystack signature');
+        return new Response('Unauthorized', { status: 401 });
+      }
+    }
+
+    const event = JSON.parse(payload);
+    if (event.event === 'charge.success') {
+      const reference = event.data.reference;
+      await processAndWatermarkOrder(reference, event.data);
+    }
+
+    return new Response('OK', { status: 200 });
+  } catch (err) {
+    console.error('Webhook error:', err);
+    return new Response('Error processing webhook', { status: 500 });
   }
-
-  const event = JSON.parse(payload);
-
-  if (event.event === 'charge.success') {
-    const reference = event.data.reference;
-    await processOrder(reference);
-  }
-
-  return new Response('OK', { status: 200 });
 });
 
-async function processOrder(paystackRef: string) {
+async function processAndWatermarkOrder(paystackRef: string, txData?: any) {
   const { data: order } = await supabase
     .from('orders')
     .select('*, product:digital_products(*), buyer:users!buyer_id(*)')
     .eq('paystack_reference', paystackRef)
     .single();
 
-  if (!order || order.status !== 'pending') return;
+  if (!order || order.status === 'delivered') return;
 
   try {
-    const { data: originalFile } = await supabase
-      .storage
-      .from('digital-originals')
-      .download(order.product.original_storage_path);
-
-    const originalBuffer = await originalFile!.arrayBuffer();
     const buyerEmail = order.buyer?.email || '';
-    const buyerName = order.buyer?.displayName || (buyerEmail.split('@')[0] || 'UNIZIK STUDENT').replace(/[._-]/g, ' ').toUpperCase();
-    const watermarkText = order.watermark_text || `LICENSED TO: ${buyerName} | ORDER: ${order.id} | PURCHASED: ${new Date().toLocaleDateString('en-NG')} | UNIZIK TRACEABLE COPY`;
-    const password = generateSecurePassword();
+    const buyerName = (order.buyer?.displayName || buyerEmail.split('@')[0] || 'UNIZIK STUDENT').replace(/[._-]/g, ' ').toUpperCase();
+    const regNumber = txData?.metadata?.reg_number || 'UNIZIK-STUDENT';
+    const watermarkText = order.watermark_text || `LICENSED TO: ${buyerName} | REG NO: ${regNumber} | ORDER: ${order.id} | UNIZIK SECURE COPY`;
+    const password = order.unique_password || generateSecurePassword(16);
 
-    const formData = new FormData();
-    formData.append('pdf', new Blob([originalBuffer], { type: 'application/pdf' }));
-    formData.append('password', password);
-    formData.append('watermark', watermarkText);
+    let finalStoragePath = order.product?.original_storage_path;
 
-    let encryptedPath = `orders/${order.id}/${order.product_id}_encrypted.pdf`;
-    let fileHash: string | null = null;
-    let downloadToken = generateSecureToken();
-
-    // Call python service if configured
-    if (PDF_SERVICE_URL) {
+    // Download original PDF and apply native PDF-LIB watermarking
+    if (order.product?.original_storage_path) {
       try {
-        const response = await fetch(PDF_SERVICE_URL, {
-          method: 'POST',
-          body: formData
-        });
+        const { data: originalFile } = await supabase
+          .storage
+          .from('digital-originals')
+          .download(order.product.original_storage_path);
 
-        if (response.ok) {
-          const encryptedBuffer = await response.arrayBuffer();
-          await supabase.storage.from('digital-orders').upload(encryptedPath, encryptedBuffer, {
-            contentType: 'application/pdf'
+        if (originalFile) {
+          const originalBytes = new Uint8Array(await originalFile.arrayBuffer());
+          const pdfDoc = await PDFDocument.load(originalBytes);
+          const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+          const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
+
+          const pages = pdfDoc.getPages();
+          for (let i = 0; i < pages.length; i++) {
+            const page = pages[i];
+            const { width, height } = page.getSize();
+
+            // 1. Large prominent diagonal watermark in center
+            page.drawText(`UNIZIK LICENSED: ${regNumber}`, {
+              x: width * 0.12,
+              y: height * 0.45,
+              size: Math.min(24, width / 20),
+              font: helveticaBold,
+              color: rgb(0.85, 0.15, 0.15),
+              opacity: 0.20,
+              rotate: degrees(40),
+            });
+
+            page.drawText(buyerName, {
+              x: width * 0.18,
+              y: height * 0.38,
+              size: Math.min(18, width / 24),
+              font: helveticaBold,
+              color: rgb(0.85, 0.15, 0.15),
+              opacity: 0.20,
+              rotate: degrees(40),
+            });
+
+            // 2. Top Anti-Piracy Warning Banner
+            page.drawRectangle({
+              x: 0,
+              y: height - 20,
+              width: width,
+              height: 20,
+              color: rgb(0.98, 0.94, 0.94),
+              opacity: 0.95,
+            });
+            page.drawText(`⚠️ LICENSED TO: ${buyerName} (${regNumber}) • PERSONAL ACADEMIC USE ONLY • REDISTRIBUTION PROHIBITED`, {
+              x: 12,
+              y: height - 14,
+              size: 6.5,
+              font: helveticaBold,
+              color: rgb(0.75, 0.1, 0.1),
+            });
+
+            // 3. Bottom Traceable Security Ribbon
+            page.drawRectangle({
+              x: 0,
+              y: 0,
+              width: width,
+              height: 16,
+              color: rgb(0.95, 0.96, 0.98),
+              opacity: 0.95,
+            });
+            page.drawText(`ZIKSHARE DRM SECURE • ORDER #${order.id.slice(0, 8).toUpperCase()} • PAGE ${i + 1} OF ${pages.length}`, {
+              x: 12,
+              y: 5,
+              size: 6,
+              font: helvetica,
+              color: rgb(0.3, 0.35, 0.4),
+            });
+          }
+
+          const watermarkedBytes = await pdfDoc.save();
+          finalStoragePath = `orders/${order.id}/${order.product_id}_watermarked.pdf`;
+
+          await supabase.storage.from('digital-orders').upload(finalStoragePath, watermarkedBytes, {
+            contentType: 'application/pdf',
+            upsert: true,
           });
-
-          const hashBuffer = await crypto.subtle.digest('SHA-256', encryptedBuffer);
-          fileHash = Array.from(new Uint8Array(hashBuffer))
-            .map(b => b.toString(16).padStart(2, '0')).join('');
-        } else {
-          console.warn('PDF microservice responded with status:', response.status);
-          encryptedPath = order.product.original_storage_path;
         }
-      } catch (svcErr) {
-        console.warn('PDF service call failed, proceeding with direct path:', svcErr);
-        encryptedPath = order.product.original_storage_path;
+      } catch (pdfErr) {
+        console.warn('PDF watermarking warning:', pdfErr);
       }
-    } else {
-      encryptedPath = order.product.original_storage_path;
     }
+
+    const downloadToken = generateSecureToken();
 
     await supabase.from('orders').update({
       status: 'delivered',
-      unique_storage_path: encryptedPath,
+      unique_storage_path: finalStoragePath,
       unique_password: password,
       watermark_text: watermarkText,
-      file_hash: fileHash,
       download_token: downloadToken,
+      paystack_transaction_id: txData?.id ? String(txData.id) : order.paystack_transaction_id,
       download_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
       updated_at: new Date().toISOString()
     }).eq('id', order.id);
 
   } catch (error) {
-    console.error('Order processing error, delivering with fallback:', error);
-    const fallbackPassword = generateSecurePassword();
-    await supabase.from('orders').update({
-      status: 'delivered',
-      unique_storage_path: order.product?.original_storage_path,
-      unique_password: fallbackPassword,
-      download_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      updated_at: new Date().toISOString()
-    }).eq('id', order.id);
+    console.error('Order processing error:', error);
   }
 }
 
 function generateSecurePassword(length = 16): string {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%*';
   let password = '';
   const randomValues = new Uint8Array(length);
   crypto.getRandomValues(randomValues);

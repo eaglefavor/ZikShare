@@ -10,7 +10,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { getSellerAnalytics, updateListing, deleteListing, upsertUser } from '../lib/database'
 import EditListingModal from '../components/EditListingModal'
 import { invalidateCacheByPrefix } from '../lib/cache'
-import { NIGERIAN_BANKS, resolveBankAccount, createPaystackSubaccount } from '../lib/paystack'
+import { NIGERIAN_BANKS, resolveBankAccount, createPaystackSubaccount, initiateSellerPayout } from '../lib/paystack'
 import { logDebug } from '../components/DebugConsole'
 
 function formatNaira(amount) {
@@ -32,8 +32,9 @@ export default function SellerHubPage() {
     const [editingListing, setEditingListing] = useState(null)
     const [inventoryFilter, setInventoryFilter] = useState('All') // 'All', 'Digital', 'Physical', 'Inactive'
     const [searchQuery, setSearchQuery] = useState('')
+    const [filterCategory, setFilterCategory] = useState('all')
 
-    // Payout form state
+    // Payout settings states
     const [bankName, setBankName] = useState('')
     const [bankCode, setBankCode] = useState('')
     const [accountNumber, setAccountNumber] = useState('')
@@ -43,6 +44,11 @@ export default function SellerHubPage() {
     const [savingPayout, setSavingPayout] = useState(false)
     const [payoutSuccess, setPayoutSuccess] = useState(false)
     const [payoutError, setPayoutError] = useState('')
+
+    // Withdrawal states
+    const [withdrawing, setWithdrawing] = useState(false)
+    const [withdrawSuccess, setWithdrawSuccess] = useState('')
+    const [withdrawError, setWithdrawError] = useState('')
 
     const currentUserId = session?.user?.id || user?.uid || user?.id
 
@@ -259,6 +265,42 @@ export default function SellerHubPage() {
             logDebug('error', `Failed to save payout settings: ${err.message}`, err)
         } finally {
             setSavingPayout(false)
+        }
+    }
+
+    const handleWithdrawEarnings = async () => {
+        const availableBalance = analytics?.totalEarningsNaira || 0
+        if (availableBalance <= 0) {
+            setWithdrawError('No earnings available to withdraw yet.')
+            return
+        }
+
+        if (!user?.account_number || !user?.bank_code) {
+            setWithdrawError('Please save and verify your settlement bank account below before withdrawing.')
+            return
+        }
+
+        setWithdrawing(true)
+        setWithdrawError('')
+        setWithdrawSuccess('')
+
+        try {
+            const res = await initiateSellerPayout({
+                sellerId: currentUserId,
+                amountInNaira: availableBalance,
+                reason: `ZikShare Seller Earnings Payout (${user.displayName || 'Seller'})`
+            })
+
+            if (res.success) {
+                setWithdrawSuccess(`🎉 Successfully initiated transfer of ${formatNaira(availableBalance)} to ${user.bank_name || 'your bank'} (${user.account_number})!`)
+                logDebug('success', `Withdrawal transfer initiated: ${JSON.stringify(res.data)}`)
+            } else {
+                setWithdrawError(res.error || 'Failed to initiate transfer. Please verify your bank account.')
+            }
+        } catch (err) {
+            setWithdrawError(err.message || 'Error processing payout transfer.')
+        } finally {
+            setWithdrawing(false)
         }
     }
 
@@ -672,18 +714,92 @@ export default function SellerHubPage() {
 
                     {/* ──────────────── TAB 4: PAYOUT SETTINGS ──────────────── */}
                     {activeTab === 'payout' && (
-                        <div style={{ backgroundColor: 'white', borderRadius: '1rem', border: '1px solid var(--color-border)', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
-                                <div style={{ width: '2.75rem', height: '2.75rem', borderRadius: '0.75rem', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}>
-                                    <Building2 size={24} />
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                            {/* Available Balance & Instant Withdrawal Card */}
+                            <div style={{ backgroundColor: '#0F172A', borderRadius: '1rem', padding: '1.5rem', color: 'white', boxShadow: '0 10px 25px -5px rgba(15,23,42,0.3)', border: '1px solid #1E293B' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                    <div>
+                                        <p style={{ margin: '0 0 0.25rem', fontSize: '0.75rem', fontWeight: 600, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                            Available Seller Revenue
+                                        </p>
+                                        <h2 style={{ margin: 0, fontSize: '2rem', fontWeight: 800, color: '#10B981', letterSpacing: '-0.02em' }}>
+                                            {formatNaira(analytics?.totalEarningsNaira || 0)}
+                                        </h2>
+                                    </div>
+                                    <div style={{ padding: '0.375rem 0.75rem', borderRadius: '2rem', backgroundColor: '#1E293B', fontSize: '0.6875rem', fontWeight: 700, color: '#38BDF8', border: '1px solid #334155' }}>
+                                        {user?.paystack_subaccount_code ? '🟢 Instant Bank Split Active' : '⚡ On-Demand Bank Payout'}
+                                    </div>
                                 </div>
-                                <div>
-                                    <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>Direct Bank Payouts</h3>
-                                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Earnings from study materials are settled directly to your Nigerian bank account</p>
+
+                                <div style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', backgroundColor: '#1E293B', marginBottom: '1.25rem', fontSize: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ color: '#94A3B8' }}>Settlement Destination:</span>
+                                    <span style={{ fontWeight: 700, color: '#F1F5F9' }}>
+                                        {user?.account_name ? `${user.account_name} (${user.bank_name || 'Bank'})` : 'No bank account linked yet'}
+                                    </span>
                                 </div>
+
+                                {withdrawSuccess && (
+                                    <div style={{ padding: '0.75rem 1rem', borderRadius: '0.625rem', backgroundColor: '#064E3B', border: '1px solid #059669', color: '#6EE7B7', fontSize: '0.75rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <CheckCircle2 size={16} /> <span>{withdrawSuccess}</span>
+                                    </div>
+                                )}
+
+                                {withdrawError && (
+                                    <div style={{ padding: '0.75rem 1rem', borderRadius: '0.625rem', backgroundColor: '#7F1D1D', border: '1px solid #DC2626', color: '#FCA5A5', fontSize: '0.75rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                        <AlertCircle size={16} /> <span>{withdrawError}</span>
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={handleWithdrawEarnings}
+                                    disabled={withdrawing || !analytics?.totalEarningsNaira || analytics?.totalEarningsNaira <= 0 || !user?.account_number}
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.875rem',
+                                        borderRadius: '0.75rem',
+                                        border: 'none',
+                                        background: (!analytics?.totalEarningsNaira || analytics?.totalEarningsNaira <= 0 || !user?.account_number)
+                                            ? '#334155'
+                                            : 'linear-gradient(135deg, #10B981, #059669)',
+                                        color: 'white',
+                                        fontSize: '0.875rem',
+                                        fontWeight: 800,
+                                        fontFamily: 'inherit',
+                                        cursor: (!analytics?.totalEarningsNaira || analytics?.totalEarningsNaira <= 0 || !user?.account_number || withdrawing) ? 'not-allowed' : 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '0.5rem',
+                                        boxShadow: (analytics?.totalEarningsNaira > 0 && user?.account_number) ? '0 4px 14px rgba(16,185,129,0.4)' : 'none'
+                                    }}
+                                >
+                                    {withdrawing ? (
+                                        <>
+                                            <Loader2 size={18} className="animate-spin" />
+                                            <span>Processing Transfer to Bank...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <DollarSign size={18} />
+                                            <span>Withdraw {formatNaira(analytics?.totalEarningsNaira || 0)} to My Bank Account</span>
+                                        </>
+                                    )}
+                                </button>
                             </div>
 
-                            <form onSubmit={handleSavePayout}>
+                            {/* Settlement Bank Configuration Card */}
+                            <div style={{ backgroundColor: 'white', borderRadius: '1rem', border: '1px solid var(--color-border)', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.03)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                                    <div style={{ width: '2.75rem', height: '2.75rem', borderRadius: '0.75rem', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}>
+                                        <Building2 size={24} />
+                                    </div>
+                                    <div>
+                                        <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>Settlement Bank Account</h3>
+                                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Configure where your PDF sales revenue is automatically transferred</p>
+                                    </div>
+                                </div>
+
+                                <form onSubmit={handleSavePayout}>
                                 {/* Bank Selector */}
                                 <div style={{ marginBottom: '1rem' }}>
                                     <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.375rem' }}>Select Bank *</label>

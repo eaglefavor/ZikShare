@@ -3,6 +3,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ShieldAlert, CheckCircle2, Lock, ArrowRight, FileText, Loader2, Sparkles, RefreshCw } from 'lucide-react';
 import { getOrder, fulfillDigitalOrder, createSignedDownloadUrl } from '../lib/database';
 import { verifyPaystackPayment } from '../lib/paystack';
+import { downloadWatermarkedPdf } from '../lib/pdfWatermark';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -113,7 +114,16 @@ const PaymentSuccess = () => {
     try {
       const downloadUrl = await createSignedDownloadUrl(storagePath, 3600);
       if (downloadUrl) {
-        window.open(downloadUrl, '_blank');
+        // Parse buyer metadata for watermark
+        const buyerName = order?.buyer?.displayName || order?.watermark_text?.match(/LICENSED TO: ([^|]+)/i)?.[1]?.trim() || 'UNIZIK STUDENT';
+        const regNumber = order?.watermark_text?.match(/REG NO: ([^|]+)/i)?.[1]?.trim() || 'STUDENT';
+        const title = order?.product?.title || 'ZikShare Study Material';
+
+        await downloadWatermarkedPdf(downloadUrl, title, {
+          buyerName,
+          regNumber,
+          orderId: order?.id
+        });
       } else {
         alert('Could not generate secure download link. Please refresh or contact support.');
       }

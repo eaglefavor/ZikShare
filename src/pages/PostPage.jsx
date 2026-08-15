@@ -36,7 +36,7 @@ function withTimeout(promise, ms = 45000, errorMsg = 'Upload timed out. Please c
 
 export default function PostPage() {
     const navigate = useNavigate()
-    const { user, session, isAuthenticated } = useAuth()
+    const { user, session, isAuthenticated, loading: authLoading } = useAuth()
 
     // Mode: 'physical' or 'digital'
     const [postType, setPostType] = useState('physical')
@@ -275,6 +275,14 @@ export default function PostPage() {
             setUploadStep('')
             setCurrentStepIndex(0)
         }
+    }
+
+    if (authLoading) {
+        return (
+            <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Loader2 size={36} className="animate-spin" color="var(--color-brand)" />
+            </div>
+        )
     }
 
     if (!isAuthenticated) {

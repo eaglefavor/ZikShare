@@ -144,15 +144,43 @@ export async function updateListing(id, updates) {
 }
 
 export async function deleteListing(id) {
+    if (!id) return true
+
+    // 1. Invalidate caches immediately
+    invalidateCacheByPrefix('listings')
+    invalidateCacheByPrefix('digital')
+    invalidateCacheByPrefix('seller')
+    invalidateCacheByPrefix('catalog')
+    invalidateCacheByPrefix('feed')
+    invalidateCacheByPrefix(`listing-${id}`)
+
+    // 2. Mark status as deleted in digital_products and listings
     try {
-        const query = supabase.from('listings').delete().eq('id', id)
-        await queryWithTimeout(query, 8000, null)
+        await supabase.from('digital_products').update({ status: 'deleted' }).eq('id', id)
     } catch {}
 
     try {
-        const query = supabase.from('digital_products').delete().eq('id', id)
-        await queryWithTimeout(query, 8000, null)
+        await supabase.from('listings').update({ status: 'Deleted' }).eq('id', id)
     } catch {}
+
+    // 3. Hard delete from both tables
+    try {
+        await supabase.from('digital_products').delete().eq('id', id)
+    } catch (e) {
+        console.warn('Digital product hard delete note:', e)
+    }
+
+    try {
+        await supabase.from('listings').delete().eq('id', id)
+    } catch (e) {
+        console.warn('Physical listing hard delete note:', e)
+    }
+
+    // 4. Invalidate caches again
+    invalidateCacheByPrefix('listings')
+    invalidateCacheByPrefix('digital')
+    invalidateCacheByPrefix('seller')
+    invalidateCacheByPrefix(`listing-${id}`)
 
     return true
 }
@@ -355,13 +383,15 @@ export async function getSellerAnalytics(userId) {
             getUser(userId).catch(() => null)
         ])
 
-        const physicalListings = listingsRes?.data || []
-        const digitalProducts = (digitalRes?.data || []).map(d => ({
-            ...d,
-            isDigital: true,
-            priceInKobo: d.price,
-            price: d.price / 100,
-        }))
+        const physicalListings = (listingsRes?.data || []).filter(l => l.status !== 'Deleted' && l.status !== 'deleted')
+        const digitalProducts = (digitalRes?.data || [])
+            .filter(d => d.status !== 'deleted' && d.status !== 'Deleted')
+            .map(d => ({
+                ...d,
+                isDigital: true,
+                priceInKobo: d.price,
+                price: d.price / 100,
+            }))
         const orders = ordersRes?.data || []
 
         const totalPhysical = physicalListings.length

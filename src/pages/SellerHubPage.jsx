@@ -319,6 +319,27 @@ export default function SellerHubPage() {
         }
     }
 
+    const handleDeleteListing = async (listing) => {
+        if (!confirm(`Are you sure you want to delete "${listing.title}"? This cannot be undone.`)) {
+            return
+        }
+
+        try {
+            await deleteListing(listing.id)
+            setAnalytics(prev => ({
+                ...prev,
+                listings: (prev?.listings || []).filter(l => l.id !== listing.id),
+                totalListings: Math.max(0, (prev?.totalListings || 1) - 1)
+            }))
+            invalidateCacheByPrefix('listings')
+            invalidateCacheByPrefix('digital')
+            invalidateCacheByPrefix('seller')
+            invalidateCacheByPrefix(`listing-${listing.id}`)
+        } catch (err) {
+            alert('Failed to delete listing: ' + err.message)
+        }
+    }
+
     const filteredListings = (analytics?.listings || []).filter(item => {
         const matchesCategory = 
             inventoryFilter === 'All' ? true :
@@ -649,6 +670,13 @@ export default function SellerHubPage() {
                                                             style={{ padding: '0.375rem 0.625rem', borderRadius: '0.5rem', border: '1px solid #BFDBFE', backgroundColor: '#EFF6FF', color: '#1E40AF', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
                                                         >
                                                             <Edit3 size={12} /> Edit
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteListing(item)}
+                                                            title="Delete listing permanently"
+                                                            style={{ padding: '0.375rem 0.625rem', borderRadius: '0.5rem', border: '1px solid #FECACA', backgroundColor: '#FEF2F2', color: '#DC2626', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                                                        >
+                                                            <Trash2 size={12} /> Delete
                                                         </button>
                                                     </div>
                                                 </div>

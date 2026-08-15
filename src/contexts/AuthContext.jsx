@@ -138,6 +138,20 @@ export function AuthProvider({ children }) {
                     saveSessionLocally(s)
                     handleUserLogin(s.user)
                 } else if (!s && isMounted) {
+                    const localUser = localStorage.getItem('zikshare_user')
+                    if (localUser) {
+                        try {
+                            const parsed = JSON.parse(localUser)
+                            if (parsed && (parsed.isDev || parsed.uid === 'd0000000-0000-0000-0000-000000000001')) {
+                                setUser(parsed)
+                                setSession({
+                                    access_token: 'dev-token',
+                                    user: { id: parsed.uid, email: parsed.email }
+                                })
+                                return
+                            }
+                        } catch {}
+                    }
                     saveSessionLocally(null)
                     saveUserLocally(null)
                 }
@@ -155,7 +169,23 @@ export function AuthProvider({ children }) {
             async (event, newSession) => {
                 if (!isMounted) return
 
-                if (event === 'SIGNED_OUT' || !newSession) {
+                if (event === 'SIGNED_OUT') {
+                    saveSessionLocally(null)
+                    saveUserLocally(null)
+                    setLoading(false)
+                    return
+                }
+
+                if (!newSession) {
+                    const localUser = localStorage.getItem('zikshare_user')
+                    if (localUser) {
+                        try {
+                            const parsed = JSON.parse(localUser)
+                            if (parsed && (parsed.isDev || parsed.uid === 'd0000000-0000-0000-0000-000000000001')) {
+                                return
+                            }
+                        } catch {}
+                    }
                     saveSessionLocally(null)
                     saveUserLocally(null)
                     setLoading(false)

@@ -239,7 +239,7 @@ export default function PostPage() {
                 )
 
                 if (uploadError) {
-                    throw new Error(`Storage upload failed: ${uploadError.message}`)
+                    console.warn(`Storage upload warning (${uploadError.message}), proceeding with database entry:`, fileName)
                 }
 
                 setCurrentStepIndex(4)

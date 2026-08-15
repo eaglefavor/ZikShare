@@ -926,6 +926,7 @@ export default function SellerHubPage() {
                                 </button>
                             </form>
                         </div>
+                        </div>
                     )}
                 </div>
             )}

@@ -9,7 +9,7 @@ function queryWithTimeout(promise, ms = 8000, fallbackVal = null) {
         }, ms)
     })
 
-    return Promise.race([promise, timeoutPromise]).finally(() => {
+    return Promise.race([Promise.resolve(promise), timeoutPromise]).finally(() => {
         if (timer) clearTimeout(timer)
     })
 }
@@ -215,14 +215,21 @@ export async function getUser(userId) {
 export async function upsertUser(user) {
     if (!user?.uid) return null
     try {
+        const payload = {
+            uid: user.uid,
+            email: user.email || '',
+            displayName: user.displayName || 'Student',
+            ...user,
+            updatedAt: new Date().toISOString(),
+        }
         const query = supabase
             .from('users')
-            .upsert(user, { onConflict: 'uid' })
+            .upsert(payload, { onConflict: 'uid' })
             .select()
             .single()
 
-        const res = await queryWithTimeout(query, 5000, { data: user })
-        return res?.data || user
+        const res = await queryWithTimeout(query, 5000, { data: payload })
+        return res?.data || payload
     } catch {
         return user
     }

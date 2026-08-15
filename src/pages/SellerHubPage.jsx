@@ -11,6 +11,7 @@ import { getSellerAnalytics, updateListing, deleteListing, upsertUser } from '..
 import EditListingModal from '../components/EditListingModal'
 import { invalidateCacheByPrefix } from '../lib/cache'
 import { NIGERIAN_BANKS, resolveBankAccount } from '../lib/paystack'
+import { logDebug } from '../components/DebugConsole'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount || 0)
@@ -109,6 +110,7 @@ export default function SellerHubPage() {
         setResolvingAccount(true)
         setPayoutError('')
         setAccountVerified(false)
+        logDebug('info', `Resolving bank account: ${accNum} with bank code ${bCode}...`)
 
         try {
             const res = await resolveBankAccount(accNum, bCode)
@@ -116,14 +118,17 @@ export default function SellerHubPage() {
                 setAccountName(res.accountName)
                 setAccountVerified(true)
                 setPayoutError('')
+                logDebug('success', `Account resolved: "${res.accountName}"`)
             } else {
                 setAccountName('')
                 setAccountVerified(false)
                 setPayoutError(res.error || 'Could not verify account name.')
+                logDebug('warn', `Account resolution failed: ${res.error || 'Unknown'}`)
             }
         } catch (err) {
             setAccountVerified(false)
             setPayoutError(err.message || 'Error resolving bank account.')
+            logDebug('error', `Bank resolve error: ${err.message}`, err)
         } finally {
             setResolvingAccount(false)
         }
@@ -136,6 +141,7 @@ export default function SellerHubPage() {
         setBankName(bankObj ? bankObj.name : '')
         setAccountVerified(false)
         setPayoutError('')
+        logDebug('info', `Bank changed: ${bankObj?.name || 'None'} (${selectedCode})`)
         if (accountNumber && accountNumber.length === 10 && selectedCode) {
             handleResolve(accountNumber, selectedCode)
         }
@@ -171,35 +177,42 @@ export default function SellerHubPage() {
         const cleanNum = (accountNumber || '').replace(/[^0-9]/g, '').slice(0, 10)
         if (!cleanNum || cleanNum.length !== 10) {
             setPayoutError('Please enter a valid 10-digit NUBAN account number.')
+            logDebug('warn', 'Save payout blocked: Invalid NUBAN length.')
             return
         }
         if (!bankCode || !bankName) {
             setPayoutError('Please select your bank.')
+            logDebug('warn', 'Save payout blocked: No bank selected.')
             return
         }
 
         setSavingPayout(true)
         setPayoutError('')
         setPayoutSuccess(false)
+        logDebug('info', `Saving payout details: ${bankName} - ${cleanNum}...`)
 
         let finalAccountName = accountName
         // If not verified yet, resolve right now before saving
         if (!accountVerified || !finalAccountName) {
             setResolvingAccount(true)
+            logDebug('info', 'Auto-resolving account before saving...')
             try {
                 const res = await resolveBankAccount(cleanNum, bankCode)
                 if (res.success && res.accountName) {
                     finalAccountName = res.accountName
                     setAccountName(res.accountName)
                     setAccountVerified(true)
+                    logDebug('success', `Auto-resolved account: "${res.accountName}"`)
                 } else {
                     setPayoutError(res.error || 'Could not verify account with bank. Check account number and bank.')
+                    logDebug('error', `Auto-resolve failed: ${res.error}`)
                     setSavingPayout(false)
                     setResolvingAccount(false)
                     return
                 }
             } catch (err) {
                 setPayoutError(err.message || 'Error resolving bank account.')
+                logDebug('error', `Auto-resolve error: ${err.message}`)
                 setSavingPayout(false)
                 setResolvingAccount(false)
                 return
@@ -217,10 +230,12 @@ export default function SellerHubPage() {
                 account_name: finalAccountName,
             })
             setPayoutSuccess(true)
+            logDebug('success', `Payout settings saved successfully for UID: ${currentUserId}`)
             await refreshUser()
             setTimeout(() => setPayoutSuccess(false), 4000)
         } catch (err) {
             setPayoutError(err.message || 'Failed to save payout settings.')
+            logDebug('error', `Failed to save payout settings: ${err.message}`, err)
         } finally {
             setSavingPayout(false)
         }

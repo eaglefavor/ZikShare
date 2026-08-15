@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import BottomNav from './components/BottomNav'
+import DebugConsole from './components/DebugConsole'
 import HomePage from './pages/HomePage'
 import SearchPage from './pages/SearchPage'
 import PostPage from './pages/PostPage'
@@ -54,6 +55,7 @@ function App() {
             }
           />
         </Routes>
+        <DebugConsole />
       </div>
     </AuthProvider>
   )

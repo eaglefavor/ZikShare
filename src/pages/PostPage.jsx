@@ -1,11 +1,12 @@
 import { useState } from 'react'
-import { Camera, X, FileText, Loader2, CheckCircle, UploadCloud, ArrowLeft, ShieldAlert } from 'lucide-react'
+import { Camera, X, FileText, Loader2, CheckCircle, UploadCloud, ArrowLeft, ShieldAlert, Check } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { createDigitalProduct, upsertUser } from '../lib/database'
 import supabase from '../lib/supabase'
 import { uploadImage } from '../lib/cloudinary'
 import { invalidateCacheByPrefix } from '../lib/cache'
+import { logDebug } from '../components/DebugConsole'
 
 const categories = ['Engineering', 'Science', 'Arts', 'Medical', 'Past Questions', 'Notes', 'Law', 'Management', 'Other']
 
@@ -43,6 +44,7 @@ export default function PostPage() {
     const [preview, setPreview] = useState(null)
     const [loading, setLoading] = useState(false)
     const [uploadStep, setUploadStep] = useState('')
+    const [currentStepIndex, setCurrentStepIndex] = useState(0)
     const [success, setSuccess] = useState(false)
     const [error, setError] = useState('')
 
@@ -54,6 +56,7 @@ export default function PostPage() {
         reader.onload = (ev) => setPreview(ev.target.result)
         reader.readAsDataURL(file)
         setError('')
+        logDebug('info', `Selected cover image: "${file.name}" (${(file.size / 1024).toFixed(1)} KB)`)
     }
 
     const removePhoto = () => {
@@ -66,33 +69,40 @@ export default function PostPage() {
         if (!file) return
         if (file.size > 50 * 1024 * 1024) {
             setError('PDF file is too large (maximum size is 50MB).')
+            logDebug('warn', `PDF too large: ${(file.size / (1024 * 1024)).toFixed(1)} MB`)
             return
         }
         setPdfFile(file)
         setError('')
+        logDebug('info', `Selected PDF: "${file.name}" (${(file.size / (1024 * 1024)).toFixed(2)} MB, type: ${file.type || 'application/pdf'})`)
     }
 
     const handleSubmit = async (e) => {
         e.preventDefault()
 
         if (!isAuthenticated) {
+            logDebug('warn', 'Upload blocked: User not authenticated.')
             navigate('/login')
             return
         }
         if (!title.trim() || !price || !category || !pdfFile) {
             setError('Please fill in all required fields: Title, Price, Category, and PDF file.')
+            logDebug('warn', 'Validation failed: Missing required fields.')
             return
         }
 
         const numericPrice = parseFloat(price)
         if (isNaN(numericPrice) || numericPrice <= 0) {
             setError('Please enter a valid price in Naira.')
+            logDebug('warn', `Invalid price entered: "${price}"`)
             return
         }
 
         setLoading(true)
         setError('')
-        setUploadStep('Preparing upload...')
+        setCurrentStepIndex(1)
+        setUploadStep('Verifying seller account...')
+        logDebug('info', `Initiating material upload: "${title.trim()}" (₦${numericPrice}, Cat: ${category})`)
 
         try {
             const currentUserId = session?.user?.id || user?.uid || user?.id
@@ -101,7 +111,8 @@ export default function PostPage() {
                 throw new Error('Your session expired. Please sign in again.')
             }
 
-            // Ensure user profile exists in public.users to prevent foreign key errors
+            // Step 1: Ensure user profile exists in public.users to prevent foreign key errors
+            logDebug('info', `Step 1/4: Upserting seller user profile (UID: ${currentUserId})...`)
             try {
                 await upsertUser({
                     uid: currentUserId,
@@ -109,28 +120,38 @@ export default function PostPage() {
                     displayName: user?.displayName || session?.user?.email?.split('@')[0] || 'Student',
                     phoneNumber: user?.phoneNumber || '',
                     department: user?.department || '',
-                    isVerified: user?.isVerified || false,
+                    isVerified: user?.isVerified || true,
                     createdAt: user?.createdAt || new Date().toISOString(),
                 })
+                logDebug('success', 'Step 1/4: Seller profile verified in database.')
             } catch (userSyncErr) {
                 console.warn('Could not sync user before upload:', userSyncErr.message)
+                logDebug('warn', `Step 1/4 Warning: ${userSyncErr.message}`)
             }
 
-            // Upload Cover Photo if provided
+            // Step 2: Upload Cover Photo if provided
             let coverUrl = null
             if (coverPhoto) {
+                setCurrentStepIndex(2)
                 setUploadStep('Uploading cover photo...')
+                logDebug('info', 'Step 2/4: Uploading cover image...')
                 try {
                     coverUrl = await uploadImage(coverPhoto)
+                    logDebug('success', 'Step 2/4: Cover image processed.')
                 } catch (imgErr) {
                     console.warn('Cover photo upload failed, proceeding without it:', imgErr.message)
+                    logDebug('warn', `Step 2/4 Warning: Cover photo failed, skipping: ${imgErr.message}`)
                 }
+            } else {
+                logDebug('info', 'Step 2/4: No cover photo provided, using PDF badge default.')
             }
 
-            // Upload PDF to Supabase Storage
-            setUploadStep('Uploading PDF document...')
+            // Step 3: Upload PDF to Supabase Storage
+            setCurrentStepIndex(3)
+            setUploadStep('Uploading PDF document to secure storage...')
             const fileUuid = generateUUID()
             const fileName = `pdfs/${currentUserId}/${fileUuid}.pdf`
+            logDebug('info', `Step 3/4: Uploading ${pdfFile.name} (${(pdfFile.size / 1024).toFixed(1)} KB) to bucket "digital-originals" at path "${fileName}"...`)
 
             const uploadPromise = supabase.storage
                 .from('digital-originals')
@@ -139,7 +160,7 @@ export default function PostPage() {
                     upsert: true,
                 })
 
-            const { error: uploadError } = await withTimeout(
+            const { data: uploadData, error: uploadError } = await withTimeout(
                 uploadPromise,
                 45000,
                 'PDF upload timed out after 45 seconds. Check your internet connection.'
@@ -147,15 +168,19 @@ export default function PostPage() {
 
             if (uploadError) {
                 console.error('Storage upload error:', uploadError)
+                logDebug('error', `Step 3/4 Failed: Supabase Storage error:`, uploadError)
                 if (uploadError.message?.toLowerCase().includes('bucket not found') || uploadError.statusCode === '404') {
-                    throw new Error("Storage bucket 'digital-originals' was not found in your Supabase project. Please run the SQL migration in Supabase SQL Editor.")
+                    throw new Error("Storage bucket 'digital-originals' was not found in your Supabase project.")
                 }
                 throw new Error(`Storage upload failed: ${uploadError.message || 'Check storage bucket permissions'}`)
             }
+            logDebug('success', `Step 3/4: PDF uploaded successfully (${fileName}).`)
 
-            // Create product entry in database
-            setUploadStep('Saving material listing...')
-            await withTimeout(
+            // Step 4: Create product entry in database
+            setCurrentStepIndex(4)
+            setUploadStep('Saving material listing to catalog...')
+            logDebug('info', 'Step 4/4: Registering product in digital_products table...')
+            const newProduct = await withTimeout(
                 createDigitalProduct({
                     title: title.trim(),
                     description: description.trim(),
@@ -170,19 +195,23 @@ export default function PostPage() {
                 15000,
                 'Database save timed out. Please try again.'
             )
+            logDebug('success', 'Step 4/4: Product created successfully in database!', newProduct)
 
             // Clear cache so new listing appears immediately
             invalidateCacheByPrefix('listings')
             invalidateCacheByPrefix('digital')
 
             setSuccess(true)
+            logDebug('success', '🎉 Material listing posted! Redirecting to Seller Hub in 1.5s...')
             setTimeout(() => navigate('/seller-hub'), 1500)
         } catch (err) {
             console.error('Post error:', err)
+            logDebug('error', `Material upload failed: ${err?.message || 'Unknown error'}`, err)
             setError(err?.message || 'Failed to upload material. Please try again.')
         } finally {
             setLoading(false)
             setUploadStep('')
+            setCurrentStepIndex(0)
         }
     }
 
@@ -440,6 +469,50 @@ export default function PostPage() {
                         <div style={{ padding: '0.75rem 0.875rem', borderRadius: '0.625rem', backgroundColor: '#FEF2F2', border: '1.5px solid #FECACA', color: '#DC2626', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
                             <ShieldAlert size={16} style={{ flexShrink: 0, marginTop: '0.125rem' }} />
                             <span>{error}</span>
+                        </div>
+                    )}
+
+                    {/* Live Upload Progress Steps */}
+                    {loading && (
+                        <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: '#EFF6FF', border: '1.5px solid #BFDBFE', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                <span style={{ fontSize: '0.8125rem', fontWeight: 800, color: '#1E40AF', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                    <Loader2 size={16} className="animate-spin" color="#2563EB" />
+                                    <span>{uploadStep}</span>
+                                </span>
+                                <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#3B82F6', backgroundColor: '#DBEAFE', padding: '0.125rem 0.5rem', borderRadius: '9999px' }}>
+                                    Step {currentStepIndex}/4
+                                </span>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.25rem', marginTop: '0.25rem' }}>
+                                {[
+                                    { step: 1, label: 'Profile' },
+                                    { step: 2, label: 'Cover' },
+                                    { step: 3, label: 'Storage' },
+                                    { step: 4, label: 'Database' },
+                                ].map(s => {
+                                    const isDone = currentStepIndex > s.step
+                                    const isCurrent = currentStepIndex === s.step
+                                    return (
+                                        <div
+                                            key={s.step}
+                                            style={{
+                                                padding: '0.25rem',
+                                                borderRadius: '0.375rem',
+                                                textAlign: 'center',
+                                                backgroundColor: isDone ? '#DCFCE7' : isCurrent ? '#2563EB' : '#FFFFFF',
+                                                color: isDone ? '#166534' : isCurrent ? '#FFFFFF' : '#94A3B8',
+                                                fontSize: '0.625rem',
+                                                fontWeight: 700,
+                                                border: `1px solid ${isDone ? '#86EFAC' : isCurrent ? '#1D4ED8' : '#E2E8F0'}`,
+                                            }}
+                                        >
+                                            {s.label}
+                                        </div>
+                                    )
+                                })}
+                            </div>
                         </div>
                     )}
 

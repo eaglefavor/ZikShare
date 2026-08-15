@@ -138,20 +138,6 @@ export function AuthProvider({ children }) {
                     saveSessionLocally(s)
                     handleUserLogin(s.user)
                 } else if (!s && isMounted) {
-                    const localUser = localStorage.getItem('zikshare_user')
-                    if (localUser) {
-                        try {
-                            const parsed = JSON.parse(localUser)
-                            if (parsed && (parsed.isDev || parsed.uid === 'd0000000-0000-0000-0000-000000000001')) {
-                                setUser(parsed)
-                                setSession({
-                                    access_token: 'dev-token',
-                                    user: { id: parsed.uid, email: parsed.email }
-                                })
-                                return
-                            }
-                        } catch {}
-                    }
                     saveSessionLocally(null)
                     saveUserLocally(null)
                 }
@@ -177,15 +163,6 @@ export function AuthProvider({ children }) {
                 }
 
                 if (!newSession) {
-                    const localUser = localStorage.getItem('zikshare_user')
-                    if (localUser) {
-                        try {
-                            const parsed = JSON.parse(localUser)
-                            if (parsed && (parsed.isDev || parsed.uid === 'd0000000-0000-0000-0000-000000000001')) {
-                                return
-                            }
-                        } catch {}
-                    }
                     saveSessionLocally(null)
                     saveUserLocally(null)
                     setLoading(false)
@@ -217,69 +194,18 @@ export function AuthProvider({ children }) {
         }
     }, [])
 
-    async function signInAsDev(customEmail = 'debelucharles@unizik.edu.ng', customName = 'Charles Debelu') {
-        const devUser = {
-            uid: 'd0000000-0000-0000-0000-000000000001',
-            email: customEmail,
-            displayName: customName,
-            phoneNumber: '2348012345678',
-            department: 'Computer Science',
-            isVerified: true,
-            createdAt: new Date().toISOString(),
-        }
-        const devSession = {
-            access_token: 'dev-token',
-            token_type: 'bearer',
-            expires_in: 31536000,
-            user: {
-                id: 'd0000000-0000-0000-0000-000000000001',
-                email: customEmail,
-                user_metadata: { full_name: customName },
-            }
-        }
-        saveSessionLocally(devSession)
-        saveUserLocally(devUser)
-        setUser(devUser)
-        setSession(devSession)
-        try {
-            await upsertUser(devUser)
-        } catch (err) {
-            console.warn('Dev user db sync warning:', err)
-        }
-        return { user: devUser, session: devSession }
-    }
-
     async function signInWithEmail(email, password) {
         const cleanEmail = email.trim().toLowerCase()
-        
-        // Dev master credentials bypass
-        if ((cleanEmail === 'debelucharles@gmail.com' || cleanEmail === 'debelucharles@unizik.edu.ng' || cleanEmail === 'developer@unizik.edu.ng') && password === 'g24p2Zc5jkwdFsU') {
-            return signInAsDev(cleanEmail, 'Charles Debelu')
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: cleanEmail,
+            password,
+        })
+        if (error) throw error
+        if (data?.session) {
+            saveSessionLocally(data.session)
+            handleUserLogin(data.session.user)
         }
-
-        try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email: cleanEmail,
-                password,
-            })
-            if (error) {
-                // If email unconfirmed or test user fallback
-                if (error.message.includes('Email not confirmed') || cleanEmail.includes('debelu')) {
-                    return signInAsDev(cleanEmail, deriveNameFromEmail(cleanEmail))
-                }
-                throw error
-            }
-            if (data?.session) {
-                saveSessionLocally(data.session)
-                handleUserLogin(data.session.user)
-            }
-            return data
-        } catch (err) {
-            if (err.message?.includes('Email not confirmed') || cleanEmail.includes('debelu')) {
-                return signInAsDev(cleanEmail, deriveNameFromEmail(cleanEmail))
-            }
-            throw err
-        }
+        return data
     }
 
     async function signUpWithEmail(email, password, displayName) {
@@ -348,7 +274,6 @@ export function AuthProvider({ children }) {
         isAuthenticated,
         isVerified,
         signInWithEmail,
-        signInAsDev,
         signUpWithEmail,
         signInWithGoogle,
         signOut,

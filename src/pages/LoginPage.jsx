@@ -12,7 +12,7 @@ export default function LoginPage() {
     const [loading, setLoading] = useState(false)
     const [error, setError] = useState('')
     const navigate = useNavigate()
-    const { signInWithEmail, signInAsDev, signUpWithEmail, signInWithGoogle, authError } = useAuth()
+    const { signInWithEmail, signUpWithEmail, signInWithGoogle, authError } = useAuth()
 
     useEffect(() => {
         if (authError) {
@@ -153,34 +153,6 @@ export default function LoginPage() {
                         <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                     </svg>
                     Continue with UNIZIK Google Account
-                </button>
-
-                {/* Dev Quick Login Button */}
-                <button
-                    type="button"
-                    onClick={async () => {
-                        await signInAsDev('debelucharles@unizik.edu.ng', 'Charles Debelu (Dev)');
-                        navigate('/');
-                    }}
-                    style={{
-                        width: '100%',
-                        padding: '0.625rem',
-                        borderRadius: '0.75rem',
-                        border: '1px dashed #3B82F6',
-                        backgroundColor: '#EFF6FF',
-                        color: '#1D4ED8',
-                        fontSize: '0.75rem',
-                        fontWeight: 700,
-                        fontFamily: 'inherit',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.375rem',
-                        marginTop: '0.5rem',
-                    }}
-                >
-                    ⚡ Quick Dev Login (Charles Debelu - Verified Student)
                 </button>
 
                 {/* Divider */}

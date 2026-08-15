@@ -188,9 +188,6 @@ export function AuthProvider({ children }) {
     }, [])
 
     async function signInWithEmail(email, password) {
-        if (!isUnizikEmail(email)) {
-            throw new Error('Please sign in with your official UNIZIK email (@unizik.edu.ng).')
-        }
         const { data, error } = await supabase.auth.signInWithPassword({
             email: email.trim().toLowerCase(),
             password,

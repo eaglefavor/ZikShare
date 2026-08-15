@@ -133,15 +133,31 @@ export async function watermarkPdfBytes(pdfBytes, { buyerName, regNumber, orderI
  */
 export async function downloadWatermarkedPdf(signedPdfUrl, filename, metadata) {
   const response = await fetch(signedPdfUrl);
-  if (!response.ok) throw new Error('Could not download original PDF from storage');
+  if (!response.ok) throw new Error('Could not download file from storage');
 
   const originalBuffer = await response.arrayBuffer();
-  const watermarkedBytes = await watermarkPdfBytes(originalBuffer, metadata);
+  
+  // Check if buffer is already a password-encrypted protected PDF
+  const bufferSlice = new Uint8Array(originalBuffer.slice(0, Math.min(originalBuffer.byteLength, 8192)));
+  const tailSlice = new Uint8Array(originalBuffer.slice(Math.max(0, originalBuffer.byteLength - 8192)));
+  const headerStr = new TextDecoder('latin1').decode(bufferSlice);
+  const tailStr = new TextDecoder('latin1').decode(tailSlice);
+  
+  const isAlreadyEncrypted = headerStr.includes('/Encrypt') || tailStr.includes('/Encrypt');
+  
+  let finalBytes;
+  if (isAlreadyEncrypted) {
+    // Preserve the encrypted & watermarked binary payload exactly as generated
+    finalBytes = originalBuffer;
+  } else {
+    // Dynamically apply watermark for legacy unencrypted uploads
+    finalBytes = await watermarkPdfBytes(originalBuffer, metadata);
+  }
 
-  const blob = new Blob([watermarkedBytes], { type: 'application/pdf' });
+  const blob = new Blob([finalBytes], { type: 'application/pdf' });
   const blobUrl = URL.createObjectURL(blob);
 
-  const cleanFilename = (filename || 'ZikShare-Study-Material').replace(/\.pdf$/i, '');
+  const cleanFilename = (filename || 'ZikShare-Study-Material').replace(/\.pdf$/i, '').replace(/[/\\?%*:|"<>]/g, '-');
   const downloadLink = document.createElement('a');
   downloadLink.href = blobUrl;
   downloadLink.download = `${cleanFilename} - Licensed Copy.pdf`;

@@ -50,14 +50,38 @@ export default function SellerHubPage() {
             setLoading(false)
             return
         }
-        loadDashboardData()
+
+        let isMounted = true
+        // Guarantee loading state terminates within 4 seconds max
+        const safetyTimer = setTimeout(() => {
+            if (isMounted) setLoading(false)
+        }, 4000)
+
+        loadDashboardData().finally(() => {
+            if (isMounted) setLoading(false)
+        })
+
+        return () => {
+            isMounted = false
+            clearTimeout(safetyTimer)
+        }
     }, [isAuthenticated, currentUserId])
 
     async function loadDashboardData() {
-        setLoading(true)
         try {
             const data = await getSellerAnalytics(currentUserId)
-            setAnalytics(data)
+            setAnalytics(data || {
+                totalEarningsNaira: 0,
+                totalSalesCount: 0,
+                activeListings: 0,
+                totalPhysical: 0,
+                totalDigital: 0,
+                totalListings: 0,
+                orders: [],
+                topProducts: [],
+                userProfile: user || null,
+                listings: []
+            })
             if (data?.userProfile) {
                 setBankName(data.userProfile.bank_name || '')
                 setAccountNumber(data.userProfile.account_number || '')
@@ -214,6 +238,38 @@ export default function SellerHubPage() {
         { id: 'orders', label: `Orders (${analytics?.totalSalesCount || 0})`, icon: ShoppingBag },
         { id: 'payout', label: 'Payouts', icon: Building2 },
     ]
+
+    if (!isAuthenticated) {
+        return (
+            <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backgroundColor: '#F8FAFC' }}>
+                <div style={{ backgroundColor: 'white', padding: '2rem 1.5rem', borderRadius: '1.25rem', border: '1px solid var(--color-border)', maxWidth: '24rem', width: '100%', textAlign: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                    <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '9999px', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: '#2563EB', fontSize: '1.5rem' }}>
+                        🏪
+                    </div>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.5rem', color: '#0F172A' }}>Seller Hub</h2>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', margin: '0 0 1.5rem' }}>Sign in with your UNIZIK student account to manage your listings, sales, analytics, and bank payouts.</p>
+                    <button
+                        onClick={() => navigate('/login')}
+                        style={{
+                            width: '100%',
+                            padding: '0.875rem',
+                            borderRadius: '0.75rem',
+                            border: 'none',
+                            background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
+                            color: '#FFFFFF',
+                            fontSize: '0.9375rem',
+                            fontWeight: 800,
+                            fontFamily: 'inherit',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 14px rgba(59,130,246,0.35)'
+                        }}
+                    >
+                        Sign In / Register
+                    </button>
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', paddingBottom: '5rem' }}>

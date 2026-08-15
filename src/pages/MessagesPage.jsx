@@ -39,24 +39,35 @@ export default function MessagesPage() {
         let isMounted = true
         setLoading(true)
 
+        const safetyTimer = setTimeout(() => {
+            if (isMounted) setLoading(false)
+        }, 3000)
+
         async function fetchConversations() {
             try {
                 const convs = await getConversations(currentUserId)
                 if (!isMounted) return
                 setConversations(convs || [])
+                // Immediately unblock spinner once conversations list is loaded
+                setLoading(false)
 
-                // Fetch other users' profiles in background
-                const userMap = {}
-                for (const conv of (convs || [])) {
-                    const otherId = conv.buyerId === currentUserId ? conv.sellerId : conv.buyerId
-                    if (otherId && !userMap[otherId]) {
+                // Fetch other users' profiles concurrently in background
+                const otherIds = [...new Set((convs || []).map(c => c.buyerId === currentUserId ? c.sellerId : c.buyerId).filter(Boolean))]
+                const userEntries = await Promise.all(
+                    otherIds.map(async (id) => {
                         try {
-                            const u = await getUser(otherId)
-                            if (u) userMap[otherId] = u
-                        } catch { /* skip */ }
-                    }
+                            const u = await getUser(id)
+                            return u ? [id, u] : null
+                        } catch {
+                            return null
+                        }
+                    })
+                )
+
+                if (isMounted) {
+                    const userMap = Object.fromEntries(userEntries.filter(Boolean))
+                    setOtherUsers(userMap)
                 }
-                if (isMounted) setOtherUsers(userMap)
             } catch (err) {
                 console.warn('Failed to load conversations:', err)
             } finally {
@@ -68,6 +79,7 @@ export default function MessagesPage() {
 
         return () => {
             isMounted = false
+            clearTimeout(safetyTimer)
         }
     }, [isAuthenticated, currentUserId])
 

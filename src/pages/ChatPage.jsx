@@ -48,40 +48,55 @@ export default function ChatPage() {
         if (!conversationId || !myId) return
         let unsubscribe = null
 
+        let isMounted = true
+        const safetyTimer = setTimeout(() => {
+            if (isMounted) setLoading(false)
+        }, 3000)
+
         async function load() {
             try {
                 const conv = await getConversation(conversationId)
+                if (!isMounted) return
                 setConversation(conv)
 
                 const msgs = await getMessages(conversationId)
-                setMessages(msgs)
+                if (!isMounted) return
+                setMessages(msgs || [])
 
                 // Mark as read
                 markConversationRead(conversationId)
 
                 // Load the other user's profile
-                const otherId = conv.buyerId === myId ? conv.sellerId : conv.buyerId
-                const other = await getUser(otherId)
-                setOtherUser(other)
+                if (conv) {
+                    const otherId = conv.buyerId === myId ? conv.sellerId : conv.buyerId
+                    if (otherId) {
+                        const other = await getUser(otherId)
+                        if (isMounted) setOtherUser(other)
+                    }
+                }
             } catch (err) {
                 console.error('Failed to load chat:', err)
             } finally {
-                setLoading(false)
+                if (isMounted) setLoading(false)
             }
 
             // Subscribe to real-time messages
             unsubscribe = subscribeToMessages(conversationId, (newMsg) => {
+                if (!isMounted) return
                 setMessages(prev => {
                     if (prev.some(m => m.id === newMsg.id)) return prev
                     return [...prev, newMsg]
                 })
-                // Mark as read since user is viewing the chat
                 markConversationRead(conversationId)
             })
         }
 
         load()
-        return () => { if (unsubscribe) unsubscribe() }
+        return () => {
+            isMounted = false
+            clearTimeout(safetyTimer)
+            if (unsubscribe) unsubscribe()
+        }
     }, [conversationId, myId])
 
     // Auto-scroll to bottom when messages change

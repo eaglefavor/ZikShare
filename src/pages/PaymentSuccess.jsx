@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { ShieldAlert, CheckCircle2, Lock, ArrowRight, FileText, Loader2, Sparkles, RefreshCw } from 'lucide-react';
 import { getOrder, fulfillDigitalOrder, createSignedDownloadUrl } from '../lib/database';
+import { verifyPaystackPayment } from '../lib/paystack';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -26,6 +27,22 @@ const PaymentSuccess = () => {
       if (!reference) return;
 
       try {
+        // 1. Try server-verified payment check
+        if (!isFulfillingRef.current) {
+          try {
+            const verifyRes = await verifyPaystackPayment(reference);
+            if (verifyRes.success && verifyRes.order && isMounted) {
+              setOrder(verifyRes.order);
+              setStatus('ready');
+              if (pollInterval) clearInterval(pollInterval);
+              return;
+            }
+          } catch (vErr) {
+            console.warn('Server verify check note:', vErr);
+          }
+        }
+
+        // 2. Query order from database
         const orderData = await getOrder(reference);
 
         if (orderData && isMounted) {
@@ -37,7 +54,7 @@ const PaymentSuccess = () => {
             return;
           }
 
-          // If still pending after 3.5s, auto-fulfill directly
+          // 3. If still pending after 3.5s, auto-fulfill directly
           if (orderData.status === 'pending' && !isFulfillingRef.current) {
             isFulfillingRef.current = true;
             try {

@@ -10,7 +10,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { getSellerAnalytics, updateListing, deleteListing, upsertUser } from '../lib/database'
 import EditListingModal from '../components/EditListingModal'
 import { invalidateCacheByPrefix } from '../lib/cache'
-import { NIGERIAN_BANKS, resolveBankAccount } from '../lib/paystack'
+import { NIGERIAN_BANKS, resolveBankAccount, createPaystackSubaccount } from '../lib/paystack'
 import { logDebug } from '../components/DebugConsole'
 
 function formatNaira(amount) {
@@ -222,6 +222,7 @@ export default function SellerHubPage() {
         }
 
         try {
+            // 1. Save bank information
             await upsertUser({
                 uid: currentUserId,
                 bank_name: bankName,
@@ -229,6 +230,26 @@ export default function SellerHubPage() {
                 account_number: cleanNum,
                 account_name: finalAccountName,
             })
+
+            // 2. Automatically generate / link Paystack subaccount
+            try {
+                const subRes = await createPaystackSubaccount({
+                    userId: currentUserId,
+                    businessName: finalAccountName || user?.displayName || 'UNIZIK Student Merchant',
+                    bankCode: bankCode,
+                    accountNumber: cleanNum,
+                })
+                if (subRes.success && subRes.subaccountCode) {
+                    await upsertUser({
+                        uid: currentUserId,
+                        paystack_subaccount_code: subRes.subaccountCode,
+                    })
+                    logDebug('success', `Paystack subaccount linked: ${subRes.subaccountCode}`)
+                }
+            } catch (subErr) {
+                console.warn('Subaccount auto-link note:', subErr)
+            }
+
             setPayoutSuccess(true)
             logDebug('success', `Payout settings saved successfully for UID: ${currentUserId}`)
             await refreshUser()

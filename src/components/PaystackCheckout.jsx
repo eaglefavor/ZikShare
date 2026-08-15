@@ -61,6 +61,8 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
     reference: `ZKS-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
     email: user?.email || '',
     amount: totalToCharge,
+    currency: 'NGN',
+    channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'],
     publicKey: PAYSTACK_PUBLIC_KEY,
     subaccount: product.users?.paystack_subaccount_code || undefined,
     metadata: {

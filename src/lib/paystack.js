@@ -145,3 +145,78 @@ export function calculatePaystackFeeAndTotal(amountInKobo) {
     fee: Math.ceil(fee * 100),
   };
 }
+
+/**
+ * Creates or retrieves a Paystack subaccount for seller settlement splits.
+ */
+export async function createPaystackSubaccount({ userId, businessName, bankCode, accountNumber }) {
+  if (!bankCode || !accountNumber) {
+    return { success: false, error: 'Bank and account number are required' };
+  }
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/create-paystack-subaccount`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({
+        user_id: userId,
+        business_name: businessName || 'UNIZIK Student Seller',
+        settlement_bank: bankCode,
+        account_number: accountNumber,
+      }),
+    });
+
+    const result = await res.json();
+    if (result?.status && result?.subaccount_code) {
+      return {
+        success: true,
+        subaccountCode: result.subaccount_code,
+      };
+    }
+
+    return {
+      success: false,
+      error: result?.message || 'Failed to configure Paystack seller subaccount',
+    };
+  } catch (err) {
+    console.warn('Subaccount creation endpoint call fallback:', err);
+    return {
+      success: false,
+      error: err.message,
+    };
+  }
+}
+
+/**
+ * Server-verified Paystack payment status check and instant fulfillment
+ */
+export async function verifyPaystackPayment(reference) {
+  if (!reference) return { success: false, error: 'Reference required' };
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/verify-paystack-payment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        apikey: SUPABASE_ANON_KEY,
+        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({ reference }),
+    });
+
+    const result = await res.json();
+    return {
+      success: !!result?.verified,
+      order: result?.order || null,
+      transaction: result?.transaction || null,
+      message: result?.message,
+    };
+  } catch (err) {
+    console.warn('Payment verification service fallback:', err);
+    return { success: false, error: err.message };
+  }
+}

@@ -10,6 +10,7 @@ function formatNaira(amount) {
 }
 
 function timeAgo(iso) {
+    if (!iso) return 'Recent'
     const seconds = Math.floor((Date.now() - new Date(iso).getTime()) / 1000)
     if (seconds < 60) return 'now'
     const minutes = Math.floor(seconds / 60)
@@ -21,49 +22,57 @@ function timeAgo(iso) {
 }
 
 export default function MessagesPage() {
-    const { session, isAuthenticated, loading: authLoading } = useAuth()
+    const { session, user, isAuthenticated } = useAuth()
     const navigate = useNavigate()
     const [conversations, setConversations] = useState([])
     const [otherUsers, setOtherUsers] = useState({})
-    const [loading, setLoading] = useState(true)
+    const [loading, setLoading] = useState(false)
+
+    const currentUserId = session?.user?.id || user?.uid || user?.id
 
     useEffect(() => {
-        if (authLoading) return
-        if (!isAuthenticated || !session?.user?.id) {
+        if (!isAuthenticated || !currentUserId) {
             setLoading(false)
             return
         }
 
-        fetchConversations()
-    }, [isAuthenticated, session, authLoading])
-
-    async function fetchConversations() {
+        let isMounted = true
         setLoading(true)
-        try {
-            const convs = await getConversations(session.user.id)
-            setConversations(convs)
 
-            // Fetch other users' profiles
-            const userMap = {}
-            for (const conv of convs) {
-                const otherId = conv.buyerId === session.user.id ? conv.sellerId : conv.buyerId
-                if (!userMap[otherId]) {
-                    try {
-                        const u = await getUser(otherId)
-                        if (u) userMap[otherId] = u
-                    } catch { /* skip */ }
+        async function fetchConversations() {
+            try {
+                const convs = await getConversations(currentUserId)
+                if (!isMounted) return
+                setConversations(convs || [])
+
+                // Fetch other users' profiles in background
+                const userMap = {}
+                for (const conv of (convs || [])) {
+                    const otherId = conv.buyerId === currentUserId ? conv.sellerId : conv.buyerId
+                    if (otherId && !userMap[otherId]) {
+                        try {
+                            const u = await getUser(otherId)
+                            if (u) userMap[otherId] = u
+                        } catch { /* skip */ }
+                    }
                 }
+                if (isMounted) setOtherUsers(userMap)
+            } catch (err) {
+                console.warn('Failed to load conversations:', err)
+            } finally {
+                if (isMounted) setLoading(false)
             }
-            setOtherUsers(userMap)
-        } catch (err) {
-            console.error('Failed to load conversations:', err)
-        } finally {
-            setLoading(false)
         }
-    }
+
+        fetchConversations()
+
+        return () => {
+            isMounted = false
+        }
+    }, [isAuthenticated, currentUserId])
 
     return (
-        <div>
+        <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', paddingBottom: '5rem' }}>
             <header style={{ position: 'sticky', top: 0, zIndex: 40, backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', padding: '1rem' }}>
                 <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 700 }}>Messages</h1>
             </header>
@@ -83,8 +92,7 @@ export default function MessagesPage() {
                 </div>
             ) : loading ? (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem 0' }}>
-                    <Loader2 size={28} color="var(--color-brand)" style={{ animation: 'spin 1s linear infinite' }} />
-                    <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+                    <Loader2 size={28} color="var(--color-brand)" className="animate-spin" />
                 </div>
             ) : conversations.length === 0 ? (
                 <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
@@ -102,7 +110,7 @@ export default function MessagesPage() {
             ) : (
                 <div style={{ padding: '0.5rem 0' }}>
                     {conversations.map(conv => {
-                        const otherId = conv.buyerId === session.user.id ? conv.sellerId : conv.buyerId
+                        const otherId = conv.buyerId === currentUserId ? conv.sellerId : conv.buyerId
                         const other = otherUsers[otherId]
                         const otherName = other?.displayName || 'User'
                         const listing = conv.listings || {}
@@ -119,15 +127,13 @@ export default function MessagesPage() {
                                     gap: '0.75rem',
                                     padding: '0.75rem 1rem',
                                     border: 'none',
-                                    backgroundColor: 'transparent',
+                                    backgroundColor: 'white',
                                     cursor: 'pointer',
                                     fontFamily: 'inherit',
                                     textAlign: 'left',
                                     borderBottom: '1px solid var(--color-border)',
                                     transition: 'background-color 0.15s',
                                 }}
-                                onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--color-background)')}
-                                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
                             >
                                 {/* Listing thumbnail */}
                                 <div style={{ width: '3rem', height: '3rem', borderRadius: '0.5rem', overflow: 'hidden', flexShrink: 0, backgroundColor: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>

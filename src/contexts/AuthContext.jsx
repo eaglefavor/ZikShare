@@ -30,7 +30,7 @@ export function deriveNameFromEmail(email) {
 const AuthContext = createContext(null)
 
 export function AuthProvider({ children }) {
-    // Initialize user and session from local cache to prevent flash of unauthenticated state on refresh
+    // Initialize user and session from local cache immediately
     const [session, setSession] = useState(() => {
         try {
             const cached = localStorage.getItem('zikshare_session')
@@ -49,7 +49,8 @@ export function AuthProvider({ children }) {
         }
     })
 
-    const [loading, setLoading] = useState(true)
+    // If we have cached session/user or known guest, do not block with full page spinner
+    const [loading, setLoading] = useState(false)
     const [authError, setAuthError] = useState('')
     const isHandlingLoginRef = useRef(false)
 
@@ -94,7 +95,7 @@ export function AuthProvider({ children }) {
 
         saveUserLocally(optimisticUser)
 
-        // Try to load full existing profile from DB
+        // Try to load full existing profile from DB in background
         try {
             const existing = await getUser(authUser.id)
             if (existing) {
@@ -122,6 +123,11 @@ export function AuthProvider({ children }) {
 
     useEffect(() => {
         let isMounted = true
+
+        // Safety timeout to ensure loading never stays stuck
+        const timer = setTimeout(() => {
+            if (isMounted) setLoading(false)
+        }, 1500)
 
         async function initAuth() {
             try {
@@ -176,6 +182,7 @@ export function AuthProvider({ children }) {
 
         return () => {
             isMounted = false
+            clearTimeout(timer)
             subscription.unsubscribe()
         }
     }, [])

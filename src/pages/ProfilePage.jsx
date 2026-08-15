@@ -17,7 +17,7 @@ const menuItems = [
 ]
 
 export default function ProfilePage() {
-    const { user, session, isAuthenticated, isVerified, loading, signOut } = useAuth()
+    const { user, session, isAuthenticated, isVerified, signOut } = useAuth()
     const navigate = useNavigate()
     const [sellerStats, setSellerStats] = useState(null)
 
@@ -36,15 +36,6 @@ export default function ProfilePage() {
         } catch (err) {
             console.error('Sign out failed:', err)
         }
-    }
-
-    if (loading) {
-        return (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-                <Loader2 size={28} color="var(--color-brand)" style={{ animation: 'spin 1s linear infinite' }} />
-                <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-            </div>
-        )
     }
 
     return (

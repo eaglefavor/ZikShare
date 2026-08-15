@@ -25,8 +25,8 @@ export default function LoginPage() {
         setError('')
 
         const cleanEmail = email.trim().toLowerCase()
-        if (!isUnizikEmail(cleanEmail)) {
-            setError('Only official UNIZIK student emails (e.g. yourname@unizik.edu.ng or regNumber@students.unizik.edu.ng) are allowed on ZikShare.')
+        if (mode === 'signup' && !isUnizikEmail(cleanEmail)) {
+            setError('Please register with an official UNIZIK student email (e.g. yourname@unizik.edu.ng or regNumber@students.unizik.edu.ng).')
             return
         }
 
@@ -38,7 +38,7 @@ export default function LoginPage() {
             } else {
                 await signUpWithEmail(cleanEmail, password, displayName.trim())
             }
-            navigate(-1)
+            navigate('/')
         } catch (err) {
             setError(err.message || 'Authentication failed. Please check your credentials.')
         } finally {

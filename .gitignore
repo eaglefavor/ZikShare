@@ -23,6 +23,8 @@ dist-ssr
 .DS_Store
 *.suo
 *.ntvs*
-*.njsproj
-*.sln
 *.sw?
+
+# MCP & Local Agent Configurations
+.agents/
+.agents

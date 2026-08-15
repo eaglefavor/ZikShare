@@ -3,53 +3,78 @@ import supabase from './supabase'
 // ── Listings ──
 
 export async function getListings({ category, search, limit = 20, offset = 0 } = {}) {
-    let query = supabase
-        .from('listings')
-        .select('*, users!sellerId(displayName, isVerified, phoneNumber)')
-        .eq('status', 'Active')
-        .order('createdAt', { ascending: false })
-        .range(offset, offset + limit - 1)
+    try {
+        let query = supabase
+            .from('listings')
+            .select('*, users!sellerId(displayName, isVerified, phoneNumber)')
+            .eq('status', 'Active')
+            .order('createdAt', { ascending: false })
+            .range(offset, offset + limit - 1)
 
-    if (category && category !== 'All') {
-        query = query.eq('category', category)
+        if (category && category !== 'All') {
+            query = query.eq('category', category)
+        }
+
+        if (search) {
+            query = query.ilike('title', `%${search}%`)
+        }
+
+        const { data, error } = await query
+        if (!error && data) return data
+    } catch (e) {
+        console.warn('getListings with join error, falling back to simple:', e?.message)
     }
 
-    if (search) {
-        query = query.ilike('title', `%${search}%`)
-    }
+    try {
+        let query = supabase
+            .from('listings')
+            .select('*')
+            .eq('status', 'Active')
+            .order('createdAt', { ascending: false })
+            .range(offset, offset + limit - 1)
 
-    const { data, error } = await query
-    if (error) throw error
-    return data
+        if (category && category !== 'All') {
+            query = query.eq('category', category)
+        }
+
+        if (search) {
+            query = query.ilike('title', `%${search}%`)
+        }
+
+        const { data } = await query
+        return data || []
+    } catch {
+        return []
+    }
 }
 
 export async function getListing(id) {
-    const { data, error } = await supabase
-        .from('listings')
-        .select('*, users!sellerId(displayName, isVerified, phoneNumber, department)')
-        .eq('id', id)
-        .single()
+    try {
+        const { data, error } = await supabase
+            .from('listings')
+            .select('*, users!sellerId(displayName, isVerified, phoneNumber, department)')
+            .eq('id', id)
+            .single()
 
-    if (!error && data) {
-        if (!data.users && data.sellerId) {
-            try {
-                const seller = await getUser(data.sellerId)
-                if (seller) {
-                    data.users = {
-                        displayName: seller.displayName,
-                        isVerified: seller.isVerified,
-                        phoneNumber: seller.phoneNumber,
-                        department: seller.department,
+        if (!error && data) {
+            if (!data.users && data.sellerId) {
+                try {
+                    const seller = await getUser(data.sellerId)
+                    if (seller) {
+                        data.users = {
+                            displayName: seller.displayName,
+                            isVerified: seller.isVerified,
+                            phoneNumber: seller.phoneNumber,
+                            department: seller.department,
+                        }
                     }
-                }
-            } catch (e) {
-                console.warn('Could not fetch seller info:', e.message)
+                } catch {}
             }
+            return data
         }
-        return data
-    }
+    } catch {}
 
-    // If not found in listings table, fallback to digital_products table
+    // Fallback to digital_products table
     try {
         const digitalData = await getDigitalProduct(id)
         if (digitalData) {
@@ -61,15 +86,12 @@ export async function getListing(id) {
                 condition: 'Digital PDF',
                 images: digitalData.cover_image_url ? [digitalData.cover_image_url] : [],
                 priceInKobo: digitalData.price,
-                price: digitalData.price / 100, // Normalized to Naira for display
+                price: digitalData.price / 100,
             }
         }
-    } catch {
-        // Continue to throw original error
-    }
+    } catch {}
 
-    if (error) throw error
-    return data
+    return null
 }
 
 export async function createListing(listing) {
@@ -85,14 +107,16 @@ export async function createListing(listing) {
 
 export async function updateListing(id, updates) {
     // Try listings table
-    const { data, error } = await supabase
-        .from('listings')
-        .update(updates)
-        .eq('id', id)
-        .select()
-        .maybeSingle()
+    try {
+        const { data } = await supabase
+            .from('listings')
+            .update(updates)
+            .eq('id', id)
+            .select()
+            .maybeSingle()
 
-    if (data) return data
+        if (data) return data
+    } catch {}
 
     // Try digital_products table
     const digitalPayload = { ...updates }
@@ -107,42 +131,34 @@ export async function updateListing(id, updates) {
         .maybeSingle()
 
     if (dData) return dData
-    if (error) throw error
     if (dError) throw dError
     return null
 }
 
 export async function deleteListing(id) {
-    const { error } = await supabase
-        .from('listings')
-        .delete()
-        .eq('id', id)
-
-    // Also attempt deletion from digital_products
-    await supabase
-        .from('digital_products')
-        .delete()
-        .eq('id', id)
-
-    if (error) throw error
+    await supabase.from('listings').delete().eq('id', id)
+    await supabase.from('digital_products').delete().eq('id', id)
 }
 
 export async function getMyListings(userId) {
+    if (!userId) return []
     const [physicalRes, digitalRes] = await Promise.all([
         supabase
             .from('listings')
             .select('*')
             .eq('sellerId', userId)
-            .order('createdAt', { ascending: false }),
+            .order('createdAt', { ascending: false })
+            .catch(() => ({ data: [] })),
         supabase
             .from('digital_products')
             .select('*')
             .eq('seller_id', userId)
-            .order('created_at', { ascending: false }),
+            .order('created_at', { ascending: false })
+            .catch(() => ({ data: [] })),
     ])
 
-    const physical = physicalRes.data || []
-    const digital = (digitalRes.data || []).map(d => ({
+    const physical = physicalRes?.data || []
+    const digital = (digitalRes?.data || []).map(d => ({
         ...d,
         isDigital: true,
         sellerId: d.seller_id,
@@ -161,6 +177,7 @@ export async function getMyListings(userId) {
 // ── Public Seller Profile & Catalog ──
 
 export async function getSellerPublicProfile(sellerId) {
+    if (!sellerId) return null
     const [userRes, physicalRes, digitalRes] = await Promise.all([
         getUser(sellerId).catch(() => null),
         supabase
@@ -168,21 +185,23 @@ export async function getSellerPublicProfile(sellerId) {
             .select('*')
             .eq('sellerId', sellerId)
             .eq('status', 'Active')
-            .order('createdAt', { ascending: false }),
+            .order('createdAt', { ascending: false })
+            .catch(() => ({ data: [] })),
         supabase
             .from('digital_products')
             .select('*')
             .eq('seller_id', sellerId)
             .eq('status', 'active')
-            .order('created_at', { ascending: false }),
+            .order('created_at', { ascending: false })
+            .catch(() => ({ data: [] })),
     ])
 
     const seller = userRes || { uid: sellerId, displayName: 'Seller' }
-    const physical = (physicalRes.data || []).map(p => ({
+    const physical = (physicalRes?.data || []).map(p => ({
         ...p,
         isDigital: false,
     }))
-    const digital = (digitalRes.data || []).map(d => ({
+    const digital = (digitalRes?.data || []).map(d => ({
         ...d,
         isDigital: true,
         sellerId: d.seller_id,
@@ -207,25 +226,41 @@ export async function getSellerPublicProfile(sellerId) {
 // ── Users ──
 
 export async function getUser(userId) {
-    const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('uid', userId)
-        .single()
+    if (!userId) return null
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('uid', userId)
+            .single()
 
-    if (error && error.code !== 'PGRST116') throw error // PGRST116 = not found
-    return data
+        if (error && error.code !== 'PGRST116') {
+            console.warn('getUser error:', error.message)
+            return null
+        }
+        return data || null
+    } catch {
+        return null
+    }
 }
 
 export async function upsertUser(user) {
-    const { data, error } = await supabase
-        .from('users')
-        .upsert(user, { onConflict: 'uid' })
-        .select()
-        .single()
+    if (!user?.uid) return null
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .upsert(user, { onConflict: 'uid' })
+            .select()
+            .single()
 
-    if (error) throw error
-    return data
+        if (error) {
+            console.warn('upsertUser warning:', error.message)
+            return user
+        }
+        return data || user
+    } catch {
+        return user
+    }
 }
 
 // ── Digital Products ──
@@ -242,54 +277,73 @@ export async function createDigitalProduct(product) {
 }
 
 export async function getDigitalProducts({ category, search, limit = 20, offset = 0 } = {}) {
-    let query = supabase
-        .from('digital_products')
-        .select('*, users!seller_id(displayName, isVerified, phoneNumber)')
-        .eq('status', 'active')
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1)
+    try {
+        let query = supabase
+            .from('digital_products')
+            .select('*, users!seller_id(displayName, isVerified, phoneNumber)')
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1)
 
-    if (category && category !== 'All') {
-        query = query.eq('category', category)
+        if (category && category !== 'All') {
+            query = query.eq('category', category)
+        }
+
+        if (search) {
+            query = query.ilike('title', `%${search}%`)
+        }
+
+        const { data, error } = await query
+        if (!error && data) return data
+    } catch (e) {
+        console.warn('getDigitalProducts with join error, falling back to simple:', e?.message)
     }
 
-    if (search) {
-        query = query.ilike('title', `%${search}%`)
-    }
+    try {
+        let query = supabase
+            .from('digital_products')
+            .select('*')
+            .eq('status', 'active')
+            .order('created_at', { ascending: false })
+            .range(offset, offset + limit - 1)
 
-    const { data, error } = await query
-    if (error) throw error
-    return data
+        if (category && category !== 'All') {
+            query = query.eq('category', category)
+        }
+
+        if (search) {
+            query = query.ilike('title', `%${search}%`)
+        }
+
+        const { data } = await query
+        return data || []
+    } catch {
+        return []
+    }
 }
 
 export async function getDigitalProduct(id) {
-    const { data, error } = await supabase
-        .from('digital_products')
-        .select('*, users!seller_id(uid, displayName, isVerified, phoneNumber, department, paystack_subaccount_code)')
-        .eq('id', id)
-        .single()
+    try {
+        const { data, error } = await supabase
+            .from('digital_products')
+            .select('*, users!seller_id(displayName, isVerified, phoneNumber, department, paystack_subaccount_code)')
+            .eq('id', id)
+            .single()
 
-    if (error) throw error
+        if (!error && data) return data
+    } catch {}
 
-    if (data && !data.users && data.seller_id) {
-        try {
-            const seller = await getUser(data.seller_id)
-            if (seller) {
-                data.users = {
-                    uid: seller.uid,
-                    displayName: seller.displayName,
-                    isVerified: seller.isVerified,
-                    phoneNumber: seller.phoneNumber,
-                    department: seller.department,
-                    paystack_subaccount_code: seller.paystack_subaccount_code,
-                }
-            }
-        } catch (e) {
-            console.warn('Could not fetch seller info:', e.message)
-        }
+    try {
+        const { data } = await supabase
+            .from('digital_products')
+            .select('*')
+            .eq('id', id)
+            .single()
+
+        return data || null
+    } catch {
+        return null
     }
-
-    return data
 }
 
 export async function updateDigitalProduct(id, updates) {
@@ -312,73 +366,96 @@ export async function updateDigitalProduct(id, updates) {
 // ── Seller Analytics & Orders ──
 
 export async function getSellerAnalytics(userId) {
-    const [listingsRes, digitalRes, ordersRes, userProfile] = await Promise.all([
-        supabase.from('listings').select('*').eq('sellerId', userId),
-        supabase.from('digital_products').select('*').eq('seller_id', userId),
-        supabase.from('orders').select('*').eq('seller_id', userId).order('created_at', { ascending: false }),
-        getUser(userId).catch(() => null)
-    ])
+    if (!userId) return null
+    try {
+        const [listingsRes, digitalRes, ordersRes, userProfile] = await Promise.all([
+            supabase.from('listings').select('*').eq('sellerId', userId).catch(() => ({ data: [] })),
+            supabase.from('digital_products').select('*').eq('seller_id', userId).catch(() => ({ data: [] })),
+            supabase.from('orders').select('*').eq('seller_id', userId).order('created_at', { ascending: false }).catch(() => ({ data: [] })),
+            getUser(userId).catch(() => null)
+        ])
 
-    const physicalListings = listingsRes.data || []
-    const digitalProducts = (digitalRes.data || []).map(d => ({
-        ...d,
-        isDigital: true,
-        priceInKobo: d.price,
-        price: d.price / 100,
-    }))
-    const orders = ordersRes.data || []
-
-    const totalPhysical = physicalListings.length
-    const totalDigital = digitalProducts.length
-    const activeListings = physicalListings.filter(l => l.status === 'Active').length + digitalProducts.filter(d => d.status === 'active').length
-
-    const completedOrders = orders.filter(o => o.status === 'delivered' || o.status === 'success' || o.status === 'ready')
-    const totalEarningsKobo = completedOrders.reduce((sum, o) => sum + (o.seller_settlement || o.amount || 0), 0)
-    const totalSalesCount = completedOrders.length
-
-    const productSalesMap = {}
-    completedOrders.forEach(o => {
-        if (o.product_id) {
-            productSalesMap[o.product_id] = (productSalesMap[o.product_id] || 0) + 1
-        }
-    })
-
-    const topProducts = digitalProducts
-        .map(p => ({
-            ...p,
-            sales_count: productSalesMap[p.id] || p.sales_count || 0,
-            revenue: (productSalesMap[p.id] || p.sales_count || 0) * p.price
+        const physicalListings = listingsRes?.data || []
+        const digitalProducts = (digitalRes?.data || []).map(d => ({
+            ...d,
+            isDigital: true,
+            priceInKobo: d.price,
+            price: d.price / 100,
         }))
-        .sort((a, b) => b.sales_count - a.sales_count)
+        const orders = ordersRes?.data || []
 
-    return {
-        totalEarningsNaira: totalEarningsKobo / 100,
-        totalSalesCount,
-        activeListings,
-        totalPhysical,
-        totalDigital,
-        totalListings: totalPhysical + totalDigital,
-        orders,
-        topProducts,
-        userProfile,
-        listings: [...physicalListings, ...digitalProducts].sort((a, b) => new Date(b.createdAt || b.created_at || 0) - new Date(a.createdAt || a.created_at || 0))
+        const totalPhysical = physicalListings.length
+        const totalDigital = digitalProducts.length
+        const activeListings = physicalListings.filter(l => l.status === 'Active').length + digitalProducts.filter(d => d.status === 'active').length
+
+        const completedOrders = orders.filter(o => o.status === 'delivered' || o.status === 'success' || o.status === 'ready')
+        const totalEarningsKobo = completedOrders.reduce((sum, o) => sum + (o.seller_settlement || o.amount || 0), 0)
+        const totalSalesCount = completedOrders.length
+
+        const productSalesMap = {}
+        completedOrders.forEach(o => {
+            if (o.product_id) {
+                productSalesMap[o.product_id] = (productSalesMap[o.product_id] || 0) + 1
+            }
+        })
+
+        const topProducts = digitalProducts
+            .map(p => ({
+                ...p,
+                sales_count: productSalesMap[p.id] || p.sales_count || 0,
+                revenue: (productSalesMap[p.id] || p.sales_count || 0) * p.price
+            }))
+            .sort((a, b) => b.sales_count - a.sales_count)
+
+        return {
+            totalEarningsNaira: totalEarningsKobo / 100,
+            totalSalesCount,
+            activeListings,
+            totalPhysical,
+            totalDigital,
+            totalListings: totalPhysical + totalDigital,
+            orders,
+            topProducts,
+            userProfile,
+            listings: [...physicalListings, ...digitalProducts].sort((a, b) => new Date(b.createdAt || b.created_at || 0) - new Date(a.createdAt || a.created_at || 0))
+        }
+    } catch (err) {
+        console.warn('getSellerAnalytics caught error:', err)
+        return {
+            totalEarningsNaira: 0,
+            totalSalesCount: 0,
+            activeListings: 0,
+            totalPhysical: 0,
+            totalDigital: 0,
+            totalListings: 0,
+            orders: [],
+            topProducts: [],
+            userProfile: null,
+            listings: []
+        }
     }
 }
 
 export async function getSellerOrders(userId) {
-    const { data, error } = await supabase
-        .from('orders')
-        .select('*, product:digital_products(title, category, price), buyer:users!buyer_id(displayName, email, phoneNumber, department)')
-        .eq('seller_id', userId)
-        .order('created_at', { ascending: false })
+    if (!userId) return []
+    try {
+        const { data, error } = await supabase
+            .from('orders')
+            .select('*, product:digital_products(title, category, price), buyer:users!buyer_id(displayName, email, phoneNumber, department)')
+            .eq('seller_id', userId)
+            .order('created_at', { ascending: false })
 
-    if (error) {
-        const simple = await supabase
+        if (!error && data) return data
+    } catch {}
+
+    try {
+        const { data } = await supabase
             .from('orders')
             .select('*')
             .eq('seller_id', userId)
             .order('created_at', { ascending: false })
-        return simple.data || []
+        return data || []
+    } catch {
+        return []
     }
-    return data || []
 }

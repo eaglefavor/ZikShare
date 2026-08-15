@@ -6,77 +6,89 @@ import supabase from './supabase'
  * Get or create a conversation between buyer and seller about a listing.
  */
 export async function getOrCreateConversation(listingId, buyerId, sellerId) {
-    // Check for existing conversation
-    const { data: existing } = await supabase
-        .from('conversations')
-        .select('*')
-        .eq('listingId', listingId)
-        .eq('buyerId', buyerId)
-        .eq('sellerId', sellerId)
-        .single()
+    if (!buyerId || !sellerId) return null
+    try {
+        let query = supabase
+            .from('conversations')
+            .select('*')
+            .eq('buyerId', buyerId)
+            .eq('sellerId', sellerId)
 
-    if (existing) return existing
+        if (listingId) {
+            query = query.eq('listingId', listingId)
+        }
 
-    // Create new conversation
-    const { data, error } = await supabase
-        .from('conversations')
-        .insert({ listingId, buyerId, sellerId })
-        .select()
-        .single()
+        const { data: existing } = await query.maybeSingle()
+        if (existing) return existing
 
-    if (error) throw error
-    return data
+        const { data, error } = await supabase
+            .from('conversations')
+            .insert({ listingId: listingId || null, buyerId, sellerId })
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    } catch (err) {
+        console.warn('getOrCreateConversation error:', err?.message)
+        throw err
+    }
 }
 
 /**
  * Get all conversations for a user (as buyer or seller), with listing info.
  */
 export async function getConversations(userId) {
-    // Try with listing join first
-    let { data, error } = await supabase
-        .from('conversations')
-        .select('*, listings!listingId(title, price, images, category)')
-        .or(`buyerId.eq.${userId},sellerId.eq.${userId}`)
-        .order('lastMessageAt', { ascending: false })
+    if (!userId) return []
+    try {
+        let { data, error } = await supabase
+            .from('conversations')
+            .select('*, listings!listingId(title, price, images, category)')
+            .or(`buyerId.eq.${userId},sellerId.eq.${userId}`)
+            .order('lastMessageAt', { ascending: false })
 
-    // Fall back to simple query if join fails
-    if (error) {
-        const result = await supabase
+        if (!error && data) return data
+    } catch {}
+
+    try {
+        const { data } = await supabase
             .from('conversations')
             .select('*')
             .or(`buyerId.eq.${userId},sellerId.eq.${userId}`)
             .order('lastMessageAt', { ascending: false })
-        data = result.data
-        error = result.error
-    }
 
-    if (error) throw error
-    return data || []
+        return data || []
+    } catch {
+        return []
+    }
 }
 
 /**
  * Get a single conversation by ID.
  */
 export async function getConversation(conversationId) {
-    let { data, error } = await supabase
-        .from('conversations')
-        .select('*, listings!listingId(title, price, images, category, sellerId)')
-        .eq('id', conversationId)
-        .single()
+    if (!conversationId) return null
+    try {
+        let { data, error } = await supabase
+            .from('conversations')
+            .select('*, listings!listingId(title, price, images, category, sellerId)')
+            .eq('id', conversationId)
+            .single()
 
-    // Fall back to simple query if join fails
-    if (error) {
-        const result = await supabase
+        if (!error && data) return data
+    } catch {}
+
+    try {
+        const { data } = await supabase
             .from('conversations')
             .select('*')
             .eq('id', conversationId)
             .single()
-        data = result.data
-        error = result.error
-    }
 
-    if (error) throw error
-    return data
+        return data || null
+    } catch {
+        return null
+    }
 }
 
 // ── Messages ──
@@ -85,39 +97,47 @@ export async function getConversation(conversationId) {
  * Get all messages in a conversation, ordered oldest first.
  */
 export async function getMessages(conversationId) {
-    const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('conversationId', conversationId)
-        .order('createdAt', { ascending: true })
+    if (!conversationId) return []
+    try {
+        const { data, error } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('conversationId', conversationId)
+            .order('createdAt', { ascending: true })
 
-    if (error) throw error
-    return data || []
+        if (!error && data) return data
+        return []
+    } catch {
+        return []
+    }
 }
 
 /**
  * Send a message and update the conversation's lastMessage.
  */
 export async function sendMessage(conversationId, senderId, text) {
-    const { data, error } = await supabase
-        .from('messages')
-        .insert({ conversationId, senderId, text })
-        .select()
-        .single()
-
-    if (error) throw error
-
-    // Update conversation preview
+    if (!conversationId || !senderId || !text) return null
     try {
-        await supabase
-            .from('conversations')
-            .update({ lastMessage: text, lastMessageAt: new Date().toISOString() })
-            .eq('id', conversationId)
-    } catch (err) {
-        console.warn('Failed to update conversation preview:', err.message)
-    }
+        const { data, error } = await supabase
+            .from('messages')
+            .insert({ conversationId, senderId, text })
+            .select()
+            .single()
 
-    return data
+        if (error) throw error
+
+        try {
+            await supabase
+                .from('conversations')
+                .update({ lastMessage: text, lastMessageAt: new Date().toISOString() })
+                .eq('id', conversationId)
+        } catch {}
+
+        return data
+    } catch (err) {
+        console.error('sendMessage error:', err?.message)
+        throw err
+    }
 }
 
 /**
@@ -125,23 +145,30 @@ export async function sendMessage(conversationId, senderId, text) {
  * @returns {function} unsubscribe function
  */
 export function subscribeToMessages(conversationId, onNewMessage) {
-    const channel = supabase
-        .channel(`messages:${conversationId}`)
-        .on(
-            'postgres_changes',
-            {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'messages',
-                filter: `conversationId=eq.${conversationId}`,
-            },
-            (payload) => {
-                onNewMessage(payload.new)
-            }
-        )
-        .subscribe()
+    if (!conversationId) return () => {}
+    try {
+        const channel = supabase
+            .channel(`messages:${conversationId}`)
+            .on(
+                'postgres_changes',
+                {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'messages',
+                    filter: `conversationId=eq.${conversationId}`,
+                },
+                (payload) => {
+                    if (onNewMessage && payload?.new) onNewMessage(payload.new)
+                }
+            )
+            .subscribe()
 
-    return () => {
-        supabase.removeChannel(channel)
+        return () => {
+            try {
+                supabase.removeChannel(channel)
+            } catch {}
+        }
+    } catch {
+        return () => {}
     }
 }

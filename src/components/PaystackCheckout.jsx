@@ -58,7 +58,7 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
   const watermarkText = `LICENSED TO: ${buyerName.toUpperCase()} | REG NO: ${regNumber.trim().toUpperCase()} | EMAIL: ${user?.email || 'UNIZIK'} | ORDER TRACEABLE COPY - DO NOT REDISTRIBUTE`
 
   const config = useMemo(() => ({
-    reference: `ZKS-${Date.now()}`,
+    reference: `ZKS-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
     email: user?.email || '',
     amount: totalToCharge,
     publicKey: PAYSTACK_PUBLIC_KEY,

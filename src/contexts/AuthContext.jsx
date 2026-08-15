@@ -82,6 +82,7 @@ export function AuthProvider({ children }) {
         const googleName = authUser.user_metadata?.full_name || authUser.user_metadata?.name || ''
         const fallbackDisplayName = googleName || deriveNameFromEmail(authUser.email) || 'UNIZIK Student'
 
+        const isStudentVerified = isUnizikEmail(authUser.email)
         // Instant optimistic user state so isAuthenticated is true immediately
         const optimisticUser = {
             uid: authUser.id,
@@ -89,7 +90,7 @@ export function AuthProvider({ children }) {
             displayName: fallbackDisplayName,
             phoneNumber: authUser.phone || '',
             department: '',
-            isVerified: true,
+            isVerified: isStudentVerified,
             createdAt: new Date().toISOString(),
         }
 
@@ -102,6 +103,7 @@ export function AuthProvider({ children }) {
                 if (existing) {
                     if (googleName && (!existing.displayName || existing.displayName === 'Student' || existing.displayName === 'UNIZIK Student' || existing.displayName.length <= 3)) {
                         existing.displayName = googleName
+                        existing.isVerified = isStudentVerified || existing.isVerified
                         upsertUser(existing).catch(() => {})
                     }
                     saveUserLocally(existing)
@@ -136,12 +138,8 @@ export function AuthProvider({ children }) {
                     saveSessionLocally(s)
                     handleUserLogin(s.user)
                 } else if (!s && isMounted) {
-                    // Check if we have cached session in localStorage that we can keep as fallback
-                    const cachedSess = localStorage.getItem('zikshare_session')
-                    if (!cachedSess) {
-                        saveSessionLocally(null)
-                        saveUserLocally(null)
-                    }
+                    saveSessionLocally(null)
+                    saveUserLocally(null)
                 }
             } catch (err) {
                 console.error('Session init error:', err)
@@ -261,6 +259,7 @@ export function AuthProvider({ children }) {
     }
 
     const isAuthenticated = !!session?.user || !!user?.uid || !!user?.id
+    const isVerified = user ? (user.isVerified || isUnizikEmail(user.email)) : false
 
     const value = {
         user,
@@ -268,7 +267,7 @@ export function AuthProvider({ children }) {
         loading,
         authError,
         isAuthenticated,
-        isVerified: true,
+        isVerified,
         signInWithEmail,
         signUpWithEmail,
         signInWithGoogle,

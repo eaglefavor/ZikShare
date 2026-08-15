@@ -17,6 +17,7 @@ import SettingsPage from './pages/SettingsPage'
 import HelpPage from './pages/HelpPage'
 import ChatPage from './pages/ChatPage'
 import PaymentSuccess from './pages/PaymentSuccess'
+import PurchasedItemsPage from './pages/PurchasedItemsPage'
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
           <Route path="/seller-hub" element={<SellerHubPage />} />
           <Route path="/profile/listings" element={<MyListingsPage />} />
           <Route path="/profile/saved" element={<SavedItemsPage />} />
+          <Route path="/profile/purchases" element={<PurchasedItemsPage />} />
           <Route path="/profile/settings" element={<SettingsPage />} />
           <Route path="/profile/help" element={<HelpPage />} />
           <Route path="/chat/:conversationId" element={<ChatPage />} />

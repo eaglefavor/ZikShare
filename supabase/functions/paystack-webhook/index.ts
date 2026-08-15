@@ -49,6 +49,7 @@ async function processOrder(paystackRef: string) {
     const buyerEmail = order.buyer?.email || '';
     const buyerName = order.buyer?.displayName || (buyerEmail.split('@')[0] || 'UNIZIK STUDENT').replace(/[._-]/g, ' ').toUpperCase();
     const watermarkText = order.watermark_text || `LICENSED TO: ${buyerName} | ORDER: ${order.id} | PURCHASED: ${new Date().toLocaleDateString('en-NG')} | UNIZIK TRACEABLE COPY`;
+    const password = generateSecurePassword();
 
     const formData = new FormData();
     formData.append('pdf', new Blob([originalBuffer], { type: 'application/pdf' }));

@@ -194,6 +194,8 @@ export async function getSellerStore(sellerId) {
     }
 }
 
+export const getSellerPublicProfile = getSellerStore
+
 // ── Users ──
 
 export async function getUser(userId) {
@@ -439,3 +441,66 @@ export async function getSellerOrders(userId) {
         return []
     }
 }
+
+export async function getBuyerOrders(buyerId) {
+    if (!buyerId) return []
+    try {
+        const query = supabase
+            .from('orders')
+            .select('*, product:digital_products(title, category, price, cover_image_url), seller:users!seller_id(displayName, email, phoneNumber)')
+            .eq('buyer_id', buyerId)
+            .order('created_at', { ascending: false })
+
+        const res = await queryWithTimeout(query, 6000, { data: null })
+        if (res?.data) return res.data
+    } catch {}
+
+    try {
+        const query = supabase
+            .from('orders')
+            .select('*')
+            .eq('buyer_id', buyerId)
+            .order('created_at', { ascending: false })
+        const res = await queryWithTimeout(query, 6000, { data: [] })
+        return res?.data || []
+    } catch {
+        return []
+    }
+}
+
+export async function getOrder(referenceOrId) {
+    if (!referenceOrId) return null
+    try {
+        let query = supabase
+            .from('orders')
+            .select('*, product:digital_products(*), seller:users!seller_id(displayName, email, phoneNumber)')
+
+        if (referenceOrId.includes('-') && referenceOrId.length > 20 && !referenceOrId.startsWith('ZKS-')) {
+            query = query.eq('id', referenceOrId)
+        } else {
+            query = query.eq('paystack_reference', referenceOrId)
+        }
+
+        const res = await queryWithTimeout(query.single(), 6000, { data: null })
+        return res?.data || null
+    } catch {
+        return null
+    }
+}
+
+export async function createSignedDownloadUrl(storagePath, expiresInSeconds = 3600) {
+    if (!storagePath) return null
+    try {
+        const { data, error } = await supabase
+            .storage
+            .from('digital-orders')
+            .createSignedUrl(storagePath, expiresInSeconds)
+
+        if (error) throw error
+        return data?.signedUrl || null
+    } catch (err) {
+        console.error('Failed to create signed URL:', err)
+        return null
+    }
+}
+

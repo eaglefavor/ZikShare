@@ -71,23 +71,15 @@ export default function DebugConsole() {
         }
         setDiagResults({ ...results })
 
-        // 2. Users Table Read/Write
+        // 2. Users Table Read Check
         try {
-            const uid = session?.user?.id || user?.uid || '00000000-0000-0000-0000-000000000001'
-            const testUser = {
-                uid,
-                email: session?.user?.email || user?.email || 'diagnostic@test.com',
-                displayName: 'Diagnostic Test User',
-                isVerified: true,
-                updatedAt: new Date().toISOString(),
-            }
-            const upsertPromise = supabase.from('users').upsert(testUser, { onConflict: 'uid' }).select()
-            const { data, error } = await diagTimeout(upsertPromise, 5000, 'Users Table Upsert')
+            const selectPromise = supabase.from('users').select('uid, displayName, email').limit(1)
+            const { data, error } = await diagTimeout(selectPromise, 5000, 'Users Table Check')
             if (error) throw error
             results.usersTable = {
                 name: 'Users Table Read/Write',
                 status: 'success',
-                details: `Successfully upserted user row in public.users (${data?.length || 1} row).`,
+                details: `Successfully connected to public.users table.`,
             }
             logDebug('success', `Users Table Check: OK`)
         } catch (e) {
@@ -177,6 +169,9 @@ export default function DebugConsole() {
         debugLogs.length = 0
         setLogs([])
     }
+
+    const showDebug = import.meta.env.DEV || (typeof window !== 'undefined' && window.location.search.includes('debug=1'))
+    if (!showDebug) return null
 
     return (
         <>

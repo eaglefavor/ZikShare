@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { User, Settings, LogIn, LogOut, ShieldCheck, Package, Heart, HelpCircle, ChevronRight, Loader2, TrendingUp, Sparkles } from 'lucide-react'
+import { User, Settings, LogIn, LogOut, ShieldCheck, Package, Heart, HelpCircle, ChevronRight, Loader2, TrendingUp, Sparkles, FileText } from 'lucide-react'
 import { getSellerAnalytics } from '../lib/database'
 
 function formatNaira(amount) {
@@ -11,6 +11,7 @@ function formatNaira(amount) {
 const menuItems = [
     { icon: TrendingUp, label: 'Seller Hub & Analytics', path: '/seller-hub', badgeKey: 'seller' },
     { icon: Package, label: 'My Listings', path: '/profile/listings', badgeKey: 'listings' },
+    { icon: FileText, label: 'Purchased Study Materials', path: '/profile/purchases', badgeKey: null },
     { icon: Heart, label: 'Saved Items', path: '/profile/saved', badge: null },
     { icon: Settings, label: 'Settings', path: '/profile/settings', badge: null },
     { icon: HelpCircle, label: 'Help & Support', path: '/profile/help', badge: null },

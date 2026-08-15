@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
+  <defs>
+    <linearGradient id="zikGrad192" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B82F6"/>
+      <stop offset="100%" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="42" fill="url(#zikGrad192)"/>
+  <g fill="none" stroke="white" stroke-width="11" stroke-linecap="round" stroke-linejoin="round" transform="translate(0, 4)">
+    <path d="M58,86 L67,56 L125,56 L134,86 L134,142 Q134,150 126,150 L66,150 Q58,150 58,142 Z" fill="rgba(255,255,255,0.18)" stroke="white"/>
+    <path d="M78,56 L78,41 Q78,28 96,28 Q114,28 114,41 L114,56"/>
+    <path d="M81,90 L111,90 L81,124 L111,124" stroke="white" stroke-width="12"/>
+  </g>
+</svg>

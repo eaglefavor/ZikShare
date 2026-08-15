@@ -1,5 +1,6 @@
-import eruda from "eruda";
-eruda.init();
+if (typeof window !== 'undefined' && (import.meta.env.DEV || window.location.search.includes('debug=1'))) {
+  import('eruda').then(({ default: eruda }) => eruda.init()).catch(() => {})
+}
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'

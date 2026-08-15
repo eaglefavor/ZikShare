@@ -1,18 +1,14 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="zikGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="zikGrad512" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#3B82F6"/>
       <stop offset="100%" stop-color="#1D4ED8"/>
     </linearGradient>
   </defs>
-  <rect width="512" height="512" rx="112" fill="url(#zikGrad)"/>
-  <!-- Z Logo / Graduation & Book Shield -->
+  <rect width="512" height="512" rx="112" fill="url(#zikGrad512)"/>
   <g fill="none" stroke="white" stroke-width="28" stroke-linecap="round" stroke-linejoin="round" transform="translate(0, 10)">
-    <!-- Shopping bag / Box -->
     <path d="M156,230 L180,150 L332,150 L356,230 L356,380 Q356,400 336,400 L176,400 Q156,400 156,380 Z" fill="rgba(255,255,255,0.18)" stroke="white"/>
-    <!-- Bag Handle -->
     <path d="M210,150 L210,110 Q210,75 256,75 Q302,75 302,110 L302,150"/>
-    <!-- Z Monogram inside Bag -->
     <path d="M216,240 L296,240 L216,330 L296,330" stroke="white" stroke-width="32"/>
   </g>
 </svg>

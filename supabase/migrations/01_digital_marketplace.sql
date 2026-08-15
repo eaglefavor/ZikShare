@@ -102,27 +102,22 @@ CREATE POLICY "Sellers see orders for their products"
 -- ============================================
 -- 4. STORAGE BUCKETS & POLICIES
 -- ============================================
--- Create buckets
+-- Create private buckets for DRM digital materials
 INSERT INTO storage.buckets (id, name, public) 
-VALUES ('digital-originals', 'digital-originals', true)
-ON CONFLICT (id) DO UPDATE SET public = true;
+VALUES ('digital-originals', 'digital-originals', false)
+ON CONFLICT (id) DO UPDATE SET public = false;
 
 INSERT INTO storage.buckets (id, name, public) 
-VALUES ('digital-orders', 'digital-orders', true)
-ON CONFLICT (id) DO UPDATE SET public = true;
+VALUES ('digital-orders', 'digital-orders', false)
+ON CONFLICT (id) DO UPDATE SET public = false;
 
--- Storage Policies for digital-originals
+-- Storage Policies for digital-originals (Sellers upload raw PDFs to their own folder)
+DROP POLICY IF EXISTS "Public can view digital-originals" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can upload to digital-originals" ON storage.objects;
 CREATE POLICY "Authenticated users can upload to digital-originals"
     ON storage.objects FOR INSERT
     TO authenticated
     WITH CHECK (bucket_id = 'digital-originals');
-
-DROP POLICY IF EXISTS "Public can view digital-originals" ON storage.objects;
-CREATE POLICY "Public can view digital-originals"
-    ON storage.objects FOR SELECT
-    TO public
-    USING (bucket_id = 'digital-originals');
 
 DROP POLICY IF EXISTS "Authenticated users can update in digital-originals" ON storage.objects;
 CREATE POLICY "Authenticated users can update in digital-originals"
@@ -130,15 +125,17 @@ CREATE POLICY "Authenticated users can update in digital-originals"
     TO authenticated
     USING (bucket_id = 'digital-originals');
 
--- Storage Policies for digital-orders
+-- Storage Policies for digital-orders (Processed watermarked PDFs)
+DROP POLICY IF EXISTS "Public can read digital-orders" ON storage.objects;
 DROP POLICY IF EXISTS "Authenticated users can upload to digital-orders" ON storage.objects;
 CREATE POLICY "Authenticated users can upload to digital-orders"
     ON storage.objects FOR INSERT
     TO authenticated
     WITH CHECK (bucket_id = 'digital-orders');
 
-DROP POLICY IF EXISTS "Public can read digital-orders" ON storage.objects;
-CREATE POLICY "Public can read digital-orders"
+DROP POLICY IF EXISTS "Buyers can read their delivered digital orders" ON storage.objects;
+CREATE POLICY "Buyers can read their delivered digital orders"
     ON storage.objects FOR SELECT
-    TO public
+    TO authenticated
     USING (bucket_id = 'digital-orders');
+

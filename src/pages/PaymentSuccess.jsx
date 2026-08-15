@@ -89,46 +89,97 @@ const PaymentSuccess = () => {
           )}
         </div>
 
-        {/* Password Notice */}
-        <div style={{ backgroundColor: '#F8FAFC', padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', marginBottom: '1.5rem' }}>
-          <h3 style={{ fontSize: '0.8125rem', fontWeight: 800, marginBottom: '0.625rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-            <Lock size={14} color="var(--color-brand)" /> Your PDF Password Delivery:
+        {/* Password & Download Card */}
+        <div style={{ backgroundColor: '#F8FAFC', padding: '1.25rem', borderRadius: '0.875rem', border: '1px solid var(--color-border)', marginBottom: '1.25rem' }}>
+          <h3 style={{ fontSize: '0.875rem', fontWeight: 800, margin: '0 0 0.75rem', display: 'flex', alignItems: 'center', gap: '0.375rem', color: '#0F172A' }}>
+            <Lock size={16} color="var(--color-brand)" /> Your PDF Unlock Password:
           </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.625rem' }}>
-              <span style={{ fontSize: '1rem' }}>💬</span>
-              <div>
-                <strong style={{ fontSize: '0.8125rem' }}>In-App Messages</strong>
-                <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>The download link and unique password are sent to your chat.</p>
-              </div>
+          
+          {order?.unique_password ? (
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF', padding: '0.75rem 1rem', borderRadius: '0.625rem', border: '1.5px dashed #3B82F6', marginBottom: '0.75rem' }}>
+              <code style={{ fontSize: '1.125rem', fontWeight: 800, letterSpacing: '0.08em', color: '#1E40AF', fontFamily: 'monospace' }}>
+                {order.unique_password}
+              </code>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(order.unique_password);
+                  alert('Password copied to clipboard!');
+                }}
+                style={{ padding: '0.375rem 0.75rem', borderRadius: '0.375rem', border: 'none', backgroundColor: '#EFF6FF', color: '#2563EB', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+              >
+                Copy Password
+              </button>
             </div>
-          </div>
+          ) : (
+            <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>
+              Password will be shown once encryption finishes.
+            </p>
+          )}
+
+          <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
+            💡 You will need this unique password to open the downloaded PDF on your phone or laptop.
+          </p>
         </div>
 
-        <button
-          onClick={() => navigate('/messages')}
-          style={{
-            width: '100%',
-            padding: '0.875rem',
-            borderRadius: '0.75rem',
-            border: 'none',
-            background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-            color: 'white',
-            fontSize: '0.9375rem',
-            fontWeight: 800,
-            fontFamily: 'inherit',
-            cursor: 'pointer',
-            textAlign: 'center',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '0.5rem',
-            boxShadow: '0 4px 14px rgba(59,130,246,0.35)'
-          }}
-        >
-          <span>View in Messages & Download</span>
-          <ArrowRight size={16} />
-        </button>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+          {order?.unique_storage_path && (
+            <button
+              onClick={async () => {
+                const { data } = await supabase.storage.from('digital-orders').createSignedUrl(order.unique_storage_path, 3600);
+                if (data?.signedUrl) {
+                  window.open(data.signedUrl, '_blank');
+                } else {
+                  alert('Generating download link failed. Please refresh or contact support.');
+                }
+              }}
+              style={{
+                width: '100%',
+                padding: '0.875rem',
+                borderRadius: '0.75rem',
+                border: 'none',
+                background: 'linear-gradient(135deg, #10B981, #059669)',
+                color: 'white',
+                fontSize: '0.9375rem',
+                fontWeight: 800,
+                fontFamily: 'inherit',
+                cursor: 'pointer',
+                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '0.5rem',
+                boxShadow: '0 4px 14px rgba(16,185,129,0.35)'
+              }}
+            >
+              <FileText size={18} />
+              <span>Download Watermarked PDF Now</span>
+            </button>
+          )}
+
+          <button
+            onClick={() => navigate('/')}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              borderRadius: '0.75rem',
+              border: '1px solid var(--color-border)',
+              backgroundColor: 'white',
+              color: 'var(--color-text-primary)',
+              fontSize: '0.875rem',
+              fontWeight: 700,
+              fontFamily: 'inherit',
+              cursor: 'pointer',
+              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '0.5rem'
+            }}
+          >
+            <span>Return to Marketplace</span>
+            <ArrowRight size={16} />
+          </button>
+        </div>
       </div>
     </div>
   );

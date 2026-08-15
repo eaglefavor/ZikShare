@@ -427,7 +427,14 @@ export default function ItemDetailPage() {
             {!isOwnListing && (
                 <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '0.625rem 1rem', backgroundColor: 'white', borderTop: '1px solid var(--color-border)', display: 'flex', gap: '0.625rem', zIndex: 50, paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))' }}>
                     {item.isDigital ? (
-                        session?.user ? (
+                        existingOrder ? (
+                            <button
+                                onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                                style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.9375rem', fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}
+                            >
+                                <span>✅ You Own This Material — View / Download</span>
+                            </button>
+                        ) : session?.user ? (
                             <PaystackCheckout
                                 product={item}
                                 user={session.user}

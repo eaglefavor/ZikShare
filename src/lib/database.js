@@ -119,10 +119,23 @@ export async function createListing(listing) {
 
     const res = await queryWithTimeout(query, 10000, null)
     if (!res || res.error) throw res?.error || new Error('Create listing timed out')
+
+    invalidateCacheByPrefix('listings')
+    invalidateCacheByPrefix('seller')
+    invalidateCacheByPrefix('catalog')
+    invalidateCacheByPrefix('feed')
+
     return res.data
 }
 
 export async function updateListing(id, updates) {
+    invalidateCacheByPrefix('listings')
+    invalidateCacheByPrefix('digital')
+    invalidateCacheByPrefix('seller')
+    invalidateCacheByPrefix('catalog')
+    invalidateCacheByPrefix('feed')
+    invalidateCacheByPrefix(`listing-${id}`)
+
     try {
         const query = supabase
             .from('listings')
@@ -278,6 +291,13 @@ export async function createDigitalProduct(product) {
     if (!res || res.error) {
         throw res?.error || new Error('Saving material to database timed out after 10s.')
     }
+
+    invalidateCacheByPrefix('digital')
+    invalidateCacheByPrefix('listings')
+    invalidateCacheByPrefix('seller')
+    invalidateCacheByPrefix('catalog')
+    invalidateCacheByPrefix('feed')
+
     return res.data
 }
 
@@ -368,6 +388,14 @@ export async function updateDigitalProduct(id, updates) {
 
     const res = await queryWithTimeout(query, 8000, null)
     if (!res || res.error) throw res?.error || new Error('Update digital product timed out')
+
+    invalidateCacheByPrefix('digital')
+    invalidateCacheByPrefix('listings')
+    invalidateCacheByPrefix('seller')
+    invalidateCacheByPrefix('catalog')
+    invalidateCacheByPrefix('feed')
+    invalidateCacheByPrefix(`listing-${id}`)
+
     return res.data
 }
 

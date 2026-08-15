@@ -168,22 +168,22 @@ export default function PurchasedItemsPage() {
                                     {/* Download Button */}
                                     <button
                                         onClick={() => handleDownload(order)}
-                                        disabled={downloadingId === order.id || !order.unique_storage_path}
+                                        disabled={downloadingId === order.id}
                                         style={{
                                             width: '100%',
                                             padding: '0.75rem',
                                             borderRadius: '0.75rem',
                                             border: 'none',
-                                            background: order.unique_storage_path ? 'linear-gradient(135deg, #10B981, #059669)' : '#94A3B8',
+                                            background: 'linear-gradient(135deg, #10B981, #059669)',
                                             color: 'white',
                                             fontSize: '0.875rem',
                                             fontWeight: 700,
-                                            cursor: order.unique_storage_path ? 'pointer' : 'not-allowed',
+                                            cursor: downloadingId === order.id ? 'not-allowed' : 'pointer',
                                             display: 'flex',
                                             alignItems: 'center',
                                             justifyContent: 'center',
                                             gap: '0.5rem',
-                                            boxShadow: order.unique_storage_path ? '0 4px 12px rgba(16,185,129,0.3)' : 'none'
+                                            boxShadow: '0 4px 12px rgba(16,185,129,0.3)'
                                         }}
                                     >
                                         {downloadingId === order.id ? (

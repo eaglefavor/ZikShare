@@ -306,14 +306,22 @@ export default function SellerHubPage() {
 
     const handleToggleStatus = async (listing) => {
         try {
-            const nextStatus = listing.status === 'Active' || listing.status === 'active' ? 'Sold' : 'Active'
+            const isDigital = listing.isDigital || listing.original_storage_path
+            const isCurrentActive = listing.status === 'Active' || listing.status === 'active'
+            const nextStatus = isCurrentActive
+                ? (isDigital ? 'inactive' : 'Sold')
+                : (isDigital ? 'active' : 'Active')
+
             await updateListing(listing.id, { status: nextStatus })
             setAnalytics(prev => ({
                 ...prev,
-                listings: prev.listings.map(l => l.id === listing.id ? { ...l, status: nextStatus } : l)
+                listings: (prev?.listings || []).map(l => l.id === listing.id ? { ...l, status: nextStatus } : l)
             }))
             invalidateCacheByPrefix('listings')
             invalidateCacheByPrefix('digital')
+            invalidateCacheByPrefix('seller')
+            invalidateCacheByPrefix('catalog')
+            invalidateCacheByPrefix('feed')
         } catch (err) {
             alert('Failed to update listing status: ' + err.message)
         }

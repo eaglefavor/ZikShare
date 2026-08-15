@@ -168,7 +168,8 @@ export default function SellerHubPage() {
 
     const handleSavePayout = async (e) => {
         e.preventDefault()
-        if (!accountNumber || accountNumber.length < 10) {
+        const cleanNum = (accountNumber || '').replace(/[^0-9]/g, '').slice(0, 10)
+        if (!cleanNum || cleanNum.length !== 10) {
             setPayoutError('Please enter a valid 10-digit NUBAN account number.')
             return
         }
@@ -176,22 +177,44 @@ export default function SellerHubPage() {
             setPayoutError('Please select your bank.')
             return
         }
-        if (!accountName || !accountVerified) {
-            setPayoutError('Please wait for account name verification.')
-            return
-        }
 
         setSavingPayout(true)
         setPayoutError('')
         setPayoutSuccess(false)
+
+        let finalAccountName = accountName
+        // If not verified yet, resolve right now before saving
+        if (!accountVerified || !finalAccountName) {
+            setResolvingAccount(true)
+            try {
+                const res = await resolveBankAccount(cleanNum, bankCode)
+                if (res.success && res.accountName) {
+                    finalAccountName = res.accountName
+                    setAccountName(res.accountName)
+                    setAccountVerified(true)
+                } else {
+                    setPayoutError(res.error || 'Could not verify account with bank. Check account number and bank.')
+                    setSavingPayout(false)
+                    setResolvingAccount(false)
+                    return
+                }
+            } catch (err) {
+                setPayoutError(err.message || 'Error resolving bank account.')
+                setSavingPayout(false)
+                setResolvingAccount(false)
+                return
+            } finally {
+                setResolvingAccount(false)
+            }
+        }
 
         try {
             await upsertUser({
                 uid: currentUserId,
                 bank_name: bankName,
                 bank_code: bankCode,
-                account_number: accountNumber,
-                account_name: accountName,
+                account_number: cleanNum,
+                account_name: finalAccountName,
             })
             setPayoutSuccess(true)
             await refreshUser()
@@ -647,19 +670,43 @@ export default function SellerHubPage() {
                                         <label style={{ fontSize: '0.75rem', fontWeight: 700 }}>NUBAN Account Number (10 Digits) *</label>
                                         {resolvingAccount && (
                                             <span style={{ fontSize: '0.6875rem', color: 'var(--color-brand)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                                <Loader2 size={12} className="animate-spin" /> Verifying with Edge Function...
+                                                <Loader2 size={12} className="animate-spin" /> Verifying with Bank...
                                             </span>
                                         )}
                                     </div>
-                                    <input
-                                        type="tel"
-                                        maxLength={10}
-                                        placeholder="0123456789"
-                                        value={accountNumber}
-                                        onChange={handleAccountNumberChange}
-                                        required
-                                        style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: `1px solid ${accountVerified ? '#10B981' : 'var(--color-border)'}`, fontSize: '0.875rem', fontFamily: 'monospace', letterSpacing: '0.05em', outline: 'none', boxSizing: 'border-box' }}
-                                    />
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <input
+                                            type="tel"
+                                            maxLength={10}
+                                            placeholder="0123456789"
+                                            value={accountNumber}
+                                            onChange={handleAccountNumberChange}
+                                            required
+                                            style={{ flex: 1, padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: `1px solid ${accountVerified ? '#10B981' : 'var(--color-border)'}`, fontSize: '0.875rem', fontFamily: 'monospace', letterSpacing: '0.05em', outline: 'none', boxSizing: 'border-box' }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => handleResolve(accountNumber, bankCode)}
+                                            disabled={resolvingAccount || !accountNumber || accountNumber.length !== 10 || !bankCode}
+                                            style={{
+                                                padding: '0.625rem 1rem',
+                                                borderRadius: '0.625rem',
+                                                border: '1px solid var(--color-brand)',
+                                                backgroundColor: accountVerified ? '#DCFCE7' : '#EFF6FF',
+                                                color: accountVerified ? '#166534' : '#2563EB',
+                                                fontSize: '0.75rem',
+                                                fontWeight: 700,
+                                                cursor: (resolvingAccount || !accountNumber || accountNumber.length !== 10 || !bankCode) ? 'not-allowed' : 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.25rem',
+                                                whiteSpace: 'nowrap'
+                                            }}
+                                        >
+                                            {resolvingAccount ? <Loader2 size={14} className="animate-spin" /> : accountVerified ? <Check size={14} /> : null}
+                                            <span>{accountVerified ? 'Verified' : 'Verify'}</span>
+                                        </button>
+                                    </div>
                                 </div>
 
                                 {/* Verified Account Name */}
@@ -694,18 +741,18 @@ export default function SellerHubPage() {
 
                                 <button
                                     type="submit"
-                                    disabled={savingPayout || !accountVerified}
+                                    disabled={savingPayout || resolvingAccount || !accountNumber || accountNumber.length !== 10 || !bankCode}
                                     style={{
                                         width: '100%',
                                         padding: '0.875rem',
                                         borderRadius: '0.75rem',
                                         border: 'none',
-                                        background: (!accountVerified || savingPayout) ? '#94A3B8' : 'linear-gradient(135deg, #10B981, #059669)',
+                                        background: (savingPayout || resolvingAccount || !accountNumber || accountNumber.length !== 10 || !bankCode) ? '#94A3B8' : 'linear-gradient(135deg, #10B981, #059669)',
                                         color: 'white',
                                         fontSize: '0.875rem',
                                         fontWeight: 700,
                                         fontFamily: 'inherit',
-                                        cursor: (!accountVerified || savingPayout) ? 'not-allowed' : 'pointer',
+                                        cursor: (savingPayout || resolvingAccount || !accountNumber || accountNumber.length !== 10 || !bankCode) ? 'not-allowed' : 'pointer',
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',

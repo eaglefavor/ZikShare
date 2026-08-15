@@ -31,7 +31,7 @@ export const NIGERIAN_BANKS = [
 ];
 
 /**
- * Resolves a Nigerian bank account number via Supabase Edge Function
+ * Resolves a Nigerian bank account number via Supabase Edge Function with a strict 10s timeout
  * @param {string} accountNumber 10-digit NUBAN
  * @param {string} bankCode CBN bank code
  * @returns {Promise<{ success: boolean, accountName?: string, error?: string }>}
@@ -41,16 +41,23 @@ export async function resolveBankAccount(accountNumber, bankCode) {
     return { success: false, error: 'Enter a valid 10-digit NUBAN account number and select a bank.' };
   }
 
+  let timeoutId;
   try {
-    const { data, error } = await supabase.functions.invoke('resolve-bank-account', {
+    const invokePromise = supabase.functions.invoke('resolve-bank-account', {
       body: {
         account_number: accountNumber.trim(),
         bank_code: bankCode.trim(),
       },
     });
 
+    const timeoutPromise = new Promise((_, reject) => {
+      timeoutId = setTimeout(() => reject(new Error('Bank account resolution timed out after 10s. Please try again.')), 10000);
+    });
+
+    const { data, error } = await Promise.race([invokePromise, timeoutPromise]);
+
     if (error) {
-      return { success: false, error: error.message || 'Failed to invoke resolve-bank-account edge function' };
+      return { success: false, error: error.message || 'Failed to resolve account via Edge Function' };
     }
 
     if (data?.status && data?.data?.account_name) {
@@ -66,7 +73,9 @@ export async function resolveBankAccount(accountNumber, bankCode) {
       error: data?.message || 'Could not resolve account name for the selected bank.',
     };
   } catch (err) {
-    return { success: false, error: err.message || 'Error communicating with bank resolution function.' };
+    return { success: false, error: err.message || 'Error communicating with bank resolution service.' };
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
   }
 }
 

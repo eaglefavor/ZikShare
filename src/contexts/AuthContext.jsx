@@ -95,30 +95,26 @@ export function AuthProvider({ children }) {
 
         saveUserLocally(optimisticUser)
 
-        // Try to load full existing profile from DB in background
-        try {
-            const existing = await getUser(authUser.id)
-            if (existing) {
-                if (googleName && (!existing.displayName || existing.displayName === 'Student' || existing.displayName === 'UNIZIK Student' || existing.displayName.length <= 3)) {
-                    existing.displayName = googleName
-                    await upsertUser(existing).catch(() => {})
+        // Asynchronous non-blocking background DB sync
+        ;(async () => {
+            try {
+                const existing = await getUser(authUser.id)
+                if (existing) {
+                    if (googleName && (!existing.displayName || existing.displayName === 'Student' || existing.displayName === 'UNIZIK Student' || existing.displayName.length <= 3)) {
+                        existing.displayName = googleName
+                        upsertUser(existing).catch(() => {})
+                    }
+                    saveUserLocally(existing)
+                    return
                 }
-                saveUserLocally(existing)
-                return existing
+                const savedUser = await upsertUser(optimisticUser)
+                if (savedUser) saveUserLocally(savedUser)
+            } catch (err) {
+                console.warn('Background user sync warning:', err.message)
             }
-        } catch (err) {
-            console.warn('Could not fetch existing user:', err.message)
-        }
+        })()
 
-        // First-time DB sync
-        try {
-            const savedUser = await upsertUser(optimisticUser)
-            if (savedUser) saveUserLocally(savedUser)
-            return savedUser
-        } catch (err) {
-            console.warn('Could not sync user to database:', err.message)
-            return optimisticUser
-        }
+        return optimisticUser
     }
 
     useEffect(() => {
@@ -131,15 +127,21 @@ export function AuthProvider({ children }) {
 
         async function initAuth() {
             try {
-                const { data } = await supabase.auth.getSession()
+                const getSessionPromise = supabase.auth.getSession()
+                const timeoutPromise = new Promise((resolve) => setTimeout(() => resolve({ data: { session: null } }), 2500))
+                const { data } = await Promise.race([getSessionPromise, timeoutPromise])
                 const s = data?.session || null
 
                 if (s?.user && isMounted) {
                     saveSessionLocally(s)
-                    await handleUserLogin(s.user)
-                } else if (isMounted) {
-                    saveSessionLocally(null)
-                    saveUserLocally(null)
+                    handleUserLogin(s.user)
+                } else if (!s && isMounted) {
+                    // Check if we have cached session in localStorage that we can keep as fallback
+                    const cachedSess = localStorage.getItem('zikshare_session')
+                    if (!cachedSess) {
+                        saveSessionLocally(null)
+                        saveUserLocally(null)
+                    }
                 }
             } catch (err) {
                 console.error('Session init error:', err)
@@ -167,7 +169,7 @@ export function AuthProvider({ children }) {
                     if (!isHandlingLoginRef.current) {
                         isHandlingLoginRef.current = true
                         try {
-                            await handleUserLogin(newSession.user)
+                            handleUserLogin(newSession.user)
                             setAuthError('')
                         } catch (err) {
                             console.error('Auth state error:', err.message)
@@ -198,7 +200,7 @@ export function AuthProvider({ children }) {
         if (error) throw error
         if (data?.session) {
             saveSessionLocally(data.session)
-            await handleUserLogin(data.session.user)
+            handleUserLogin(data.session.user)
         }
         return data
     }
@@ -215,7 +217,7 @@ export function AuthProvider({ children }) {
         if (error) throw error
         if (data?.session) {
             saveSessionLocally(data.session)
-            await handleUserLogin(data.session.user)
+            handleUserLogin(data.session.user)
         }
         return data
     }

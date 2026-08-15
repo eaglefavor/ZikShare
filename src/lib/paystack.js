@@ -1,6 +1,8 @@
 import supabase from './supabase';
 
 export const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_live_3eda0ad1995bbe9c8f0767f24ab6f10b7d86a0f4';
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://jiateaqbyaalwrkbtvjf.supabase.co';
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImppYXRlYXFieWFhbHdya2J0dmpmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5NzM4NzAsImV4cCI6MjA4NzU0OTg3MH0.DSn25Cix6IcelovjbA_HMV07Ni06W7Ms0KcBlAhzjlk';
 
 export const NIGERIAN_BANKS = [
   { name: 'Access Bank', code: '044' },
@@ -31,7 +33,7 @@ export const NIGERIAN_BANKS = [
 ];
 
 /**
- * Resolves a Nigerian bank account number via Supabase Edge Function with a strict 10s timeout
+ * Resolves a Nigerian bank account number via Supabase Edge Function with automatic direct fetch fallback & timeout
  * @param {string} accountNumber 10-digit NUBAN
  * @param {string} bankCode CBN bank code
  * @returns {Promise<{ success: boolean, accountName?: string, error?: string }>}
@@ -41,41 +43,71 @@ export async function resolveBankAccount(accountNumber, bankCode) {
     return { success: false, error: 'Enter a valid 10-digit NUBAN account number and select a bank.' };
   }
 
-  let timeoutId;
+  const cleanNum = accountNumber.trim();
+  const cleanCode = bankCode.trim();
+
+  // Try 1: Supabase client functions.invoke with 6s timeout
   try {
     const invokePromise = supabase.functions.invoke('resolve-bank-account', {
-      body: {
-        account_number: accountNumber.trim(),
-        bank_code: bankCode.trim(),
-      },
+      body: { account_number: cleanNum, bank_code: cleanCode },
     });
 
-    const timeoutPromise = new Promise((_, reject) => {
-      timeoutId = setTimeout(() => reject(new Error('Bank account resolution timed out after 10s. Please try again.')), 10000);
-    });
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Edge function invocation timeout')), 6000)
+    );
 
     const { data, error } = await Promise.race([invokePromise, timeoutPromise]);
 
-    if (error) {
-      return { success: false, error: error.message || 'Failed to resolve account via Edge Function' };
-    }
-
-    if (data?.status && data?.data?.account_name) {
+    if (!error && data?.status && data?.data?.account_name) {
       return {
         success: true,
         accountName: data.data.account_name,
         accountNumber: data.data.account_number,
       };
     }
+  } catch (invErr) {
+    console.warn('supabase.functions.invoke warning, trying direct fetch:', invErr.message);
+  }
+
+  // Try 2: Direct HTTP fetch to Edge Function endpoint with 6s timeout
+  try {
+    const fetchPromise = fetch(`${SUPABASE_URL}/functions/v1/resolve-bank-account`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+      },
+      body: JSON.stringify({
+        account_number: cleanNum,
+        bank_code: cleanCode,
+      }),
+    });
+
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Direct bank resolve fetch timeout')), 6000)
+    );
+
+    const res = await Promise.race([fetchPromise, timeoutPromise]);
+    const result = await res.json();
+
+    if (result?.status && result?.data?.account_name) {
+      return {
+        success: true,
+        accountName: result.data.account_name,
+        accountNumber: result.data.account_number,
+      };
+    }
 
     return {
       success: false,
-      error: data?.message || 'Could not resolve account name for the selected bank.',
+      error: result?.message || 'Could not resolve account name for the selected bank.',
     };
   } catch (err) {
-    return { success: false, error: err.message || 'Error communicating with bank resolution service.' };
-  } finally {
-    if (timeoutId) clearTimeout(timeoutId);
+    return {
+      success: false,
+      error: err.message || 'Error communicating with bank resolution service.',
+    };
   }
 }
 

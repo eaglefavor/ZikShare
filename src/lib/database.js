@@ -1,5 +1,19 @@
 import supabase from './supabase'
 
+function queryWithTimeout(promise, ms = 8000, fallbackVal = null) {
+    let timer
+    const timeoutPromise = new Promise((resolve) => {
+        timer = setTimeout(() => {
+            console.warn(`Query timed out after ${ms}ms, returning fallback.`)
+            resolve(fallbackVal)
+        }, ms)
+    })
+
+    return Promise.race([promise, timeoutPromise]).finally(() => {
+        if (timer) clearTimeout(timer)
+    })
+}
+
 // ── Listings ──
 
 export async function getListings({ category, search, limit = 20, offset = 0 } = {}) {
@@ -19,8 +33,8 @@ export async function getListings({ category, search, limit = 20, offset = 0 } =
             query = query.ilike('title', `%${search}%`)
         }
 
-        const { data, error } = await query
-        if (!error && data) return data
+        const res = await queryWithTimeout(query, 6000, { data: null, error: new Error('Timeout') })
+        if (res?.data && !res?.error) return res.data
     } catch (e) {
         console.warn('getListings with join error, falling back to simple:', e?.message)
     }
@@ -41,8 +55,8 @@ export async function getListings({ category, search, limit = 20, offset = 0 } =
             query = query.ilike('title', `%${search}%`)
         }
 
-        const { data } = await query
-        return data || []
+        const res = await queryWithTimeout(query, 6000, { data: [] })
+        return res?.data || []
     } catch {
         return []
     }
@@ -50,13 +64,15 @@ export async function getListings({ category, search, limit = 20, offset = 0 } =
 
 export async function getListing(id) {
     try {
-        const { data, error } = await supabase
+        const query = supabase
             .from('listings')
             .select('*, users!sellerId(displayName, isVerified, phoneNumber, department)')
             .eq('id', id)
             .single()
 
-        if (!error && data) {
+        const res = await queryWithTimeout(query, 6000, { data: null })
+        const data = res?.data
+        if (data) {
             if (!data.users && data.sellerId) {
                 try {
                     const seller = await getUser(data.sellerId)
@@ -95,118 +111,73 @@ export async function getListing(id) {
 }
 
 export async function createListing(listing) {
-    const { data, error } = await supabase
+    const query = supabase
         .from('listings')
         .insert(listing)
         .select()
         .single()
 
-    if (error) throw error
-    return data
+    const res = await queryWithTimeout(query, 10000, null)
+    if (!res || res.error) throw res?.error || new Error('Create listing timed out')
+    return res.data
 }
 
 export async function updateListing(id, updates) {
-    // Try listings table
     try {
-        const { data } = await supabase
+        const query = supabase
             .from('listings')
             .update(updates)
             .eq('id', id)
             .select()
             .maybeSingle()
 
-        if (data) return data
+        const res = await queryWithTimeout(query, 8000, { data: null })
+        if (res?.data) return res.data
     } catch {}
 
-    // Try digital_products table
-    const digitalPayload = { ...updates }
-    if (digitalPayload.price !== undefined) {
-        digitalPayload.price = Math.round(Number(digitalPayload.price) * 100) // store in kobo
-    }
-    const { data: dData, error: dError } = await supabase
-        .from('digital_products')
-        .update(digitalPayload)
-        .eq('id', id)
-        .select()
-        .maybeSingle()
+    // Try digital_products
+    try {
+        return await updateDigitalProduct(id, updates)
+    } catch {}
 
-    if (dData) return dData
-    if (dError) throw dError
     return null
 }
 
 export async function deleteListing(id) {
-    await supabase.from('listings').delete().eq('id', id)
-    await supabase.from('digital_products').delete().eq('id', id)
+    try {
+        const query = supabase.from('listings').delete().eq('id', id)
+        await queryWithTimeout(query, 8000, null)
+    } catch {}
+
+    try {
+        const query = supabase.from('digital_products').delete().eq('id', id)
+        await queryWithTimeout(query, 8000, null)
+    } catch {}
+
+    return true
 }
 
-export async function getMyListings(userId) {
-    if (!userId) return []
-    const [physicalRes, digitalRes] = await Promise.all([
-        supabase
-            .from('listings')
-            .select('*')
-            .eq('sellerId', userId)
-            .order('createdAt', { ascending: false })
-            .catch(() => ({ data: [] })),
-        supabase
-            .from('digital_products')
-            .select('*')
-            .eq('seller_id', userId)
-            .order('created_at', { ascending: false })
-            .catch(() => ({ data: [] })),
-    ])
-
-    const physical = physicalRes?.data || []
-    const digital = (digitalRes?.data || []).map(d => ({
-        ...d,
-        isDigital: true,
-        sellerId: d.seller_id,
-        createdAt: d.created_at,
-        condition: 'Digital PDF',
-        images: d.cover_image_url ? [d.cover_image_url] : [],
-        priceInKobo: d.price,
-        price: d.price / 100,
-    }))
-
-    const combined = [...physical, ...digital]
-    combined.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
-    return combined
-}
-
-// ── Public Seller Profile & Catalog ──
-
-export async function getSellerPublicProfile(sellerId) {
+export async function getSellerStore(sellerId) {
     if (!sellerId) return null
-    const [userRes, physicalRes, digitalRes] = await Promise.all([
+
+    const [seller, physicalRes, digitalRes] = await Promise.all([
         getUser(sellerId).catch(() => null),
-        supabase
-            .from('listings')
-            .select('*')
-            .eq('sellerId', sellerId)
-            .eq('status', 'Active')
-            .order('createdAt', { ascending: false })
-            .catch(() => ({ data: [] })),
-        supabase
-            .from('digital_products')
-            .select('*')
-            .eq('seller_id', sellerId)
-            .eq('status', 'active')
-            .order('created_at', { ascending: false })
-            .catch(() => ({ data: [] })),
+        queryWithTimeout(supabase.from('listings').select('*').eq('sellerId', sellerId).eq('status', 'Active'), 6000, { data: [] }),
+        queryWithTimeout(supabase.from('digital_products').select('*').eq('seller_id', sellerId).eq('status', 'active'), 6000, { data: [] }),
     ])
 
-    const seller = userRes || { uid: sellerId, displayName: 'Seller' }
     const physical = (physicalRes?.data || []).map(p => ({
         ...p,
         isDigital: false,
     }))
+
     const digital = (digitalRes?.data || []).map(d => ({
         ...d,
         isDigital: true,
-        sellerId: d.seller_id,
+        title: d.title,
+        description: d.description,
+        category: d.category,
         createdAt: d.created_at,
-        condition: 'Digital PDF',
         images: d.cover_image_url ? [d.cover_image_url] : [],
         priceInKobo: d.price,
         price: d.price / 100,
@@ -228,17 +199,14 @@ export async function getSellerPublicProfile(sellerId) {
 export async function getUser(userId) {
     if (!userId) return null
     try {
-        const { data, error } = await supabase
+        const query = supabase
             .from('users')
             .select('*')
             .eq('uid', userId)
             .single()
 
-        if (error && error.code !== 'PGRST116') {
-            console.warn('getUser error:', error.message)
-            return null
-        }
-        return data || null
+        const res = await queryWithTimeout(query, 5000, { data: null })
+        return res?.data || null
     } catch {
         return null
     }
@@ -247,17 +215,14 @@ export async function getUser(userId) {
 export async function upsertUser(user) {
     if (!user?.uid) return null
     try {
-        const { data, error } = await supabase
+        const query = supabase
             .from('users')
             .upsert(user, { onConflict: 'uid' })
             .select()
             .single()
 
-        if (error) {
-            console.warn('upsertUser warning:', error.message)
-            return user
-        }
-        return data || user
+        const res = await queryWithTimeout(query, 5000, { data: user })
+        return res?.data || user
     } catch {
         return user
     }
@@ -266,14 +231,17 @@ export async function upsertUser(user) {
 // ── Digital Products ──
 
 export async function createDigitalProduct(product) {
-    const { data, error } = await supabase
+    const query = supabase
         .from('digital_products')
         .insert(product)
         .select()
         .single()
 
-    if (error) throw error
-    return data
+    const res = await queryWithTimeout(query, 10000, null)
+    if (!res || res.error) {
+        throw res?.error || new Error('Saving material to database timed out after 10s.')
+    }
+    return res.data
 }
 
 export async function getDigitalProducts({ category, search, limit = 20, offset = 0 } = {}) {
@@ -293,8 +261,8 @@ export async function getDigitalProducts({ category, search, limit = 20, offset 
             query = query.ilike('title', `%${search}%`)
         }
 
-        const { data, error } = await query
-        if (!error && data) return data
+        const res = await queryWithTimeout(query, 6000, { data: null })
+        if (res?.data && !res?.error) return res.data
     } catch (e) {
         console.warn('getDigitalProducts with join error, falling back to simple:', e?.message)
     }
@@ -315,8 +283,8 @@ export async function getDigitalProducts({ category, search, limit = 20, offset 
             query = query.ilike('title', `%${search}%`)
         }
 
-        const { data } = await query
-        return data || []
+        const res = await queryWithTimeout(query, 6000, { data: [] })
+        return res?.data || []
     } catch {
         return []
     }
@@ -324,23 +292,25 @@ export async function getDigitalProducts({ category, search, limit = 20, offset 
 
 export async function getDigitalProduct(id) {
     try {
-        const { data, error } = await supabase
+        const query = supabase
             .from('digital_products')
             .select('*, users!seller_id(displayName, isVerified, phoneNumber, department, paystack_subaccount_code)')
             .eq('id', id)
             .single()
 
-        if (!error && data) return data
+        const res = await queryWithTimeout(query, 6000, { data: null })
+        if (res?.data) return res.data
     } catch {}
 
     try {
-        const { data } = await supabase
+        const query = supabase
             .from('digital_products')
             .select('*')
             .eq('id', id)
             .single()
 
-        return data || null
+        const res = await queryWithTimeout(query, 6000, { data: null })
+        return res?.data || null
     } catch {
         return null
     }
@@ -352,15 +322,16 @@ export async function updateDigitalProduct(id, updates) {
         payload.price = Math.round(Number(payload.price) * 100) // Ensure kobo in DB
     }
 
-    const { data, error } = await supabase
+    const query = supabase
         .from('digital_products')
         .update(payload)
         .eq('id', id)
         .select()
         .single()
 
-    if (error) throw error
-    return data
+    const res = await queryWithTimeout(query, 8000, null)
+    if (!res || res.error) throw res?.error || new Error('Update digital product timed out')
+    return res.data
 }
 
 // ── Seller Analytics & Orders ──
@@ -369,9 +340,9 @@ export async function getSellerAnalytics(userId) {
     if (!userId) return null
     try {
         const [listingsRes, digitalRes, ordersRes, userProfile] = await Promise.all([
-            supabase.from('listings').select('*').eq('sellerId', userId).catch(() => ({ data: [] })),
-            supabase.from('digital_products').select('*').eq('seller_id', userId).catch(() => ({ data: [] })),
-            supabase.from('orders').select('*').eq('seller_id', userId).order('created_at', { ascending: false }).catch(() => ({ data: [] })),
+            queryWithTimeout(supabase.from('listings').select('*').eq('sellerId', userId), 6000, { data: [] }),
+            queryWithTimeout(supabase.from('digital_products').select('*').eq('seller_id', userId), 6000, { data: [] }),
+            queryWithTimeout(supabase.from('orders').select('*').eq('seller_id', userId).order('created_at', { ascending: false }), 6000, { data: [] }),
             getUser(userId).catch(() => null)
         ])
 
@@ -439,22 +410,24 @@ export async function getSellerAnalytics(userId) {
 export async function getSellerOrders(userId) {
     if (!userId) return []
     try {
-        const { data, error } = await supabase
+        const query = supabase
             .from('orders')
             .select('*, product:digital_products(title, category, price), buyer:users!buyer_id(displayName, email, phoneNumber, department)')
             .eq('seller_id', userId)
             .order('created_at', { ascending: false })
 
-        if (!error && data) return data
+        const res = await queryWithTimeout(query, 6000, { data: null })
+        if (res?.data) return res.data
     } catch {}
 
     try {
-        const { data } = await supabase
+        const query = supabase
             .from('orders')
             .select('*')
             .eq('seller_id', userId)
             .order('created_at', { ascending: false })
-        return data || []
+        const res = await queryWithTimeout(query, 6000, { data: [] })
+        return res?.data || []
     } catch {
         return []
     }

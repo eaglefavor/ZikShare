@@ -48,9 +48,16 @@ export default function DebugConsole() {
         setDiagResults({ ...results })
         logDebug('info', '🚀 Starting full platform diagnostics...')
 
+        // Helper to timeout individual diag checks
+        const diagTimeout = (promise, ms = 5000, name = 'Operation') =>
+            Promise.race([
+                promise,
+                new Promise((_, reject) => setTimeout(() => reject(new Error(`${name} timed out after ${ms}ms`)), ms)),
+            ])
+
         // 1. Auth check
         try {
-            const { data } = await supabase.auth.getSession()
+            const { data } = await diagTimeout(supabase.auth.getSession(), 4000, 'Auth Session Check')
             const s = data?.session
             results.auth = {
                 name: 'Authentication State',
@@ -74,7 +81,8 @@ export default function DebugConsole() {
                 isVerified: true,
                 updatedAt: new Date().toISOString(),
             }
-            const { data, error } = await supabase.from('users').upsert(testUser, { onConflict: 'uid' }).select()
+            const upsertPromise = supabase.from('users').upsert(testUser, { onConflict: 'uid' }).select()
+            const { data, error } = await diagTimeout(upsertPromise, 5000, 'Users Table Upsert')
             if (error) throw error
             results.usersTable = {
                 name: 'Users Table Read/Write',
@@ -92,10 +100,11 @@ export default function DebugConsole() {
         try {
             const testBlob = new Blob(['%PDF-1.4 Diagnostic Test PDF Content'], { type: 'application/pdf' })
             const testPath = `diag/test-${Date.now()}.pdf`
-            const { data, error } = await supabase.storage.from('digital-originals').upload(testPath, testBlob, {
+            const uploadPromise = supabase.storage.from('digital-originals').upload(testPath, testBlob, {
                 contentType: 'application/pdf',
                 upsert: true,
             })
+            const { data, error } = await diagTimeout(uploadPromise, 6000, 'Storage Upload')
             if (error) throw error
             results.storageOriginals = {
                 name: 'Storage: digital-originals bucket',
@@ -104,7 +113,7 @@ export default function DebugConsole() {
             }
             logDebug('success', `Storage Check: digital-originals upload OK (${data?.path})`)
 
-            // Cleanup test file
+            // Cleanup test file in background
             supabase.storage.from('digital-originals').remove([testPath]).catch(() => {})
         } catch (e) {
             results.storageOriginals = { name: 'Storage: digital-originals bucket', status: 'error', details: e.message }
@@ -114,7 +123,8 @@ export default function DebugConsole() {
 
         // 4. Digital Products Table
         try {
-            const { data, error } = await supabase.from('digital_products').select('id, title, status').limit(3)
+            const selectPromise = supabase.from('digital_products').select('id, title, status').limit(3)
+            const { data, error } = await diagTimeout(selectPromise, 5000, 'Digital Products Query')
             if (error) throw error
             results.digitalProductsTable = {
                 name: 'Digital Products Table',
@@ -130,7 +140,7 @@ export default function DebugConsole() {
 
         // 5. Edge Function: resolve-bank-account
         try {
-            const res = await resolveBankAccount('7016159288', '999992')
+            const res = await diagTimeout(resolveBankAccount('7016159288', '999992'), 6000, 'Edge Function Invoke')
             if (res.success && res.accountName) {
                 results.edgeFunction = {
                     name: 'Edge Function: resolve-bank-account',

@@ -8,6 +8,16 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+        // Bypass navigator.locks to prevent browser lock deadlock bug on page refresh/concurrent calls
+        lock: async (_name, _acquireTimeout, fn) => {
+            try {
+                return await fn()
+            } catch (err) {
+                console.warn('Supabase auth lock execution error:', err?.message)
+                throw err
+            }
+        },
     },
     realtime: {
         params: {

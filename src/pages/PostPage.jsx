@@ -114,7 +114,7 @@ export default function PostPage() {
             // Step 1: Ensure user profile exists in public.users to prevent foreign key errors
             logDebug('info', `Step 1/4: Upserting seller user profile (UID: ${currentUserId})...`)
             try {
-                await upsertUser({
+                const syncPromise = upsertUser({
                     uid: currentUserId,
                     email: session?.user?.email || user?.email || '',
                     displayName: user?.displayName || session?.user?.email?.split('@')[0] || 'Student',
@@ -123,10 +123,11 @@ export default function PostPage() {
                     isVerified: user?.isVerified || true,
                     createdAt: user?.createdAt || new Date().toISOString(),
                 })
+                await withTimeout(syncPromise, 3000, 'Profile sync timed out')
                 logDebug('success', 'Step 1/4: Seller profile verified in database.')
             } catch (userSyncErr) {
                 console.warn('Could not sync user before upload:', userSyncErr.message)
-                logDebug('warn', `Step 1/4 Warning: ${userSyncErr.message}`)
+                logDebug('warn', `Step 1/4 (Non-blocking): ${userSyncErr.message || 'Continuing upload'}`)
             }
 
             // Step 2: Upload Cover Photo if provided

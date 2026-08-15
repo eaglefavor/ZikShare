@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, FileText, Lock, Download, Loader2, CheckCircle2, ShieldAlert, Sparkles } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { getBuyerOrders, createSignedDownloadUrl } from '../lib/database'
+import { getBuyerOrders, createSignedDownloadUrl, fulfillDigitalOrder } from '../lib/database'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount || 0)
@@ -45,14 +45,15 @@ export default function PurchasedItemsPage() {
     }
 
     const handleDownload = async (order) => {
-        if (!order.unique_storage_path) {
-            alert('File processing is still in progress. Please refresh in a moment.')
-            return
-        }
-
         setDownloadingId(order.id)
         try {
-            const url = await createSignedDownloadUrl(order.unique_storage_path, 3600)
+            let activeOrder = order
+            if (!activeOrder.unique_storage_path || activeOrder.status === 'pending') {
+                activeOrder = await fulfillDigitalOrder(activeOrder)
+            }
+
+            const storagePath = activeOrder?.unique_storage_path || activeOrder?.product?.original_storage_path
+            const url = await createSignedDownloadUrl(storagePath, 3600)
             if (url) {
                 window.open(url, '_blank')
             } else {

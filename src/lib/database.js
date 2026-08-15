@@ -468,6 +468,28 @@ export async function getBuyerOrders(buyerId) {
     }
 }
 
+export async function getUserPurchaseForProduct(userId, productId) {
+    if (!userId || !productId) return null
+    try {
+        const query = supabase
+            .from('orders')
+            .select('*, product:digital_products(*), seller:users!seller_id(displayName, email, phoneNumber)')
+            .eq('buyer_id', userId)
+            .eq('product_id', productId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+
+        const res = await queryWithTimeout(query, 5000, { data: [] })
+        const list = res?.data || []
+        if (list.length > 0) {
+            return list[0]
+        }
+        return null
+    } catch {
+        return null
+    }
+}
+
 export async function getOrder(referenceOrId) {
     if (!referenceOrId) return null
     try {

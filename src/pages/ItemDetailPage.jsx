@@ -1,8 +1,9 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, FileText, ShieldAlert, ChevronRight as ChevronRightIcon } from 'lucide-react'
-import { useState } from 'react'
+import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, FileText, ShieldAlert, ChevronRight as ChevronRightIcon, CheckCircle2, Lock, Download, Sparkles } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { useCachedQuery } from '../hooks/useCachedQuery'
-import { getListing } from '../lib/database'
+import { getListing, getUserPurchaseForProduct, fulfillDigitalOrder, createSignedDownloadUrl } from '../lib/database'
+import { downloadWatermarkedPdf } from '../lib/pdfWatermark'
 import PaystackCheckout from '../components/PaystackCheckout'
 import { isSaved as checkSaved, toggleSaved } from '../lib/savedItems'
 import { getOrCreateConversation } from '../lib/messaging'
@@ -33,11 +34,15 @@ function timeAgo(iso) {
 export default function ItemDetailPage() {
     const { id } = useParams()
     const navigate = useNavigate()
-    const { session, isAuthenticated } = useAuth()
+    const { session, user, isAuthenticated } = useAuth()
     const [currentImage, setCurrentImage] = useState(0)
     const [isSaved, setIsSaved] = useState(() => checkSaved(id))
     const [showCallSheet, setShowCallSheet] = useState(false)
     const [contacting, setContacting] = useState(false)
+    const [existingOrder, setExistingOrder] = useState(null)
+    const [downloadingExisting, setDownloadingExisting] = useState(false)
+
+    const currentUserId = session?.user?.id || user?.uid || user?.id
 
     const handleToggleSave = () => {
         const nowSaved = toggleSaved(id)
@@ -49,6 +54,46 @@ export default function ItemDetailPage() {
         () => getListing(id),
         { ttl: 5 * 60 * 1000 }
     )
+
+    useEffect(() => {
+        if (isAuthenticated && currentUserId && item?.isDigital) {
+            getUserPurchaseForProduct(currentUserId, item.id).then(order => {
+                if (order) setExistingOrder(order)
+            })
+        }
+    }, [isAuthenticated, currentUserId, item])
+
+    const handleDownloadExistingPdf = async () => {
+        if (!existingOrder) return
+        setDownloadingExisting(true)
+        try {
+            let activeOrder = existingOrder
+            if (!activeOrder.unique_storage_path || activeOrder.status === 'pending') {
+                activeOrder = await fulfillDigitalOrder(activeOrder)
+                setExistingOrder(activeOrder)
+            }
+
+            const storagePath = activeOrder?.unique_storage_path || activeOrder?.product?.original_storage_path || item?.original_storage_path
+            const url = await createSignedDownloadUrl(storagePath, 3600)
+            if (url) {
+                const buyerName = user?.displayName || session?.user?.user_metadata?.full_name || 'UNIZIK STUDENT'
+                const regNumber = activeOrder?.watermark_text?.match(/REG NO: ([^|]+)/i)?.[1]?.trim() || 'STUDENT'
+                const title = item?.title || 'ZikShare Study Material'
+
+                await downloadWatermarkedPdf(url, title, {
+                    buyerName,
+                    regNumber,
+                    orderId: activeOrder?.id
+                })
+            } else {
+                alert('Could not generate download link. Please refresh or contact support.')
+            }
+        } catch (err) {
+            alert('Download failed: ' + err.message)
+        } finally {
+            setDownloadingExisting(false)
+        }
+    }
 
     const condClass = {
         'Brand New': 'condition-new',
@@ -200,7 +245,67 @@ export default function ItemDetailPage() {
                 {!isOwnListing && (
                     item.isDigital ? (
                         <div style={{ marginBottom: '0.5rem' }}>
-                            {session?.user ? (
+                            {existingOrder ? (
+                                <div style={{ backgroundColor: '#F0FDF4', border: '1.5px solid #10B981', borderRadius: '0.875rem', padding: '1.125rem', boxShadow: '0 4px 12px rgba(16,185,129,0.1)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                            <CheckCircle2 size={18} color="#10B981" />
+                                            <span style={{ fontWeight: 800, fontSize: '0.875rem', color: '#065F46' }}>You Already Own This Material!</span>
+                                        </div>
+                                        <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#059669', backgroundColor: '#DCFCE7', padding: '0.125rem 0.5rem', borderRadius: '1rem' }}>
+                                            Purchased
+                                        </span>
+                                    </div>
+                                    <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: '#047857', lineHeight: 1.4 }}>
+                                        You previously purchased this study material on {formatDate(existingOrder.created_at)}. Your unlocked PDF is ready to download.
+                                    </p>
+
+                                    {existingOrder.unique_password && (
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px dashed #10B981', marginBottom: '0.75rem' }}>
+                                            <span style={{ fontSize: '0.75rem', color: '#065F46', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                                <Lock size={13} color="#10B981" /> PDF Password:
+                                            </span>
+                                            <code style={{ fontSize: '0.875rem', fontWeight: 800, color: '#1E40AF', fontFamily: 'monospace' }}>
+                                                {existingOrder.unique_password}
+                                            </code>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        onClick={handleDownloadExistingPdf}
+                                        disabled={downloadingExisting}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem',
+                                            borderRadius: '0.625rem',
+                                            border: 'none',
+                                            background: 'linear-gradient(135deg, #10B981, #059669)',
+                                            color: 'white',
+                                            fontSize: '0.875rem',
+                                            fontWeight: 800,
+                                            fontFamily: 'inherit',
+                                            cursor: downloadingExisting ? 'not-allowed' : 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '0.5rem',
+                                            boxShadow: '0 4px 12px rgba(16,185,129,0.3)'
+                                        }}
+                                    >
+                                        {downloadingExisting ? (
+                                            <>
+                                                <Loader2 size={16} className="animate-spin" />
+                                                <span>Watermarking & Preparing PDF...</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Download size={16} />
+                                                <span>Download Licensed PDF Now</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            ) : session?.user ? (
                                 <PaystackCheckout
                                     product={item}
                                     user={session.user}

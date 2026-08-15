@@ -34,6 +34,7 @@ function App() {
           <Route path="/profile/listings" element={<MyListingsPage />} />
           <Route path="/profile/saved" element={<SavedItemsPage />} />
           <Route path="/profile/purchases" element={<PurchasedItemsPage />} />
+          <Route path="/purchases" element={<PurchasedItemsPage />} />
           <Route path="/profile/settings" element={<SettingsPage />} />
           <Route path="/profile/help" element={<HelpPage />} />
           <Route path="/chat/:conversationId" element={<ChatPage />} />

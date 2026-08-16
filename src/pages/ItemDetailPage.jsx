@@ -151,7 +151,6 @@ export default function ItemDetailPage() {
     const sellerId = item.sellerId || item.seller_id || seller.uid
     const images = item.images?.length ? item.images : [null]
     const sellerPhone = seller.phoneNumber || ''
-    const currentUserId = session?.user?.id
     const isOwnListing = currentUserId && (currentUserId === item.sellerId || currentUserId === item.seller_id)
 
     const handleShare = async () => {

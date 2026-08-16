@@ -7,7 +7,6 @@ const categories = [
     { name: 'Electronics', emoji: '📱', color: '#3B82F6' },
     { name: 'Books', emoji: '📚', color: '#8B5CF6' },
     { name: 'Fashion', emoji: '👕', color: '#EC4899' },
-    { name: 'Hostel', emoji: '🏠', color: '#10B981' },
     { name: 'Services', emoji: '🔧', color: '#F59E0B' },
 ]
 

@@ -8,7 +8,7 @@ import { uploadImage, uploadImages } from '../lib/cloudinary'
 import { invalidateCacheByPrefix } from '../lib/cache'
 import { logDebug } from '../components/DebugConsole'
 
-const physicalCategories = ['Electronics', 'Books', 'Fashion', 'Hostel', 'Services', 'Engineering', 'Science', 'Arts', 'Medical', 'Other']
+const physicalCategories = ['Electronics', 'Books', 'Fashion', 'Services', 'Engineering', 'Science', 'Arts', 'Medical', 'Other']
 const digitalCategories = ['Engineering', 'Science', 'Arts', 'Medical', 'Past Questions', 'Notes', 'Law', 'Management', 'Other']
 const conditions = ['Fairly Used', 'Like New', 'Brand New']
 

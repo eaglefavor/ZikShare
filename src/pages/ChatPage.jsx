@@ -24,8 +24,9 @@ function dateLabel(iso) {
 const quickReplies = [
     'Is this still available?',
     'What\'s the last price?',
-    'Can we meet today?',
-    'Where on campus?',
+    'Can we meet at Garba Square?',
+    'Can we meet at Chisco Park?',
+    'I\'m at the Student Center',
 ]
 
 export default function ChatPage() {
@@ -152,7 +153,7 @@ export default function ChatPage() {
     let lastDate = ''
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#F0F2F5' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', height: '100vh', backgroundColor: '#F0F2F5', maxWidth: '42rem', margin: '0 auto', width: '100%' }}>
             {/* Header */}
             <header style={{ flexShrink: 0, backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', padding: '0.625rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', zIndex: 40 }}>
                 <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>

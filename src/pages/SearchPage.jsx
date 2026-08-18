@@ -1,15 +1,17 @@
 import { useState, useEffect, useCallback } from 'react'
-import { Search as SearchIcon, X, SlidersHorizontal } from 'lucide-react'
+import { Search as SearchIcon, X, SlidersHorizontal, History, Sparkles, TrendingUp } from 'lucide-react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { getListings, getDigitalProducts } from '../lib/database'
 
-const categories = ['All', 'Electronics', 'Books', 'Fashion', 'Hostel', 'Services', 'Engineering', 'Science', 'Past Questions', 'Notes']
+const categories = ['All', 'Electronics', 'Books', 'Fashion', 'Services', 'Engineering', 'Science', 'Past Questions', 'Notes']
 const conditions = ['All', 'Brand New', 'Like New', 'Fairly Used', 'Digital PDF']
 const sortOptions = [
     { value: 'newest', label: 'Newest First' },
     { value: 'price-low', label: 'Price: Low → High' },
     { value: 'price-high', label: 'Price: High → Low' },
 ]
+
+const popularSearches = ['GST 112', 'FAC 202', 'Calculus', 'Standing Fan', 'Past Questions', 'MTH 101']
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
@@ -26,6 +28,34 @@ export default function SearchPage() {
     const [showFilters, setShowFilters] = useState(false)
     const [sortBy, setSortBy] = useState('newest')
     const [conditionFilter, setConditionFilter] = useState('All')
+
+    // Recent search history
+    const [recentSearches, setRecentSearches] = useState(() => {
+        try {
+            return JSON.parse(localStorage.getItem('zikshare_recent_searches') || '[]')
+        } catch {
+            return []
+        }
+    })
+
+    const saveSearchTerm = (term) => {
+        const clean = term.trim()
+        if (!clean || clean.length < 2) return
+        setRecentSearches(prev => {
+            const updated = [clean, ...prev.filter(s => s.toLowerCase() !== clean.toLowerCase())].slice(0, 6)
+            try {
+                localStorage.setItem('zikshare_recent_searches', JSON.stringify(updated))
+            } catch {}
+            return updated
+        })
+    }
+
+    const clearRecentSearches = () => {
+        setRecentSearches([])
+        try {
+            localStorage.removeItem('zikshare_recent_searches')
+        } catch {}
+    }
 
     const fetchResults = useCallback(async () => {
         setIsLoading(true)
@@ -71,6 +101,9 @@ export default function SearchPage() {
             }
 
             setResults(combined)
+            if (query.trim()) {
+                saveSearchTerm(query)
+            }
         } catch (err) {
             console.error('Search error:', err)
             setResults([])
@@ -81,12 +114,12 @@ export default function SearchPage() {
 
     // Debounced search
     useEffect(() => {
-        const timer = setTimeout(fetchResults, 300)
+        const timer = setTimeout(fetchResults, 280)
         return () => clearTimeout(timer)
     }, [fetchResults])
 
     return (
-        <div>
+        <div style={{ maxWidth: '42rem', margin: '0 auto' }}>
             {/* Header */}
             <header
                 style={{
@@ -108,16 +141,16 @@ export default function SearchPage() {
                             padding: '0.625rem 0.875rem',
                             borderRadius: '0.75rem',
                             backgroundColor: 'var(--color-background)',
-                            border: '2px solid var(--color-brand)',
+                            border: '1.5px solid var(--color-brand)',
+                            transition: 'box-shadow 0.2s',
                         }}
                     >
-                        <SearchIcon size={16} color="var(--color-brand)" />
+                        <SearchIcon size={16} color="var(--color-brand)" style={{ flexShrink: 0 }} />
                         <input
                             type="text"
-                            placeholder="Search items, notes, electronics..."
+                            placeholder="Search past questions, books, gadgets..."
                             value={query}
                             onChange={e => setQuery(e.target.value)}
-                            autoFocus
                             style={{
                                 flex: 1,
                                 border: 'none',
@@ -131,9 +164,10 @@ export default function SearchPage() {
                         {query && (
                             <button
                                 onClick={() => setQuery('')}
-                                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.125rem' }}
+                                style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.125rem', color: 'var(--color-text-muted)' }}
+                                aria-label="Clear search"
                             >
-                                <X size={14} color="var(--color-text-muted)" />
+                                <X size={16} />
                             </button>
                         )}
                     </div>
@@ -150,6 +184,7 @@ export default function SearchPage() {
                             justifyContent: 'center',
                             cursor: 'pointer',
                             transition: 'all 0.2s ease',
+                            flexShrink: 0
                         }}
                     >
                         <SlidersHorizontal size={16} color={showFilters ? 'var(--color-brand)' : 'var(--color-text-secondary)'} />
@@ -160,17 +195,18 @@ export default function SearchPage() {
                 {showFilters && (
                     <div
                         style={{
-                            padding: '0.75rem',
+                            padding: '0.875rem',
                             marginBottom: '0.75rem',
                             borderRadius: '0.75rem',
-                            backgroundColor: 'var(--color-background)',
+                            backgroundColor: '#F8FAFC',
                             border: '1px solid var(--color-border)',
+                            animation: 'fadeIn 0.2s ease-out'
                         }}
                     >
                         {/* Sort */}
                         <div style={{ marginBottom: '0.75rem' }}>
-                            <label style={{ fontSize: '0.6875rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: '0.375rem' }}>
-                                Sort by
+                            <label style={{ fontSize: '0.6875rem', fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: '0.375rem' }}>
+                                Sort By
                             </label>
                             <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
                                 {sortOptions.map(opt => (
@@ -187,7 +223,7 @@ export default function SearchPage() {
                                             cursor: 'pointer',
                                             backgroundColor: sortBy === opt.value ? 'var(--color-brand)' : 'white',
                                             color: sortBy === opt.value ? 'white' : 'var(--color-text-secondary)',
-                                            transition: 'all 0.2s ease',
+                                            transition: 'all 0.15s ease',
                                             boxShadow: sortBy === opt.value ? '0 2px 6px rgba(59,130,246,0.3)' : '0 1px 2px rgba(0,0,0,0.04)',
                                         }}
                                     >
@@ -198,8 +234,8 @@ export default function SearchPage() {
                         </div>
                         {/* Condition */}
                         <div>
-                            <label style={{ fontSize: '0.6875rem', fontWeight: 600, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: '0.375rem' }}>
-                                Condition
+                            <label style={{ fontSize: '0.6875rem', fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: '0.375rem' }}>
+                                Item Type & Condition
                             </label>
                             <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
                                 {conditions.map(cond => (
@@ -216,7 +252,7 @@ export default function SearchPage() {
                                             cursor: 'pointer',
                                             backgroundColor: conditionFilter === cond ? 'var(--color-brand)' : 'white',
                                             color: conditionFilter === cond ? 'white' : 'var(--color-text-secondary)',
-                                            transition: 'all 0.2s ease',
+                                            transition: 'all 0.15s ease',
                                             boxShadow: conditionFilter === cond ? '0 2px 6px rgba(59,130,246,0.3)' : '0 1px 2px rgba(0,0,0,0.04)',
                                         }}
                                     >
@@ -229,7 +265,7 @@ export default function SearchPage() {
                 )}
 
                 {/* Category chips */}
-                <div className="hide-scrollbar" style={{ display: 'flex', gap: '0.375rem', overflowX: 'auto' }}>
+                <div className="hide-scrollbar" style={{ display: 'flex', gap: '0.375rem', overflowX: 'auto', paddingBottom: '0.125rem' }}>
                     {categories.map(cat => (
                         <button
                             key={cat}
@@ -245,7 +281,7 @@ export default function SearchPage() {
                                 whiteSpace: 'nowrap',
                                 backgroundColor: activeCategory === cat ? 'var(--color-brand)' : 'var(--color-background)',
                                 color: activeCategory === cat ? 'white' : 'var(--color-text-secondary)',
-                                transition: 'all 0.2s ease',
+                                transition: 'all 0.15s ease',
                             }}
                         >
                             {cat}
@@ -254,11 +290,58 @@ export default function SearchPage() {
                 </div>
             </header>
 
-            {/* Results */}
+            {/* Recent Searches Chips (shown when no query typed) */}
+            {!query && recentSearches.length > 0 && (
+                <div style={{ padding: '0.75rem 1rem 0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.6875rem', fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>
+                            <History size={12} />
+                            Recent Searches
+                        </div>
+                        <button
+                            onClick={clearRecentSearches}
+                            style={{ background: 'none', border: 'none', color: '#94A3B8', fontSize: '0.6875rem', fontWeight: 600, cursor: 'pointer' }}
+                        >
+                            Clear
+                        </button>
+                    </div>
+                    <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
+                        {recentSearches.map(term => (
+                            <button
+                                key={term}
+                                onClick={() => setQuery(term)}
+                                style={{
+                                    padding: '0.3125rem 0.625rem',
+                                    borderRadius: '0.5rem',
+                                    border: '1px solid var(--color-border)',
+                                    backgroundColor: 'white',
+                                    fontSize: '0.75rem',
+                                    color: 'var(--color-text-primary)',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.25rem'
+                                }}
+                            >
+                                {term}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Results Section */}
             <section style={{ padding: '0.75rem 1rem' }}>
-                <p style={{ margin: '0 0 0.625rem', fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>
-                    {isLoading ? 'Searching...' : `${results.length} result${results.length !== 1 ? 's' : ''} found`}
-                </p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 0 0.625rem' }}>
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>
+                        {isLoading ? 'Searching UNIZIK marketplace...' : `${results.length} item${results.length !== 1 ? 's' : ''} found`}
+                    </p>
+                    {activeCategory !== 'All' && (
+                        <span style={{ fontSize: '0.6875rem', backgroundColor: '#EFF6FF', color: '#2563EB', padding: '0.125rem 0.5rem', borderRadius: '9999px', fontWeight: 600 }}>
+                            {activeCategory}
+                        </span>
+                    )}
+                </div>
 
                 {isLoading ? (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
@@ -295,10 +378,16 @@ export default function SearchPage() {
                                         backgroundColor: 'white',
                                         boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
                                         cursor: 'pointer',
-                                        transition: 'transform 0.2s ease',
+                                        transition: 'transform 0.15s ease, box-shadow 0.15s ease',
                                     }}
-                                    onMouseEnter={e => (e.currentTarget.style.transform = 'translateY(-2px)')}
-                                    onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
+                                    onMouseEnter={e => {
+                                        e.currentTarget.style.transform = 'translateY(-2px)'
+                                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.08)'
+                                    }}
+                                    onMouseLeave={e => {
+                                        e.currentTarget.style.transform = 'translateY(0)'
+                                        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'
+                                    }}
                                 >
                                     <div style={{ width: '100%', height: '130px', backgroundColor: bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', position: 'relative', overflow: 'hidden' }}>
                                         {imageUrl ? (
@@ -319,10 +408,41 @@ export default function SearchPage() {
                         })}
                     </div>
                 ) : (
-                    <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                        <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🔍</p>
-                        <p style={{ fontSize: '0.875rem', fontWeight: 600 }}>No items found</p>
-                        <p style={{ fontSize: '0.75rem' }}>Try a different search or category</p>
+                    <div style={{ padding: '2.5rem 1rem', textAlign: 'center', backgroundColor: 'white', borderRadius: '1rem', border: '1px solid var(--color-border)', marginTop: '0.5rem' }}>
+                        <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '9999px', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem', fontSize: '1.5rem', color: '#2563EB' }}>
+                            🔍
+                        </div>
+                        <h3 style={{ fontSize: '0.9375rem', fontWeight: 700, margin: '0 0 0.25rem', color: 'var(--color-text-primary)' }}>No items found</h3>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', margin: '0 0 1.25rem' }}>
+                            We couldn't find matches for "{query}". Try checking one of these popular searches:
+                        </p>
+                        <div style={{ display: 'flex', gap: '0.375rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                            {popularSearches.map(pop => (
+                                <button
+                                    key={pop}
+                                    onClick={() => {
+                                        setQuery(pop)
+                                        setActiveCategory('All')
+                                    }}
+                                    style={{
+                                        padding: '0.375rem 0.75rem',
+                                        borderRadius: '9999px',
+                                        border: '1px solid #BFDBFE',
+                                        backgroundColor: '#EFF6FF',
+                                        color: '#1E40AF',
+                                        fontSize: '0.75rem',
+                                        fontWeight: 600,
+                                        cursor: 'pointer',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '0.25rem'
+                                    }}
+                                >
+                                    <Sparkles size={12} color="#2563EB" />
+                                    {pop}
+                                </button>
+                            ))}
+                        </div>
                     </div>
                 )}
             </section>

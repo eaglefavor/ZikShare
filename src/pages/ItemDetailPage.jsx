@@ -8,6 +8,7 @@ import PaystackCheckout from '../components/PaystackCheckout'
 import { isSaved as checkSaved, toggleSaved } from '../lib/savedItems'
 import { getOrCreateConversation } from '../lib/messaging'
 import { useAuth } from '../contexts/AuthContext'
+import { useToast } from '../components/Toast'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
@@ -35,6 +36,7 @@ export default function ItemDetailPage() {
     const { id } = useParams()
     const navigate = useNavigate()
     const { session, user, isAuthenticated } = useAuth()
+    const toast = useToast()
     const [currentImage, setCurrentImage] = useState(0)
     const [isSaved, setIsSaved] = useState(() => checkSaved(id))
     const [showCallSheet, setShowCallSheet] = useState(false)
@@ -47,6 +49,38 @@ export default function ItemDetailPage() {
     const handleToggleSave = () => {
         const nowSaved = toggleSaved(id)
         setIsSaved(nowSaved)
+        if (nowSaved) {
+            toast.success('Saved to your wishlist!')
+        } else {
+            toast.info('Removed from saved items')
+        }
+    }
+
+    const handleShare = async () => {
+        const shareUrl = window.location.href
+        const shareText = `Check out "${item?.title || 'this item'}" on ZikShare (UNIZIK Campus Marketplace):`
+        
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: `${item?.title || 'ZikShare'}`,
+                    text: shareText,
+                    url: shareUrl,
+                })
+                return
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.warn('Share error:', err)
+                }
+            }
+        }
+
+        try {
+            await navigator.clipboard.writeText(`${shareText}\n${shareUrl}`)
+            toast.success('Listing link copied to clipboard!')
+        } catch {
+            toast.info('Share URL: ' + shareUrl)
+        }
     }
 
     const { data: item, isLoading, error } = useCachedQuery(
@@ -166,19 +200,10 @@ export default function ItemDetailPage() {
     const sellerPhone = seller.phoneNumber || ''
     const isOwnListing = currentUserId && (currentUserId === item.sellerId || currentUserId === item.seller_id)
 
-    const handleShare = async () => {
-        if (navigator.share) {
-            await navigator.share({ title: item.title, text: `Check out "${item.title}" on ZikShare for ${formatNaira(item.price)}`, url: window.location.href })
-        } else {
-            await navigator.clipboard.writeText(window.location.href)
-            alert('Link copied!')
-        }
-    }
-
     const placeholderColors = ['#DBEAFE', '#E0E7FF', '#D1FAE5']
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-background)', paddingBottom: '5.5rem' }}>
+        <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-background)', paddingBottom: '5.5rem', maxWidth: '42rem', margin: '0 auto' }}>
             {/* Image Carousel / Banner */}
             <div style={{ position: 'relative' }}>
                 <div style={{ width: '100%', height: '300px', backgroundColor: placeholderColors[currentImage % placeholderColors.length], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem', overflow: 'hidden' }}>
@@ -449,7 +474,7 @@ export default function ItemDetailPage() {
 
             {/* Sticky Bottom CTA */}
             {!isOwnListing && (
-                <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, padding: '0.625rem 1rem', backgroundColor: 'white', borderTop: '1px solid var(--color-border)', display: 'flex', gap: '0.625rem', zIndex: 50, paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))' }}>
+                <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '42rem', padding: '0.625rem 1rem', backgroundColor: 'white', borderTop: '1px solid var(--color-border)', display: 'flex', gap: '0.625rem', zIndex: 50, paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box' }}>
                     {item.isDigital ? (
                         existingOrder ? (
                             <button

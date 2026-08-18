@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
+import { ToastProvider } from './components/Toast'
 import BottomNav from './components/BottomNav'
 import DebugConsole from './components/DebugConsole'
 import HomePage from './pages/HomePage'
@@ -22,44 +23,46 @@ import PurchasedItemsPage from './pages/PurchasedItemsPage'
 function App() {
   return (
     <AuthProvider>
-      <div className="min-h-screen bg-background">
-        <Routes>
-          {/* Full-screen pages (no bottom nav) */}
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/payment/success" element={<PaymentSuccess />} />
-          <Route path="/item/:id" element={<ItemDetailPage />} />
-          <Route path="/seller/:id" element={<SellerProfilePage />} />
-          <Route path="/user/:id" element={<SellerProfilePage />} />
-          <Route path="/seller-hub" element={<SellerHubPage />} />
-          <Route path="/profile/listings" element={<MyListingsPage />} />
-          <Route path="/profile/saved" element={<SavedItemsPage />} />
-          <Route path="/profile/purchases" element={<PurchasedItemsPage />} />
-          <Route path="/purchases" element={<PurchasedItemsPage />} />
-          <Route path="/profile/settings" element={<SettingsPage />} />
-          <Route path="/profile/help" element={<HelpPage />} />
-          <Route path="/chat/:conversationId" element={<ChatPage />} />
+      <ToastProvider>
+        <div className="min-h-screen bg-background">
+          <Routes>
+            {/* Full-screen pages (no bottom nav) */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/payment/success" element={<PaymentSuccess />} />
+            <Route path="/item/:id" element={<ItemDetailPage />} />
+            <Route path="/seller/:id" element={<SellerProfilePage />} />
+            <Route path="/user/:id" element={<SellerProfilePage />} />
+            <Route path="/seller-hub" element={<SellerHubPage />} />
+            <Route path="/profile/listings" element={<MyListingsPage />} />
+            <Route path="/profile/saved" element={<SavedItemsPage />} />
+            <Route path="/profile/purchases" element={<PurchasedItemsPage />} />
+            <Route path="/purchases" element={<PurchasedItemsPage />} />
+            <Route path="/profile/settings" element={<SettingsPage />} />
+            <Route path="/profile/help" element={<HelpPage />} />
+            <Route path="/chat/:conversationId" element={<ChatPage />} />
 
-          {/* Pages with bottom nav */}
-          <Route
-            path="*"
-            element={
-              <>
-                <main className="pb-safe">
-                  <Routes>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/search" element={<SearchPage />} />
-                    <Route path="/post" element={<PostPage />} />
-                    <Route path="/messages" element={<MessagesPage />} />
-                    <Route path="/profile" element={<ProfilePage />} />
-                  </Routes>
-                </main>
-                <BottomNav />
-              </>
-            }
-          />
-        </Routes>
-        <DebugConsole />
-      </div>
+            {/* Pages with bottom nav */}
+            <Route
+              path="*"
+              element={
+                <>
+                  <main className="pb-safe">
+                    <Routes>
+                      <Route path="/" element={<HomePage />} />
+                      <Route path="/search" element={<SearchPage />} />
+                      <Route path="/post" element={<PostPage />} />
+                      <Route path="/messages" element={<MessagesPage />} />
+                      <Route path="/profile" element={<ProfilePage />} />
+                    </Routes>
+                  </main>
+                  <BottomNav />
+                </>
+              }
+            />
+          </Routes>
+          <DebugConsole />
+        </div>
+      </ToastProvider>
     </AuthProvider>
   )
 }

@@ -141,7 +141,7 @@ export default function HomePage() {
     const listings = data;
 
     return (
-        <div>
+        <div style={{ maxWidth: '42rem', margin: '0 auto' }}>
             {/* Header */}
             <header
                 style={{

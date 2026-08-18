@@ -9,7 +9,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons/*.svg'],
+      includeAssets: ['favicon.svg', 'icons/*.svg', 'cover_photo.jpg', 'og-image.jpg'],
       manifest: {
         name: 'ZikShare - Campus Marketplace',
         short_name: 'ZikShare',

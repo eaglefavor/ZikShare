@@ -145,8 +145,8 @@ export default function PurchasedItemsPage() {
                                         </div>
                                     </div>
 
-                                    {/* Password Card */}
-                                    {order.unique_password && (
+                                    {/* Password / Access Card */}
+                                    {order.unique_password ? (
                                         <div style={{ backgroundColor: '#F8FAFC', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid #E2E8F0', marginBottom: '0.75rem' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                                 <div>
@@ -161,6 +161,14 @@ export default function PurchasedItemsPage() {
                                                 >
                                                     {copiedId === order.id ? 'Copied!' : 'Copy'}
                                                 </button>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        <div style={{ backgroundColor: '#F0FDF4', padding: '0.625rem 0.75rem', borderRadius: '0.75rem', border: '1px solid #DCFCE7', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <span style={{ fontSize: '0.9375rem' }}>🔓</span>
+                                            <div>
+                                                <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, color: '#166534' }}>Open PDF (No Password Required)</p>
+                                                <p style={{ margin: 0, fontSize: '0.625rem', color: '#15803D' }}>Standard unlocked document</p>
                                             </div>
                                         </div>
                                     )}

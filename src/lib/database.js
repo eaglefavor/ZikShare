@@ -599,13 +599,17 @@ export async function fulfillDigitalOrder(order) {
     if (order.status === 'delivered' || order.status === 'ready') return order
 
     try {
-        // Generate secure 16-character unlock password
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%*'
+        const isDrmEnabled = order.product?.drm_enabled !== false
+
+        // Generate secure 16-character unlock password only if DRM is enabled
         let password = order.unique_password
-        if (!password) {
+        if (isDrmEnabled && !password) {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%*'
             const randomBytes = new Uint8Array(16)
             crypto.getRandomValues(randomBytes)
             password = Array.from(randomBytes).map(n => chars[n % chars.length]).join('')
+        } else if (!isDrmEnabled) {
+            password = null
         }
 
         // Get storage path from product if missing
@@ -616,10 +620,13 @@ export async function fulfillDigitalOrder(order) {
             } else if (order.product_id) {
                 const { data: prod } = await supabase
                     .from('digital_products')
-                    .select('original_storage_path')
+                    .select('original_storage_path, drm_enabled')
                     .eq('id', order.product_id)
                     .single()
                 storagePath = prod?.original_storage_path || `orders/${order.id}/${order.product_id}_encrypted.pdf`
+                if (prod && prod.drm_enabled === false) {
+                    password = null
+                }
             }
         }
 

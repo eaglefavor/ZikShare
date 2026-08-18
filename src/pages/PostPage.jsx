@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Camera, X, FileText, Loader2, CheckCircle, UploadCloud, ArrowLeft, ShieldAlert, Package, MapPin, Sparkles } from 'lucide-react'
+import { Camera, X, FileText, Loader2, CheckCircle, UploadCloud, ArrowLeft, ShieldAlert, ShieldCheck, Package, MapPin, Sparkles } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { createListing, createDigitalProduct, upsertUser } from '../lib/database'
@@ -56,6 +56,7 @@ export default function PostPage() {
     const [pdfFile, setPdfFile] = useState(null)
     const [coverPhoto, setCoverPhoto] = useState(null)
     const [coverPreview, setCoverPreview] = useState(null)
+    const [drmEnabled, setDrmEnabled] = useState(user?.drm_enabled_by_default !== false)
 
     // Status / Progress
     const [loading, setLoading] = useState(false)
@@ -255,6 +256,7 @@ export default function PostPage() {
                         seller_id: currentUserId,
                         status: 'active',
                         cover_image_url: coverUrl,
+                        drm_enabled: drmEnabled,
                     }),
                     15000,
                     'Database save timed out.'
@@ -520,6 +522,55 @@ export default function PostPage() {
                                         <input type="file" accept="image/*" onChange={handleCoverPhotoAdd} style={{ display: 'none' }} />
                                     </label>
                                 )}
+                            </div>
+
+                            {/* Material Watermark/Encryption Toggle */}
+                            <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: drmEnabled ? '#EFF6FF' : '#F8FAFC', border: `1px solid ${drmEnabled ? '#BFDBFE' : '#E2E8F0'}`, transition: 'all 0.2s' }}>
+                                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem' }}>
+                                    <div style={{ display: 'flex', gap: '0.625rem' }}>
+                                        <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', backgroundColor: drmEnabled ? '#DBEAFE' : '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: drmEnabled ? '#1D4ED8' : '#64748B', flexShrink: 0 }}>
+                                            <ShieldCheck size={18} />
+                                        </div>
+                                        <div>
+                                            <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 700, color: drmEnabled ? '#1E3A8A' : '#334155' }}>
+                                                Material Watermark & Encryption
+                                            </p>
+                                            <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: 'var(--color-text-secondary)' }}>
+                                                {drmEnabled ? 'Stamps buyer’s UNIZIK Reg No. & encrypts with a unique unlock password.' : 'Deliver standard open PDF without watermarks or passwords.'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setDrmEnabled(!drmEnabled)}
+                                        style={{
+                                            width: '2.75rem',
+                                            height: '1.5rem',
+                                            borderRadius: '9999px',
+                                            backgroundColor: drmEnabled ? '#3B82F6' : '#CBD5E1',
+                                            border: 'none',
+                                            cursor: 'pointer',
+                                            position: 'relative',
+                                            transition: 'background-color 0.2s',
+                                            padding: 0,
+                                            flexShrink: 0
+                                        }}
+                                    >
+                                        <div
+                                            style={{
+                                                width: '1.125rem',
+                                                height: '1.125rem',
+                                                borderRadius: '9999px',
+                                                backgroundColor: 'white',
+                                                position: 'absolute',
+                                                top: '0.1875rem',
+                                                left: drmEnabled ? '1.4375rem' : '0.1875rem',
+                                                transition: 'left 0.2s',
+                                                boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                                            }}
+                                        />
+                                    </button>
+                                </div>
                             </div>
                         </>
                     )}

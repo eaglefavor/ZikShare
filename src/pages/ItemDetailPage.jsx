@@ -80,11 +80,24 @@ export default function ItemDetailPage() {
                 const regNumber = activeOrder?.watermark_text?.match(/REG NO: ([^|]+)/i)?.[1]?.trim() || 'STUDENT'
                 const title = item?.title || 'ZikShare Study Material'
 
-                await downloadWatermarkedPdf(url, title, {
-                    buyerName,
-                    regNumber,
-                    orderId: activeOrder?.id
-                })
+                if (activeOrder?.unique_password && item?.drm_enabled !== false) {
+                    await downloadWatermarkedPdf(url, title, {
+                        buyerName,
+                        regNumber,
+                        orderId: activeOrder?.id
+                    })
+                } else {
+                    const res = await fetch(url)
+                    const blob = await res.blob()
+                    const blobUrl = window.URL.createObjectURL(blob)
+                    const a = document.createElement('a')
+                    a.href = blobUrl
+                    a.download = `${title.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`
+                    document.body.appendChild(a)
+                    a.click()
+                    document.body.removeChild(a)
+                    window.URL.revokeObjectURL(blobUrl)
+                }
             } else {
                 alert('Could not generate download link. Please refresh or contact support.')
             }
@@ -403,15 +416,27 @@ export default function ItemDetailPage() {
             {/* Safe Meetup (Physical Items) or Anti-Piracy Notice (Digital Items) */}
             <div style={{ margin: '0.5rem 0 1rem', padding: '1rem', backgroundColor: 'white' }}>
                 {item.isDigital ? (
-                    <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: '#FEF2F2', border: '1.5px solid #FECACA', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                            <ShieldAlert size={18} color="#DC2626" />
-                            <strong style={{ fontSize: '0.75rem', color: '#991B1B', textTransform: 'uppercase' }}>Watermarked & Traceable Copy</strong>
+                    item.drm_enabled !== false ? (
+                        <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: '#FEF2F2', border: '1.5px solid #FECACA', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <ShieldAlert size={18} color="#DC2626" />
+                                <strong style={{ fontSize: '0.75rem', color: '#991B1B', textTransform: 'uppercase' }}>Watermarked & Traceable Copy</strong>
+                            </div>
+                            <p style={{ margin: 0, fontSize: '0.6875rem', color: '#7F1D1D', lineHeight: 1.4 }}>
+                                This PDF is permanently stamped with your <strong>Full Name</strong> and <strong>UNIZIK Reg Number</strong> on every page upon purchase.
+                            </p>
                         </div>
-                        <p style={{ margin: 0, fontSize: '0.6875rem', color: '#7F1D1D', lineHeight: 1.4 }}>
-                            This PDF is permanently stamped with your <strong>Full Name</strong> and <strong>UNIZIK Reg Number</strong> on every page upon purchase.
-                        </p>
-                    </div>
+                    ) : (
+                        <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: '#EFF6FF', border: '1.5px solid #BFDBFE', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <CheckCircle size={18} color="#2563EB" />
+                                <strong style={{ fontSize: '0.75rem', color: '#1E40AF', textTransform: 'uppercase' }}>Direct PDF Access</strong>
+                            </div>
+                            <p style={{ margin: 0, fontSize: '0.6875rem', color: '#1E3A8A', lineHeight: 1.4 }}>
+                                Standard open document. Instant access & download in your library upon purchase.
+                            </p>
+                        </div>
+                    )
                 ) : (
                     <div style={{ padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                         <MapPin size={16} color="#166534" />

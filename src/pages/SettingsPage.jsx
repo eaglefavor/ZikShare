@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save, Loader2, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Save, Loader2, CheckCircle, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { upsertUser } from '../lib/database'
 
@@ -10,6 +10,7 @@ export default function SettingsPage() {
     const [displayName, setDisplayName] = useState(user?.displayName || '')
     const [phoneNumber, setPhoneNumber] = useState(user?.phoneNumber || '')
     const [department, setDepartment] = useState(user?.department || '')
+    const [drmEnabledByDefault, setDrmEnabledByDefault] = useState(user?.drm_enabled_by_default !== false)
     const [saving, setSaving] = useState(false)
     const [saved, setSaved] = useState(false)
     const [error, setError] = useState('')
@@ -34,6 +35,7 @@ export default function SettingsPage() {
                 displayName: displayName.trim(),
                 phoneNumber: phoneNumber.trim(),
                 department: department.trim(),
+                drm_enabled_by_default: drmEnabledByDefault,
             }
             await upsertUser({
                 uid: currentUserId,
@@ -108,6 +110,55 @@ export default function SettingsPage() {
                         style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box', transition: 'border-color 0.2s' }}
                         onFocus={e => (e.target.style.borderColor = 'var(--color-brand)')}
                         onBlur={e => (e.target.style.borderColor = 'var(--color-border)')} />
+                </div>
+
+                {/* Material Watermark/Encryption Default Toggle */}
+                <div style={{ marginBottom: '1.25rem', padding: '0.875rem 1rem', borderRadius: '0.75rem', backgroundColor: '#F8FAFC', border: '1px solid var(--color-border)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                            <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.5rem', backgroundColor: drmEnabledByDefault ? '#EFF6FF' : '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: drmEnabledByDefault ? '#2563EB' : '#64748B' }}>
+                                <ShieldCheck size={18} />
+                            </div>
+                            <div>
+                                <label style={{ fontSize: '0.8125rem', fontWeight: 700, display: 'block', color: 'var(--color-text-primary)', margin: 0 }}>
+                                    Material Watermark/Encryption
+                                </label>
+                                <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
+                                    Default for new PDF study material uploads
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            type="button"
+                            onClick={() => setDrmEnabledByDefault(!drmEnabledByDefault)}
+                            style={{
+                                width: '2.75rem',
+                                height: '1.5rem',
+                                borderRadius: '9999px',
+                                backgroundColor: drmEnabledByDefault ? '#3B82F6' : '#CBD5E1',
+                                border: 'none',
+                                cursor: 'pointer',
+                                position: 'relative',
+                                transition: 'background-color 0.2s',
+                                padding: 0,
+                                flexShrink: 0
+                            }}
+                        >
+                            <div
+                                style={{
+                                    width: '1.125rem',
+                                    height: '1.125rem',
+                                    borderRadius: '9999px',
+                                    backgroundColor: 'white',
+                                    position: 'absolute',
+                                    top: '0.1875rem',
+                                    left: drmEnabledByDefault ? '1.4375rem' : '0.1875rem',
+                                    transition: 'left 0.2s',
+                                    boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
+                                }}
+                            />
+                        </button>
+                    </div>
                 </div>
 
                 {/* Error */}

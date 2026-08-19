@@ -4,7 +4,8 @@ import {
     Shield, Users, Package, ShoppingCart, Activity, Search, RefreshCw,
     CheckCircle2, XCircle, AlertTriangle, Trash2, Eye, ExternalLink,
     Lock, Unlock, Download, ArrowLeft, TrendingUp, DollarSign, Database,
-    FileText, UserCheck, UserX, ShieldAlert, Sparkles, Filter, Check, Copy
+    FileText, UserCheck, UserX, ShieldAlert, Sparkles, Filter, Check, Copy,
+    ChevronRight, Server, Zap
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import {
@@ -20,7 +21,7 @@ function formatNaira(amount) {
 
 function formatDate(iso) {
     if (!iso) return 'N/A'
-    return new Intl.DateTimeFormat('en-NG', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(iso))
+    return new Intl.DateTimeFormat('en-NG', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(iso))
 }
 
 export default function AdminPage() {
@@ -74,10 +75,10 @@ export default function AdminPage() {
             setListingsList(lList || [])
             setOrdersList(oList || [])
 
-            if (isRefresh) toast.success('Admin data refreshed!')
+            if (isRefresh) toast.success('Admin data updated!')
         } catch (err) {
             console.error('Failed to load admin suite:', err)
-            toast.error('Failed to load some dashboard data')
+            toast.error('Failed to load dashboard data')
         } finally {
             setLoading(false)
             setRefreshing(false)
@@ -160,7 +161,7 @@ export default function AdminPage() {
             setUsersList(prev => prev.map(item => item.uid === u.uid ? { ...item, is_banned: nextState } : item))
             toast.success(nextState ? 'User banned successfully' : 'User unbanned successfully')
         } catch (err) {
-            toast.error('Failed to update ban status: ' + err.message)
+            toast.error('Failed to update ban: ' + err.message)
         } finally {
             setActionLoading(false)
         }
@@ -228,95 +229,100 @@ export default function AdminPage() {
     }
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: '#0B0F19', color: '#F8FAFC', paddingBottom: '4rem' }}>
-            {/* Top SuperAdmin Navigation Bar */}
+        <div style={{ minHeight: '100vh', backgroundColor: '#0B0F19', color: '#F8FAFC', paddingBottom: '4rem', fontFamily: 'inherit' }}>
+            {/* ── MOBILE-OPTIMIZED TOP APP BAR ── */}
             <header
                 style={{
                     backgroundColor: '#111827',
                     borderBottom: '1px solid #1F2937',
-                    padding: '0.875rem 1.25rem',
+                    padding: '0.75rem 1rem',
                     position: 'sticky',
                     top: 0,
                     zIndex: 50,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    gap: '1rem',
                 }}
             >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.875rem' }}>
-                    <button
-                        onClick={() => navigate('/')}
-                        style={{
-                            background: '#1F2937',
-                            border: '1px solid #374151',
-                            color: '#9CA3AF',
-                            padding: '0.4rem 0.6rem',
-                            borderRadius: '0.5rem',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.375rem',
-                            fontSize: '0.75rem',
-                            fontWeight: 600
-                        }}
-                    >
-                        <ArrowLeft size={14} />
-                        Exit
-                    </button>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', backgroundColor: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-                            <Shield size={18} />
-                        </div>
-                        <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                <h1 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 800, color: 'white', letterSpacing: '-0.01em' }}>
-                                    ZikShare Admin Suite
-                                </h1>
-                                <span style={{ fontSize: '0.5625rem', fontWeight: 800, backgroundColor: '#EF4444', color: 'white', padding: '0.1rem 0.35rem', borderRadius: '0.25rem', textTransform: 'uppercase' }}>
-                                    SuperAdmin
-                                </span>
+                {/* Main Header Row */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.5rem' }}>
+                    {/* Left: Exit + Title */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', minWidth: 0 }}>
+                        <button
+                            onClick={() => navigate('/')}
+                            style={{
+                                width: '2.125rem',
+                                height: '2.125rem',
+                                borderRadius: '0.5rem',
+                                backgroundColor: '#1F2937',
+                                border: '1px solid #374151',
+                                color: '#9CA3AF',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                flexShrink: 0,
+                            }}
+                            title="Exit to Marketplace"
+                        >
+                            <ArrowLeft size={16} />
+                        </button>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', minWidth: 0 }}>
+                            <div style={{ width: '1.75rem', height: '1.75rem', borderRadius: '0.375rem', backgroundColor: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', flexShrink: 0 }}>
+                                <Shield size={14} />
                             </div>
-                            <p style={{ margin: 0, fontSize: '0.6875rem', color: '#9CA3AF' }}>
-                                Logged in as <span style={{ color: '#60A5FA', fontWeight: 600 }}>rc5632250@gmail.com</span>
-                            </p>
+                            <span style={{ fontSize: '0.9375rem', fontWeight: 800, color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                ZikShare Admin
+                            </span>
+                            <span style={{ fontSize: '0.5625rem', fontWeight: 800, backgroundColor: '#DC2626', color: 'white', padding: '0.1rem 0.35rem', borderRadius: '0.25rem', flexShrink: 0 }}>
+                                SUPERADMIN
+                            </span>
                         </div>
                     </div>
-                </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    {/* Right: Compact Refresh Button */}
                     <button
                         onClick={() => loadAllData(true)}
                         disabled={refreshing}
                         style={{
+                            height: '2.125rem',
+                            padding: '0 0.625rem',
+                            borderRadius: '0.5rem',
                             backgroundColor: '#1F2937',
                             border: '1px solid #374151',
                             color: '#E5E7EB',
-                            padding: '0.45rem 0.75rem',
-                            borderRadius: '0.5rem',
-                            cursor: refreshing ? 'not-allowed' : 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '0.375rem',
                             fontSize: '0.75rem',
-                            fontWeight: 600
+                            fontWeight: 700,
+                            cursor: refreshing ? 'not-allowed' : 'pointer',
+                            flexShrink: 0,
                         }}
                     >
-                        <RefreshCw size={14} className={refreshing ? 'animate-spin' : ''} />
-                        {refreshing ? 'Refreshing...' : 'Refresh'}
+                        <RefreshCw size={13} className={refreshing ? 'animate-spin' : ''} />
+                        <span style={{ display: 'inline-block' }}>{refreshing ? 'Syncing...' : 'Sync'}</span>
                     </button>
+                </div>
+
+                {/* Sub-bar: Authenticated Status */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.375rem 0.625rem', backgroundColor: '#0B0F19', borderRadius: '0.5rem', border: '1px solid #1E293B', fontSize: '0.6875rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        <span style={{ width: '6px', height: '6px', borderRadius: '9999px', backgroundColor: '#10B981', flexShrink: 0 }} />
+                        <span style={{ color: '#60A5FA', fontWeight: 600 }}>rc5632250@gmail.com</span>
+                    </div>
+                    <span style={{ color: '#64748B', fontWeight: 700, flexShrink: 0 }}>
+                        {dbLatency ? `${dbLatency}ms` : 'Connected'}
+                    </span>
                 </div>
             </header>
 
-            {/* Sub-Navigation Tabs */}
-            <div style={{ backgroundColor: '#111827', borderBottom: '1px solid #1F2937', padding: '0 1rem', overflowX: 'auto' }} className="hide-scrollbar">
-                <div style={{ display: 'flex', gap: '0.5rem', maxWidth: '64rem', margin: '0 auto' }}>
+            {/* ── HORIZONTAL SCROLLING PILL TABS BAR ── */}
+            <div style={{ backgroundColor: '#111827', borderBottom: '1px solid #1F2937', padding: '0.5rem 0.75rem', overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+                <div style={{ display: 'flex', gap: '0.375rem', width: 'max-content' }}>
                     {[
-                        { id: 'overview', label: 'Overview & Pulse', icon: Activity },
-                        { id: 'users', label: `Users (${usersList.length})`, icon: Users },
-                        { id: 'listings', label: `Marketplace (${listingsList.length})`, icon: Package },
-                        { id: 'orders', label: `Orders (${ordersList.length})`, icon: ShoppingCart },
-                        { id: 'system', label: 'System Health', icon: Database },
+                        { id: 'overview', label: 'Overview', icon: Activity, count: null },
+                        { id: 'users', label: 'Users', icon: Users, count: usersList.length },
+                        { id: 'listings', label: 'Marketplace', icon: Package, count: listingsList.length },
+                        { id: 'orders', label: 'Orders', icon: ShoppingCart, count: ordersList.length },
+                        { id: 'system', label: 'System', icon: Database, count: null },
                     ].map(tab => {
                         const Icon = tab.icon
                         const isActive = activeTab === tab.id
@@ -325,193 +331,213 @@ export default function AdminPage() {
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
                                 style={{
-                                    padding: '0.75rem 1rem',
-                                    border: 'none',
-                                    borderBottom: `2px solid ${isActive ? '#3B82F6' : 'transparent'}`,
-                                    backgroundColor: 'transparent',
-                                    color: isActive ? '#60A5FA' : '#9CA3AF',
-                                    fontSize: '0.8125rem',
-                                    fontWeight: isActive ? 700 : 600,
+                                    padding: '0.45rem 0.75rem',
+                                    borderRadius: '9999px',
+                                    border: `1px solid ${isActive ? '#3B82F6' : '#334155'}`,
+                                    backgroundColor: isActive ? '#2563EB' : '#1E293B',
+                                    color: isActive ? '#FFFFFF' : '#94A3B8',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 700,
                                     cursor: 'pointer',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '0.45rem',
+                                    gap: '0.35rem',
                                     whiteSpace: 'nowrap',
                                     transition: 'all 0.15s'
                                 }}
                             >
-                                <Icon size={16} />
-                                {tab.label}
+                                <Icon size={14} />
+                                <span>{tab.label}</span>
+                                {tab.count !== null && (
+                                    <span style={{ fontSize: '0.625rem', padding: '0.05rem 0.35rem', borderRadius: '9999px', backgroundColor: isActive ? 'rgba(255,255,255,0.25)' : '#0F172A', color: isActive ? 'white' : '#CBD5E1', fontWeight: 800 }}>
+                                        {tab.count}
+                                    </span>
+                                )}
                             </button>
                         )
                     })}
                 </div>
             </div>
 
-            {/* Main Content Area */}
-            <main style={{ maxWidth: '64rem', margin: '0 auto', padding: '1.25rem 1rem' }}>
+            {/* ── MAIN CONTENT CONTAINER ── */}
+            <main style={{ maxWidth: '48rem', margin: '0 auto', padding: '1rem 0.75rem' }}>
                 {loading ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '50vh', gap: '0.75rem' }}>
-                        <RefreshCw size={32} className="animate-spin" color="#3B82F6" />
-                        <p style={{ color: '#9CA3AF', fontSize: '0.8125rem', fontWeight: 600 }}>Loading administration telemetry...</p>
+                        <RefreshCw size={28} className="animate-spin" color="#3B82F6" />
+                        <p style={{ color: '#94A3B8', fontSize: '0.8125rem', fontWeight: 600 }}>Loading administration telemetry...</p>
                     </div>
                 ) : (
                     <>
                         {/* ── TAB 1: OVERVIEW & PULSE ── */}
                         {activeTab === 'overview' && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                                {/* Top KPI Metric Cards */}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.875rem' }}>
-                                    <div style={{ backgroundColor: '#1E293B', padding: '1.125rem', borderRadius: '0.875rem', border: '1px solid #334155' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase' }}>Total Revenue</span>
-                                            <div style={{ padding: '0.375rem', backgroundColor: '#064E3B', color: '#34D399', borderRadius: '0.5rem' }}>
-                                                <DollarSign size={16} />
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                {/* 2x2 Clean Responsive KPI Metric Cards Grid */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.625rem' }}>
+                                    {/* Card 1: Revenue */}
+                                    <div style={{ backgroundColor: '#1E293B', padding: '0.875rem', borderRadius: '0.75rem', border: '1px solid #334155', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
+                                            <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Revenue</span>
+                                            <div style={{ width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', backgroundColor: '#064E3B', color: '#34D399', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <DollarSign size={13} />
                                             </div>
                                         </div>
-                                        <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: '#34D399' }}>
-                                            {formatNaira(stats?.totalRevenueNaira || 0)}
-                                        </p>
-                                        <p style={{ margin: '0.25rem 0 0', fontSize: '0.6875rem', color: '#64748B' }}>
-                                            {stats?.totalOrders || 0} completed Paystack transactions
-                                        </p>
-                                    </div>
-
-                                    <div style={{ backgroundColor: '#1E293B', padding: '1.125rem', borderRadius: '0.875rem', border: '1px solid #334155' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase' }}>Registered Students</span>
-                                            <div style={{ padding: '0.375rem', backgroundColor: '#1E3A8A', color: '#60A5FA', borderRadius: '0.5rem' }}>
-                                                <Users size={16} />
-                                            </div>
-                                        </div>
-                                        <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: '#FFFFFF' }}>
-                                            {stats?.totalUsers || 0}
-                                        </p>
-                                        <p style={{ margin: '0.25rem 0 0', fontSize: '0.6875rem', color: '#64748B' }}>
-                                            {stats?.verifiedUsers || 0} verified • {stats?.bannedUsers || 0} suspended
-                                        </p>
-                                    </div>
-
-                                    <div style={{ backgroundColor: '#1E293B', padding: '1.125rem', borderRadius: '0.875rem', border: '1px solid #334155' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase' }}>Study Materials</span>
-                                            <div style={{ padding: '0.375rem', backgroundColor: '#4C1D95', color: '#C084FC', borderRadius: '0.5rem' }}>
-                                                <FileText size={16} />
-                                            </div>
-                                        </div>
-                                        <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: '#C084FC' }}>
-                                            {stats?.totalDigital || 0}
-                                        </p>
-                                        <p style={{ margin: '0.25rem 0 0', fontSize: '0.6875rem', color: '#64748B' }}>
-                                            {stats?.activeDigital || 0} active in catalog • {stats?.drmOrdersCount || 0} DRM copies
-                                        </p>
-                                    </div>
-
-                                    <div style={{ backgroundColor: '#1E293B', padding: '1.125rem', borderRadius: '0.875rem', border: '1px solid #334155' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
-                                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#94A3B8', textTransform: 'uppercase' }}>Physical Listings</span>
-                                            <div style={{ padding: '0.375rem', backgroundColor: '#78350F', color: '#FBBF24', borderRadius: '0.5rem' }}>
-                                                <Package size={16} />
-                                            </div>
-                                        </div>
-                                        <p style={{ margin: 0, fontSize: '1.5rem', fontWeight: 800, color: '#FBBF24' }}>
-                                            {stats?.totalListings || 0}
-                                        </p>
-                                        <p style={{ margin: '0.25rem 0 0', fontSize: '0.6875rem', color: '#64748B' }}>
-                                            {stats?.activeListings || 0} active listings on feed
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Quick Command Actions & Security Pulse */}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1rem' }}>
-                                    {/* Security & System Status */}
-                                    <div style={{ backgroundColor: '#1E293B', borderRadius: '0.875rem', border: '1px solid #334155', padding: '1.25rem' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                                            <Activity size={18} color="#38BDF8" />
-                                            <h2 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, color: 'white' }}>Live Platform Health</h2>
-                                        </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.75rem', backgroundColor: '#0F172A', borderRadius: '0.5rem' }}>
-                                                <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>Database Cluster (PostgreSQL)</span>
-                                                <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#34D399', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                                    <span style={{ width: '6px', height: '6px', borderRadius: '9999px', backgroundColor: '#10B981' }} />
-                                                    Healthy ({dbLatency}ms)
-                                                </span>
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.75rem', backgroundColor: '#0F172A', borderRadius: '0.5rem' }}>
-                                                <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>Storage Bucket (digital-originals)</span>
-                                                <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#34D399', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                                    <span style={{ width: '6px', height: '6px', borderRadius: '9999px', backgroundColor: '#10B981' }} />
-                                                    Operational
-                                                </span>
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.75rem', backgroundColor: '#0F172A', borderRadius: '0.5rem' }}>
-                                                <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>Paystack Webhook & Settlement</span>
-                                                <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#34D399', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                                    <span style={{ width: '6px', height: '6px', borderRadius: '9999px', backgroundColor: '#10B981' }} />
-                                                    Live Gateway
-                                                </span>
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 0.75rem', backgroundColor: '#0F172A', borderRadius: '0.5rem' }}>
-                                                <span style={{ fontSize: '0.75rem', color: '#94A3B8' }}>Anti-Piracy DRM & Watermarking</span>
-                                                <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#60A5FA', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                                                    <span style={{ width: '6px', height: '6px', borderRadius: '9999px', backgroundColor: '#3B82F6' }} />
-                                                    Active
-                                                </span>
-                                            </div>
+                                        <div>
+                                            <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#34D399', letterSpacing: '-0.02em' }}>
+                                                {formatNaira(stats?.totalRevenueNaira || 0)}
+                                            </p>
+                                            <p style={{ margin: '0.125rem 0 0', fontSize: '0.625rem', color: '#64748B' }}>
+                                                {stats?.totalOrders || 0} orders
+                                            </p>
                                         </div>
                                     </div>
 
-                                    {/* Admin Controls */}
-                                    <div style={{ backgroundColor: '#1E293B', borderRadius: '0.875rem', border: '1px solid #334155', padding: '1.25rem' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
-                                            <Sparkles size={18} color="#FBBF24" />
-                                            <h2 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, color: 'white' }}>Quick Maintenance</h2>
+                                    {/* Card 2: Students */}
+                                    <div style={{ backgroundColor: '#1E293B', padding: '0.875rem', borderRadius: '0.75rem', border: '1px solid #334155', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
+                                            <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Students</span>
+                                            <div style={{ width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', backgroundColor: '#1E3A8A', color: '#60A5FA', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <Users size={13} />
+                                            </div>
                                         </div>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                                            <button
-                                                onClick={handlePurgePlatformCache}
-                                                style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.5rem', border: '1px solid #475569', backgroundColor: '#334155', color: 'white', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-                                            >
-                                                <span>Purge Platform Client Caches</span>
-                                                <RefreshCw size={14} />
-                                            </button>
-                                            <button
-                                                onClick={() => setActiveTab('users')}
-                                                style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.5rem', border: '1px solid #475569', backgroundColor: '#334155', color: 'white', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-                                            >
-                                                <span>Manage Banned / Suspended Accounts</span>
-                                                <Users size={14} />
-                                            </button>
-                                            <button
-                                                onClick={() => setActiveTab('listings')}
-                                                style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.5rem', border: '1px solid #475569', backgroundColor: '#334155', color: 'white', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-                                            >
-                                                <span>Audit & Moderate Marketplace Listings</span>
-                                                <Package size={14} />
-                                            </button>
+                                        <div>
+                                            <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#FFFFFF', letterSpacing: '-0.02em' }}>
+                                                {stats?.totalUsers || 0}
+                                            </p>
+                                            <p style={{ margin: '0.125rem 0 0', fontSize: '0.625rem', color: '#64748B' }}>
+                                                {stats?.verifiedUsers || 0} verified
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Card 3: Study Materials */}
+                                    <div style={{ backgroundColor: '#1E293B', padding: '0.875rem', borderRadius: '0.75rem', border: '1px solid #334155', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
+                                            <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Materials</span>
+                                            <div style={{ width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', backgroundColor: '#4C1D95', color: '#C084FC', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <FileText size={13} />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#C084FC', letterSpacing: '-0.02em' }}>
+                                                {stats?.totalDigital || 0}
+                                            </p>
+                                            <p style={{ margin: '0.125rem 0 0', fontSize: '0.625rem', color: '#64748B' }}>
+                                                {stats?.drmOrdersCount || 0} DRM copies
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {/* Card 4: Listings */}
+                                    <div style={{ backgroundColor: '#1E293B', padding: '0.875rem', borderRadius: '0.75rem', border: '1px solid #334155', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
+                                            <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.02em' }}>Listings</span>
+                                            <div style={{ width: '1.5rem', height: '1.5rem', borderRadius: '0.375rem', backgroundColor: '#78350F', color: '#FBBF24', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <Package size={13} />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <p style={{ margin: 0, fontSize: '1.25rem', fontWeight: 900, color: '#FBBF24', letterSpacing: '-0.02em' }}>
+                                                {stats?.totalListings || 0}
+                                            </p>
+                                            <p style={{ margin: '0.125rem 0 0', fontSize: '0.625rem', color: '#64748B' }}>
+                                                {stats?.activeListings || 0} active
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Recent Transaction Audit */}
-                                <div style={{ backgroundColor: '#1E293B', borderRadius: '0.875rem', border: '1px solid #334155', padding: '1.25rem' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.875rem' }}>
-                                        <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: 'white' }}>Recent Purchase Activity</h3>
-                                        <button onClick={() => setActiveTab('orders')} style={{ background: 'none', border: 'none', color: '#60A5FA', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>View All Orders →</button>
+                                {/* Platform System Pulse Status */}
+                                <div style={{ backgroundColor: '#1E293B', borderRadius: '0.75rem', border: '1px solid #334155', padding: '1rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                                        <Activity size={16} color="#38BDF8" />
+                                        <h2 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 800, color: 'white' }}>Live Telemetry Health</h2>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0.625rem', backgroundColor: '#0F172A', borderRadius: '0.5rem', fontSize: '0.75rem' }}>
+                                            <span style={{ color: '#94A3B8' }}>Postgres Database</span>
+                                            <span style={{ fontWeight: 700, color: '#34D399', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.6875rem' }}>
+                                                <span style={{ width: '6px', height: '6px', borderRadius: '9999px', backgroundColor: '#10B981' }} />
+                                                Healthy ({dbLatency}ms)
+                                            </span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0.625rem', backgroundColor: '#0F172A', borderRadius: '0.5rem', fontSize: '0.75rem' }}>
+                                            <span style={{ color: '#94A3B8' }}>Storage (digital-originals)</span>
+                                            <span style={{ fontWeight: 700, color: '#34D399', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.6875rem' }}>
+                                                <span style={{ width: '6px', height: '6px', borderRadius: '9999px', backgroundColor: '#10B981' }} />
+                                                Operational
+                                            </span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0.625rem', backgroundColor: '#0F172A', borderRadius: '0.5rem', fontSize: '0.75rem' }}>
+                                            <span style={{ color: '#94A3B8' }}>Paystack Settlement</span>
+                                            <span style={{ fontWeight: 700, color: '#34D399', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.6875rem' }}>
+                                                <span style={{ width: '6px', height: '6px', borderRadius: '9999px', backgroundColor: '#10B981' }} />
+                                                Live Gateway
+                                            </span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0.625rem', backgroundColor: '#0F172A', borderRadius: '0.5rem', fontSize: '0.75rem' }}>
+                                            <span style={{ color: '#94A3B8' }}>Watermark & DRM Engine</span>
+                                            <span style={{ fontWeight: 700, color: '#60A5FA', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.6875rem' }}>
+                                                <span style={{ width: '6px', height: '6px', borderRadius: '9999px', backgroundColor: '#3B82F6' }} />
+                                                Active
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Quick Maintenance Actions */}
+                                <div style={{ backgroundColor: '#1E293B', borderRadius: '0.75rem', border: '1px solid #334155', padding: '1rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                                        <Sparkles size={16} color="#FBBF24" />
+                                        <h2 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 800, color: 'white' }}>Quick Maintenance</h2>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                        <button
+                                            onClick={handlePurgePlatformCache}
+                                            style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #475569', backgroundColor: '#334155', color: 'white', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                                        >
+                                            <span>Purge Client Feeds Cache</span>
+                                            <RefreshCw size={13} />
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('users')}
+                                            style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #475569', backgroundColor: '#334155', color: 'white', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                                        >
+                                            <span>Moderate Users & Students</span>
+                                            <Users size={13} />
+                                        </button>
+                                        <button
+                                            onClick={() => setActiveTab('listings')}
+                                            style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #475569', backgroundColor: '#334155', color: 'white', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                                        >
+                                            <span>Moderate Marketplace Listings</span>
+                                            <Package size={13} />
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Recent Sales Feed */}
+                                <div style={{ backgroundColor: '#1E293B', borderRadius: '0.75rem', border: '1px solid #334155', padding: '1rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                                        <h3 style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 800, color: 'white' }}>Recent Purchase Activity</h3>
+                                        <button onClick={() => setActiveTab('orders')} style={{ background: 'none', border: 'none', color: '#60A5FA', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer' }}>View All →</button>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                         {ordersList.slice(0, 5).map(o => (
-                                            <div key={o.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.625rem 0.75rem', backgroundColor: '#0F172A', borderRadius: '0.5rem', border: '1px solid #334155' }}>
-                                                <div>
-                                                    <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, color: 'white' }}>{o.product?.title || 'Study Material'}</p>
-                                                    <p style={{ margin: 0, fontSize: '0.625rem', color: '#94A3B8' }}>{formatDate(o.created_at)} • Buyer: {o.buyer?.displayName || o.buyer?.email || 'Student'}</p>
+                                            <div key={o.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.5rem 0.625rem', backgroundColor: '#0F172A', borderRadius: '0.5rem', border: '1px solid #334155', gap: '0.5rem' }}>
+                                                <div style={{ minWidth: 0, flex: 1 }}>
+                                                    <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                        {o.product?.title || 'Study Material'}
+                                                    </p>
+                                                    <p style={{ margin: 0, fontSize: '0.625rem', color: '#94A3B8' }}>
+                                                        {formatDate(o.created_at)} • {o.buyer?.displayName || 'Student'}
+                                                    </p>
                                                 </div>
-                                                <div style={{ textAlign: 'right' }}>
-                                                    <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 800, color: '#34D399' }}>{formatNaira(o.amount / 100)}</p>
-                                                    <span style={{ fontSize: '0.5625rem', fontWeight: 700, color: o.unique_password ? '#60A5FA' : '#34D399', backgroundColor: o.unique_password ? '#1E3A8A' : '#064E3B', padding: '0.05rem 0.35rem', borderRadius: '0.25rem' }}>
-                                                        {o.unique_password ? 'DRM Encrypted' : 'Open PDF'}
+                                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                                    <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 800, color: '#34D399' }}>
+                                                        {formatNaira(o.amount / 100)}
+                                                    </p>
+                                                    <span style={{ fontSize: '0.5625rem', fontWeight: 700, color: o.unique_password ? '#60A5FA' : '#34D399' }}>
+                                                        {o.unique_password ? '🛡️ DRM' : '🔓 Open'}
                                                     </span>
                                                 </div>
                                             </div>
@@ -523,44 +549,48 @@ export default function AdminPage() {
 
                         {/* ── TAB 2: USER DIRECTORY & MODERATION ── */}
                         {activeTab === 'users' && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                {/* Filters */}
-                                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: '240px', backgroundColor: '#1E293B', padding: '0.5rem 0.75rem', borderRadius: '0.625rem', border: '1px solid #334155' }}>
-                                        <Search size={16} color="#94A3B8" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search student by name, email, department, phone..."
-                                            value={userSearch}
-                                            onChange={e => setUserSearch(e.target.value)}
-                                            style={{ flex: 1, border: 'none', outline: 'none', backgroundColor: 'transparent', color: 'white', fontSize: '0.8125rem', fontFamily: 'inherit' }}
-                                        />
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '0.375rem' }}>
-                                        {['all', 'verified', 'unverified', 'banned'].map(f => (
-                                            <button
-                                                key={f}
-                                                onClick={() => setUserFilter(f)}
-                                                style={{
-                                                    padding: '0.375rem 0.75rem',
-                                                    borderRadius: '9999px',
-                                                    border: 'none',
-                                                    backgroundColor: userFilter === f ? '#2563EB' : '#1E293B',
-                                                    color: userFilter === f ? 'white' : '#94A3B8',
-                                                    fontSize: '0.6875rem',
-                                                    fontWeight: 700,
-                                                    cursor: 'pointer',
-                                                    textTransform: 'capitalize'
-                                                }}
-                                            >
-                                                {f}
-                                            </button>
-                                        ))}
-                                    </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {/* Search Bar */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#1E293B', padding: '0.5rem 0.75rem', borderRadius: '0.625rem', border: '1px solid #334155' }}>
+                                    <Search size={15} color="#94A3B8" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search student by name, email..."
+                                        value={userSearch}
+                                        onChange={e => setUserSearch(e.target.value)}
+                                        style={{ flex: 1, border: 'none', outline: 'none', backgroundColor: 'transparent', color: 'white', fontSize: '0.75rem', fontFamily: 'inherit' }}
+                                    />
+                                    {userSearch && (
+                                        <button onClick={() => setUserSearch('')} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: 0, fontSize: '0.75rem' }}>✕</button>
+                                    )}
                                 </div>
 
-                                {/* User Cards Grid */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+                                {/* Filter Pills */}
+                                <div style={{ display: 'flex', gap: '0.375rem', overflowX: 'auto', scrollbarWidth: 'none' }}>
+                                    {['all', 'verified', 'unverified', 'banned'].map(f => (
+                                        <button
+                                            key={f}
+                                            onClick={() => setUserFilter(f)}
+                                            style={{
+                                                padding: '0.3rem 0.625rem',
+                                                borderRadius: '9999px',
+                                                border: 'none',
+                                                backgroundColor: userFilter === f ? '#2563EB' : '#1E293B',
+                                                color: userFilter === f ? 'white' : '#94A3B8',
+                                                fontSize: '0.6875rem',
+                                                fontWeight: 700,
+                                                cursor: 'pointer',
+                                                textTransform: 'capitalize',
+                                                whiteSpace: 'nowrap'
+                                            }}
+                                        >
+                                            {f}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* User Cards List */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                     {filteredUsers.map(u => (
                                         <div
                                             key={u.uid}
@@ -568,49 +598,43 @@ export default function AdminPage() {
                                                 backgroundColor: u.is_banned ? '#450A0A' : '#1E293B',
                                                 border: `1px solid ${u.is_banned ? '#991B1B' : '#334155'}`,
                                                 borderRadius: '0.75rem',
-                                                padding: '0.875rem 1rem',
+                                                padding: '0.75rem 0.875rem',
                                                 display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                gap: '1rem',
-                                                flexWrap: 'wrap'
+                                                flexDirection: 'column',
+                                                gap: '0.625rem'
                                             }}
                                         >
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: '220px' }}>
-                                                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', backgroundColor: u.is_banned ? '#7F1D1D' : '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: '0.875rem', flexShrink: 0 }}>
+                                            {/* User Header */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                                                <div style={{ width: '2.25rem', height: '2.25rem', borderRadius: '9999px', backgroundColor: u.is_banned ? '#7F1D1D' : '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 800, fontSize: '0.8125rem', flexShrink: 0 }}>
                                                     {(u.displayName || u.email || 'U').charAt(0).toUpperCase()}
                                                 </div>
-                                                <div>
+                                                <div style={{ minWidth: 0, flex: 1 }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                                        <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: 'white' }}>
+                                                        <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 700, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                             {u.displayName || 'UNIZIK Student'}
                                                         </p>
-                                                        {u.isVerified && (
-                                                            <CheckCircle2 size={14} color="#34D399" />
-                                                        )}
+                                                        {u.isVerified && <CheckCircle2 size={13} color="#34D399" />}
                                                         {u.is_banned && (
-                                                            <span style={{ fontSize: '0.5625rem', fontWeight: 800, backgroundColor: '#DC2626', color: 'white', padding: '0.1rem 0.35rem', borderRadius: '0.25rem' }}>
+                                                            <span style={{ fontSize: '0.5rem', fontWeight: 800, backgroundColor: '#DC2626', color: 'white', padding: '0.05rem 0.25rem', borderRadius: '0.2rem' }}>
                                                                 BANNED
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: '#94A3B8' }}>
+                                                    <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                         {u.email} {u.department ? `• ${u.department}` : ''}
                                                     </p>
-                                                    {u.phoneNumber && (
-                                                        <p style={{ margin: 0, fontSize: '0.625rem', color: '#60A5FA' }}>
-                                                            📱 {u.phoneNumber}
-                                                        </p>
-                                                    )}
                                                 </div>
                                             </div>
 
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            {/* Actions Bar */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.5rem' }}>
                                                 <button
                                                     onClick={() => handleToggleVerification(u)}
                                                     disabled={actionLoading}
                                                     style={{
-                                                        padding: '0.375rem 0.625rem',
+                                                        flex: 1,
+                                                        padding: '0.35rem',
                                                         borderRadius: '0.375rem',
                                                         border: `1px solid ${u.isVerified ? '#065F46' : '#3B82F6'}`,
                                                         backgroundColor: u.isVerified ? '#064E3B' : '#1E3A8A',
@@ -627,7 +651,8 @@ export default function AdminPage() {
                                                     onClick={() => handleToggleBan(u)}
                                                     disabled={actionLoading}
                                                     style={{
-                                                        padding: '0.375rem 0.625rem',
+                                                        flex: 1,
+                                                        padding: '0.35rem',
                                                         borderRadius: '0.375rem',
                                                         border: `1px solid ${u.is_banned ? '#10B981' : '#EF4444'}`,
                                                         backgroundColor: u.is_banned ? '#064E3B' : '#7F1D1D',
@@ -637,8 +662,31 @@ export default function AdminPage() {
                                                         cursor: 'pointer',
                                                     }}
                                                 >
-                                                    {u.is_banned ? 'Unban User' : 'Ban User'}
+                                                    {u.is_banned ? 'Unban' : 'Ban'}
                                                 </button>
+
+                                                {u.phoneNumber && (
+                                                    <a
+                                                        href={`https://wa.me/${u.phoneNumber.replace(/[^0-9]/g, '')}`}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        style={{
+                                                            padding: '0.35rem 0.625rem',
+                                                            borderRadius: '0.375rem',
+                                                            border: '1px solid #166534',
+                                                            backgroundColor: '#14532D',
+                                                            color: '#86EFAC',
+                                                            fontSize: '0.6875rem',
+                                                            fontWeight: 700,
+                                                            textDecoration: 'none',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '0.25rem'
+                                                        }}
+                                                    >
+                                                        💬 WhatsApp
+                                                    </a>
+                                                )}
                                             </div>
                                         </div>
                                     ))}
@@ -648,44 +696,50 @@ export default function AdminPage() {
 
                         {/* ── TAB 3: MARKETPLACE INVENTORY ── */}
                         {activeTab === 'listings' && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flex: 1, minWidth: '240px', backgroundColor: '#1E293B', padding: '0.5rem 0.75rem', borderRadius: '0.625rem', border: '1px solid #334155' }}>
-                                        <Search size={16} color="#94A3B8" />
-                                        <input
-                                            type="text"
-                                            placeholder="Search items by title, category, seller..."
-                                            value={listingSearch}
-                                            onChange={e => setListingSearch(e.target.value)}
-                                            style={{ flex: 1, border: 'none', outline: 'none', backgroundColor: 'transparent', color: 'white', fontSize: '0.8125rem', fontFamily: 'inherit' }}
-                                        />
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '0.375rem' }}>
-                                        {[
-                                            { id: 'all', label: 'All Items' },
-                                            { id: 'physical', label: 'Physical' },
-                                            { id: 'digital', label: 'Digital PDFs/Excel' },
-                                        ].map(t => (
-                                            <button
-                                                key={t.id}
-                                                onClick={() => setListingType(t.id)}
-                                                style={{
-                                                    padding: '0.375rem 0.75rem',
-                                                    borderRadius: '9999px',
-                                                    border: 'none',
-                                                    backgroundColor: listingType === t.id ? '#2563EB' : '#1E293B',
-                                                    color: listingType === t.id ? 'white' : '#94A3B8',
-                                                    fontSize: '0.6875rem',
-                                                    fontWeight: 700,
-                                                    cursor: 'pointer'
-                                                }}
-                                            >
-                                                {t.label}
-                                            </button>
-                                        ))}
-                                    </div>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {/* Search */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#1E293B', padding: '0.5rem 0.75rem', borderRadius: '0.625rem', border: '1px solid #334155' }}>
+                                    <Search size={15} color="#94A3B8" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search title, category, seller..."
+                                        value={listingSearch}
+                                        onChange={e => setListingSearch(e.target.value)}
+                                        style={{ flex: 1, border: 'none', outline: 'none', backgroundColor: 'transparent', color: 'white', fontSize: '0.75rem', fontFamily: 'inherit' }}
+                                    />
+                                    {listingSearch && (
+                                        <button onClick={() => setListingSearch('')} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: 0, fontSize: '0.75rem' }}>✕</button>
+                                    )}
                                 </div>
 
+                                {/* Type Pills */}
+                                <div style={{ display: 'flex', gap: '0.375rem', overflowX: 'auto', scrollbarWidth: 'none' }}>
+                                    {[
+                                        { id: 'all', label: 'All' },
+                                        { id: 'physical', label: 'Physical' },
+                                        { id: 'digital', label: 'Digital PDFs' },
+                                    ].map(t => (
+                                        <button
+                                            key={t.id}
+                                            onClick={() => setListingType(t.id)}
+                                            style={{
+                                                padding: '0.3rem 0.625rem',
+                                                borderRadius: '9999px',
+                                                border: 'none',
+                                                backgroundColor: listingType === t.id ? '#2563EB' : '#1E293B',
+                                                color: listingType === t.id ? 'white' : '#94A3B8',
+                                                fontSize: '0.6875rem',
+                                                fontWeight: 700,
+                                                cursor: 'pointer',
+                                                whiteSpace: 'nowrap'
+                                            }}
+                                        >
+                                            {t.label}
+                                        </button>
+                                    ))}
+                                </div>
+
+                                {/* Listings Cards */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
                                     {filteredListings.map(item => (
                                         <div
@@ -694,52 +748,61 @@ export default function AdminPage() {
                                                 backgroundColor: '#1E293B',
                                                 border: '1px solid #334155',
                                                 borderRadius: '0.75rem',
-                                                padding: '0.875rem 1rem',
+                                                padding: '0.75rem 0.875rem',
                                                 display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                gap: '1rem',
-                                                flexWrap: 'wrap'
+                                                flexDirection: 'column',
+                                                gap: '0.625rem'
                                             }}
                                         >
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', minWidth: '220px', flex: 1 }}>
-                                                <div style={{ width: '2.75rem', height: '2.75rem', borderRadius: '0.5rem', backgroundColor: item.isDigital ? '#1E3A8A' : '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.isDigital ? '#60A5FA' : '#9CA3AF', flexShrink: 0, overflow: 'hidden' }}>
+                                            {/* Item Info Header */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                                                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.5rem', backgroundColor: item.isDigital ? '#1E3A8A' : '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', color: item.isDigital ? '#60A5FA' : '#9CA3AF', flexShrink: 0, overflow: 'hidden' }}>
                                                     {item.images?.[0] ? (
                                                         <img src={item.images[0]} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                                     ) : (
-                                                        item.isDigital ? <FileText size={20} /> : <Package size={20} />
+                                                        item.isDigital ? <FileText size={18} /> : <Package size={18} />
                                                     )}
                                                 </div>
-                                                <div>
+                                                <div style={{ minWidth: 0, flex: 1 }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                                        <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: 'white' }}>{item.title}</p>
-                                                        <span style={{ fontSize: '0.5625rem', fontWeight: 800, backgroundColor: item.isDigital ? '#1E3A8A' : '#374151', color: item.isDigital ? '#93C5FD' : '#D1D5DB', padding: '0.1rem 0.35rem', borderRadius: '0.25rem', textTransform: 'uppercase' }}>
+                                                        <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 800, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            {item.title}
+                                                        </p>
+                                                    </div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.125rem' }}>
+                                                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#34D399' }}>
+                                                            {formatNaira(item.displayPrice)}
+                                                        </span>
+                                                        <span style={{ fontSize: '0.5625rem', fontWeight: 800, backgroundColor: item.isDigital ? '#1E3A8A' : '#374151', color: item.isDigital ? '#93C5FD' : '#D1D5DB', padding: '0.05rem 0.25rem', borderRadius: '0.2rem' }}>
                                                             {item.isDigital ? 'Digital' : 'Physical'}
                                                         </span>
                                                         {item.isDigital && (
-                                                            <span style={{ fontSize: '0.5625rem', fontWeight: 700, backgroundColor: item.drm_enabled !== false ? '#064E3B' : '#374151', color: item.drm_enabled !== false ? '#34D399' : '#9CA3AF', padding: '0.1rem 0.35rem', borderRadius: '0.25rem' }}>
-                                                                {item.drm_enabled !== false ? '🛡️ DRM Locked' : '🔓 Open File'}
+                                                            <span style={{ fontSize: '0.5625rem', fontWeight: 700, backgroundColor: item.drm_enabled !== false ? '#064E3B' : '#374151', color: item.drm_enabled !== false ? '#34D399' : '#9CA3AF', padding: '0.05rem 0.25rem', borderRadius: '0.2rem' }}>
+                                                                {item.drm_enabled !== false ? '🛡️ DRM' : '🔓 Open'}
                                                             </span>
                                                         )}
                                                     </div>
-                                                    <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: '#94A3B8' }}>
-                                                        {formatNaira(item.displayPrice)} • Category: {item.category || 'General'} • Seller: {item.seller?.displayName || item.seller?.email || 'Student'}
-                                                    </p>
                                                 </div>
                                             </div>
 
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <p style={{ margin: 0, fontSize: '0.6875rem', color: '#94A3B8' }}>
+                                                Seller: <strong style={{ color: '#E2E8F0' }}>{item.seller?.displayName || 'Student'}</strong> ({item.seller?.email || 'N/A'})
+                                            </p>
+
+                                            {/* Action Buttons */}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.5rem' }}>
                                                 <button
                                                     onClick={() => navigate(`/item/${item.id}`)}
-                                                    style={{ padding: '0.375rem 0.625rem', borderRadius: '0.375rem', border: '1px solid #475569', backgroundColor: '#334155', color: 'white', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer' }}
+                                                    style={{ flex: 1, padding: '0.35rem', borderRadius: '0.375rem', border: '1px solid #475569', backgroundColor: '#334155', color: 'white', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer' }}
                                                 >
-                                                    View Item
+                                                    View
                                                 </button>
                                                 <button
                                                     onClick={() => handleToggleListingStatus(item)}
                                                     disabled={actionLoading}
                                                     style={{
-                                                        padding: '0.375rem 0.625rem',
+                                                        flex: 1.5,
+                                                        padding: '0.35rem',
                                                         borderRadius: '0.375rem',
                                                         border: '1px solid #64748B',
                                                         backgroundColor: (item.status || '').toLowerCase() === 'active' ? '#1E293B' : '#064E3B',
@@ -749,14 +812,14 @@ export default function AdminPage() {
                                                         cursor: 'pointer'
                                                     }}
                                                 >
-                                                    {(item.status || '').toLowerCase() === 'active' ? 'Hide / Deactivate' : 'Publish / Active'}
+                                                    {(item.status || '').toLowerCase() === 'active' ? 'Hide' : 'Publish'}
                                                 </button>
                                                 <button
                                                     onClick={() => handleDeleteListing(item)}
                                                     disabled={actionLoading}
-                                                    style={{ padding: '0.375rem 0.625rem', borderRadius: '0.375rem', border: '1px solid #991B1B', backgroundColor: '#7F1D1D', color: '#FCA5A5', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                                                    style={{ flex: 1, padding: '0.35rem', borderRadius: '0.375rem', border: '1px solid #991B1B', backgroundColor: '#7F1D1D', color: '#FCA5A5', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.2rem' }}
                                                 >
-                                                    <Trash2 size={12} />
+                                                    <Trash2 size={11} />
                                                     Purge
                                                 </button>
                                             </div>
@@ -768,19 +831,24 @@ export default function AdminPage() {
 
                         {/* ── TAB 4: ORDERS & REVENUE AUDIT ── */}
                         {activeTab === 'orders' && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {/* Search */}
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#1E293B', padding: '0.5rem 0.75rem', borderRadius: '0.625rem', border: '1px solid #334155' }}>
-                                    <Search size={16} color="#94A3B8" />
+                                    <Search size={15} color="#94A3B8" />
                                     <input
                                         type="text"
-                                        placeholder="Search by Paystack reference (ZKS-...), buyer email, material title, or unlock password..."
+                                        placeholder="Search by Paystack ref (ZKS-...), buyer email..."
                                         value={orderSearch}
                                         onChange={e => setOrderSearch(e.target.value)}
-                                        style={{ flex: 1, border: 'none', outline: 'none', backgroundColor: 'transparent', color: 'white', fontSize: '0.8125rem', fontFamily: 'inherit' }}
+                                        style={{ flex: 1, border: 'none', outline: 'none', backgroundColor: 'transparent', color: 'white', fontSize: '0.75rem', fontFamily: 'inherit' }}
                                     />
+                                    {orderSearch && (
+                                        <button onClick={() => setOrderSearch('')} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: 0, fontSize: '0.75rem' }}>✕</button>
+                                    )}
                                 </div>
 
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                {/* Order Cards */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
                                     {filteredOrders.map(order => (
                                         <div
                                             key={order.id}
@@ -788,57 +856,61 @@ export default function AdminPage() {
                                                 backgroundColor: '#1E293B',
                                                 border: '1px solid #334155',
                                                 borderRadius: '0.75rem',
-                                                padding: '1rem',
+                                                padding: '0.875rem',
                                                 display: 'flex',
                                                 flexDirection: 'column',
-                                                gap: '0.625rem'
+                                                gap: '0.5rem'
                                             }}
                                         >
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.5rem' }}>
-                                                <div>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                        <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#38BDF8', fontFamily: 'monospace' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                                                <div style={{ minWidth: 0, flex: 1 }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                                        <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: '#38BDF8', fontFamily: 'monospace' }}>
                                                             {order.paystack_reference}
                                                         </span>
                                                         <button
                                                             onClick={() => handleCopyText(order.paystack_reference, order.id + '_ref')}
                                                             style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: 0 }}
                                                         >
-                                                            {copiedRef === order.id + '_ref' ? <Check size={12} color="#34D399" /> : <Copy size={12} />}
+                                                            {copiedRef === order.id + '_ref' ? <Check size={11} color="#34D399" /> : <Copy size={11} />}
                                                         </button>
                                                     </div>
-                                                    <h4 style={{ margin: '0.25rem 0 0', fontSize: '0.9375rem', fontWeight: 800, color: 'white' }}>
+                                                    <h4 style={{ margin: '0.2rem 0 0', fontSize: '0.875rem', fontWeight: 800, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                         {order.product?.title || 'Study Material'}
                                                     </h4>
                                                 </div>
-                                                <div style={{ textAlign: 'right' }}>
-                                                    <p style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#34D399' }}>
+                                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                                    <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 900, color: '#34D399' }}>
                                                         {formatNaira(order.amount / 100)}
                                                     </p>
-                                                    <p style={{ margin: 0, fontSize: '0.625rem', color: '#94A3B8' }}>
-                                                        Settlement: {formatNaira(order.seller_settlement / 100)} • Fee: {formatNaira(order.platform_fee / 100)}
+                                                    <p style={{ margin: 0, fontSize: '0.5625rem', color: '#94A3B8' }}>
+                                                        Fee: {formatNaira(order.platform_fee / 100)}
                                                     </p>
                                                 </div>
                                             </div>
 
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '0.5rem', backgroundColor: '#0F172A', padding: '0.625rem 0.75rem', borderRadius: '0.5rem', fontSize: '0.6875rem' }}>
-                                                <div>
-                                                    <span style={{ color: '#64748B' }}>Buyer:</span> <strong style={{ color: '#E2E8F0' }}>{order.buyer?.displayName || 'Student'}</strong> ({order.buyer?.email || 'N/A'})
+                                            <div style={{ backgroundColor: '#0F172A', padding: '0.5rem 0.625rem', borderRadius: '0.5rem', fontSize: '0.625rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <span style={{ color: '#64748B' }}>Buyer:</span>
+                                                    <span style={{ color: '#E2E8F0', fontWeight: 600 }}>{order.buyer?.displayName || 'Student'} ({order.buyer?.email || 'N/A'})</span>
                                                 </div>
-                                                <div>
-                                                    <span style={{ color: '#64748B' }}>Seller:</span> <strong style={{ color: '#E2E8F0' }}>{order.seller?.displayName || 'Seller'}</strong> ({order.seller?.email || 'N/A'})
+                                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <span style={{ color: '#64748B' }}>Seller:</span>
+                                                    <span style={{ color: '#E2E8F0', fontWeight: 600 }}>{order.seller?.displayName || 'Seller'}</span>
                                                 </div>
-                                                <div>
-                                                    <span style={{ color: '#64748B' }}>Purchased:</span> <span style={{ color: '#E2E8F0' }}>{formatDate(order.created_at)}</span>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                    <span style={{ color: '#64748B' }}>Date:</span>
+                                                    <span style={{ color: '#E2E8F0' }}>{formatDate(order.created_at)}</span>
                                                 </div>
-                                                <div>
-                                                    <span style={{ color: '#64748B' }}>Unlock Password:</span> <code style={{ color: '#60A5FA', fontWeight: 800 }}>{order.unique_password || 'None (Open PDF)'}</code>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span style={{ color: '#64748B' }}>Password:</span>
+                                                    <code style={{ color: '#60A5FA', fontWeight: 800 }}>{order.unique_password || 'None (Open PDF)'}</code>
                                                 </div>
                                             </div>
 
                                             {order.watermark_text && (
-                                                <div style={{ fontSize: '0.625rem', color: '#94A3B8', backgroundColor: '#111827', padding: '0.375rem 0.5rem', borderRadius: '0.375rem', fontFamily: 'monospace' }}>
-                                                    🛡️ Watermark: {order.watermark_text}
+                                                <div style={{ fontSize: '0.5625rem', color: '#94A3B8', backgroundColor: '#111827', padding: '0.35rem 0.5rem', borderRadius: '0.375rem', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    🛡️ {order.watermark_text}
                                                 </div>
                                             )}
                                         </div>
@@ -849,28 +921,28 @@ export default function AdminPage() {
 
                         {/* ── TAB 5: SYSTEM HEALTH ── */}
                         {activeTab === 'system' && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-                                <div style={{ backgroundColor: '#1E293B', borderRadius: '0.875rem', border: '1px solid #334155', padding: '1.25rem' }}>
-                                    <h3 style={{ margin: '0 0 0.875rem', fontSize: '0.9375rem', fontWeight: 700, color: 'white' }}>System Configuration & Architecture</h3>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', fontSize: '0.75rem' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', backgroundColor: '#0F172A', borderRadius: '0.375rem' }}>
-                                            <span style={{ color: '#94A3B8' }}>Sole Administrator Email</span>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                <div style={{ backgroundColor: '#1E293B', borderRadius: '0.75rem', border: '1px solid #334155', padding: '1rem' }}>
+                                    <h3 style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', fontWeight: 800, color: 'white' }}>System Configuration</h3>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', fontSize: '0.6875rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0.5rem', backgroundColor: '#0F172A', borderRadius: '0.375rem' }}>
+                                            <span style={{ color: '#94A3B8' }}>Sole Admin Email</span>
                                             <code style={{ color: '#60A5FA', fontWeight: 700 }}>rc5632250@gmail.com</code>
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', backgroundColor: '#0F172A', borderRadius: '0.375rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0.5rem', backgroundColor: '#0F172A', borderRadius: '0.375rem' }}>
                                             <span style={{ color: '#94A3B8' }}>Database Engine</span>
-                                            <span style={{ color: '#34D399', fontWeight: 700 }}>Supabase PostgreSQL (jiateaqbyaalwrkbtvjf)</span>
+                                            <span style={{ color: '#34D399', fontWeight: 700 }}>Supabase PostgreSQL</span>
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', backgroundColor: '#0F172A', borderRadius: '0.375rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0.5rem', backgroundColor: '#0F172A', borderRadius: '0.375rem' }}>
                                             <span style={{ color: '#94A3B8' }}>Payment Processing</span>
-                                            <span style={{ color: '#34D399', fontWeight: 700 }}>Paystack Split Payments & Subaccounts</span>
+                                            <span style={{ color: '#34D399', fontWeight: 700 }}>Paystack Split Gateway</span>
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', backgroundColor: '#0F172A', borderRadius: '0.375rem' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0.5rem', backgroundColor: '#0F172A', borderRadius: '0.375rem' }}>
                                             <span style={{ color: '#94A3B8' }}>Storage Buckets</span>
-                                            <span style={{ color: '#34D399', fontWeight: 700 }}>digital-originals, chat-attachments</span>
+                                            <span style={{ color: '#34D399', fontWeight: 700 }}>digital-originals</span>
                                         </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.5rem', backgroundColor: '#0F172A', borderRadius: '0.375rem' }}>
-                                            <span style={{ color: '#94A3B8' }}>Frontend Build & Hosting</span>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0.5rem', backgroundColor: '#0F172A', borderRadius: '0.375rem' }}>
+                                            <span style={{ color: '#94A3B8' }}>Hosting & CDN</span>
                                             <span style={{ color: '#34D399', fontWeight: 700 }}>Vite 7 SPA + Vercel Production</span>
                                         </div>
                                     </div>

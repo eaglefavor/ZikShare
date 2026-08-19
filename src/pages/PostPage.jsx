@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Camera, X, FileText, Loader2, CheckCircle, UploadCloud, ArrowLeft, ShieldAlert, ShieldCheck, Package, MapPin, Sparkles } from 'lucide-react'
+import { Camera, X, FileText, Loader2, CheckCircle, UploadCloud, ArrowLeft, ShieldAlert, ShieldCheck, Package, MapPin, Sparkles, FileSpreadsheet, FileArchive, Lock, Unlock, HelpCircle } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { createListing, createDigitalProduct, upsertUser } from '../lib/database'
@@ -34,6 +34,30 @@ function withTimeout(promise, ms = 45000, errorMsg = 'Upload timed out. Please c
     ])
 }
 
+function getFileIcon(filename) {
+    if (!filename) return <FileText size={22} />
+    const ext = filename.split('.').pop().toLowerCase()
+    if (['xlsx', 'xls', 'csv'].includes(ext)) return <FileSpreadsheet size={22} />
+    return <FileText size={22} />
+}
+
+function getMimeType(file) {
+    if (file.type) return file.type
+    const ext = (file.name || '').split('.').pop().toLowerCase()
+    const mimeMap = {
+        pdf: 'application/pdf',
+        xlsx: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        xls: 'application/vnd.ms-excel',
+        csv: 'text/csv',
+        doc: 'application/msword',
+        docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        ppt: 'application/vnd.ms-powerpoint',
+        pptx: 'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        txt: 'text/plain',
+    }
+    return mimeMap[ext] || 'application/octet-stream'
+}
+
 export default function PostPage() {
     const navigate = useNavigate()
     const { user, session, isAuthenticated, loading: authLoading } = useAuth()
@@ -53,10 +77,11 @@ export default function PostPage() {
     const [photoPreviews, setPhotoPreviews] = useState([])
 
     // Digital fields
-    const [pdfFile, setPdfFile] = useState(null)
+    const [digitalFile, setDigitalFile] = useState(null)
     const [coverPhoto, setCoverPhoto] = useState(null)
     const [coverPreview, setCoverPreview] = useState(null)
-    const [drmEnabled, setDrmEnabled] = useState(user?.drm_enabled_by_default !== false)
+    const [drmEnabled, setDrmEnabled] = useState(true)
+    const [showDrmModal, setShowDrmModal] = useState(false)
 
     // Status / Progress
     const [loading, setLoading] = useState(false)
@@ -110,15 +135,17 @@ export default function PostPage() {
         setCoverPreview(null)
     }
 
-    const handlePdfSelect = (e) => {
+    const handleDigitalFileSelect = (e) => {
         const file = e.target.files?.[0]
         if (!file) return
         if (file.size > 50 * 1024 * 1024) {
-            setError('PDF file is too large (maximum size is 50MB).')
+            setError('Selected file is too large (maximum size is 50MB).')
             return
         }
-        setPdfFile(file)
+        setDigitalFile(file)
         setError('')
+        // Automatically trigger DRM selection pop-up!
+        setShowDrmModal(true)
     }
 
     const handleTypeSwitch = (type) => {
@@ -204,8 +231,8 @@ export default function PostPage() {
                 )
             } else {
                 // ── DIGITAL MATERIAL POSTING ──
-                if (!pdfFile) {
-                    throw new Error('Please select a PDF document to upload.')
+                if (!digitalFile) {
+                    throw new Error('Please select a document or spreadsheet to upload.')
                 }
 
                 // Upload cover photo if present
@@ -220,23 +247,24 @@ export default function PostPage() {
                     }
                 }
 
-                // Upload PDF
+                // Upload Digital File
                 setCurrentStepIndex(3)
-                setUploadStep('Uploading PDF document...')
+                setUploadStep('Uploading study material file...')
+                const fileExt = (digitalFile.name || '').split('.').pop().toLowerCase() || 'pdf'
                 const fileUuid = generateUUID()
-                const fileName = `pdfs/${currentUserId}/${fileUuid}.pdf`
+                const fileName = `digital/${currentUserId}/${fileUuid}.${fileExt}`
 
                 const uploadPromise = supabase.storage
                     .from('digital-originals')
-                    .upload(fileName, pdfFile, {
-                        contentType: 'application/pdf',
+                    .upload(fileName, digitalFile, {
+                        contentType: getMimeType(digitalFile),
                         upsert: true,
                     })
 
                 const { error: uploadError } = await withTimeout(
                     uploadPromise,
                     45000,
-                    'PDF upload timed out after 45 seconds.'
+                    'File upload timed out after 45 seconds.'
                 )
 
                 if (uploadError) {
@@ -252,7 +280,7 @@ export default function PostPage() {
                         price: Math.round(numericPrice * 100), // in kobo
                         category,
                         original_storage_path: fileName,
-                        file_size_bytes: pdfFile.size,
+                        file_size_bytes: digitalFile.size,
                         seller_id: currentUserId,
                         status: 'active',
                         cover_image_url: coverUrl,
@@ -321,25 +349,31 @@ export default function PostPage() {
 
     if (success) {
         return (
-            <div style={{ minHeight: '80vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '1rem', backgroundColor: '#F8FAFC', textAlign: 'center' }}>
-                <div style={{ width: '4.5rem', height: '4.5rem', borderRadius: '9999px', backgroundColor: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem', color: '#10B981' }}>
-                    <CheckCircle size={44} />
+            <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '1.25rem', border: '1px solid var(--color-border)', maxWidth: '24rem', width: '100%', textAlign: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                    <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '9999px', backgroundColor: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: '#166534' }}>
+                        <CheckCircle size={32} />
+                    </div>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.5rem', color: '#0F172A' }}>
+                        {postType === 'physical' ? 'Listing Published!' : 'Material Uploaded!'}
+                    </h2>
+                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', margin: '0 0 1.5rem' }}>
+                        {postType === 'physical' ? 'Your item is now live in the UNIZIK marketplace.' : 'Your study material is now available for purchase and instant delivery.'}
+                    </p>
+                    <button
+                        onClick={() => navigate('/seller-hub')}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}
+                    >
+                        View in Seller Hub
+                    </button>
                 </div>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: '0 0 0.5rem', color: '#0F172A' }}>
-                    {postType === 'physical' ? 'Item Listed Live! 🎉' : 'Material Uploaded! 🎉'}
-                </h2>
-                <p style={{ fontSize: '0.875rem', color: 'var(--color-text-secondary)', margin: 0 }}>
-                    {postType === 'physical'
-                        ? 'Your item is now visible to UNIZIK students on the marketplace.'
-                        : 'Your study material is now active in the digital library for purchase.'}
-                </p>
             </div>
         )
     }
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', paddingBottom: '7rem' }}>
-            {/* Top Bar */}
+        <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', paddingBottom: '5.5rem' }}>
+            {/* Header */}
             <header style={{ position: 'sticky', top: 0, zIndex: 40, backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', padding: '0.875rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
                 <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
                     <ArrowLeft size={20} />
@@ -347,75 +381,73 @@ export default function PostPage() {
                 <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 800, color: '#0F172A' }}>Create Listing</h1>
             </header>
 
-            <div style={{ maxWidth: '32rem', margin: '0 auto', padding: '1rem' }}>
-                {/* Mode Selector Toggle */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem', padding: '0.375rem', backgroundColor: '#E2E8F0', borderRadius: '0.875rem', marginBottom: '1.25rem' }}>
+            <div style={{ padding: '1rem', maxWidth: '32rem', margin: '0 auto' }}>
+                {/* Mode Selector Tabs */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '0.25rem', backgroundColor: '#E2E8F0', borderRadius: '0.75rem', marginBottom: '1.25rem' }}>
                     <button
                         type="button"
                         onClick={() => handleTypeSwitch('physical')}
                         style={{
-                            padding: '0.625rem 0.5rem',
+                            padding: '0.625rem',
                             borderRadius: '0.625rem',
                             border: 'none',
                             backgroundColor: postType === 'physical' ? '#FFFFFF' : 'transparent',
                             color: postType === 'physical' ? '#0F172A' : '#64748B',
-                            fontWeight: postType === 'physical' ? 800 : 600,
+                            fontWeight: 700,
                             fontSize: '0.8125rem',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: '0.375rem',
-                            boxShadow: postType === 'physical' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
-                            transition: 'all 0.15s ease',
+                            boxShadow: postType === 'physical' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                            transition: 'all 0.2s',
                         }}
                     >
-                        <Package size={16} color={postType === 'physical' ? 'var(--color-brand)' : '#64748B'} />
-                        <span>Physical Item</span>
+                        <Package size={16} />
+                        Physical Item
                     </button>
                     <button
                         type="button"
                         onClick={() => handleTypeSwitch('digital')}
                         style={{
-                            padding: '0.625rem 0.5rem',
+                            padding: '0.625rem',
                             borderRadius: '0.625rem',
                             border: 'none',
                             backgroundColor: postType === 'digital' ? '#FFFFFF' : 'transparent',
-                            color: postType === 'digital' ? '#0F172A' : '#64748B',
-                            fontWeight: postType === 'digital' ? 800 : 600,
+                            color: postType === 'digital' ? '#2563EB' : '#64748B',
+                            fontWeight: 700,
                             fontSize: '0.8125rem',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: '0.375rem',
-                            boxShadow: postType === 'digital' ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
-                            transition: 'all 0.15s ease',
+                            boxShadow: postType === 'digital' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                            transition: 'all 0.2s',
                         }}
                     >
-                        <FileText size={16} color={postType === 'digital' ? '#10B981' : '#64748B'} />
-                        <span>Study PDF</span>
+                        <FileText size={16} />
+                        Digital Material
                     </button>
                 </div>
 
-                <form onSubmit={handleSubmit} style={{ backgroundColor: 'white', borderRadius: '1.25rem', padding: '1.25rem', border: '1px solid var(--color-border)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)', display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
-
-                    {/* ── PHYSICAL ITEM INPUTS ── */}
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
                     {postType === 'physical' ? (
+                        /* ── PHYSICAL ITEM INPUTS ── */
                         <>
                             {/* Photos */}
                             <div>
-                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
                                     <label style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A' }}>
                                         Item Photos <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>(Up to 5)</span>
                                     </label>
-                                    <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>{photoPreviews.length}/5</span>
+                                    <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>{physicalPhotos.length}/5</span>
                                 </div>
-
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
                                     {photoPreviews.map((src, i) => (
                                         <div key={i} style={{ position: 'relative', height: '90px', borderRadius: '0.625rem', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
-                                            <img src={src} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            <img src={src} alt={`Photo ${i + 1}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                             <button
                                                 type="button"
                                                 onClick={() => removePhysicalPhoto(i)}
@@ -465,12 +497,12 @@ export default function PostPage() {
                             </div>
                         </>
                     ) : (
-                        /* ── DIGITAL PDF INPUTS ── */
+                        /* ── DIGITAL MATERIAL INPUTS ── */
                         <>
-                            {/* PDF File Picker */}
+                            {/* Document / Spreadsheet File Picker */}
                             <div>
                                 <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A', marginBottom: '0.375rem' }}>
-                                    PDF Document <span style={{ color: '#DC2626' }}>*</span>
+                                    Digital Document / Spreadsheet <span style={{ color: '#DC2626' }}>*</span>
                                 </label>
                                 <label
                                     style={{
@@ -479,25 +511,79 @@ export default function PostPage() {
                                         gap: '0.75rem',
                                         padding: '1rem',
                                         borderRadius: '0.875rem',
-                                        border: `2px dashed ${pdfFile ? '#10B981' : '#CBD5E1'}`,
-                                        backgroundColor: pdfFile ? '#F0FDF4' : '#F8FAFC',
+                                        border: `2px dashed ${digitalFile ? '#10B981' : '#CBD5E1'}`,
+                                        backgroundColor: digitalFile ? '#F0FDF4' : '#F8FAFC',
                                         cursor: 'pointer',
                                     }}
                                 >
-                                    <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.5rem', backgroundColor: pdfFile ? '#DCFCE7' : '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: pdfFile ? '#166534' : '#2563EB', flexShrink: 0 }}>
-                                        <FileText size={22} />
+                                    <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.5rem', backgroundColor: digitalFile ? '#DCFCE7' : '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: digitalFile ? '#166534' : '#2563EB', flexShrink: 0 }}>
+                                        {getFileIcon(digitalFile?.name)}
                                     </div>
                                     <div style={{ flex: 1, minWidth: 0 }}>
                                         <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                            {pdfFile ? pdfFile.name : 'Tap to select PDF file'}
+                                            {digitalFile ? digitalFile.name : 'Tap to upload PDF, Excel, CSV, or Word'}
                                         </p>
                                         <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
-                                            {pdfFile ? `${(pdfFile.size / 1024 / 1024).toFixed(2)} MB • Ready` : 'Past questions, lecture slides (Max 50MB)'}
+                                            {digitalFile ? `${(digitalFile.size / 1024 / 1024).toFixed(2)} MB • Ready` : 'Past questions, notes, worksheets (PDF, XLSX, CSV, DOCX)'}
                                         </p>
                                     </div>
-                                    <input type="file" accept=".pdf,application/pdf" onChange={handlePdfSelect} style={{ display: 'none' }} />
+                                    <input
+                                        type="file"
+                                        accept=".pdf,.xlsx,.xls,.csv,.doc,.docx,.ppt,.pptx,.txt,application/pdf,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                                        onChange={handleDigitalFileSelect}
+                                        style={{ display: 'none' }}
+                                    />
                                 </label>
                             </div>
+
+                            {/* Active Protection Status Card (When file selected) */}
+                            {digitalFile && (
+                                <div
+                                    style={{
+                                        padding: '0.875rem 1rem',
+                                        borderRadius: '0.75rem',
+                                        backgroundColor: drmEnabled ? '#EFF6FF' : '#F0FDF4',
+                                        border: `1.5px solid ${drmEnabled ? '#93C5FD' : '#86EFAC'}`,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'space-between',
+                                        gap: '0.75rem'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                                        <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', backgroundColor: drmEnabled ? '#DBEAFE' : '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: drmEnabled ? '#1D4ED8' : '#166534', flexShrink: 0 }}>
+                                            {drmEnabled ? <Lock size={16} /> : <Unlock size={16} />}
+                                        </div>
+                                        <div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: drmEnabled ? '#1E3A8A' : '#166534' }}>
+                                                    {drmEnabled ? 'Watermark & Password Protected' : 'Open / Unlocked File'}
+                                                </span>
+                                            </div>
+                                            <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: drmEnabled ? '#2563EB' : '#15803D' }}>
+                                                {drmEnabled ? 'Stamps buyer UNIZIK Reg No. + unique unlock password' : 'Direct download without encryption or watermarks'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowDrmModal(true)}
+                                        style={{
+                                            padding: '0.375rem 0.625rem',
+                                            borderRadius: '0.5rem',
+                                            border: `1px solid ${drmEnabled ? '#60A5FA' : '#4ADE80'}`,
+                                            backgroundColor: 'white',
+                                            color: drmEnabled ? '#1E40AF' : '#166534',
+                                            fontSize: '0.6875rem',
+                                            fontWeight: 700,
+                                            cursor: 'pointer',
+                                            flexShrink: 0
+                                        }}
+                                    >
+                                        Change
+                                    </button>
+                                </div>
+                            )}
 
                             {/* Cover Photo */}
                             <div>
@@ -522,55 +608,6 @@ export default function PostPage() {
                                         <input type="file" accept="image/*" onChange={handleCoverPhotoAdd} style={{ display: 'none' }} />
                                     </label>
                                 )}
-                            </div>
-
-                            {/* Material Watermark/Encryption Toggle */}
-                            <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: drmEnabled ? '#EFF6FF' : '#F8FAFC', border: `1px solid ${drmEnabled ? '#BFDBFE' : '#E2E8F0'}`, transition: 'all 0.2s' }}>
-                                <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem' }}>
-                                    <div style={{ display: 'flex', gap: '0.625rem' }}>
-                                        <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', backgroundColor: drmEnabled ? '#DBEAFE' : '#E2E8F0', display: 'flex', alignItems: 'center', justifyContent: 'center', color: drmEnabled ? '#1D4ED8' : '#64748B', flexShrink: 0 }}>
-                                            <ShieldCheck size={18} />
-                                        </div>
-                                        <div>
-                                            <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 700, color: drmEnabled ? '#1E3A8A' : '#334155' }}>
-                                                Material Watermark & Encryption
-                                            </p>
-                                            <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: 'var(--color-text-secondary)' }}>
-                                                {drmEnabled ? 'Stamps buyer’s UNIZIK Reg No. & encrypts with a unique unlock password.' : 'Deliver standard open PDF without watermarks or passwords.'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        type="button"
-                                        onClick={() => setDrmEnabled(!drmEnabled)}
-                                        style={{
-                                            width: '2.75rem',
-                                            height: '1.5rem',
-                                            borderRadius: '9999px',
-                                            backgroundColor: drmEnabled ? '#3B82F6' : '#CBD5E1',
-                                            border: 'none',
-                                            cursor: 'pointer',
-                                            position: 'relative',
-                                            transition: 'background-color 0.2s',
-                                            padding: 0,
-                                            flexShrink: 0
-                                        }}
-                                    >
-                                        <div
-                                            style={{
-                                                width: '1.125rem',
-                                                height: '1.125rem',
-                                                borderRadius: '9999px',
-                                                backgroundColor: 'white',
-                                                position: 'absolute',
-                                                top: '0.1875rem',
-                                                left: drmEnabled ? '1.4375rem' : '0.1875rem',
-                                                transition: 'left 0.2s',
-                                                boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
-                                            }}
-                                        />
-                                    </button>
-                                </div>
                             </div>
                         </>
                     )}
@@ -665,7 +702,7 @@ export default function PostPage() {
                             <>
                                 <Sparkles size={18} color="#1E40AF" style={{ flexShrink: 0 }} />
                                 <p style={{ margin: 0, fontSize: '0.6875rem', color: '#1E40AF', lineHeight: 1.3 }}>
-                                    <strong>Anti-Piracy DRM:</strong> Every buyer copy will be stamped with their verified name and UNIZIK matric number.
+                                    <strong>Anti-Piracy DRM:</strong> {drmEnabled ? 'Buyer copy is stamped with verified UNIZIK matric number & locked with password.' : 'Document is delivered as standard open file without DRM.'}
                                 </p>
                             </>
                         )}
@@ -690,19 +727,19 @@ export default function PostPage() {
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        disabled={loading || !title.trim() || !price || (postType === 'digital' && !pdfFile)}
+                        disabled={loading || !title.trim() || !price || (postType === 'digital' && !digitalFile)}
                         style={{
                             width: '100%',
                             minHeight: '3.25rem',
                             padding: '0.875rem 1.25rem',
                             borderRadius: '0.875rem',
                             border: 'none',
-                            background: (loading || !title.trim() || !price || (postType === 'digital' && !pdfFile)) ? '#94A3B8' : 'linear-gradient(135deg, #3B82F6, #2563EB)',
+                            background: (loading || !title.trim() || !price || (postType === 'digital' && !digitalFile)) ? '#94A3B8' : 'linear-gradient(135deg, #3B82F6, #2563EB)',
                             color: '#FFFFFF',
                             fontSize: '1rem',
                             fontWeight: 800,
                             fontFamily: 'inherit',
-                            cursor: (loading || !title.trim() || !price || (postType === 'digital' && !pdfFile)) ? 'not-allowed' : 'pointer',
+                            cursor: (loading || !title.trim() || !price || (postType === 'digital' && !digitalFile)) ? 'not-allowed' : 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
@@ -724,6 +761,174 @@ export default function PostPage() {
                     </button>
                 </form>
             </div>
+
+            {/* ── DRM & WATERMARK POP-UP MODAL ── */}
+            {showDrmModal && (
+                <>
+                    {/* Backdrop */}
+                    <div
+                        onClick={() => setShowDrmModal(false)}
+                        style={{
+                            position: 'fixed',
+                            inset: 0,
+                            backgroundColor: 'rgba(15, 23, 42, 0.65)',
+                            backdropFilter: 'blur(4px)',
+                            zIndex: 100,
+                            animation: 'fadeIn 0.2s ease-out'
+                        }}
+                    />
+
+                    {/* Modal Card */}
+                    <div
+                        style={{
+                            position: 'fixed',
+                            top: '50%',
+                            left: '50%',
+                            transform: 'translate(-50%, -50%)',
+                            width: 'calc(100% - 2rem)',
+                            maxWidth: '26rem',
+                            backgroundColor: 'white',
+                            borderRadius: '1.25rem',
+                            padding: '1.5rem',
+                            zIndex: 101,
+                            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1)',
+                            animation: 'modalPop 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.75rem', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}>
+                                    <ShieldCheck size={22} />
+                                </div>
+                                <div>
+                                    <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>Document Protection</h2>
+                                    <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>Anti-Piracy & Watermarking</p>
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setShowDrmModal(false)}
+                                style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '0.25rem' }}
+                            >
+                                <X size={20} />
+                            </button>
+                        </div>
+
+                        {digitalFile && (
+                            <div style={{ padding: '0.625rem 0.75rem', borderRadius: '0.625rem', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                {getFileIcon(digitalFile.name)}
+                                <div style={{ minWidth: 0, flex: 1 }}>
+                                    <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {digitalFile.name}
+                                    </p>
+                                    <p style={{ margin: 0, fontSize: '0.625rem', color: '#64748B' }}>
+                                        {(digitalFile.size / 1024 / 1024).toFixed(2)} MB
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+
+                        <p style={{ fontSize: '0.8125rem', color: '#334155', margin: '0 0 1rem', lineHeight: 1.4 }}>
+                            Choose how you would like your file to be delivered to buyers upon purchase:
+                        </p>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginBottom: '1.25rem' }}>
+                            {/* Option 1: DRM ON */}
+                            <div
+                                onClick={() => setDrmEnabled(true)}
+                                style={{
+                                    padding: '1rem',
+                                    borderRadius: '0.875rem',
+                                    border: `2px solid ${drmEnabled ? '#2563EB' : '#E2E8F0'}`,
+                                    backgroundColor: drmEnabled ? '#EFF6FF' : 'white',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s',
+                                    display: 'flex',
+                                    alignItems: 'flex-start',
+                                    gap: '0.75rem',
+                                }}
+                            >
+                                <div style={{ width: '1.25rem', height: '1.25rem', borderRadius: '9999px', border: `2px solid ${drmEnabled ? '#2563EB' : '#94A3B8'}`, backgroundColor: drmEnabled ? '#2563EB' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '0.125rem', flexShrink: 0 }}>
+                                    {drmEnabled && <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '9999px', backgroundColor: 'white' }} />}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.25rem' }}>
+                                        <span style={{ fontSize: '0.875rem', fontWeight: 800, color: drmEnabled ? '#1E3A8A' : '#0F172A' }}>
+                                            🛡️ Watermark & Encrypt
+                                        </span>
+                                        <span style={{ fontSize: '0.625rem', fontWeight: 700, backgroundColor: '#DBEAFE', color: '#1E40AF', padding: '0.125rem 0.375rem', borderRadius: '0.25rem' }}>
+                                            Recommended
+                                        </span>
+                                    </div>
+                                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#475569', lineHeight: 1.35 }}>
+                                        Stamps buyer's verified UNIZIK Name & Reg Number + locks file with a unique unlock password to prevent forwarding.
+                                    </p>
+                                </div>
+                            </div>
+
+                            {/* Option 2: DRM OFF */}
+                            <div
+                                onClick={() => setDrmEnabled(false)}
+                                style={{
+                                    padding: '1rem',
+                                    borderRadius: '0.875rem',
+                                    border: `2px solid ${!drmEnabled ? '#16A34A' : '#E2E8F0'}`,
+                                    backgroundColor: !drmEnabled ? '#F0FDF4' : 'white',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.15s',
+                                    display: 'flex',
+                                    alignItems: 'flex-start',
+                                    gap: '0.75rem',
+                                }}
+                            >
+                                <div style={{ width: '1.25rem', height: '1.25rem', borderRadius: '9999px', border: `2px solid ${!drmEnabled ? '#16A34A' : '#94A3B8'}`, backgroundColor: !drmEnabled ? '#16A34A' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '0.125rem', flexShrink: 0 }}>
+                                    {!drmEnabled && <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '9999px', backgroundColor: 'white' }} />}
+                                </div>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.25rem' }}>
+                                        <span style={{ fontSize: '0.875rem', fontWeight: 800, color: !drmEnabled ? '#166534' : '#0F172A' }}>
+                                            🔓 Open / Unlocked File
+                                        </span>
+                                    </div>
+                                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#475569', lineHeight: 1.35 }}>
+                                        Original document without watermarks or unlock passwords. Instant standard access for buyers.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={() => setShowDrmModal(false)}
+                            style={{
+                                width: '100%',
+                                padding: '0.875rem',
+                                borderRadius: '0.75rem',
+                                border: 'none',
+                                background: drmEnabled ? 'linear-gradient(135deg, #3B82F6, #2563EB)' : 'linear-gradient(135deg, #10B981, #059669)',
+                                color: 'white',
+                                fontSize: '0.875rem',
+                                fontWeight: 800,
+                                cursor: 'pointer',
+                                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                            }}
+                        >
+                            Confirm Selection
+                        </button>
+                    </div>
+
+                    <style>{`
+                        @keyframes modalPop {
+                            from { transform: translate(-50%, -46%); opacity: 0; }
+                            to { transform: translate(-50%, -50%); opacity: 1; }
+                        }
+                        @keyframes fadeIn {
+                            from { opacity: 0; }
+                            to { opacity: 1; }
+                        }
+                    `}</style>
+                </>
+            )}
         </div>
     )
 }

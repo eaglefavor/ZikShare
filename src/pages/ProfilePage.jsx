@@ -21,7 +21,6 @@ export default function ProfilePage() {
     const { user, session, isAuthenticated, isVerified, signOut, updateUser } = useAuth()
     const navigate = useNavigate()
     const [sellerStats, setSellerStats] = useState(null)
-    const [togglingDrm, setTogglingDrm] = useState(false)
 
     useEffect(() => {
         const uid = session?.user?.id || user?.uid || user?.id
@@ -31,26 +30,6 @@ export default function ProfilePage() {
                 .catch(() => setSellerStats(null))
         }
     }, [isAuthenticated, session, user])
-
-    const handleToggleDrmDefault = async () => {
-        if (!user) return
-        const nextVal = user.drm_enabled_by_default === false ? true : false
-        setTogglingDrm(true)
-        try {
-            const uid = session?.user?.id || user?.uid || user?.id
-            await upsertUser({
-                uid,
-                email: user.email,
-                displayName: user.displayName,
-                drm_enabled_by_default: nextVal,
-            })
-            if (updateUser) updateUser({ drm_enabled_by_default: nextVal })
-        } catch (err) {
-            console.error('Failed to update watermark setting:', err)
-        } finally {
-            setTogglingDrm(false)
-        }
-    }
 
     const handleSignOut = async () => {
         try {
@@ -222,67 +201,6 @@ export default function ProfilePage() {
                             </div>
                         </div>
                         <ChevronRight size={18} color="#94A3B8" />
-                    </div>
-                )}
-
-                {/* Seller Preference: Material Watermark/Encryption Toggle */}
-                {isAuthenticated && user && (
-                    <div
-                        style={{
-                            marginTop: '0.875rem',
-                            padding: '1rem',
-                            borderRadius: '0.875rem',
-                            backgroundColor: 'white',
-                            border: '1px solid var(--color-border)',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                        }}
-                    >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.625rem', backgroundColor: (user.drm_enabled_by_default !== false) ? '#EFF6FF' : '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: (user.drm_enabled_by_default !== false) ? '#2563EB' : '#64748B' }}>
-                                    <ShieldCheck size={20} />
-                                </div>
-                                <div>
-                                    <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                                        Material Watermark/Encryption
-                                    </h3>
-                                    <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
-                                        {(user.drm_enabled_by_default !== false) ? 'Watermarking & password DRM active by default' : 'Disabled by default for your new uploads'}
-                                    </p>
-                                </div>
-                            </div>
-                            <button
-                                type="button"
-                                onClick={handleToggleDrmDefault}
-                                disabled={togglingDrm}
-                                style={{
-                                    width: '2.75rem',
-                                    height: '1.5rem',
-                                    borderRadius: '9999px',
-                                    backgroundColor: (user.drm_enabled_by_default !== false) ? '#3B82F6' : '#CBD5E1',
-                                    border: 'none',
-                                    cursor: togglingDrm ? 'not-allowed' : 'pointer',
-                                    position: 'relative',
-                                    transition: 'background-color 0.2s',
-                                    padding: 0,
-                                    flexShrink: 0
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        width: '1.125rem',
-                                        height: '1.125rem',
-                                        borderRadius: '9999px',
-                                        backgroundColor: 'white',
-                                        position: 'absolute',
-                                        top: '0.1875rem',
-                                        left: (user.drm_enabled_by_default !== false) ? '1.4375rem' : '0.1875rem',
-                                        transition: 'left 0.2s',
-                                        boxShadow: '0 1px 2px rgba(0,0,0,0.2)'
-                                    }}
-                                />
-                            </button>
-                        </div>
                     </div>
                 )}
 

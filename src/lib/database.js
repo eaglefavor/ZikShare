@@ -883,3 +883,92 @@ export async function getAdminOrders({ search = '', limit = 100 } = {}) {
     }
 }
 
+// ── Official Campus Announcements & Broadcasts ──
+
+export async function getAnnouncements({ limit = 50, includeInactive = false } = {}) {
+    try {
+        let query = supabase
+            .from('announcements')
+            .select('*')
+            .order('is_pinned', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(limit)
+
+        if (!includeInactive) {
+            query = query.eq('is_active', true)
+        }
+
+        const { data, error } = await query
+        if (error) throw error
+        return data || []
+    } catch (err) {
+        console.error('getAnnouncements error:', err)
+        return []
+    }
+}
+
+export async function createAnnouncement({
+    title,
+    content,
+    category = 'feature_update',
+    priority = 'normal',
+    sender_email = 'rc5632250@gmail.com',
+    action_url = '',
+    action_label = '',
+    is_pinned = false
+}) {
+    const { data, error } = await supabase
+        .from('announcements')
+        .insert([{
+            title: title.trim(),
+            content: content.trim(),
+            category,
+            priority,
+            sender_email,
+            action_url: action_url.trim() || null,
+            action_label: action_label.trim() || null,
+            is_pinned: Boolean(is_pinned),
+            is_active: true
+        }])
+        .select()
+        .single()
+
+    if (error) throw error
+    invalidateCacheByPrefix('announcements')
+    return data
+}
+
+export async function deleteAnnouncement(id) {
+    const { error } = await supabase
+        .from('announcements')
+        .delete()
+        .eq('id', id)
+
+    if (error) throw error
+    invalidateCacheByPrefix('announcements')
+    return true
+}
+
+export async function togglePinAnnouncement(id, is_pinned) {
+    const { error } = await supabase
+        .from('announcements')
+        .update({ is_pinned, updated_at: new Date().toISOString() })
+        .eq('id', id)
+
+    if (error) throw error
+    invalidateCacheByPrefix('announcements')
+    return true
+}
+
+export async function toggleAnnouncementStatus(id, is_active) {
+    const { error } = await supabase
+        .from('announcements')
+        .update({ is_active, updated_at: new Date().toISOString() })
+        .eq('id', id)
+
+    if (error) throw error
+    invalidateCacheByPrefix('announcements')
+    return true
+}
+
+

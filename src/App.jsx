@@ -21,16 +21,20 @@ import PaymentSuccess from './pages/PaymentSuccess'
 import PurchasedItemsPage from './pages/PurchasedItemsPage'
 import AdminPage from './pages/AdminPage'
 import AdminRoute from './components/AdminRoute'
+import OfficialChannelPage from './pages/OfficialChannelPage'
+import AnnouncementModal from './components/AnnouncementModal'
 
 function App() {
   return (
     <AuthProvider>
       <ToastProvider>
         <div className="min-h-screen bg-background">
+          <AnnouncementModal />
           <Routes>
             {/* Full-screen pages (no bottom nav) */}
             <Route path="/admin/*" element={<AdminRoute><AdminPage /></AdminRoute>} />
             <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
+            <Route path="/official-channel" element={<OfficialChannelPage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/item/:id" element={<ItemDetailPage />} />

@@ -5,12 +5,13 @@ import {
     CheckCircle2, XCircle, AlertTriangle, Trash2, Eye, ExternalLink,
     Lock, Unlock, Download, ArrowLeft, TrendingUp, DollarSign, Database,
     FileText, UserCheck, UserX, ShieldAlert, Sparkles, Filter, Check, Copy,
-    ChevronRight, Server, Zap
+    ChevronRight, Server, Zap, Megaphone, Pin, Send, Plus, Wrench, Info
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import {
     getAdminStats, getAdminUsers, toggleUserBan, toggleUserVerification,
-    getAdminListings, adminDeleteListing, adminUpdateListingStatus, getAdminOrders
+    getAdminListings, adminDeleteListing, adminUpdateListingStatus, getAdminOrders,
+    getAnnouncements, createAnnouncement, deleteAnnouncement, togglePinAnnouncement, toggleAnnouncementStatus
 } from '../lib/database'
 import { useToast } from '../components/Toast'
 import { invalidateCacheByPrefix } from '../lib/cache'
@@ -24,12 +25,55 @@ function formatDate(iso) {
     return new Intl.DateTimeFormat('en-NG', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }).format(new Date(iso))
 }
 
+const templates = [
+    {
+        name: '🚀 Feature Update',
+        category: 'feature_update',
+        priority: 'high',
+        title: 'New Feature Live on ZikShare! 🚀',
+        content: 'We have just introduced a major update to help you find and purchase past questions and study notes faster. Try it out now!',
+        action_url: '/search',
+        action_label: 'Explore New Features',
+        is_pinned: true
+    },
+    {
+        name: '⚠️ Disciplinary / Ban Warning',
+        category: 'disciplinary_notice',
+        priority: 'urgent_popup',
+        title: 'Disciplinary Notice: Fraud & Malpractice ⚠️',
+        content: 'Multiple student accounts were suspended today for uploading copyright-infringing materials and fraudulent listings. Academic integrity is strictly enforced on ZikShare.',
+        action_url: '/profile/help',
+        action_label: 'Read Marketplace Rules',
+        is_pinned: false
+    },
+    {
+        name: '🛡️ Safe Meetup Alert',
+        category: 'security_alert',
+        priority: 'normal',
+        title: 'Campus Safety Reminder: Meetup Points 🛡️',
+        content: 'Always conduct physical exchanges in verified public campus locations: Garba Square, Chisco Park, or Student Center. Never send money before inspection.',
+        action_url: '/messages',
+        action_label: 'Campus Safety Hub',
+        is_pinned: true
+    },
+    {
+        name: '🔧 Scheduled Maintenance',
+        category: 'maintenance',
+        priority: 'normal',
+        title: 'Scheduled System Optimization 🔧',
+        content: 'ZikShare servers will undergo routine performance upgrades tonight between 1:00 AM and 2:00 AM. Study materials access remains fully functional.',
+        action_url: '',
+        action_label: '',
+        is_pinned: false
+    }
+]
+
 export default function AdminPage() {
     const navigate = useNavigate()
     const { user, session } = useAuth()
     const toast = useToast()
 
-    const [activeTab, setActiveTab] = useState('overview') // 'overview' | 'users' | 'listings' | 'orders' | 'system'
+    const [activeTab, setActiveTab] = useState('overview') // 'overview' | 'users' | 'listings' | 'orders' | 'broadcasts' | 'system'
     const [loading, setLoading] = useState(true)
     const [refreshing, setRefreshing] = useState(false)
 
@@ -38,6 +82,7 @@ export default function AdminPage() {
     const [usersList, setUsersList] = useState([])
     const [listingsList, setListingsList] = useState([])
     const [ordersList, setOrdersList] = useState([])
+    const [announcementsList, setAnnouncementsList] = useState([])
 
     // Filter & Search States
     const [userSearch, setUserSearch] = useState('')
@@ -48,6 +93,16 @@ export default function AdminPage() {
     const [listingStatus, setListingStatus] = useState('all')
 
     const [orderSearch, setOrderSearch] = useState('')
+
+    // Broadcast Composer States
+    const [broadcastTitle, setBroadcastTitle] = useState('')
+    const [broadcastContent, setBroadcastContent] = useState('')
+    const [broadcastCategory, setBroadcastCategory] = useState('feature_update')
+    const [broadcastPriority, setBroadcastPriority] = useState('normal')
+    const [broadcastActionUrl, setBroadcastActionUrl] = useState('')
+    const [broadcastActionLabel, setBroadcastActionLabel] = useState('')
+    const [broadcastPinned, setBroadcastPinned] = useState(false)
+    const [broadcasting, setBroadcasting] = useState(false)
 
     // Action Confirmation States
     const [actionLoading, setActionLoading] = useState(false)
@@ -62,11 +117,12 @@ export default function AdminPage() {
 
         const startTime = performance.now()
         try {
-            const [st, uList, lList, oList] = await Promise.all([
+            const [st, uList, lList, oList, aList] = await Promise.all([
                 getAdminStats().catch(err => { console.error('Stats error:', err); return null }),
                 getAdminUsers({ limit: 150 }).catch(err => { console.error('Users error:', err); return [] }),
                 getAdminListings({ limit: 150 }).catch(err => { console.error('Listings error:', err); return [] }),
                 getAdminOrders({ limit: 150 }).catch(err => { console.error('Orders error:', err); return [] }),
+                getAnnouncements({ limit: 50, includeInactive: true }).catch(err => { console.error('Announcements error:', err); return [] }),
             ])
 
             setDbLatency(Math.round(performance.now() - startTime))
@@ -74,6 +130,7 @@ export default function AdminPage() {
             setUsersList(uList || [])
             setListingsList(lList || [])
             setOrdersList(oList || [])
+            setAnnouncementsList(aList || [])
 
             if (isRefresh) toast.success('Admin data updated!')
         } catch (err) {
@@ -213,6 +270,85 @@ export default function AdminPage() {
         }
     }
 
+    // Broadcast Handlers
+    const handleApplyTemplate = (tmpl) => {
+        setBroadcastCategory(tmpl.category)
+        setBroadcastPriority(tmpl.priority)
+        setBroadcastTitle(tmpl.title)
+        setBroadcastContent(tmpl.content)
+        setBroadcastActionUrl(tmpl.action_url)
+        setBroadcastActionLabel(tmpl.action_label)
+        setBroadcastPinned(tmpl.is_pinned)
+        toast.success(`Applied "${tmpl.name}" template`)
+    }
+
+    const handleSendBroadcast = async (e) => {
+        e.preventDefault()
+        if (!broadcastTitle.trim() || !broadcastContent.trim()) {
+            toast.error('Please provide both title and announcement content')
+            return
+        }
+
+        setBroadcasting(true)
+        try {
+            const created = await createAnnouncement({
+                title: broadcastTitle,
+                content: broadcastContent,
+                category: broadcastCategory,
+                priority: broadcastPriority,
+                action_url: broadcastActionUrl,
+                action_label: broadcastActionLabel,
+                is_pinned: broadcastPinned,
+                sender_email: 'rc5632250@gmail.com'
+            })
+
+            setAnnouncementsList(prev => [created, ...prev])
+            toast.success('Broadcast dispatched to all students! 🚀')
+            // Reset form
+            setBroadcastTitle('')
+            setBroadcastContent('')
+            setBroadcastActionUrl('')
+            setBroadcastActionLabel('')
+            setBroadcastPinned(false)
+        } catch (err) {
+            console.error('Broadcast error:', err)
+            toast.error('Failed to dispatch broadcast: ' + err.message)
+        } finally {
+            setBroadcasting(false)
+        }
+    }
+
+    const handleDeleteAnnouncement = async (id) => {
+        if (!window.confirm('Delete this broadcast announcement?')) return
+        try {
+            await deleteAnnouncement(id)
+            setAnnouncementsList(prev => prev.filter(a => a.id !== id))
+            toast.success('Announcement removed')
+        } catch (err) {
+            toast.error('Failed to delete: ' + err.message)
+        }
+    }
+
+    const handleTogglePinAnnouncement = async (id, currentPin) => {
+        try {
+            await togglePinAnnouncement(id, !currentPin)
+            setAnnouncementsList(prev => prev.map(a => a.id === id ? { ...a, is_pinned: !currentPin } : a))
+            toast.success(!currentPin ? 'Pinned to top of official channel' : 'Unpinned')
+        } catch (err) {
+            toast.error('Failed to update pin: ' + err.message)
+        }
+    }
+
+    const handleToggleAnnouncementStatus = async (id, currentActive) => {
+        try {
+            await toggleAnnouncementStatus(id, !currentActive)
+            setAnnouncementsList(prev => prev.map(a => a.id === id ? { ...a, is_active: !currentActive } : a))
+            toast.success(!currentActive ? 'Broadcast activated' : 'Broadcast hidden')
+        } catch (err) {
+            toast.error('Failed to update status: ' + err.message)
+        }
+    }
+
     const handleCopyText = (text, id) => {
         navigator.clipboard.writeText(text)
         setCopiedRef(id)
@@ -225,6 +361,7 @@ export default function AdminPage() {
         invalidateCacheByPrefix('digital')
         invalidateCacheByPrefix('seller')
         invalidateCacheByPrefix('users')
+        invalidateCacheByPrefix('announcements')
         toast.success('All client caches purged!')
     }
 
@@ -243,7 +380,6 @@ export default function AdminPage() {
             >
                 {/* Main Header Row */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    {/* Left: Exit + Title */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', minWidth: 0 }}>
                         <button
                             onClick={() => navigate('/')}
@@ -277,7 +413,6 @@ export default function AdminPage() {
                         </div>
                     </div>
 
-                    {/* Right: Compact Refresh Button */}
                     <button
                         onClick={() => loadAllData(true)}
                         disabled={refreshing}
@@ -319,6 +454,7 @@ export default function AdminPage() {
                 <div style={{ display: 'flex', gap: '0.375rem', width: 'max-content' }}>
                     {[
                         { id: 'overview', label: 'Overview', icon: Activity, count: null },
+                        { id: 'broadcasts', label: 'Broadcasts', icon: Megaphone, count: announcementsList.length },
                         { id: 'users', label: 'Users', icon: Users, count: usersList.length },
                         { id: 'listings', label: 'Marketplace', icon: Package, count: listingsList.length },
                         { id: 'orders', label: 'Orders', icon: ShoppingCart, count: ordersList.length },
@@ -468,17 +604,10 @@ export default function AdminPage() {
                                             </span>
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0.625rem', backgroundColor: '#0F172A', borderRadius: '0.5rem', fontSize: '0.75rem' }}>
-                                            <span style={{ color: '#94A3B8' }}>Paystack Settlement</span>
-                                            <span style={{ fontWeight: 700, color: '#34D399', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.6875rem' }}>
-                                                <span style={{ width: '6px', height: '6px', borderRadius: '9999px', backgroundColor: '#10B981' }} />
-                                                Live Gateway
-                                            </span>
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.45rem 0.625rem', backgroundColor: '#0F172A', borderRadius: '0.5rem', fontSize: '0.75rem' }}>
-                                            <span style={{ color: '#94A3B8' }}>Watermark & DRM Engine</span>
-                                            <span style={{ fontWeight: 700, color: '#60A5FA', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.6875rem' }}>
-                                                <span style={{ width: '6px', height: '6px', borderRadius: '9999px', backgroundColor: '#3B82F6' }} />
-                                                Active
+                                            <span style={{ color: '#94A3B8' }}>Official Broadcast Channel</span>
+                                            <span style={{ fontWeight: 700, color: '#38BDF8', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.6875rem' }}>
+                                                <span style={{ width: '6px', height: '6px', borderRadius: '9999px', backgroundColor: '#38BDF8' }} />
+                                                {announcementsList.length} Broadcasts
                                             </span>
                                         </div>
                                     </div>
@@ -488,9 +617,16 @@ export default function AdminPage() {
                                 <div style={{ backgroundColor: '#1E293B', borderRadius: '0.75rem', border: '1px solid #334155', padding: '1rem' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.75rem' }}>
                                         <Sparkles size={16} color="#FBBF24" />
-                                        <h2 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 800, color: 'white' }}>Quick Maintenance</h2>
+                                        <h2 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 800, color: 'white' }}>Quick Actions</h2>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                        <button
+                                            onClick={() => setActiveTab('broadcasts')}
+                                            style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #2563EB', backgroundColor: '#1E3A8A', color: '#93C5FD', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
+                                        >
+                                            <span>📢 Send General Campus Broadcast</span>
+                                            <Send size={13} />
+                                        </button>
                                         <button
                                             onClick={handlePurgePlatformCache}
                                             style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #475569', backgroundColor: '#334155', color: 'white', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
@@ -504,13 +640,6 @@ export default function AdminPage() {
                                         >
                                             <span>Moderate Users & Students</span>
                                             <Users size={13} />
-                                        </button>
-                                        <button
-                                            onClick={() => setActiveTab('listings')}
-                                            style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #475569', backgroundColor: '#334155', color: 'white', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}
-                                        >
-                                            <span>Moderate Marketplace Listings</span>
-                                            <Package size={13} />
                                         </button>
                                     </div>
                                 </div>
@@ -547,7 +676,302 @@ export default function AdminPage() {
                             </div>
                         )}
 
-                        {/* ── TAB 2: USER DIRECTORY & MODERATION ── */}
+                        {/* ── TAB 2: 📢 CAMPUS BROADCASTS & ANNOUNCEMENTS (WHATSAPP-STYLE) ── */}
+                        {activeTab === 'broadcasts' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                                {/* Broadcast Composer Form */}
+                                <form onSubmit={handleSendBroadcast} style={{ backgroundColor: '#1E293B', borderRadius: '0.875rem', border: '1px solid #334155', padding: '1.125rem', display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', backgroundColor: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+                                                <Megaphone size={16} />
+                                            </div>
+                                            <div>
+                                                <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 800, color: 'white' }}>New Campus Broadcast</h3>
+                                                <p style={{ margin: 0, fontSize: '0.6875rem', color: '#94A3B8' }}>Sends instant general notification to all UNIZIK students</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Quick Templates */}
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: '#94A3B8', marginBottom: '0.375rem', textTransform: 'uppercase' }}>
+                                            Quick Templates:
+                                        </label>
+                                        <div style={{ display: 'flex', gap: '0.375rem', overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: '0.25rem' }}>
+                                            {templates.map(t => (
+                                                <button
+                                                    key={t.name}
+                                                    type="button"
+                                                    onClick={() => handleApplyTemplate(t)}
+                                                    style={{
+                                                        padding: '0.3rem 0.6rem',
+                                                        borderRadius: '9999px',
+                                                        border: '1px solid #334155',
+                                                        backgroundColor: '#0F172A',
+                                                        color: '#E2E8F0',
+                                                        fontSize: '0.6875rem',
+                                                        fontWeight: 700,
+                                                        cursor: 'pointer',
+                                                        whiteSpace: 'nowrap'
+                                                    }}
+                                                >
+                                                    {t.name}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Category Selector */}
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: '#94A3B8', marginBottom: '0.375rem', textTransform: 'uppercase' }}>
+                                            Category & Tone
+                                        </label>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '0.375rem' }}>
+                                            {[
+                                                { id: 'feature_update', label: '🚀 Feature Update' },
+                                                { id: 'disciplinary_notice', label: '⚠️ Disciplinary Warning' },
+                                                { id: 'security_alert', label: '🛡️ Safety & Policy' },
+                                                { id: 'marketplace_notice', label: '📢 General Notice' },
+                                                { id: 'maintenance', label: '🔧 Maintenance' },
+                                            ].map(cat => (
+                                                <button
+                                                    key={cat.id}
+                                                    type="button"
+                                                    onClick={() => setBroadcastCategory(cat.id)}
+                                                    style={{
+                                                        padding: '0.45rem',
+                                                        borderRadius: '0.5rem',
+                                                        border: `1px solid ${broadcastCategory === cat.id ? '#3B82F6' : '#334155'}`,
+                                                        backgroundColor: broadcastCategory === cat.id ? '#1E3A8A' : '#0F172A',
+                                                        color: broadcastCategory === cat.id ? '#93C5FD' : '#94A3B8',
+                                                        fontSize: '0.6875rem',
+                                                        fontWeight: 700,
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    {cat.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Priority Selector */}
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: '#94A3B8', marginBottom: '0.375rem', textTransform: 'uppercase' }}>
+                                            Delivery Mode & Urgency
+                                        </label>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.375rem' }}>
+                                            {[
+                                                { id: 'normal', label: 'Feed & Bell' },
+                                                { id: 'high', label: 'Home Banner' },
+                                                { id: 'urgent_popup', label: '🚨 Urgent Pop-up' },
+                                            ].map(p => (
+                                                <button
+                                                    key={p.id}
+                                                    type="button"
+                                                    onClick={() => setBroadcastPriority(p.id)}
+                                                    style={{
+                                                        padding: '0.45rem',
+                                                        borderRadius: '0.5rem',
+                                                        border: `1px solid ${broadcastPriority === p.id ? '#3B82F6' : '#334155'}`,
+                                                        backgroundColor: broadcastPriority === p.id ? '#1E3A8A' : '#0F172A',
+                                                        color: broadcastPriority === p.id ? '#93C5FD' : '#94A3B8',
+                                                        fontSize: '0.6875rem',
+                                                        fontWeight: 700,
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    {p.label}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    {/* Title */}
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: '#94A3B8', marginBottom: '0.25rem', textTransform: 'uppercase' }}>
+                                            Announcement Title *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            placeholder="e.g. Warning: Fraudulent Accounts Suspended / New Search Filter Added"
+                                            value={broadcastTitle}
+                                            onChange={e => setBroadcastTitle(e.target.value)}
+                                            required
+                                            maxLength={100}
+                                            style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #334155', backgroundColor: '#0F172A', color: 'white', fontSize: '0.8125rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+                                        />
+                                    </div>
+
+                                    {/* Content */}
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: '#94A3B8', marginBottom: '0.25rem', textTransform: 'uppercase' }}>
+                                            Broadcast Message Body *
+                                        </label>
+                                        <textarea
+                                            placeholder="State details clearly. Will be broadcasted to all active students on web & mobile..."
+                                            value={broadcastContent}
+                                            onChange={e => setBroadcastContent(e.target.value)}
+                                            required
+                                            rows={3}
+                                            style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #334155', backgroundColor: '#0F172A', color: 'white', fontSize: '0.8125rem', fontFamily: 'inherit', outline: 'none', resize: 'none', boxSizing: 'border-box' }}
+                                        />
+                                    </div>
+
+                                    {/* Optional Action CTA Link */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.5rem' }}>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: '#94A3B8', marginBottom: '0.25rem' }}>
+                                                Action Link (e.g. /post)
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="/post or /search"
+                                                value={broadcastActionUrl}
+                                                onChange={e => setBroadcastActionUrl(e.target.value)}
+                                                style={{ width: '100%', padding: '0.5rem 0.625rem', borderRadius: '0.5rem', border: '1px solid #334155', backgroundColor: '#0F172A', color: 'white', fontSize: '0.75rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: '#94A3B8', marginBottom: '0.25rem' }}>
+                                                Button Label
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. Try Now / Read Rules"
+                                                value={broadcastActionLabel}
+                                                onChange={e => setBroadcastActionLabel(e.target.value)}
+                                                style={{ width: '100%', padding: '0.5rem 0.625rem', borderRadius: '0.5rem', border: '1px solid #334155', backgroundColor: '#0F172A', color: 'white', fontSize: '0.75rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Pin Option Checkbox */}
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer', fontSize: '0.75rem', color: '#CBD5E1' }}>
+                                        <input
+                                            type="checkbox"
+                                            checked={broadcastPinned}
+                                            onChange={e => setBroadcastPinned(e.target.checked)}
+                                            style={{ width: '1rem', height: '1rem', accentColor: '#2563EB' }}
+                                        />
+                                        <span>Pin to top of official channel & home banner</span>
+                                    </label>
+
+                                    {/* Submit Broadcast Button */}
+                                    <button
+                                        type="submit"
+                                        disabled={broadcasting || !broadcastTitle.trim() || !broadcastContent.trim()}
+                                        style={{
+                                            width: '100%',
+                                            padding: '0.75rem',
+                                            borderRadius: '0.625rem',
+                                            border: 'none',
+                                            background: (broadcasting || !broadcastTitle.trim() || !broadcastContent.trim()) ? '#475569' : 'linear-gradient(135deg, #3B82F6, #2563EB)',
+                                            color: 'white',
+                                            fontSize: '0.875rem',
+                                            fontWeight: 800,
+                                            cursor: (broadcasting || !broadcastTitle.trim() || !broadcastContent.trim()) ? 'not-allowed' : 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '0.5rem',
+                                            boxShadow: '0 4px 12px rgba(37,99,235,0.3)'
+                                        }}
+                                    >
+                                        <Send size={16} />
+                                        <span>{broadcasting ? 'Broadcasting...' : '🚀 Broadcast to All Students'}</span>
+                                    </button>
+                                </form>
+
+                                {/* Broadcast History & Moderation */}
+                                <div style={{ backgroundColor: '#1E293B', borderRadius: '0.875rem', border: '1px solid #334155', padding: '1.125rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.875rem' }}>
+                                        <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 800, color: 'white' }}>
+                                            Broadcast History ({announcementsList.length})
+                                        </h3>
+                                        <button
+                                            onClick={() => navigate('/official-channel')}
+                                            style={{ background: 'none', border: 'none', color: '#60A5FA', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                                        >
+                                            <span>Open Channel Feed</span>
+                                            <ExternalLink size={12} />
+                                        </button>
+                                    </div>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
+                                        {announcementsList.map(item => (
+                                            <div
+                                                key={item.id}
+                                                style={{
+                                                    backgroundColor: item.is_active ? '#0F172A' : '#18181B',
+                                                    border: `1px solid ${item.is_pinned ? '#3B82F6' : '#334155'}`,
+                                                    borderRadius: '0.75rem',
+                                                    padding: '0.75rem 0.875rem',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    gap: '0.5rem'
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap' }}>
+                                                        <span style={{ fontSize: '0.5625rem', fontWeight: 800, backgroundColor: '#1E3A8A', color: '#93C5FD', padding: '0.1rem 0.35rem', borderRadius: '0.2rem', textTransform: 'uppercase' }}>
+                                                            {item.category?.replace('_', ' ')}
+                                                        </span>
+                                                        {item.is_pinned && (
+                                                            <span style={{ fontSize: '0.5625rem', fontWeight: 800, backgroundColor: '#064E3B', color: '#34D399', padding: '0.1rem 0.35rem', borderRadius: '0.2rem' }}>
+                                                                📌 PINNED
+                                                            </span>
+                                                        )}
+                                                        {item.priority === 'urgent_popup' && (
+                                                            <span style={{ fontSize: '0.5625rem', fontWeight: 800, backgroundColor: '#7F1D1D', color: '#FCA5A5', padding: '0.1rem 0.35rem', borderRadius: '0.2rem' }}>
+                                                                🚨 POP-UP
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    <span style={{ fontSize: '0.625rem', color: '#64748B' }}>
+                                                        {formatDate(item.created_at)}
+                                                    </span>
+                                                </div>
+
+                                                <div>
+                                                    <h4 style={{ margin: '0 0 0.125rem', fontSize: '0.8125rem', fontWeight: 800, color: 'white' }}>
+                                                        {item.title}
+                                                    </h4>
+                                                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#94A3B8', lineHeight: 1.35 }}>
+                                                        {item.content}
+                                                    </p>
+                                                </div>
+
+                                                {/* Action Bar */}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '0.375rem' }}>
+                                                    <button
+                                                        onClick={() => handleTogglePinAnnouncement(item.id, item.is_pinned)}
+                                                        style={{ flex: 1, padding: '0.3rem', borderRadius: '0.375rem', border: '1px solid #475569', backgroundColor: '#1E293B', color: item.is_pinned ? '#60A5FA' : '#CBD5E1', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer' }}
+                                                    >
+                                                        {item.is_pinned ? 'Unpin' : '📌 Pin'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleToggleAnnouncementStatus(item.id, item.is_active)}
+                                                        style={{ flex: 1, padding: '0.3rem', borderRadius: '0.375rem', border: '1px solid #475569', backgroundColor: '#1E293B', color: item.is_active ? '#34D399' : '#94A3B8', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer' }}
+                                                    >
+                                                        {item.is_active ? 'Active' : 'Hidden'}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDeleteAnnouncement(item.id)}
+                                                        style={{ padding: '0.3rem 0.5rem', borderRadius: '0.375rem', border: '1px solid #991B1B', backgroundColor: '#7F1D1D', color: '#FCA5A5', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer' }}
+                                                    >
+                                                        <Trash2 size={12} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── TAB 3: USER DIRECTORY & MODERATION ── */}
                         {activeTab === 'users' && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                 {/* Search Bar */}
@@ -694,7 +1118,7 @@ export default function AdminPage() {
                             </div>
                         )}
 
-                        {/* ── TAB 3: MARKETPLACE INVENTORY ── */}
+                        {/* ── TAB 4: MARKETPLACE INVENTORY ── */}
                         {activeTab === 'listings' && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                 {/* Search */}
@@ -829,7 +1253,7 @@ export default function AdminPage() {
                             </div>
                         )}
 
-                        {/* ── TAB 4: ORDERS & REVENUE AUDIT ── */}
+                        {/* ── TAB 5: ORDERS & REVENUE AUDIT ── */}
                         {activeTab === 'orders' && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                 {/* Search */}
@@ -919,7 +1343,7 @@ export default function AdminPage() {
                             </div>
                         )}
 
-                        {/* ── TAB 5: SYSTEM HEALTH ── */}
+                        {/* ── TAB 6: SYSTEM HEALTH ── */}
                         {activeTab === 'system' && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 <div style={{ backgroundColor: '#1E293B', borderRadius: '0.75rem', border: '1px solid #334155', padding: '1rem' }}>

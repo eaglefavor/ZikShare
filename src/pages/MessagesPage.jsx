@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MessageCircle, Loader2 } from 'lucide-react'
+import { MessageCircle, Loader2, Shield, Check, Sparkles, Pin } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getConversations } from '../lib/messaging'
-import { getUser } from '../lib/database'
+import { getUser, getAnnouncements } from '../lib/database'
+import { getUnreadAnnouncementsCount } from './OfficialChannelPage'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
@@ -26,9 +27,25 @@ export default function MessagesPage() {
     const navigate = useNavigate()
     const [conversations, setConversations] = useState([])
     const [otherUsers, setOtherUsers] = useState({})
+    const [latestAnnouncement, setLatestAnnouncement] = useState(null)
+    const [unreadAnnouncements, setUnreadAnnouncements] = useState(0)
     const [loading, setLoading] = useState(false)
 
     const currentUserId = session?.user?.id || user?.uid || user?.id
+
+    useEffect(() => {
+        // Fetch official announcements snippet and unread count
+        async function fetchOfficialSnippet() {
+            try {
+                const list = await getAnnouncements({ limit: 5 })
+                if (list && list.length > 0) {
+                    setLatestAnnouncement(list[0])
+                    setUnreadAnnouncements(getUnreadAnnouncementsCount(list))
+                }
+            } catch {}
+        }
+        fetchOfficialSnippet()
+    }, [])
 
     useEffect(() => {
         if (!isAuthenticated || !currentUserId) {
@@ -48,10 +65,8 @@ export default function MessagesPage() {
                 const convs = await getConversations(currentUserId)
                 if (!isMounted) return
                 setConversations(convs || [])
-                // Immediately unblock spinner once conversations list is loaded
                 setLoading(false)
 
-                // Fetch other users' profiles concurrently in background
                 const otherIds = [...new Set((convs || []).map(c => c.buyerId === currentUserId ? c.sellerId : c.buyerId).filter(Boolean))]
                 const userEntries = await Promise.all(
                     otherIds.map(async (id) => {
@@ -63,11 +78,12 @@ export default function MessagesPage() {
                         }
                     })
                 )
-
-                if (isMounted) {
-                    const userMap = Object.fromEntries(userEntries.filter(Boolean))
-                    setOtherUsers(userMap)
-                }
+                if (!isMounted) return
+                const userMap = {}
+                userEntries.forEach(entry => {
+                    if (entry) userMap[entry[0]] = entry[1]
+                })
+                setOtherUsers(userMap)
             } catch (err) {
                 console.warn('Failed to load conversations:', err)
             } finally {
@@ -85,9 +101,64 @@ export default function MessagesPage() {
 
     return (
         <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', paddingBottom: '5rem' }}>
-            <header style={{ position: 'sticky', top: 0, zIndex: 40, backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', padding: '1rem' }}>
-                <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 700 }}>Messages</h1>
+            <header style={{ position: 'sticky', top: 0, zIndex: 40, backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', padding: '0.875rem 1rem' }}>
+                <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 800, color: '#0F172A' }}>Messages</h1>
             </header>
+
+            <div style={{ maxWidth: '36rem', margin: '0 auto' }}>
+                {/* ── PINNED OFFICIAL WHATSAPP-STYLE CHANNEL CARD ── */}
+                <div style={{ padding: '0.625rem 0.875rem', borderBottom: '1px solid #E2E8F0', backgroundColor: '#FFFFFF' }}>
+                    <button
+                        onClick={() => navigate('/official-channel')}
+                        style={{
+                            width: '100%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.75rem',
+                            padding: '0.625rem',
+                            borderRadius: '0.75rem',
+                            border: '1.5px solid #BFDBFE',
+                            backgroundColor: '#F0F7FF',
+                            textAlign: 'left',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                        }}
+                    >
+                        <div style={{ position: 'relative', width: '2.75rem', height: '2.75rem', borderRadius: '9999px', backgroundColor: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', flexShrink: 0 }}>
+                            <Shield size={20} />
+                            <div style={{ position: 'absolute', bottom: '-1px', right: '-1px', width: '0.9375rem', height: '0.9375rem', borderRadius: '9999px', backgroundColor: '#10B981', border: '2px solid #F0F7FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Check size={9} strokeWidth={4} color="white" />
+                            </div>
+                        </div>
+
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.125rem' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                    <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 800, color: '#0F172A' }}>
+                                        ZikShare Official
+                                    </h3>
+                                    <span style={{ fontSize: '0.5625rem', fontWeight: 800, backgroundColor: '#3B82F6', color: 'white', padding: '0.05rem 0.3rem', borderRadius: '0.25rem', textTransform: 'uppercase' }}>
+                                        Channel
+                                    </span>
+                                </div>
+                                <span style={{ fontSize: '0.625rem', color: '#64748B', fontWeight: 600 }}>
+                                    {latestAnnouncement ? timeAgo(latestAnnouncement.created_at) : 'Official'}
+                                </span>
+                            </div>
+
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                                <p style={{ margin: 0, fontSize: '0.75rem', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {latestAnnouncement ? latestAnnouncement.title : 'Official campus updates & announcements'}
+                                </p>
+                                {unreadAnnouncements > 0 && (
+                                    <span style={{ minWidth: '1.125rem', height: '1.125rem', borderRadius: '9999px', backgroundColor: '#2563EB', color: 'white', fontSize: '0.625rem', fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 0.25rem', flexShrink: 0 }}>
+                                        {unreadAnnouncements}
+                                    </span>
+                                )}
+                            </div>
+                        </div>
+                    </button>
+                </div>
 
             {!isAuthenticated ? (
                 <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
@@ -167,6 +238,7 @@ export default function MessagesPage() {
                     })}
                 </div>
             )}
+            </div>
         </div>
     )
 }

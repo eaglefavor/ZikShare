@@ -4,6 +4,8 @@ import { Home, Search, PlusCircle, MessageCircle, User } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getConversations } from '../lib/messaging'
 import { countUnread } from '../lib/readStatus'
+import { getAnnouncements } from '../lib/database'
+import { getUnreadAnnouncementsCount } from '../pages/OfficialChannelPage'
 
 const navItems = [
     { path: '/', icon: Home, label: 'Home' },
@@ -42,24 +44,30 @@ export default function BottomNav() {
         setIsVisible(true)
     }, [location.pathname])
 
-    // Fetch unread count
+    // Fetch unread count (peer chats + official announcements)
     useEffect(() => {
-        if (!isAuthenticated || !session?.user?.id) {
-            setUnreadCount(0)
-            return
-        }
-
         async function checkUnread() {
             try {
-                const convs = await getConversations(session.user.id)
-                setUnreadCount(countUnread(convs))
+                let peerUnread = 0
+                if (isAuthenticated && session?.user?.id) {
+                    const convs = await getConversations(session.user.id)
+                    peerUnread = countUnread(convs)
+                }
+
+                // Official announcements unread
+                let annUnread = 0
+                try {
+                    const annList = await getAnnouncements({ limit: 10 })
+                    annUnread = getUnreadAnnouncementsCount(annList)
+                } catch {}
+
+                setUnreadCount(peerUnread + annUnread)
             } catch {
                 // Silently fail
             }
         }
 
         checkUnread()
-        // Re-check every 15 seconds
         const interval = setInterval(checkUnread, 15000)
         return () => clearInterval(interval)
     }, [isAuthenticated, session, location.pathname])

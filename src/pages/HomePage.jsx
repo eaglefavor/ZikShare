@@ -2,6 +2,7 @@ import { Search, SlidersHorizontal, ChevronRight, MapPin, ShieldCheck, Zap, Tren
 import { useNavigate } from 'react-router-dom'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListings, getDigitalProducts } from '../lib/database'
+import { HomeAnnouncementBanner } from '../components/AnnouncementModal'
 
 const categories = [
     { name: 'Electronics', emoji: '📱', color: '#3B82F6' },
@@ -215,6 +216,11 @@ export default function HomePage() {
                     <SlidersHorizontal size={16} color="var(--color-text-muted)" style={{ marginLeft: 'auto' }} />
                 </div>
             </header>
+
+            {/* Official Campus Announcement Banner (if pinned) */}
+            <div style={{ padding: '0.75rem 1rem 0' }}>
+                <HomeAnnouncementBanner />
+            </div>
 
             {/* Quick Stats Banner */}
             <div

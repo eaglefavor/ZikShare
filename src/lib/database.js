@@ -660,3 +660,226 @@ export async function fulfillDigitalOrder(order) {
         }
     }
 }
+
+// ── Admin Suite Operations (Exclusive to rc5632250@gmail.com) ──
+
+export async function getAdminStats() {
+    try {
+        const [usersRes, listingsRes, digitalRes, ordersRes] = await Promise.all([
+            supabase.from('users').select('uid, is_banned, isVerified', { count: 'exact' }),
+            supabase.from('listings').select('id, status', { count: 'exact' }),
+            supabase.from('digital_products').select('id, status, price, drm_enabled', { count: 'exact' }),
+            supabase.from('orders').select('id, amount, status, unique_password', { count: 'exact' }),
+        ])
+
+        const totalUsers = usersRes.count || usersRes.data?.length || 0
+        const bannedUsers = usersRes.data?.filter(u => u.is_banned)?.length || 0
+        const verifiedUsers = usersRes.data?.filter(u => u.isVerified)?.length || 0
+
+        const totalListings = listingsRes.count || listingsRes.data?.length || 0
+        const activeListings = listingsRes.data?.filter(l => l.status === 'Active')?.length || 0
+
+        const totalDigital = digitalRes.count || digitalRes.data?.length || 0
+        const activeDigital = digitalRes.data?.filter(d => d.status === 'active')?.length || 0
+
+        const totalOrders = ordersRes.count || ordersRes.data?.length || 0
+        const totalRevenueKobo = (ordersRes.data || []).reduce((acc, o) => acc + (o.amount || 0), 0)
+        const drmOrdersCount = (ordersRes.data || []).filter(o => Boolean(o.unique_password))?.length || 0
+
+        return {
+            totalUsers,
+            bannedUsers,
+            verifiedUsers,
+            totalListings,
+            activeListings,
+            totalDigital,
+            activeDigital,
+            totalOrders,
+            totalRevenueNaira: Math.round(totalRevenueKobo / 100),
+            drmOrdersCount,
+        }
+    } catch (err) {
+        console.error('getAdminStats error:', err)
+        throw err
+    }
+}
+
+export async function getAdminUsers({ search = '', filter = 'all', limit = 100 } = {}) {
+    try {
+        let query = supabase
+            .from('users')
+            .select('*')
+            .order('createdAt', { ascending: false })
+            .limit(limit)
+
+        if (filter === 'banned') {
+            query = query.eq('is_banned', true)
+        } else if (filter === 'verified') {
+            query = query.eq('isVerified', true)
+        } else if (filter === 'unverified') {
+            query = query.eq('isVerified', false)
+        }
+
+        const { data, error } = await query
+        if (error) throw error
+
+        let list = data || []
+        if (search.trim()) {
+            const q = search.toLowerCase().trim()
+            list = list.filter(u => 
+                (u.displayName || '').toLowerCase().includes(q) ||
+                (u.email || '').toLowerCase().includes(q) ||
+                (u.department || '').toLowerCase().includes(q) ||
+                (u.phoneNumber || '').includes(q)
+            )
+        }
+        return list
+    } catch (err) {
+        console.error('getAdminUsers error:', err)
+        return []
+    }
+}
+
+export async function toggleUserBan(uid, isBanned) {
+    const { error } = await supabase
+        .from('users')
+        .update({ is_banned: isBanned, updatedAt: new Date().toISOString() })
+        .eq('uid', uid)
+
+    if (error) throw error
+    invalidateCacheByPrefix('users')
+    return true
+}
+
+export async function toggleUserVerification(uid, isVerified) {
+    const { error } = await supabase
+        .from('users')
+        .update({ isVerified, updatedAt: new Date().toISOString() })
+        .eq('uid', uid)
+
+    if (error) throw error
+    invalidateCacheByPrefix('users')
+    return true
+}
+
+export async function getAdminListings({ search = '', type = 'all', status = 'all', limit = 100 } = {}) {
+    try {
+        const [physicalRes, digitalRes] = await Promise.all([
+            supabase.from('listings').select('*, seller:users!sellerId(displayName, email, phoneNumber, isVerified)').order('createdAt', { ascending: false }).limit(limit),
+            supabase.from('digital_products').select('*, seller:users!seller_id(displayName, email, phoneNumber, isVerified)').order('created_at', { ascending: false }).limit(limit),
+        ])
+
+        const physical = (physicalRes.data || []).map(p => ({
+            ...p,
+            isDigital: false,
+            createdAt: p.createdAt,
+            displayPrice: p.price,
+        }))
+
+        const digital = (digitalRes.data || []).map(d => ({
+            ...d,
+            isDigital: true,
+            createdAt: d.created_at,
+            displayPrice: d.price / 100,
+            images: d.cover_image_url ? [d.cover_image_url] : [],
+        }))
+
+        let combined = []
+        if (type === 'physical') {
+            combined = physical
+        } else if (type === 'digital') {
+            combined = digital
+        } else {
+            combined = [...physical, ...digital]
+        }
+
+        combined.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0))
+
+        if (status !== 'all') {
+            combined = combined.filter(item => (item.status || '').toLowerCase() === status.toLowerCase())
+        }
+
+        if (search.trim()) {
+            const q = search.toLowerCase().trim()
+            combined = combined.filter(item =>
+                (item.title || '').toLowerCase().includes(q) ||
+                (item.category || '').toLowerCase().includes(q) ||
+                (item.seller?.displayName || '').toLowerCase().includes(q) ||
+                (item.seller?.email || '').toLowerCase().includes(q)
+            )
+        }
+
+        return combined
+    } catch (err) {
+        console.error('getAdminListings error:', err)
+        return []
+    }
+}
+
+export async function adminDeleteListing(id, isDigital, storagePath) {
+    if (isDigital) {
+        const { error } = await supabase.from('digital_products').delete().eq('id', id)
+        if (error) throw error
+        if (storagePath) {
+            try {
+                await supabase.storage.from('digital-originals').remove([storagePath])
+            } catch (err) {
+                console.warn('Storage purge warning:', err)
+            }
+        }
+        invalidateCacheByPrefix('digital')
+    } else {
+        const { error } = await supabase.from('listings').delete().eq('id', id)
+        if (error) throw error
+        invalidateCacheByPrefix('listings')
+    }
+    return true
+}
+
+export async function adminUpdateListingStatus(id, isDigital, status) {
+    if (isDigital) {
+        const { error } = await supabase
+            .from('digital_products')
+            .update({ status, updated_at: new Date().toISOString() })
+            .eq('id', id)
+        if (error) throw error
+        invalidateCacheByPrefix('digital')
+    } else {
+        const { error } = await supabase
+            .from('listings')
+            .update({ status, updatedAt: new Date().toISOString() })
+            .eq('id', id)
+        if (error) throw error
+        invalidateCacheByPrefix('listings')
+    }
+    return true
+}
+
+export async function getAdminOrders({ search = '', limit = 100 } = {}) {
+    try {
+        let query = supabase
+            .from('orders')
+            .select('*, product:digital_products(*), buyer:users!buyer_id(displayName, email, phoneNumber), seller:users!seller_id(displayName, email, phoneNumber)')
+            .order('created_at', { ascending: false })
+            .limit(limit)
+
+        const { data, error } = await query
+        if (error) throw error
+
+        let list = data || []
+        if (search.trim()) {
+            const q = search.toLowerCase().trim()
+            list = list.filter(o => 
+                (o.paystack_reference || '').toLowerCase().includes(q) ||
+                (o.product?.title || '').toLowerCase().includes(q) ||
+                (o.buyer?.displayName || '').toLowerCase().includes(q) ||
+                (o.buyer?.email || '').toLowerCase().includes(q)
+            )
+        }
+        return list
+    } catch (err) {
+        console.error('getAdminOrders error:', err)
+        return []
+    }
+}
+

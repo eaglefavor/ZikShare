@@ -19,6 +19,8 @@ import HelpPage from './pages/HelpPage'
 import ChatPage from './pages/ChatPage'
 import PaymentSuccess from './pages/PaymentSuccess'
 import PurchasedItemsPage from './pages/PurchasedItemsPage'
+import AdminPage from './pages/AdminPage'
+import AdminRoute from './components/AdminRoute'
 
 function App() {
   return (
@@ -27,6 +29,8 @@ function App() {
         <div className="min-h-screen bg-background">
           <Routes>
             {/* Full-screen pages (no bottom nav) */}
+            <Route path="/admin/*" element={<AdminRoute><AdminPage /></AdminRoute>} />
+            <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/payment/success" element={<PaymentSuccess />} />
             <Route path="/item/:id" element={<ItemDetailPage />} />

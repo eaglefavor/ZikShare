@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { User, Settings, LogIn, LogOut, ShieldCheck, Package, Heart, HelpCircle, ChevronRight, Loader2, TrendingUp, Sparkles, FileText } from 'lucide-react'
+import { User, Settings, LogIn, LogOut, ShieldCheck, Package, Heart, HelpCircle, ChevronRight, Loader2, TrendingUp, Sparkles, FileText, Shield } from 'lucide-react'
 import { getSellerAnalytics, upsertUser } from '../lib/database'
+import { isUserAdmin } from '../components/AdminRoute'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount || 0)
@@ -201,6 +202,42 @@ export default function ProfilePage() {
                             </div>
                         </div>
                         <ChevronRight size={18} color="#94A3B8" />
+                    </div>
+                )}
+
+                {/* SuperAdmin Access Card */}
+                {isAuthenticated && isUserAdmin(user, session) && (
+                    <div
+                        onClick={() => navigate('/admin')}
+                        style={{
+                            marginTop: '0.875rem',
+                            padding: '1rem',
+                            borderRadius: '0.875rem',
+                            background: 'linear-gradient(135deg, #1E1B4B, #312E81)',
+                            border: '1.5px solid #6366F1',
+                            color: 'white',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)',
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.625rem', backgroundColor: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Shield size={20} color="white" />
+                            </div>
+                            <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                    <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700 }}>ZikShare Admin Suite</h3>
+                                    <span style={{ fontSize: '0.5625rem', fontWeight: 800, backgroundColor: '#EF4444', color: 'white', padding: '0.05rem 0.3rem', borderRadius: '0.25rem', textTransform: 'uppercase' }}>SuperAdmin</span>
+                                </div>
+                                <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: '#C7D2FE' }}>
+                                    User moderation, inventory & system pulse
+                                </p>
+                            </div>
+                        </div>
+                        <ChevronRight size={18} color="#C7D2FE" />
                     </div>
                 )}
 

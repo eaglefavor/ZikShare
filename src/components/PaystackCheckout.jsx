@@ -67,7 +67,7 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
     amount: totalToCharge,
     currency: 'NGN',
     channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'],
-    subaccount: product.users?.paystack_subaccount_code || undefined,
+    ...(product.users?.paystack_subaccount_code ? { subaccount: product.users.paystack_subaccount_code } : {}),
   }), [user, product, totalToCharge, currentReference])
 
   const initializePayment = usePaystackPayment(baseConfig)
@@ -109,7 +109,7 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
       amount: totalToCharge,
       currency: 'NGN',
       channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'],
-      subaccount: product.users?.paystack_subaccount_code || undefined,
+      ...(product.users?.paystack_subaccount_code ? { subaccount: product.users.paystack_subaccount_code } : {}),
       metadata: {
         product_id: product.id,
         product_type: 'digital_pdf',

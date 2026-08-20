@@ -70,7 +70,7 @@ const templates = [
 
 export default function AdminPage() {
     const navigate = useNavigate()
-    const { user, session } = useAuth()
+    useAuth()
     const toast = useToast()
 
     const [activeTab, setActiveTab] = useState('overview') // 'overview' | 'users' | 'listings' | 'orders' | 'broadcasts' | 'system'

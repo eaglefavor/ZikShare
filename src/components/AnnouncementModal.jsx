@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Shield, Sparkles, AlertTriangle, ShieldAlert, Megaphone, X, ExternalLink, ArrowRight, Pin } from 'lucide-react'
 import { getAnnouncements } from '../lib/database'
-import { markAnnouncementsAsRead } from '../pages/OfficialChannelPage'
+import { markAnnouncementsAsRead } from '../lib/announcements'
 
 const categoryConfig = {
     feature_update: { label: 'Feature Update', color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE', icon: Sparkles },

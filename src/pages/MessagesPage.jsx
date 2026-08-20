@@ -4,11 +4,7 @@ import { MessageCircle, Loader2, Shield, Check, Sparkles, Pin } from 'lucide-rea
 import { useAuth } from '../contexts/AuthContext'
 import { getConversations } from '../lib/messaging'
 import { getUser, getAnnouncements } from '../lib/database'
-import { getUnreadAnnouncementsCount } from './OfficialChannelPage'
-
-function formatNaira(amount) {
-    return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
-}
+import { getUnreadAnnouncementsCount } from '../lib/announcements'
 
 function timeAgo(iso) {
     if (!iso) return 'Recent'

@@ -13,10 +13,6 @@ export default function SavedItemsPage() {
     const [items, setItems] = useState([])
     const [loading, setLoading] = useState(true)
 
-    useEffect(() => {
-        fetchSavedItems()
-    }, [])
-
     async function fetchSavedItems() {
         setLoading(true)
         const ids = getSavedIds()
@@ -38,6 +34,10 @@ export default function SavedItemsPage() {
         setItems(fetched)
         setLoading(false)
     }
+
+    useEffect(() => {
+        fetchSavedItems()
+    }, [])
 
     function handleRemove(id) {
         removeSaved(id)

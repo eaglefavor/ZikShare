@@ -6,7 +6,6 @@ import { createListing, createDigitalProduct, upsertUser } from '../lib/database
 import supabase from '../lib/supabase'
 import { uploadImage, uploadImages } from '../lib/cloudinary'
 import { invalidateCacheByPrefix } from '../lib/cache'
-import { logDebug } from '../components/DebugConsole'
 
 const physicalCategories = ['Electronics', 'Books', 'Fashion', 'Services', 'Engineering', 'Science', 'Arts', 'Medical', 'Other']
 const digitalCategories = ['Engineering', 'Science', 'Arts', 'Medical', 'Past Questions', 'Notes', 'Law', 'Management', 'Other']
@@ -86,7 +85,6 @@ export default function PostPage() {
     // Status / Progress
     const [loading, setLoading] = useState(false)
     const [uploadStep, setUploadStep] = useState('')
-    const [currentStepIndex, setCurrentStepIndex] = useState(0)
     const [success, setSuccess] = useState(false)
     const [error, setError] = useState('')
 

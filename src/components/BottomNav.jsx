@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { getConversations } from '../lib/messaging'
 import { countUnread } from '../lib/readStatus'
 import { getAnnouncements } from '../lib/database'
-import { getUnreadAnnouncementsCount } from '../pages/OfficialChannelPage'
+import { getUnreadAnnouncementsCount } from '../lib/announcements'
 
 const navItems = [
     { path: '/', icon: Home, label: 'Home' },

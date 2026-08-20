@@ -32,7 +32,6 @@ export default function SellerHubPage() {
     const [editingListing, setEditingListing] = useState(null)
     const [inventoryFilter, setInventoryFilter] = useState('All') // 'All', 'Digital', 'Physical', 'Inactive'
     const [searchQuery, setSearchQuery] = useState('')
-    const [filterCategory, setFilterCategory] = useState('all')
 
     // Payout settings states
     const [bankName, setBankName] = useState('')

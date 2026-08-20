@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, Shield, CheckCheck, Sparkles, AlertTriangle, ShieldAlert, Pin, ExternalLink, RefreshCw, Megaphone, Wrench, Info, Check } from 'lucide-react'
 import { getAnnouncements } from '../lib/database'
+import { markAnnouncementsAsRead } from '../lib/announcements'
 import supabase from '../lib/supabase'
 
 function formatDate(iso) {
@@ -15,23 +16,6 @@ const categoryConfig = {
     security_alert: { label: 'Safety & Policy Alert', color: '#D97706', bg: '#FFFBEB', border: '#FDE68A', icon: AlertTriangle },
     marketplace_notice: { label: 'Marketplace Notice', color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', icon: Megaphone },
     maintenance: { label: 'System Maintenance', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', icon: Wrench },
-}
-
-export function markAnnouncementsAsRead(announcementIds = []) {
-    try {
-        const existing = JSON.parse(localStorage.getItem('zikshare_read_announcements') || '[]')
-        const combined = [...new Set([...existing, ...announcementIds])]
-        localStorage.setItem('zikshare_read_announcements', JSON.stringify(combined))
-    } catch {}
-}
-
-export function getUnreadAnnouncementsCount(announcements = []) {
-    try {
-        const readIds = JSON.parse(localStorage.getItem('zikshare_read_announcements') || '[]')
-        return announcements.filter(a => a.is_active && !readIds.includes(a.id)).length
-    } catch {
-        return 0
-    }
 }
 
 export default function OfficialChannelPage() {

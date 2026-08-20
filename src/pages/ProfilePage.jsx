@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { User, Settings, LogIn, LogOut, ShieldCheck, Package, Heart, HelpCircle, ChevronRight, Loader2, TrendingUp, Sparkles, FileText, Shield } from 'lucide-react'
-import { getSellerAnalytics, upsertUser } from '../lib/database'
+import { getSellerAnalytics } from '../lib/database'
 import { isUserAdmin } from '../components/AdminRoute'
 
 function formatNaira(amount) {
@@ -19,7 +19,7 @@ const menuItems = [
 ]
 
 export default function ProfilePage() {
-    const { user, session, isAuthenticated, isVerified, signOut, updateUser } = useAuth()
+    const { user, session, isAuthenticated, isVerified, signOut } = useAuth()
     const navigate = useNavigate()
     const [sellerStats, setSellerStats] = useState(null)
 

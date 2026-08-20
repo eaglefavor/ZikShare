@@ -62,7 +62,9 @@ export function AuthProvider({ children }) {
             } else {
                 localStorage.removeItem('zikshare_user')
             }
-        } catch {}
+        } catch (e) {
+            console.debug?.('LocalStorage user save failed:', e)
+        }
     }
 
     function saveSessionLocally(sessData) {
@@ -73,7 +75,9 @@ export function AuthProvider({ children }) {
             } else {
                 localStorage.removeItem('zikshare_session')
             }
-        } catch {}
+        } catch (e) {
+            console.debug?.('LocalStorage session save failed:', e)
+        }
     }
 
     async function handleUserLogin(authUser) {
@@ -239,7 +243,9 @@ export function AuthProvider({ children }) {
     async function signOut() {
         try {
             await supabase.auth.signOut()
-        } catch {}
+        } catch (err) {
+            console.warn('Supabase auth signOut error:', err)
+        }
         saveUserLocally(null)
         saveSessionLocally(null)
     }

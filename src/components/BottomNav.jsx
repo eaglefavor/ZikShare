@@ -40,8 +40,10 @@ export default function BottomNav() {
         return () => window.removeEventListener('scroll', handleScroll)
     }, [])
 
+    // Reset visibility on route change
     useEffect(() => {
-        setIsVisible(true)
+        const t = setTimeout(() => setIsVisible(true), 0)
+        return () => clearTimeout(t)
     }, [location.pathname])
 
     // Fetch unread count (peer chats + official announcements)
@@ -59,11 +61,13 @@ export default function BottomNav() {
                 try {
                     const annList = await getAnnouncements({ limit: 10 })
                     annUnread = getUnreadAnnouncementsCount(annList)
-                } catch {}
+                } catch (e) {
+                    console.debug?.('Failed to get announcements count:', e)
+                }
 
                 setUnreadCount(peerUnread + annUnread)
-            } catch {
-                // Silently fail
+            } catch (e) {
+                console.debug?.('Failed to check unread messages:', e)
             }
         }
 
@@ -98,72 +102,75 @@ export default function BottomNav() {
                     margin: '0 auto',
                 }}
             >
-                {navItems.map(({ path, icon: Icon, label }) => (
-                    <NavLink
-                        key={path}
-                        to={path}
-                        end={path === '/'}
-                        style={({ isActive }) => ({
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.125rem',
-                            padding: '0.5rem',
-                            textDecoration: 'none',
-                            color: isActive ? 'var(--color-brand)' : 'var(--color-text-muted)',
-                            transition: 'color 0.2s ease',
-                            WebkitTapHighlightColor: 'transparent',
-                            position: 'relative',
-                        })}
-                    >
-                        {({ isActive }) => (
-                            <>
-                                {isActive && (
-                                    <span
-                                        style={{
-                                            position: 'absolute',
-                                            top: '0.125rem',
-                                            width: '0.25rem',
-                                            height: '0.25rem',
-                                            borderRadius: '9999px',
-                                            backgroundColor: 'var(--color-brand)',
-                                        }}
-                                    />
-                                )}
-                                {path === '/post' ? (
-                                    <span
-                                        style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            width: '2.75rem',
-                                            height: '2.75rem',
-                                            borderRadius: '9999px',
-                                            background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-                                            color: 'white',
-                                            boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
-                                            marginTop: '-1rem',
-                                            transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                                        }}
-                                        onMouseEnter={e => {
-                                            e.currentTarget.style.transform = 'scale(1.1)'
-                                            e.currentTarget.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.5)'
-                                        }}
-                                        onMouseLeave={e => {
-                                            e.currentTarget.style.transform = 'scale(1)'
-                                            e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)'
-                                        }}
-                                    >
-                                        <Icon size={22} strokeWidth={2.5} />
-                                    </span>
-                                ) : (
-                                    <span style={{ position: 'relative', display: 'flex' }}>
-                                        <Icon
-                                            size={22}
-                                            strokeWidth={isActive ? 2.5 : 1.8}
-                                            style={{ transition: 'stroke-width 0.2s ease' }}
+                {navItems.map((item) => {
+                    const NavIcon = item.icon
+                    const { path, label } = item
+                    return (
+                        <NavLink
+                            key={path}
+                            to={path}
+                            end={path === '/'}
+                            style={({ isActive }) => ({
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '0.125rem',
+                                padding: '0.5rem',
+                                textDecoration: 'none',
+                                color: isActive ? 'var(--color-brand)' : 'var(--color-text-muted)',
+                                transition: 'color 0.2s ease',
+                                WebkitTapHighlightColor: 'transparent',
+                                position: 'relative',
+                            })}
+                        >
+                            {({ isActive }) => (
+                                <>
+                                    {isActive && (
+                                        <span
+                                            style={{
+                                                position: 'absolute',
+                                                top: '0.125rem',
+                                                width: '0.25rem',
+                                                height: '0.25rem',
+                                                borderRadius: '9999px',
+                                                backgroundColor: 'var(--color-brand)',
+                                            }}
                                         />
+                                    )}
+                                    {path === '/post' ? (
+                                        <span
+                                            style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center',
+                                                width: '2.75rem',
+                                                height: '2.75rem',
+                                                borderRadius: '9999px',
+                                                background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
+                                                color: 'white',
+                                                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
+                                                marginTop: '-1rem',
+                                                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                            }}
+                                            onMouseEnter={e => {
+                                                e.currentTarget.style.transform = 'scale(1.1)'
+                                                e.currentTarget.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.5)'
+                                            }}
+                                            onMouseLeave={e => {
+                                                e.currentTarget.style.transform = 'scale(1)'
+                                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)'
+                                            }}
+                                        >
+                                            <NavIcon size={22} strokeWidth={2.5} />
+                                        </span>
+                                    ) : (
+                                        <span style={{ position: 'relative', display: 'flex' }}>
+                                            <NavIcon
+                                                size={22}
+                                                strokeWidth={isActive ? 2.5 : 1.8}
+                                                style={{ transition: 'stroke-width 0.2s ease' }}
+                                            />
                                         {/* Unread badge for Messages */}
                                         {path === '/messages' && unreadCount > 0 && (
                                             <span
@@ -205,8 +212,9 @@ export default function BottomNav() {
                                 )}
                             </>
                         )}
-                    </NavLink>
-                ))}
+                        </NavLink>
+                    )
+                })}
             </div>
         </nav>
     )

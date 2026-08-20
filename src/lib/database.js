@@ -1,5 +1,6 @@
 import supabase from './supabase'
 import { invalidateCacheByPrefix } from './cache'
+import { notifyError, notifyWarn } from './notify'
 
 function queryWithTimeout(promise, ms = 8000, fallbackVal = null) {
     let timer
@@ -58,7 +59,9 @@ export async function getListings({ category, search, limit = 20, offset = 0 } =
 
         const res = await queryWithTimeout(query, 6000, { data: [] })
         return res?.data || []
-    } catch {
+    } catch (err) {
+        console.error('[DB] getListings fallback failed:', err?.message, err)
+        notifyError('Failed to load listings — check network')
         return []
     }
 }
@@ -85,11 +88,15 @@ export async function getListing(id) {
                             department: seller.department,
                         }
                     }
-                } catch {}
+                } catch (err) {
+                    console.warn('[DB] getListing seller enrich warning:', err?.message)
+                }
             }
             return data
         }
-    } catch {}
+    } catch (err) {
+        console.warn('[DB] getListing primary query warning:', err?.message)
+    }
 
     // Fallback to digital_products table
     try {
@@ -106,7 +113,9 @@ export async function getListing(id) {
                 price: digitalData.price / 100,
             }
         }
-    } catch {}
+    } catch (err) {
+        console.warn('[DB] getListing digital fallback warning:', err?.message)
+    }
 
     return null
 }
@@ -147,12 +156,18 @@ export async function updateListing(id, updates) {
 
         const res = await queryWithTimeout(query, 8000, { data: null })
         if (res?.data) return res.data
-    } catch {}
+    } catch (err) {
+        console.error('[DB] updateListing listings table failed:', err?.message)
+        notifyError('Update failed — try again')
+    }
 
     // Try digital_products
     try {
         return await updateDigitalProduct(id, updates)
-    } catch {}
+    } catch (err) {
+        console.error('[DB] updateListing digital fallback failed:', err?.message)
+        notifyError('Update failed on both tables')
+    }
 
     return null
 }
@@ -171,11 +186,15 @@ export async function deleteListing(id) {
     // 2. Mark status as deleted in digital_products and listings
     try {
         await supabase.from('digital_products').update({ status: 'deleted' }).eq('id', id)
-    } catch {}
+    } catch (err) {
+        console.warn('[DB] deleteListing soft-delete digital warning:', err?.message)
+    }
 
     try {
         await supabase.from('listings').update({ status: 'Deleted' }).eq('id', id)
-    } catch {}
+    } catch (err) {
+        console.warn('[DB] deleteListing soft-delete listings warning:', err?.message)
+    }
 
     // 3. Hard delete from both tables
     try {
@@ -251,7 +270,9 @@ export async function getUser(userId) {
 
         const res = await queryWithTimeout(query, 5000, { data: null })
         return res?.data || null
-    } catch {
+    } catch (err) {
+        console.error('[DB] getUser failed:', err?.message)
+        notifyWarn('Could not load user profile')
         return null
     }
 }
@@ -274,7 +295,9 @@ export async function upsertUser(user) {
 
         const res = await queryWithTimeout(query, 5000, { data: payload })
         return res?.data || payload
-    } catch {
+    } catch (err) {
+        console.error('[DB] upsertUser failed:', err?.message)
+        notifyWarn('Profile sync failed — data saved locally')
         return user
     }
 }
@@ -343,7 +366,9 @@ export async function getDigitalProducts({ category, search, limit = 20, offset 
 
         const res = await queryWithTimeout(query, 6000, { data: [] })
         return res?.data || []
-    } catch {
+    } catch (err) {
+        console.error('[DB] getDigitalProducts fallback failed:', err?.message)
+        notifyError('Failed to load study materials')
         return []
     }
 }
@@ -358,7 +383,9 @@ export async function getDigitalProduct(id) {
 
         const res = await queryWithTimeout(query, 6000, { data: null })
         if (res?.data) return res.data
-    } catch {}
+    } catch (err) {
+        console.warn('[DB] getDigitalProduct with join warning:', err?.message)
+    }
 
     try {
         const query = supabase
@@ -369,7 +396,8 @@ export async function getDigitalProduct(id) {
 
         const res = await queryWithTimeout(query, 6000, { data: null })
         return res?.data || null
-    } catch {
+    } catch (err) {
+        console.error('[DB] getDigitalProduct fallback failed:', err?.message)
         return null
     }
 }
@@ -486,7 +514,9 @@ export async function getSellerOrders(userId) {
 
         const res = await queryWithTimeout(query, 6000, { data: null })
         if (res?.data) return res.data
-    } catch {}
+    } catch (err) {
+        console.warn('[DB] getSellerOrders join warning:', err?.message)
+    }
 
     try {
         const query = supabase
@@ -496,7 +526,9 @@ export async function getSellerOrders(userId) {
             .order('created_at', { ascending: false })
         const res = await queryWithTimeout(query, 6000, { data: [] })
         return res?.data || []
-    } catch {
+    } catch (err) {
+        console.error('[DB] getSellerOrders fallback failed:', err?.message)
+        notifyError('Failed to load seller orders')
         return []
     }
 }
@@ -512,7 +544,9 @@ export async function getBuyerOrders(buyerId) {
 
         const res = await queryWithTimeout(query, 6000, { data: null })
         if (res?.data) return res.data
-    } catch {}
+    } catch (err) {
+        console.warn('[DB] getBuyerOrders join warning:', err?.message)
+    }
 
     try {
         const query = supabase
@@ -522,7 +556,9 @@ export async function getBuyerOrders(buyerId) {
             .order('created_at', { ascending: false })
         const res = await queryWithTimeout(query, 6000, { data: [] })
         return res?.data || []
-    } catch {
+    } catch (err) {
+        console.error('[DB] getBuyerOrders fallback failed:', err?.message)
+        notifyError('Failed to load purchases')
         return []
     }
 }
@@ -544,7 +580,8 @@ export async function getUserPurchaseForProduct(userId, productId) {
             return list[0]
         }
         return null
-    } catch {
+    } catch (err) {
+        console.error('[DB] getUserPurchaseForProduct failed:', err?.message)
         return null
     }
 }
@@ -564,7 +601,8 @@ export async function getOrder(referenceOrId) {
 
         const res = await queryWithTimeout(query.single(), 6000, { data: null })
         return res?.data || null
-    } catch {
+    } catch (err) {
+        console.error('[DB] getOrder failed:', err?.message)
         return null
     }
 }

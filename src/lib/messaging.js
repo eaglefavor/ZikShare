@@ -1,4 +1,5 @@
 import supabase from './supabase'
+import { notifyError, notifyWarn } from './notify'
 
 // ── Conversations ──
 
@@ -48,7 +49,9 @@ export async function getConversations(userId) {
             .order('lastMessageAt', { ascending: false })
 
         if (!error && data) return data
-    } catch {}
+    } catch (err) {
+        console.warn('[DB] getConversations join warning:', err?.message)
+    }
 
     try {
         const { data } = await supabase
@@ -58,7 +61,9 @@ export async function getConversations(userId) {
             .order('lastMessageAt', { ascending: false })
 
         return data || []
-    } catch {
+    } catch (err) {
+        console.error('[DB] getConversations fallback failed:', err?.message)
+        notifyError('Failed to load conversations')
         return []
     }
 }
@@ -76,7 +81,9 @@ export async function getConversation(conversationId) {
             .single()
 
         if (!error && data) return data
-    } catch {}
+    } catch (err) {
+        console.warn('[DB] getConversations join warning:', err?.message)
+    }
 
     try {
         const { data } = await supabase
@@ -86,7 +93,8 @@ export async function getConversation(conversationId) {
             .single()
 
         return data || null
-    } catch {
+    } catch (err) {
+        console.error('[DB] getConversation fallback failed:', err?.message)
         return null
     }
 }
@@ -107,7 +115,9 @@ export async function getMessages(conversationId) {
 
         if (!error && data) return data
         return []
-    } catch {
+    } catch (err) {
+        console.error('[DB] getMessages failed:', err?.message)
+        notifyWarn('Failed to load messages')
         return []
     }
 }
@@ -131,7 +141,9 @@ export async function sendMessage(conversationId, senderId, text) {
                 .from('conversations')
                 .update({ lastMessage: text, lastMessageAt: new Date().toISOString() })
                 .eq('id', conversationId)
-        } catch {}
+        } catch (err) {
+            console.warn('[DB] sendMessage lastMessage update warning:', err?.message)
+        }
 
         return data
     } catch (err) {
@@ -166,9 +178,13 @@ export function subscribeToMessages(conversationId, onNewMessage) {
         return () => {
             try {
                 supabase.removeChannel(channel)
-            } catch {}
+            } catch (err) {
+                console.warn('[DB] removeChannel warning:', err?.message)
+            }
         }
-    } catch {
+    } catch (err) {
+        console.error('[DB] subscribeToMessages failed:', err?.message)
+        notifyError('Realtime connection failed')
         return () => {}
     }
 }

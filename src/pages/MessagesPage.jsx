@@ -38,7 +38,9 @@ export default function MessagesPage() {
                     setLatestAnnouncement(list[0])
                     setUnreadAnnouncements(getUnreadAnnouncementsCount(list))
                 }
-            } catch {}
+            } catch (err) {
+                console.warn('Failed to fetch official announcements snippet:', err)
+            }
         }
         fetchOfficialSnippet()
     }, [])

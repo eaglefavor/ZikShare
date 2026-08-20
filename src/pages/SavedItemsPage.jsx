@@ -13,30 +13,36 @@ export default function SavedItemsPage() {
     const [items, setItems] = useState([])
     const [loading, setLoading] = useState(true)
 
-    async function fetchSavedItems() {
-        setLoading(true)
-        const ids = getSavedIds()
-        if (ids.length === 0) {
-            setItems([])
-            setLoading(false)
-            return
-        }
+    useEffect(() => {
+        let isMounted = true
+        async function loadSavedItems() {
+            setLoading(true)
+            const ids = getSavedIds()
+            if (ids.length === 0) {
+                if (isMounted) {
+                    setItems([])
+                    setLoading(false)
+                }
+                return
+            }
 
-        const fetched = []
-        for (const id of ids) {
-            try {
-                const item = await getListing(id)
-                if (item) fetched.push(item)
-            } catch {
-                // Item may have been deleted — skip
+            const fetched = []
+            for (const id of ids) {
+                try {
+                    const item = await getListing(id)
+                    if (item) fetched.push(item)
+                } catch {
+                    // Item may have been deleted
+                }
+            }
+            if (isMounted) {
+                setItems(fetched)
+                setLoading(false)
             }
         }
-        setItems(fetched)
-        setLoading(false)
-    }
 
-    useEffect(() => {
-        fetchSavedItems()
+        loadSavedItems()
+        return () => { isMounted = false }
     }, [])
 
     function handleRemove(id) {

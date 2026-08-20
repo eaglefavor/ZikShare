@@ -27,7 +27,7 @@ export async function loadPdfLib() {
       const fallback = document.createElement('script');
       fallback.src = 'https://unpkg.com/pdf-lib@1.17.9/dist/pdf-lib.min.js';
       fallback.onload = () => resolve(window.PDFLib);
-      fallback.onerror = (e) => reject(new Error('Failed to load PDF watermark library'));
+      fallback.onerror = (_e) => reject(new Error('Failed to load PDF watermark library'));
       document.head.appendChild(fallback);
     };
     document.head.appendChild(script);

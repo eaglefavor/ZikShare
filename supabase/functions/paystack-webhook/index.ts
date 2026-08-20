@@ -41,6 +41,17 @@ Deno.serve(async (req: Request) => {
   }
 });
 
+function calculatePaystackFeeAndTotal(amountInKobo: number): { totalToCharge: number; fee: number } {
+  const p = amountInKobo / 100
+  let totalNgn: number
+  const totalIfUnder2500 = p / 0.985
+  if (totalIfUnder2500 < 2500) totalNgn = totalIfUnder2500
+  else totalNgn = (p + 100) / 0.985
+  if (totalNgn - p > 2000) totalNgn = p + 2000
+  const fee = totalNgn - p
+  return { totalToCharge: Math.ceil(totalNgn * 100), fee: Math.ceil(fee * 100) }
+}
+
 async function processAndWatermarkOrder(paystackRef: string, txData?: any) {
   const { data: order } = await supabase
     .from('orders')
@@ -49,6 +60,23 @@ async function processAndWatermarkOrder(paystackRef: string, txData?: any) {
     .single();
 
   if (!order || order.status === 'delivered') return;
+
+  // P1: Server-side fee/amount validation — reject tampered webhook payloads
+  if (txData?.amount != null && order.amount != null) {
+    const txAmount = Number(txData.amount)
+    if (Math.abs(txAmount - Number(order.amount)) > 1) {
+      console.error(`[paystack-webhook] Amount mismatch for ${paystackRef}: tx ${txAmount} vs order ${order.amount} — refusing fulfillment`)
+      // Mark as failed for manual review instead of delivering
+      await supabase.from('orders').update({ status: 'amount_mismatch', updated_at: new Date().toISOString() }).eq('id', order.id)
+      return
+    }
+    if (order.seller_settlement) {
+      const expected = calculatePaystackFeeAndTotal(Number(order.seller_settlement))
+      if (Math.abs(txAmount - expected.totalToCharge) > 1 && Math.abs(txAmount - Number(order.amount)) > 1) {
+        console.warn(`[paystack-webhook] Fee recompute mismatch tx ${txAmount} vs expected ${expected.totalToCharge}`)
+      }
+    }
+  }
 
   try {
     const buyerEmail = order.buyer?.email || '';

@@ -273,7 +273,9 @@ export default function ProfilePage() {
 
                 {/* Menu Items */}
                 <div style={{ marginTop: '1.25rem' }}>
-                    {menuItems.map(({ icon: ItemIcon, label, path, badgeKey }) => {
+                    {menuItems.map((item) => {
+                        const ItemIcon = item.icon
+                        const { label, path, badgeKey } = item
                         let badgeValue = null
                         if (badgeKey === 'listings' && sellerStats?.totalListings !== undefined) {
                             badgeValue = String(sellerStats.totalListings)

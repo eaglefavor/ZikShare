@@ -18,7 +18,7 @@ const UPLOAD_URL = CLOUD_NAME && CLOUD_NAME !== 'YOUR_CLOUD_NAME'
  * @param {function} onProgress - Optional progress callback (0-100)
  * @returns {Promise<string>} Cloudinary secure URL or data URL
  */
-export async function uploadImage(file, onProgress) {
+export async function uploadImage(file, _onProgress) {
     if (!file) return null
 
     // Step 1: Compress the image client-side

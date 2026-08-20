@@ -72,7 +72,9 @@ export default function SellerProfilePage() {
                     text: `Check out study materials and campus listings from ${sellerName} on ZikShare!`,
                     url: url,
                 })
-            } catch {}
+            } catch (err) {
+                if (err.name !== 'AbortError') console.warn('Share error:', err)
+            }
         } else {
             await navigator.clipboard.writeText(url)
             alert('Seller profile link copied!')

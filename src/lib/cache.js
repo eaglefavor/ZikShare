@@ -37,7 +37,7 @@ export function setCache(key, data) {
             CACHE_PREFIX + key,
             JSON.stringify({ data, timestamp: Date.now() })
         )
-    } catch (e) {
+    } catch (_e) {
         // localStorage might be full — evict oldest entries
         evictOldest()
         try {
@@ -45,7 +45,7 @@ export function setCache(key, data) {
                 CACHE_PREFIX + key,
                 JSON.stringify({ data, timestamp: Date.now() })
             )
-        } catch {
+        } catch (_err) {
             // Give up silently — app continues without cache
         }
     }

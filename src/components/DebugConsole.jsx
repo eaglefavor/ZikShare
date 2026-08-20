@@ -74,7 +74,7 @@ export default function DebugConsole() {
         // 2. Users Table Read Check
         try {
             const selectPromise = supabase.from('users').select('uid, displayName, email').limit(1)
-            const { data, error } = await diagTimeout(selectPromise, 5000, 'Users Table Check')
+            const { error } = await diagTimeout(selectPromise, 5000, 'Users Table Check')
             if (error) throw error
             results.usersTable = {
                 name: 'Users Table Read/Write',
@@ -336,7 +336,6 @@ export default function DebugConsole() {
                                         {Object.entries(diagResults).map(([key, item]) => {
                                             const isSuccess = item.status === 'success'
                                             const isError = item.status === 'error'
-                                            const isWarn = item.status === 'warn'
 
                                             return (
                                                 <div

@@ -45,7 +45,9 @@ export default function SearchPage() {
             const updated = [clean, ...prev.filter(s => s.toLowerCase() !== clean.toLowerCase())].slice(0, 6)
             try {
                 localStorage.setItem('zikshare_recent_searches', JSON.stringify(updated))
-            } catch {}
+            } catch (e) {
+                console.debug?.('LocalStorage recent search save failed:', e)
+            }
             return updated
         })
     }
@@ -54,7 +56,9 @@ export default function SearchPage() {
         setRecentSearches([])
         try {
             localStorage.removeItem('zikshare_recent_searches')
-        } catch {}
+        } catch (e) {
+            console.debug?.('LocalStorage recent search clear failed:', e)
+        }
     }
 
     const fetchResults = useCallback(async () => {

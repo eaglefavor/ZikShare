@@ -90,7 +90,7 @@ export default function AdminPage() {
 
     const [listingSearch, setListingSearch] = useState('')
     const [listingType, setListingType] = useState('all') // 'all' | 'physical' | 'digital'
-    const [listingStatus, setListingStatus] = useState('all')
+    const [listingStatus] = useState('all')
 
     const [orderSearch, setOrderSearch] = useState('')
 

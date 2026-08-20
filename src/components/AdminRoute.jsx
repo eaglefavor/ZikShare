@@ -1,6 +1,6 @@
-import { Navigate, useLocation, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
-import { ShieldAlert, ArrowLeft, Loader2, Lock } from 'lucide-react'
+import { ArrowLeft, Loader2, Lock } from 'lucide-react'
 
 export const ADMIN_EMAILS = ['rc5632250@gmail.com']
 
@@ -12,7 +12,6 @@ export function isUserAdmin(user, session) {
 export default function AdminRoute({ children }) {
     const { user, session, isAuthenticated, loading } = useAuth()
     const navigate = useNavigate()
-    const location = useLocation()
 
     if (loading) {
         return (

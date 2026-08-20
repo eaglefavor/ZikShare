@@ -14,6 +14,17 @@ const corsHeaders = {
   'Access-Control-Max-Age': '86400',
 };
 
+function calculatePaystackFeeAndTotal(amountInKobo: number): { totalToCharge: number; fee: number } {
+  const p = amountInKobo / 100
+  let totalNgn: number
+  const totalIfUnder2500 = p / 0.985
+  if (totalIfUnder2500 < 2500) totalNgn = totalIfUnder2500
+  else totalNgn = (p + 100) / 0.985
+  if (totalNgn - p > 2000) totalNgn = p + 2000
+  const fee = totalNgn - p
+  return { totalToCharge: Math.ceil(totalNgn * 100), fee: Math.ceil(fee * 100) }
+}
+
 function generateSecurePassword(length = 16): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%*';
   const randomValues = new Uint8Array(length);
@@ -63,6 +74,12 @@ serve(async (req) => {
 
     const txData = result.data;
 
+    // 1b. Server-side fee validation — never trust client amount
+    //    Paystack amount must match what seller expected (seller_settlement + fee)
+    if (txData.amount == null) {
+      console.warn('[verify-paystack-payment] Paystack tx missing amount field')
+    }
+
     // 2. Fulfill order in Supabase
     if (SUPABASE_SERVICE_KEY) {
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
@@ -74,6 +91,20 @@ serve(async (req) => {
         .single();
 
       if (order) {
+        // Server-side amount integrity check
+        const expected = calculatePaystackFeeAndTotal(order.seller_settlement || order.amount)
+        const txAmount = Number(txData.amount)
+        // Allow 1 kobo rounding diff due to ceil
+        if (order.amount && txAmount && Math.abs(txAmount - order.amount) > 1) {
+          console.error(`[verify-paystack-payment] Amount mismatch: tx ${txAmount} vs order ${order.amount} (expected ${expected.totalToCharge}) for ref ${reference}`)
+          return new Response(JSON.stringify({ status: false, verified: false, message: `Payment amount mismatch — expected ₦${(order.amount/100).toFixed(2)} but got ₦${(txAmount/100).toFixed(2)}. Contact support.` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
+        }
+        // Also verify against recomputed fee if seller_settlement is present
+        if (order.seller_settlement && txAmount && Math.abs(txAmount - expected.totalToCharge) > 1) {
+          console.warn(`[verify-paystack-payment] Fee recompute warn: tx ${txAmount} vs recomputed ${expected.totalToCharge}`)
+          // Still allow if order.amount matches txAmount (order.amount is source of truth)
+        }
+
         let password = order.unique_password || generateSecurePassword(16);
         let finalStoragePath = order.unique_storage_path || order.product?.original_storage_path;
         const buyerEmail = order.buyer?.email || '';

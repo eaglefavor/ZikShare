@@ -27,7 +27,7 @@ export default function AnnouncementModal() {
                     setUrgentAnnouncement(target)
                 }
             } catch (err) {
-                // Silently ignore
+                console.debug?.('Failed to check urgent broadcasts:', err)
             }
         }
 
@@ -41,7 +41,9 @@ export default function AnnouncementModal() {
             const dismissed = JSON.parse(localStorage.getItem('zikshare_dismissed_announcements') || '[]')
             localStorage.setItem('zikshare_dismissed_announcements', JSON.stringify([...dismissed, urgentAnnouncement.id]))
             markAnnouncementsAsRead([urgentAnnouncement.id])
-        } catch {}
+        } catch (err) {
+            console.debug?.('Failed to persist dismissal:', err)
+        }
         setUrgentAnnouncement(null)
     }
 
@@ -188,14 +190,14 @@ export function HomeAnnouncementBanner() {
                 const list = await getAnnouncements({ limit: 5 })
                 const pinned = list.find(a => a.is_pinned && a.is_active)
                 if (pinned) setPinnedAnnouncement(pinned)
-            } catch {}
+            } catch (err) {
+                console.warn('Failed to load pinned announcement:', err)
+            }
         }
         fetchPinned()
     }, [])
 
     if (!pinnedAnnouncement || dismissed) return null
-
-    const cfg = categoryConfig[pinnedAnnouncement.category] || categoryConfig.feature_update
 
     return (
         <div

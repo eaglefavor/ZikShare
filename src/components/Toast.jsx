@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useCallback, useEffect } from 'react'
 import { CheckCircle2, AlertCircle, Info, X } from 'lucide-react'
 
 const ToastContext = createContext(null)
@@ -18,6 +18,20 @@ export function ToastProvider({ children }) {
     const removeToast = useCallback((id) => {
         setToasts(prev => prev.filter(t => t.id !== id))
     }, [])
+
+    // Bridge for non-React libs via window event (notify.js)
+    // So database.js empty-catch failures surface as visible toasts (§2)
+    useEffect(() => {
+        if (typeof window === 'undefined') return
+        const handler = (e) => {
+            const { level, message } = e.detail || {}
+            if (level === 'error') addToast(message, 'error', 3500)
+            else if (level === 'warn') addToast(message, 'info', 3000)
+        }
+        window.addEventListener('zikshare:notify', handler)
+        window.__zikshare_toast = { success: (m)=>addToast(m,'success'), error: (m)=>addToast(m,'error',3500), info: (m)=>addToast(m,'info') }
+        return () => window.removeEventListener('zikshare:notify', handler)
+    }, [addToast])
 
     const toast = {
         success: (msg, dur) => addToast(msg, 'success', dur),

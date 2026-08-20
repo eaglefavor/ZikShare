@@ -170,7 +170,11 @@ export default function SellerHubPage() {
             url: url,
         }
         if (navigator.share) {
-            try { await navigator.share(shareData) } catch {}
+            try {
+                await navigator.share(shareData)
+            } catch (err) {
+                if (err.name !== 'AbortError') console.warn('Share error:', err)
+            }
         } else {
             await navigator.clipboard.writeText(url)
             alert('Store link copied to clipboard!')

@@ -26,7 +26,7 @@ import AnnouncementModal from './components/AnnouncementModal'
 import MaintenancePage from './pages/MaintenancePage'
 
 // Maintenance Mode Flag — Set to true to show maintenance screen to all standard visitors
-export const MAINTENANCE_MODE = true
+export const MAINTENANCE_MODE = false
 
 function AppRoutes() {
   const { user, session, loading } = useAuth()

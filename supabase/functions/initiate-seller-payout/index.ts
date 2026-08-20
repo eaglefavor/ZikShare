@@ -1,9 +1,10 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || 'https://jiateaqbyaalwrkbtvjf.supabase.co';
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-const PAYSTACK_SECRET = Deno.env.get('PAYSTACK_SECRET_KEY') || atob('c2tfbGl2ZV9kMTA5YzQxMmNjNDFlYmIxOWYyYjAwNGJiY2VhMzM4OTRmM2FjZWVk');
+const PAYSTACK_SECRET = Deno.env.get('PAYSTACK_SECRET_KEY') || '';
+if (!PAYSTACK_SECRET) console.error('[initiate-seller-payout] Missing PAYSTACK_SECRET_KEY env');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',

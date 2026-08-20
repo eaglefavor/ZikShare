@@ -1,7 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { PDFDocument, rgb, degrees, StandardFonts } from 'https://esm.sh/pdf-lib@1.17.9?target=deno';
 
-const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || 'https://jiateaqbyaalwrkbtvjf.supabase.co';
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const PAYSTACK_SECRET = Deno.env.get('PAYSTACK_SECRET_KEY') || '';
 
@@ -16,7 +16,11 @@ Deno.serve(async (req: Request) => {
     const signature = req.headers.get('x-paystack-signature');
     const payload = await req.text();
 
-    if (PAYSTACK_SECRET) {
+    if (!PAYSTACK_SECRET) {
+      console.error('[paystack-webhook] Missing PAYSTACK_SECRET_KEY — rejecting webhook');
+      return new Response('Server misconfigured: missing PAYSTACK_SECRET_KEY', { status: 500 });
+    }
+    {
       const expectedSig = await hmacSha512(payload, PAYSTACK_SECRET);
       if (signature !== expectedSig) {
         console.warn('Invalid Paystack signature');

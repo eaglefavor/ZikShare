@@ -85,6 +85,8 @@ export default function PostPage() {
     // Status / Progress
     const [loading, setLoading] = useState(false)
     const [uploadStep, setUploadStep] = useState('')
+    // eslint-disable-next-line no-unused-vars
+    const [currentStepIndex, setCurrentStepIndex] = useState(0)
     const [success, setSuccess] = useState(false)
     const [error, setError] = useState('')
 

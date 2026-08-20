@@ -170,7 +170,9 @@ export default function DebugConsole() {
         setLogs([])
     }
 
-    const showDebug = import.meta.env.DEV || (typeof window !== 'undefined' && window.location.search.includes('debug=1'))
+    // P0: Never ship eruda/debug console to production. Only in Vite DEV or explicit ?debug=1 on localhost.
+    const isLocalhost = typeof window !== 'undefined' && /^(localhost|127\.0\.0\.1)/.test(window.location.hostname)
+    const showDebug = import.meta.env.DEV || (isLocalhost && typeof window !== 'undefined' && window.location.search.includes('debug=1'))
     if (!showDebug) return null
 
     return (

@@ -14,6 +14,11 @@ serve(async (req) => {
     return new Response('ok', { headers: corsHeaders });
   }
 
+  if (!PAYSTACK_SECRET) {
+    console.error('[resolve-bank-account] Missing PAYSTACK_SECRET_KEY env');
+    return new Response(JSON.stringify({ status: false, message: 'Server misconfigured: missing PAYSTACK_SECRET_KEY' }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+  }
+
   try {
     const { account_number, bank_code } = await req.json();
 

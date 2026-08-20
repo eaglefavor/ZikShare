@@ -1,4 +1,4 @@
-if (typeof window !== 'undefined' && (import.meta.env.DEV || window.location.search.includes('debug=1'))) {
+if (typeof window !== 'undefined' && (import.meta.env.DEV || (window.location.search.includes('debug=1') && /^(localhost|127\.0\.0\.1)/.test(window.location.hostname)))) {
   import('eruda').then(({ default: eruda }) => eruda.init()).catch(() => {})
 }
 import { StrictMode } from 'react'

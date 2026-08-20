@@ -25,7 +25,7 @@ export default function LoginPage() {
         setError('')
 
         const cleanEmail = email.trim().toLowerCase()
-        if (mode === 'signup' && !isUnizikEmail(cleanEmail)) {
+        if (mode === 'register' && !isUnizikEmail(cleanEmail)) {
             setError('Please register with an official UNIZIK student email (e.g. yourname@unizik.edu.ng or regNumber@students.unizik.edu.ng).')
             return
         }
@@ -40,7 +40,12 @@ export default function LoginPage() {
             }
             navigate('/')
         } catch (err) {
-            setError(err.message || 'Authentication failed. Please check your credentials.')
+            const msg = (err.message || '').toLowerCase()
+            if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit') || msg.includes('too many requests')) {
+                setError('Email verification is temporarily rate-limited. Please sign in instantly using the "Continue with UNIZIK Google Account" button above.')
+            } else {
+                setError(err.message || 'Authentication failed. Please check your credentials.')
+            }
         } finally {
             setLoading(false)
         }

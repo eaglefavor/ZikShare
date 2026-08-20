@@ -57,30 +57,20 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
 
   const watermarkText = `LICENSED TO: ${buyerName.toUpperCase()} | REG NO: ${regNumber.trim().toUpperCase()} | EMAIL: ${user?.email || 'UNIZIK'} | ORDER TRACEABLE COPY - DO NOT REDISTRIBUTE`
 
-  const config = useMemo(() => ({
-    reference: `ZKS-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`,
+  const [currentReference, setCurrentReference] = useState(() => `ZKS-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`)
+
+  // Base config for hook registration
+  const baseConfig = useMemo(() => ({
+    publicKey: PAYSTACK_PUBLIC_KEY,
+    reference: currentReference,
     email: user?.email || '',
     amount: totalToCharge,
     currency: 'NGN',
     channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'],
-    publicKey: PAYSTACK_PUBLIC_KEY,
     subaccount: product.users?.paystack_subaccount_code || undefined,
-    metadata: {
-      product_id: product.id,
-      product_type: 'digital_pdf',
-      buyer_name: buyerName,
-      reg_number: regNumber.trim().toUpperCase(),
-      watermark_text: watermarkText,
-      custom_fields: [
-        { display_name: 'Product', variable_name: 'product_name', value: product.title },
-        { display_name: 'Buyer Name (Verified)', variable_name: 'buyer_name', value: buyerName },
-        { display_name: 'Reg Number', variable_name: 'reg_number', value: regNumber.trim().toUpperCase() },
-        { display_name: 'Seller', variable_name: 'seller_id', value: product.seller_id || product.sellerId }
-      ]
-    }
-  }), [user, product, totalToCharge, buyerName, regNumber, watermarkText])
+  }), [user, product, totalToCharge, currentReference])
 
-  const initializePayment = usePaystackPayment(config)
+  const initializePayment = usePaystackPayment(baseConfig)
 
   const handleOpenModal = () => {
     if (!user) {
@@ -88,6 +78,9 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
       window.location.href = '/login'
       return
     }
+    // Refresh reference whenever opening modal
+    const freshRef = `ZKS-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`
+    setCurrentReference(freshRef)
     setShowModal(true)
   }
 
@@ -105,6 +98,33 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
     setCreatingOrder(true)
     setInputError('')
 
+    // Generate guaranteed unique reference for this exact payment initiation attempt
+    const activeReference = `ZKS-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`
+    setCurrentReference(activeReference)
+
+    const paymentConfig = {
+      publicKey: PAYSTACK_PUBLIC_KEY,
+      reference: activeReference,
+      email: user?.email || '',
+      amount: totalToCharge,
+      currency: 'NGN',
+      channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'],
+      subaccount: product.users?.paystack_subaccount_code || undefined,
+      metadata: {
+        product_id: product.id,
+        product_type: 'digital_pdf',
+        buyer_name: buyerName,
+        reg_number: regNumber.trim().toUpperCase(),
+        watermark_text: watermarkText,
+        custom_fields: [
+          { display_name: 'Product', variable_name: 'product_name', value: product.title },
+          { display_name: 'Buyer Name (Verified)', variable_name: 'buyer_name', value: buyerName },
+          { display_name: 'Reg Number', variable_name: 'reg_number', value: regNumber.trim().toUpperCase() },
+          { display_name: 'Seller', variable_name: 'seller_id', value: product.seller_id || product.sellerId }
+        ]
+      }
+    }
+
     try {
       // Insert pending order in supabase with watermark metadata
       const { error } = await supabase
@@ -117,7 +137,7 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
           platform_fee: fee,
           seller_settlement: priceInKobo,
           status: 'pending',
-          paystack_reference: config.reference,
+          paystack_reference: activeReference,
           watermark_text: watermarkText,
         })
         .select()
@@ -131,8 +151,11 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
       setShowModal(false)
 
       initializePayment({
-        onSuccess: (ref) => onSuccess(ref.reference),
-        onClose: () => console.log('Payment sheet closed')
+        config: paymentConfig,
+        onSuccess: (ref) => onSuccess(ref?.reference || activeReference),
+        onClose: () => {
+          console.log('Payment sheet closed')
+        }
       })
     } catch (err) {
       setInputError(err.message || 'Payment setup failed. Please try again.')

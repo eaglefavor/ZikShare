@@ -1,6 +1,7 @@
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ToastProvider } from './components/Toast'
+import ErrorBoundary from './components/ErrorBoundary'
 import BottomNav from './components/BottomNav'
 import DebugConsole from './components/DebugConsole'
 import HomePage from './pages/HomePage'
@@ -90,14 +91,16 @@ function AppRoutes() {
 
 function App() {
   return (
-    <AuthProvider>
-      <ToastProvider>
-        <div className="min-h-screen bg-background">
-          <AppRoutes />
-          <DebugConsole />
-        </div>
-      </ToastProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ToastProvider>
+          <div className="min-h-screen bg-background">
+            <AppRoutes />
+            <DebugConsole />
+          </div>
+        </ToastProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   )
 }
 

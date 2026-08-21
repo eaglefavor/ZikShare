@@ -89,7 +89,7 @@ export default function ItemDetailPage() {
         }
     }
 
-    const { data: item, isLoading, error } = useCachedQuery(
+    const { data: item, isLoading, error: itemError } = useCachedQuery(
         `listing-${id}`,
         () => getListing(id),
         { ttl: 5 * 60 * 1000 }

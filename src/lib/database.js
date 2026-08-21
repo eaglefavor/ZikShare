@@ -111,7 +111,13 @@ export async function getListing(id) {
                 condition: 'Digital PDF',
                 images: digitalData.cover_image_url ? [digitalData.cover_image_url] : [],
                 priceInKobo: digitalData.price,
-                price: digitalData.price / 100,
+                price: (digitalData.price || 0) / 100,
+                users: digitalData.users || {
+                    displayName: 'UNIZIK Seller',
+                    isVerified: true,
+                    phoneNumber: '',
+                    department: digitalData.category || 'Academic',
+                },
             }
         }
     } catch (err) {

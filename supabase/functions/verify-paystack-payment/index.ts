@@ -4,8 +4,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const PAYSTACK_SECRET = Deno.env.get('PAYSTACK_SECRET_KEY') || '';
-if (!PAYSTACK_SECRET) console.error('[verify-paystack-payment] Missing PAYSTACK_SECRET_KEY env');
-if (!SUPABASE_URL) console.error('[verify-paystack-payment] Missing SUPABASE_URL env');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -15,21 +13,14 @@ const corsHeaders = {
 };
 
 function calculatePaystackFeeAndTotal(amountInKobo: number): { totalToCharge: number; fee: number } {
-  const p = amountInKobo / 100
-  let totalNgn: number
-  const totalIfUnder2500 = p / 0.985
-  if (totalIfUnder2500 < 2500) totalNgn = totalIfUnder2500
-  else totalNgn = (p + 100) / 0.985
-  if (totalNgn - p > 2000) totalNgn = p + 2000
-  const fee = totalNgn - p
-  return { totalToCharge: Math.ceil(totalNgn * 100), fee: Math.ceil(fee * 100) }
-}
-
-function generateSecurePassword(length = 16): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%*';
-  const randomValues = new Uint8Array(length);
-  crypto.getRandomValues(randomValues);
-  return Array.from(randomValues).map(n => chars[n % chars.length]).join('');
+  const p = amountInKobo / 100;
+  let totalNgn: number;
+  const totalIfUnder2500 = p / 0.985;
+  if (totalIfUnder2500 < 2500) totalNgn = totalIfUnder2500;
+  else totalNgn = (p + 100) / 0.985;
+  if (totalNgn - p > 2000) totalNgn = p + 2000;
+  const fee = totalNgn - p;
+  return { totalToCharge: Math.ceil(totalNgn * 100), fee: Math.ceil(fee * 100) };
 }
 
 serve(async (req) => {
@@ -38,7 +29,7 @@ serve(async (req) => {
   }
 
   try {
-    const { reference } = await req.json();
+    const { reference, user_id } = await req.json();
 
     if (!reference) {
       return new Response(
@@ -47,9 +38,18 @@ serve(async (req) => {
       );
     }
 
+    if (!PAYSTACK_SECRET) {
+      console.error('[verify-paystack-payment] Missing PAYSTACK_SECRET_KEY');
+      return new Response(
+        JSON.stringify({ status: false, message: 'Server configuration error: missing payment secret' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     // 1. Verify directly with Paystack API
+    const cleanRef = String(reference).trim();
     const paystackRes = await fetch(
-      `https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`,
+      `https://api.paystack.co/transaction/verify/${encodeURIComponent(cleanRef)}`,
       {
         method: 'GET',
         headers: {
@@ -62,79 +62,125 @@ serve(async (req) => {
     const result = await paystackRes.json();
 
     if (!result?.status || result?.data?.status !== 'success') {
+      const errMsg = result?.data?.gateway_response || result?.message || 'Payment verification was not successful';
       return new Response(
         JSON.stringify({
           status: false,
           verified: false,
-          message: result?.data?.gateway_response || result?.message || 'Payment verification failed',
+          message: errMsg,
+          details: result?.data,
         }),
         { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const txData = result.data;
-
-    // 1b. Server-side fee validation — never trust client amount
-    //    Paystack amount must match what seller expected (seller_settlement + fee)
-    if (txData.amount == null) {
-      console.warn('[verify-paystack-payment] Paystack tx missing amount field')
-    }
+    const txAmount = Number(txData.amount);
 
     // 2. Fulfill order in Supabase
     if (SUPABASE_SERVICE_KEY) {
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-      const { data: order } = await supabase
+      // Search for order by reference
+      let { data: order } = await supabase
         .from('orders')
-        .select('*, product:digital_products(*), buyer:users!buyer_id(*)')
-        .eq('paystack_reference', reference)
-        .single();
+        .select('*, product:digital_products(*), buyer:users!buyer_id(*), seller:users!seller_id(*)')
+        .eq('paystack_reference', cleanRef)
+        .maybeSingle();
+
+      // If not found by reference, try finding pending order by buyer_id and metadata product_id
+      if (!order && txData.metadata?.product_id) {
+        const query = supabase
+          .from('orders')
+          .select('*, product:digital_products(*), buyer:users!buyer_id(*), seller:users!seller_id(*)')
+          .eq('product_id', txData.metadata.product_id)
+          .eq('status', 'pending');
+
+        if (user_id) {
+          query.eq('buyer_id', user_id);
+        }
+
+        const { data: fallbackOrder } = await query.order('created_at', { ascending: false }).limit(1).maybeSingle();
+        if (fallbackOrder) {
+          order = fallbackOrder;
+        }
+      }
 
       if (order) {
         // Server-side amount integrity check
-        const expected = calculatePaystackFeeAndTotal(order.seller_settlement || order.amount)
-        const txAmount = Number(txData.amount)
-        // Allow 1 kobo rounding diff due to ceil
         if (order.amount && txAmount && Math.abs(txAmount - order.amount) > 1) {
-          console.error(`[verify-paystack-payment] Amount mismatch: tx ${txAmount} vs order ${order.amount} (expected ${expected.totalToCharge}) for ref ${reference}`)
-          return new Response(JSON.stringify({ status: false, verified: false, message: `Payment amount mismatch — expected ₦${(order.amount/100).toFixed(2)} but got ₦${(txAmount/100).toFixed(2)}. Contact support.` }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
-        }
-        // Also verify against recomputed fee if seller_settlement is present
-        if (order.seller_settlement && txAmount && Math.abs(txAmount - expected.totalToCharge) > 1) {
-          console.warn(`[verify-paystack-payment] Fee recompute warn: tx ${txAmount} vs recomputed ${expected.totalToCharge}`)
-          // Still allow if order.amount matches txAmount (order.amount is source of truth)
+          console.error(`[verify-paystack-payment] Amount mismatch: tx ${txAmount} vs order ${order.amount} for ref ${cleanRef}`);
+          return new Response(
+            JSON.stringify({
+              status: false,
+              verified: false,
+              message: `Payment amount mismatch — expected ₦${(order.amount / 100).toFixed(2)} but got ₦${(txAmount / 100).toFixed(2)}. Please contact support.`,
+            }),
+            { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+          );
         }
 
-        let password = order.unique_password || generateSecurePassword(16);
-        let finalStoragePath = order.unique_storage_path || order.product?.original_storage_path;
-        const buyerEmail = order.buyer?.email || '';
-        const buyerName = (order.buyer?.displayName || buyerEmail.split('@')[0] || 'UNIZIK STUDENT').replace(/[._-]/g, ' ').toUpperCase();
-        const regNumber = txData?.metadata?.reg_number || 'UNIZIK-STUDENT';
+        const storagePath = order.unique_storage_path || order.product?.original_storage_path;
+        const buyerEmail = order.buyer?.email || txData?.customer?.email || '';
+        const buyerName = (order.buyer?.displayName || txData.metadata?.buyer_name || buyerEmail.split('@')[0] || 'UNIZIK STUDENT').replace(/[._-]/g, ' ').toUpperCase();
+        const regNumber = txData?.metadata?.reg_number || order.watermark_text?.match(/REG NO: ([^|]+)/i)?.[1]?.trim() || 'UNIZIK-STUDENT';
         const watermarkText = order.watermark_text || `LICENSED TO: ${buyerName} | REG NO: ${regNumber} | ORDER: ${order.id} | UNIZIK SECURE COPY`;
 
         const updates = {
           status: 'delivered',
+          paystack_reference: cleanRef,
           paystack_transaction_id: String(txData.id),
-          unique_password: password,
-          unique_storage_path: finalStoragePath,
+          unique_storage_path: storagePath,
           watermark_text: watermarkText,
           download_expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
           updated_at: new Date().toISOString(),
         };
 
-        const { data: updatedOrder } = await supabase
+        const { data: updatedOrder, error: updateErr } = await supabase
           .from('orders')
           .update(updates)
           .eq('id', order.id)
-          .select('*, product:digital_products(*)')
+          .select('*, product:digital_products(*), buyer:users!buyer_id(*), seller:users!seller_id(*)')
           .single();
+
+        if (updateErr) {
+          console.error('[verify-paystack-payment] Error updating order:', updateErr);
+        }
+
+        // Generate signed download URL via service role
+        let directDownloadUrl = null;
+        if (storagePath) {
+          try {
+            // Check digital-orders first, then digital-originals
+            const { data: signRes } = await supabase
+              .storage
+              .from('digital-orders')
+              .createSignedUrl(storagePath, 86400);
+
+            if (signRes?.signedUrl) {
+              directDownloadUrl = signRes.signedUrl;
+            } else {
+              const { data: origSignRes } = await supabase
+                .storage
+                .from('digital-originals')
+                .createSignedUrl(storagePath, 86400);
+              if (origSignRes?.signedUrl) {
+                directDownloadUrl = origSignRes.signedUrl;
+              }
+            }
+          } catch (storageErr) {
+            console.warn('[verify-paystack-payment] Signed URL creation warning:', storageErr);
+          }
+        }
 
         return new Response(
           JSON.stringify({
             status: true,
             verified: true,
             order: updatedOrder || { ...order, ...updates },
+            download_url: directDownloadUrl,
             transaction: txData,
+            message: 'Payment verified and material unlocked successfully! 🎉',
           }),
           { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
         );
@@ -146,13 +192,14 @@ serve(async (req) => {
         status: true,
         verified: true,
         transaction: txData,
+        message: 'Payment confirmed on Paystack.',
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
     console.error('Verify payment error:', error);
     return new Response(
-      JSON.stringify({ status: false, message: error.message || 'Internal server error' }),
+      JSON.stringify({ status: false, message: error.message || 'Internal server error during verification' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

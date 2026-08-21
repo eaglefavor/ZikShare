@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ShieldAlert, CheckCircle2, Lock, ArrowRight, FileText, Loader2, Sparkles, RefreshCw } from 'lucide-react';
-import { getOrder, fulfillDigitalOrder, createSignedDownloadUrl } from '../lib/database';
+import { ShieldAlert, CheckCircle2, Lock, ArrowRight, FileText, Loader2, Sparkles, RefreshCw, AlertTriangle } from 'lucide-react';
+import { getOrder, createSignedDownloadUrl } from '../lib/database';
 import { verifyPaystackPayment } from '../lib/paystack';
 import { downloadWatermarkedPdf } from '../lib/pdfWatermark';
 
@@ -10,111 +10,106 @@ const PaymentSuccess = () => {
   const reference = searchParams.get('ref');
   const [status, setStatus] = useState('processing');
   const [order, setOrder] = useState(null);
+  const [directDownloadUrl, setDirectDownloadUrl] = useState(null);
   const [downloading, setDownloading] = useState(false);
-  const [showInstantUnlock, setShowInstantUnlock] = useState(false);
-  const isFulfillingRef = useRef(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const isVerifyingRef = useRef(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     let isMounted = true;
     let pollInterval = null;
+    let attempts = 0;
 
-    // Show manual instant unlock fallback button after 3 seconds
-    const fallbackTimer = setTimeout(() => {
-      if (isMounted) setShowInstantUnlock(true);
-    }, 3000);
-
-    const handleCheckAndFulfill = async () => {
-      if (!reference) return;
+    const handleVerify = async () => {
+      if (!reference || isVerifyingRef.current) return;
+      isVerifyingRef.current = true;
+      attempts += 1;
 
       try {
-        // 1. Try server-verified payment check
-        if (!isFulfillingRef.current) {
-          try {
-            const verifyRes = await verifyPaystackPayment(reference);
-            if (verifyRes.success && verifyRes.order && isMounted) {
-              setOrder(verifyRes.order);
-              setStatus('ready');
-              if (pollInterval) clearInterval(pollInterval);
-              return;
-            }
-          } catch (vErr) {
-            console.warn('Server verify check note:', vErr);
-          }
+        // 1. Direct Server-Side Verification via Paystack Edge Function
+        const verifyRes = await verifyPaystackPayment(reference);
+
+        if (verifyRes?.success && isMounted) {
+          if (verifyRes.order) setOrder(verifyRes.order);
+          if (verifyRes.download_url) setDirectDownloadUrl(verifyRes.download_url);
+          setStatus('ready');
+          if (pollInterval) clearInterval(pollInterval);
+          return;
         }
 
-        // 2. Query order from database
+        // 2. Query order directly from database in case webhook delivered it
         const orderData = await getOrder(reference);
-
         if (orderData && isMounted) {
           setOrder(orderData);
-
           if (orderData.status === 'delivered' || orderData.status === 'ready') {
             setStatus('ready');
             if (pollInterval) clearInterval(pollInterval);
             return;
           }
+        }
 
-          // 3. If still pending after 3.5s, auto-fulfill directly
-          if (orderData.status === 'pending' && !isFulfillingRef.current) {
-            isFulfillingRef.current = true;
-            try {
-              const fulfilled = await fulfillDigitalOrder(orderData);
-              if (fulfilled && isMounted) {
-                setOrder(fulfilled);
-                setStatus('ready');
-                if (pollInterval) clearInterval(pollInterval);
-              }
-            } catch (fulErr) {
-              console.warn('Auto fulfill warning:', fulErr);
-            } finally {
-              isFulfillingRef.current = false;
-            }
-          }
+        if (attempts >= 8 && isMounted) {
+          if (verifyRes?.message) setErrorMessage(verifyRes.message);
+          setStatus('pending_manual');
+          if (pollInterval) clearInterval(pollInterval);
         }
       } catch (err) {
-        console.error('Error checking order status:', err);
+        console.error('Error during payment verification:', err);
+      } finally {
+        isVerifyingRef.current = false;
       }
     };
 
     if (reference) {
-      handleCheckAndFulfill();
-      pollInterval = setInterval(handleCheckAndFulfill, 2500);
+      handleVerify();
+      pollInterval = setInterval(handleVerify, 3000);
+    } else {
+      setStatus('error');
+      setErrorMessage('No payment reference provided in URL.');
     }
 
     return () => {
       isMounted = false;
-      clearTimeout(fallbackTimer);
       if (pollInterval) clearInterval(pollInterval);
     };
   }, [reference]);
 
-  const handleManualUnlock = async () => {
-    if (!order) return;
+  const handleManualReverify = async () => {
+    if (!reference) return;
     setStatus('processing');
+    setErrorMessage('');
     try {
-      const fulfilled = await fulfillDigitalOrder(order);
-      if (fulfilled) {
-        setOrder(fulfilled);
+      const verifyRes = await verifyPaystackPayment(reference);
+      if (verifyRes?.success) {
+        if (verifyRes.order) setOrder(verifyRes.order);
+        if (verifyRes.download_url) setDirectDownloadUrl(verifyRes.download_url);
         setStatus('ready');
+      } else {
+        setStatus('pending_manual');
+        setErrorMessage(verifyRes?.message || 'Payment is still being processed by your bank/Paystack. Please retry in a few seconds.');
       }
     } catch (err) {
-      alert('Could not unlock material: ' + err.message);
+      setStatus('pending_manual');
+      setErrorMessage(err.message || 'Error communicating with verification service.');
     }
   };
 
   const handleDownloadPdf = async () => {
     const storagePath = order?.unique_storage_path || order?.product?.original_storage_path;
-    if (!storagePath) {
-      alert('File is being finalized. Please try again in 5 seconds.');
+    if (!storagePath && !directDownloadUrl) {
+      alert('Your study material is being prepared. Please click in 5 seconds.');
       return;
     }
 
     setDownloading(true);
     try {
-      const downloadUrl = await createSignedDownloadUrl(storagePath, 3600);
+      let downloadUrl = directDownloadUrl;
+      if (!downloadUrl && storagePath) {
+        downloadUrl = await createSignedDownloadUrl(storagePath, 3600);
+      }
+
       if (downloadUrl) {
-        // Parse buyer metadata for watermark
         const buyerName = order?.buyer?.displayName || order?.watermark_text?.match(/LICENSED TO: ([^|]+)/i)?.[1]?.trim() || 'UNIZIK STUDENT';
         const regNumber = order?.watermark_text?.match(/REG NO: ([^|]+)/i)?.[1]?.trim() || 'STUDENT';
         const title = order?.product?.title || 'ZikShare Study Material';
@@ -122,10 +117,10 @@ const PaymentSuccess = () => {
         await downloadWatermarkedPdf(downloadUrl, title, {
           buyerName,
           regNumber,
-          orderId: order?.id
+          orderId: order?.id,
         });
       } else {
-        alert('Could not generate secure download link. Please refresh or contact support.');
+        alert('Could not generate secure download link. Please click Re-Check Payment.');
       }
     } catch (err) {
       alert('Download error: ' + err.message);
@@ -140,55 +135,47 @@ const PaymentSuccess = () => {
         <div style={{ textAlign: 'center', backgroundColor: 'white', padding: '2.5rem 1.5rem', borderRadius: '1.25rem', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.06)', maxWidth: '24rem', width: '100%', border: '1px solid var(--color-border)' }}>
           <div style={{ margin: '0 auto 1.25rem', width: '3.5rem', height: '3.5rem', borderRadius: '50%', border: '4px solid #EFF6FF', borderTopColor: '#2563EB', animation: 'spin 1s linear infinite' }}></div>
           <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>🔐 Generating Watermarked PDF...</h2>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.8125rem', marginBottom: '1.25rem', lineHeight: 1.5 }}>We're securing your purchase and preparing your personalized copy.</p>
-          
-          {showInstantUnlock && order && (
-            <button
-              onClick={handleManualUnlock}
-              style={{
-                width: '100%',
-                padding: '0.75rem',
-                borderRadius: '0.75rem',
-                border: 'none',
-                background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-                color: 'white',
-                fontSize: '0.875rem',
-                fontWeight: 700,
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '0.5rem',
-                boxShadow: '0 4px 12px rgba(37,99,235,0.3)',
-                marginTop: '0.5rem'
-              }}
-            >
-              <Sparkles size={16} />
-              <span>⚡ Unlock & View Material Now</span>
-            </button>
-          )}
-
-          <p style={{ color: '#DC2626', fontSize: '0.75rem', fontWeight: 700, marginTop: '1rem', margin: '1rem 0 0' }}>Do not close this page!</p>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>🔐 Verifying Payment...</h2>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.8125rem', marginBottom: '1.25rem', lineHeight: 1.5 }}>
+            Connecting with Paystack & preparing your secure licensed PDF.
+          </p>
+          <p style={{ color: '#64748B', fontSize: '0.6875rem', fontFamily: 'monospace' }}>Ref: {reference}</p>
         </div>
       </div>
     );
   }
 
-  if (status === 'error') {
+  if (status === 'pending_manual' || status === 'error') {
     return (
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '1rem', backgroundColor: '#F8FAFC' }}>
-        <div style={{ textAlign: 'center', backgroundColor: 'white', padding: '2rem', borderRadius: '1.25rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', maxWidth: '24rem', width: '100%', border: '1px solid var(--color-border)' }}>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#DC2626', marginBottom: '0.5rem' }}>❌ Processing Notice</h2>
-          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.8125rem', marginBottom: '1.5rem' }}>We verified your payment. Reference: <strong>{reference}</strong></p>
-          <button onClick={handleManualUnlock} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.625rem', backgroundColor: 'var(--color-brand)', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', marginBottom: '0.5rem' }}>Retry Unlock</button>
-          <button onClick={() => navigate('/')} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.625rem', backgroundColor: 'white', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', fontWeight: 600, cursor: 'pointer' }}>Return Home</button>
+        <div style={{ textAlign: 'center', backgroundColor: 'white', padding: '2rem 1.5rem', borderRadius: '1.25rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', maxWidth: '26rem', width: '100%', border: '1px solid var(--color-border)' }}>
+          <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '50%', backgroundColor: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: '#DC2626' }}>
+            <AlertTriangle size={28} />
+          </div>
+          <h2 style={{ fontSize: '1.1875rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>Verification Notice</h2>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.8125rem', marginBottom: '1rem', lineHeight: 1.4 }}>
+            {errorMessage || `We are checking the payment confirmation from Paystack for reference: ${reference}`}
+          </p>
+          <div style={{ backgroundColor: '#F1F5F9', padding: '0.625rem', borderRadius: '0.5rem', fontSize: '0.6875rem', fontFamily: 'monospace', color: '#334155', marginBottom: '1.25rem', wordBreak: 'break-all' }}>
+            Reference: {reference}
+          </div>
+          <button
+            onClick={handleManualReverify}
+            style={{ width: '100%', padding: '0.75rem', borderRadius: '0.625rem', backgroundColor: '#2563EB', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+          >
+            <RefreshCw size={15} />
+            <span>Re-Check Paystack Payment</span>
+          </button>
+          <button onClick={() => navigate('/profile/purchases')} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.625rem', backgroundColor: 'white', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', fontWeight: 600, cursor: 'pointer' }}>
+            Go to My Purchases
+          </button>
         </div>
       </div>
     );
   }
 
-  const unlockPassword = order?.unique_password || 'ZikShare-Verified';
+  const buyerName = order?.buyer?.displayName || order?.watermark_text?.match(/LICENSED TO: ([^|]+)/i)?.[1]?.trim() || 'UNIZIK STUDENT';
+  const regNumber = order?.watermark_text?.match(/REG NO: ([^|]+)/i)?.[1]?.trim() || 'STUDENT';
 
   return (
     <div style={{ minHeight: '100vh', padding: '1.5rem 1rem', backgroundColor: '#F8FAFC', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
@@ -196,55 +183,41 @@ const PaymentSuccess = () => {
         <div style={{ width: '4rem', height: '4rem', borderRadius: '9999px', backgroundColor: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: '#10B981' }}>
           <CheckCircle2 size={36} />
         </div>
-        <h2 style={{ fontSize: '1.375rem', fontWeight: 800, textAlign: 'center', marginBottom: '0.25rem', color: '#0F172A' }}>Payment Successful! 🎉</h2>
-        <p style={{ textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '0.8125rem', marginBottom: '1.25rem' }}>Your customized study material is ready for download.</p>
+        <h2 style={{ fontSize: '1.375rem', fontWeight: 800, textAlign: 'center', marginBottom: '0.25rem', color: '#0F172A' }}>Payment Verified! 🎉</h2>
+        <p style={{ textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '0.8125rem', marginBottom: '1.25rem' }}>
+          Your licensed study material is ready for download.
+        </p>
 
-        {/* BOLD ANTI-PIRACY DISCLAIMER */}
+        {/* BOLD ANTI-PIRACY & WATERMARK NOTICE */}
         <div style={{ backgroundColor: '#FEF2F2', padding: '1.125rem', borderRadius: '0.875rem', border: '2px solid #DC2626', marginBottom: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
             <ShieldAlert size={20} color="#DC2626" />
             <h4 style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 900, color: '#991B1B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              ⚠️ STRICT WATERMARK & ANTI-PIRACY NOTICE
+              ⚠️ LICENSED ACADEMIC COPY
             </h4>
           </div>
           <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: '#7F1D1D', fontWeight: 600, lineHeight: 1.4 }}>
-            Every page of this document is registered to your <strong>UNIZIK Account & Reg Number</strong>.
+            Licensed to: <strong>{buyerName}</strong> (Reg No: <strong>{regNumber}</strong>).
           </p>
           <p style={{ margin: 0, fontSize: '0.6875rem', color: '#991B1B', lineHeight: 1.4 }}>
-            Redistributing or re-uploading this material reveals your identity and triggers immediate disciplinary actions.
+            Every page of this PDF contains traceable identification ribbons. Sharing or re-uploading this material violates UNIZIK academic integrity rules.
           </p>
-
-          {order?.watermark_text && (
-            <div style={{ marginTop: '0.625rem', padding: '0.5rem', borderRadius: '0.375rem', backgroundColor: 'rgba(255,255,255,0.7)', border: '1px dashed #F87171', fontSize: '0.625rem', fontFamily: 'monospace', color: '#7F1D1D', wordBreak: 'break-all' }}>
-              {order.watermark_text}
-            </div>
-          )}
         </div>
 
-        {/* Password & Download Card */}
-        <div style={{ backgroundColor: '#F8FAFC', padding: '1.25rem', borderRadius: '0.875rem', border: '1px solid var(--color-border)', marginBottom: '1.25rem' }}>
-          <h3 style={{ fontSize: '0.875rem', fontWeight: 800, margin: '0 0 0.75rem', display: 'flex', alignItems: 'center', gap: '0.375rem', color: '#0F172A' }}>
-            <Lock size={16} color="var(--color-brand)" /> Your PDF Unlock Password:
-          </h3>
-          
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#FFFFFF', padding: '0.75rem 1rem', borderRadius: '0.625rem', border: '1.5px dashed #3B82F6', marginBottom: '0.75rem' }}>
-            <code style={{ fontSize: '1.125rem', fontWeight: 800, letterSpacing: '0.08em', color: '#1E40AF', fontFamily: 'monospace' }}>
-              {unlockPassword}
-            </code>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(unlockPassword);
-                alert('Password copied to clipboard!');
-              }}
-              style={{ padding: '0.375rem 0.75rem', borderRadius: '0.375rem', border: 'none', backgroundColor: '#EFF6FF', color: '#2563EB', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
-            >
-              Copy Password
-            </button>
+        {/* Product Details & Download */}
+        <div style={{ backgroundColor: '#F8FAFC', padding: '1rem 1.25rem', borderRadius: '0.875rem', border: '1px solid var(--color-border)', marginBottom: '1.25rem' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Material:</span>
+            <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A' }}>{order?.product?.title || 'Study Material'}</span>
           </div>
-
-          <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
-            💡 Enter this unique password when opening the downloaded PDF document.
-          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Reference:</span>
+            <span style={{ fontSize: '0.6875rem', fontFamily: 'monospace', color: '#2563EB', fontWeight: 700 }}>{order?.paystack_reference || reference}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>License Status:</span>
+            <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: '#059669', backgroundColor: '#ECFDF5', padding: '0.125rem 0.375rem', borderRadius: '0.25rem' }}>✓ Active & Verified</span>
+          </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
@@ -268,11 +241,11 @@ const PaymentSuccess = () => {
               justifyContent: 'center',
               gap: '0.5rem',
               boxShadow: '0 4px 14px rgba(16,185,129,0.35)',
-              opacity: downloading ? 0.8 : 1
+              opacity: downloading ? 0.8 : 1,
             }}
           >
             {downloading ? <Loader2 size={18} className="animate-spin" /> : <FileText size={18} />}
-            <span>{downloading ? 'Preparing Download Link...' : 'Download Study Material PDF'}</span>
+            <span>{downloading ? 'Preparing Personalized Copy...' : 'Download Study Material PDF'}</span>
           </button>
 
           <button
@@ -292,7 +265,7 @@ const PaymentSuccess = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '0.5rem'
+              gap: '0.5rem',
             }}
           >
             <span>View All My Purchases</span>

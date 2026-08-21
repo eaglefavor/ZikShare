@@ -1,6 +1,7 @@
 import supabase from './supabase'
 import { invalidateCacheByPrefix } from './cache'
 import { notifyError, notifyWarn } from './notify'
+import { verifyPaystackPayment } from './paystack'
 
 function queryWithTimeout(promise, ms = 8000, fallbackVal = null) {
     let timer
@@ -428,15 +429,16 @@ export async function updateDigitalProduct(id, updates) {
     return res.data
 }
 
-// ── Seller Analytics & Orders ──
+// ── Seller Analytics, Orders & Payouts ──
 
 export async function getSellerAnalytics(userId) {
     if (!userId) return null
     try {
-        const [listingsRes, digitalRes, ordersRes, userProfile] = await Promise.all([
+        const [listingsRes, digitalRes, ordersRes, payoutsRes, userProfile] = await Promise.all([
             queryWithTimeout(supabase.from('listings').select('*').eq('sellerId', userId), 6000, { data: [] }),
             queryWithTimeout(supabase.from('digital_products').select('*').eq('seller_id', userId), 6000, { data: [] }),
             queryWithTimeout(supabase.from('orders').select('*').eq('seller_id', userId).order('created_at', { ascending: false }), 6000, { data: [] }),
+            queryWithTimeout(supabase.from('payouts').select('*').eq('seller_id', userId).order('created_at', { ascending: false }), 6000, { data: [] }),
             getUser(userId).catch(() => null)
         ])
 
@@ -450,6 +452,7 @@ export async function getSellerAnalytics(userId) {
                 price: d.price / 100,
             }))
         const orders = ordersRes?.data || []
+        const payouts = payoutsRes?.data || []
 
         const totalPhysical = physicalListings.length
         const totalDigital = digitalProducts.length
@@ -457,7 +460,12 @@ export async function getSellerAnalytics(userId) {
 
         const completedOrders = orders.filter(o => o.status === 'delivered' || o.status === 'success' || o.status === 'ready')
         const totalEarningsKobo = completedOrders.reduce((sum, o) => sum + (o.seller_settlement || o.amount || 0), 0)
+        const totalEarningsNaira = totalEarningsKobo / 100
         const totalSalesCount = completedOrders.length
+
+        const successfulPayouts = payouts.filter(p => p.status !== 'failed')
+        const totalWithdrawnNaira = successfulPayouts.reduce((sum, p) => sum + Number(p.amount_naira || (p.amount ? p.amount / 100 : 0) || 0), 0)
+        const availableBalanceNaira = Math.max(0, totalEarningsNaira - totalWithdrawnNaira)
 
         const productSalesMap = {}
         completedOrders.forEach(o => {
@@ -475,13 +483,16 @@ export async function getSellerAnalytics(userId) {
             .sort((a, b) => b.sales_count - a.sales_count)
 
         return {
-            totalEarningsNaira: totalEarningsKobo / 100,
+            totalEarningsNaira,
+            totalWithdrawnNaira,
+            availableBalanceNaira,
             totalSalesCount,
             activeListings,
             totalPhysical,
             totalDigital,
             totalListings: totalPhysical + totalDigital,
             orders,
+            payouts,
             topProducts,
             userProfile,
             listings: [...physicalListings, ...digitalProducts].sort((a, b) => new Date(b.createdAt || b.created_at || 0) - new Date(a.createdAt || a.created_at || 0))
@@ -490,16 +501,34 @@ export async function getSellerAnalytics(userId) {
         console.warn('getSellerAnalytics caught error:', err)
         return {
             totalEarningsNaira: 0,
+            totalWithdrawnNaira: 0,
+            availableBalanceNaira: 0,
             totalSalesCount: 0,
             activeListings: 0,
             totalPhysical: 0,
             totalDigital: 0,
             totalListings: 0,
             orders: [],
+            payouts: [],
             topProducts: [],
             userProfile: null,
             listings: []
         }
+    }
+}
+
+export async function getSellerPayouts(userId) {
+    if (!userId) return []
+    try {
+        const res = await queryWithTimeout(
+            supabase.from('payouts').select('*').eq('seller_id', userId).order('created_at', { ascending: false }),
+            6000,
+            { data: [] }
+        )
+        return res?.data || []
+    } catch (err) {
+        console.warn('[DB] getSellerPayouts warning:', err?.message)
+        return []
     }
 }
 
@@ -638,65 +667,29 @@ export async function fulfillDigitalOrder(order) {
     if (order.status === 'delivered' || order.status === 'ready') return order
 
     try {
-        const isDrmEnabled = order.product?.drm_enabled !== false
-
-        // Generate secure 16-character unlock password only if DRM is enabled
-        let password = order.unique_password
-        if (isDrmEnabled && !password) {
-            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%*'
-            const randomBytes = new Uint8Array(16)
-            crypto.getRandomValues(randomBytes)
-            password = Array.from(randomBytes).map(n => chars[n % chars.length]).join('')
-        } else if (!isDrmEnabled) {
-            password = null
-        }
-
-        // Get storage path from product if missing
-        let storagePath = order.unique_storage_path
-        if (!storagePath) {
-            if (order.product?.original_storage_path) {
-                storagePath = order.product.original_storage_path
-            } else if (order.product_id) {
-                const { data: prod } = await supabase
-                    .from('digital_products')
-                    .select('original_storage_path, drm_enabled')
-                    .eq('id', order.product_id)
-                    .single()
-                storagePath = prod?.original_storage_path || `orders/${order.id}/${order.product_id}_encrypted.pdf`
-                if (prod && prod.drm_enabled === false) {
-                    password = null
-                }
+        // If order has a paystack reference, verify via server edge function
+        if (order.paystack_reference) {
+            const verifyRes = await verifyPaystackPayment(order.paystack_reference, order.buyer_id)
+            if (verifyRes?.success && verifyRes?.order) {
+                return verifyRes.order
             }
         }
 
-        const updates = {
-            status: 'delivered',
-            unique_password: password,
-            unique_storage_path: storagePath,
-            download_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-            updated_at: new Date().toISOString()
-        }
-
-        const { data, error } = await supabase
+        // Re-fetch latest order status directly from database
+        const { data: latestOrder, error } = await supabase
             .from('orders')
-            .update(updates)
-            .eq('id', order.id)
             .select('*, product:digital_products(*), seller:users!seller_id(displayName, email, phoneNumber)')
-            .single()
+            .eq('id', order.id)
+            .maybeSingle()
 
-        if (!error && data) {
-            return data
+        if (!error && latestOrder) {
+            return latestOrder
         }
 
-        return { ...order, ...updates }
+        return order
     } catch (err) {
-        console.warn('Direct order fulfillment fallback:', err)
-        return {
-            ...order,
-            status: 'delivered',
-            unique_password: order.unique_password || 'ZikShare-Verified',
-            unique_storage_path: order.unique_storage_path || order.product?.original_storage_path
-        }
+        console.warn('[DB] fulfillDigitalOrder check note:', err?.message)
+        return order
     }
 }
 

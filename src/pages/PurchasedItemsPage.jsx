@@ -1,8 +1,9 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, FileText, Lock, Download, Loader2, CheckCircle2, ShieldAlert, Sparkles, Search, X, Check, Copy } from 'lucide-react'
+import { ArrowLeft, FileText, Download, Loader2, Search, X, Check, Copy, HelpCircle, Sparkles, RefreshCw, AlertCircle } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { getBuyerOrders, createSignedDownloadUrl, fulfillDigitalOrder } from '../lib/database'
+import { getBuyerOrders, createSignedDownloadUrl } from '../lib/database'
+import { claimPurchaseByReference } from '../lib/paystack'
 import { downloadWatermarkedPdf } from '../lib/pdfWatermark'
 import { useToast } from '../components/Toast'
 
@@ -24,6 +25,12 @@ export default function PurchasedItemsPage() {
     const [downloadingId, setDownloadingId] = useState(null)
     const [copiedId, setCopiedId] = useState(null)
     const [searchQuery, setSearchQuery] = useState('')
+
+    // Self-Service Dispute / Purchase Claim Modal
+    const [showClaimModal, setShowClaimModal] = useState(false)
+    const [claimReference, setClaimReference] = useState('')
+    const [claiming, setClaiming] = useState(false)
+    const [claimError, setClaimError] = useState('')
 
     const currentUserId = session?.user?.id || user?.uid || user?.id
 
@@ -54,58 +61,73 @@ export default function PurchasedItemsPage() {
         return orders.filter(o => {
             const title = (o.product?.title || '').toLowerCase()
             const cat = (o.product?.category || '').toLowerCase()
-            return title.includes(q) || cat.includes(q)
+            const ref = (o.paystack_reference || '').toLowerCase()
+            return title.includes(q) || cat.includes(q) || ref.includes(q)
         })
     }, [orders, searchQuery])
 
     const handleDownload = async (order) => {
         setDownloadingId(order.id)
         try {
-            let activeOrder = order
-            if (!activeOrder.unique_storage_path || activeOrder.status === 'pending') {
-                activeOrder = await fulfillDigitalOrder(activeOrder)
+            const storagePath = order?.unique_storage_path || order?.product?.original_storage_path
+            if (!storagePath) {
+                toast.error('File link is being finalized. Please try again.')
+                return
             }
 
-            const storagePath = activeOrder?.unique_storage_path || activeOrder?.product?.original_storage_path
             const url = await createSignedDownloadUrl(storagePath, 3600)
             if (url) {
                 const buyerName = user?.displayName || session?.user?.user_metadata?.full_name || 'UNIZIK STUDENT'
-                const regNumber = activeOrder?.watermark_text?.match(/REG NO: ([^|]+)/i)?.[1]?.trim() || 'STUDENT'
-                const title = activeOrder?.product?.title || 'ZikShare Study Material'
+                const regNumber = order?.watermark_text?.match(/REG NO: ([^|]+)/i)?.[1]?.trim() || 'STUDENT'
+                const title = order?.product?.title || 'ZikShare Study Material'
 
-                if (activeOrder.unique_password) {
-                    await downloadWatermarkedPdf(url, title, {
-                        buyerName,
-                        regNumber,
-                        orderId: activeOrder?.id
-                    })
-                } else {
-                    const res = await fetch(url)
-                    const blob = await res.blob()
-                    const blobUrl = window.URL.createObjectURL(blob)
-                    const a = document.createElement('a')
-                    a.href = blobUrl
-                    a.download = `${title.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`
-                    document.body.appendChild(a)
-                    a.click()
-                    document.body.removeChild(a)
-                    window.URL.revokeObjectURL(blobUrl)
-                }
-                toast.success('Download started successfully!')
+                await downloadWatermarkedPdf(url, title, {
+                    buyerName,
+                    regNumber,
+                    orderId: order?.id
+                })
+                toast.success('Personalized study material downloaded! 🚀')
             } else {
                 toast.error('Could not generate download link. Please refresh.')
             }
         } catch (err) {
-            toast.error('Download failed: ' + err.message)
+            toast.error('Download error: ' + err.message)
         } finally {
             setDownloadingId(null)
         }
     }
 
-    const handleCopyPassword = (orderId, pwd) => {
-        navigator.clipboard.writeText(pwd)
-        setCopiedId(orderId)
-        toast.success('Unlock password copied to clipboard!')
+    const handleClaimSubmit = async (e) => {
+        e.preventDefault()
+        if (!claimReference.trim()) {
+            setClaimError('Please enter your Paystack transaction reference.')
+            return
+        }
+
+        setClaiming(true)
+        setClaimError('')
+
+        try {
+            const res = await claimPurchaseByReference(claimReference.trim(), currentUserId)
+            if (res?.success) {
+                toast.success(res.message || 'Purchase successfully verified & added to your library! 🎉')
+                setShowClaimModal(false)
+                setClaimReference('')
+                await loadPurchases()
+            } else {
+                setClaimError(res?.message || res?.error || 'Could not verify payment with this reference. Please check and retry.')
+            }
+        } catch (err) {
+            setClaimError(err.message || 'Error communicating with verification service.')
+        } finally {
+            setClaiming(false)
+        }
+    }
+
+    const handleCopyText = (id, text) => {
+        navigator.clipboard.writeText(text)
+        setCopiedId(id)
+        toast.success('Copied to clipboard!')
         setTimeout(() => setCopiedId(null), 2500)
     }
 
@@ -130,16 +152,38 @@ export default function PurchasedItemsPage() {
     return (
         <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', paddingBottom: '3rem', maxWidth: '42rem', margin: '0 auto' }}>
             <header style={{ padding: '0.875rem 1rem', backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', position: 'sticky', top: 0, zIndex: 40 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: orders.length > 0 ? '0.75rem' : 0 }}>
-                    <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
-                        <ArrowLeft size={20} />
-                    </button>
-                    <div>
-                        <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 800, color: '#0F172A' }}>Purchased Study Materials</h1>
-                        <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
-                            {orders.length} digital document{orders.length !== 1 ? 's' : ''} in library
-                        </p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
+                            <ArrowLeft size={20} />
+                        </button>
+                        <div>
+                            <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 800, color: '#0F172A' }}>Purchased Study Materials</h1>
+                            <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
+                                {orders.length} digital document{orders.length !== 1 ? 's' : ''} in library
+                            </p>
+                        </div>
                     </div>
+
+                    <button
+                        onClick={() => setShowClaimModal(true)}
+                        style={{
+                            padding: '0.375rem 0.625rem',
+                            borderRadius: '0.5rem',
+                            border: '1px solid #BFDBFE',
+                            backgroundColor: '#EFF6FF',
+                            color: '#2563EB',
+                            fontSize: '0.6875rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '0.25rem'
+                        }}
+                    >
+                        <Sparkles size={13} />
+                        <span>Claim Reference</span>
+                    </button>
                 </div>
 
                 {/* In-Library Search Bar */}
@@ -148,7 +192,7 @@ export default function PurchasedItemsPage() {
                         <Search size={15} color="var(--color-text-muted)" style={{ flexShrink: 0 }} />
                         <input
                             type="text"
-                            placeholder="Search your purchased courses & notes..."
+                            placeholder="Search by title, course, or reference..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
                             style={{ flex: 1, border: 'none', outline: 'none', backgroundColor: 'transparent', fontSize: '0.8125rem', fontFamily: 'inherit' }}
@@ -175,23 +219,30 @@ export default function PurchasedItemsPage() {
                             <FileText size={28} />
                         </div>
                         <h2 style={{ fontSize: '1.125rem', fontWeight: 800, margin: '0 0 0.375rem', color: '#0F172A' }}>
-                            {searchQuery ? 'No matching materials found' : 'No Study Materials Yet'}
+                            {searchQuery ? 'No matching materials found' : 'No Study Materials in Library'}
                         </h2>
-                        <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', margin: '0 0 1.5rem' }}>
-                            {searchQuery ? `No files match "${searchQuery}". Try another search.` : 'Browse the campus catalog for lecture slides, past questions, and summaries.'}
+                        <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', margin: '0 0 1.5rem', lineHeight: 1.4 }}>
+                            {searchQuery ? `No files match "${searchQuery}".` : 'Paid for a material but not seeing it? You can claim it instantly with your Paystack transaction reference.'}
                         </p>
-                        <button
-                            onClick={() => navigate('/search?category=Past%20Questions')}
-                            style={{ padding: '0.75rem 1.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(59,130,246,0.3)' }}
-                        >
-                            Explore Study Materials
-                        </button>
+                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
+                            <button
+                                onClick={() => setShowClaimModal(true)}
+                                style={{ padding: '0.625rem 1.25rem', borderRadius: '0.625rem', border: '1px solid #3B82F6', backgroundColor: '#EFF6FF', color: '#2563EB', fontWeight: 700, fontSize: '0.8125rem', cursor: 'pointer' }}
+                            >
+                                ⚡ Claim with Paystack Ref
+                            </button>
+                            <button
+                                onClick={() => navigate('/search?category=Past%20Questions')}
+                                style={{ padding: '0.625rem 1.25rem', borderRadius: '0.625rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontWeight: 700, fontSize: '0.8125rem', cursor: 'pointer' }}
+                            >
+                                Browse Catalog
+                            </button>
+                        </div>
                     </div>
                 ) : (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
                         {filteredOrders.map(order => {
                             const product = order.product || {}
-                            const isDrmProtected = Boolean(order.unique_password)
                             return (
                                 <div
                                     key={order.id}
@@ -212,11 +263,11 @@ export default function PurchasedItemsPage() {
                                                 width: '3.25rem',
                                                 height: '3.25rem',
                                                 borderRadius: '0.75rem',
-                                                backgroundColor: isDrmProtected ? '#EFF6FF' : '#F0FDF4',
+                                                backgroundColor: '#EFF6FF',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                color: isDrmProtected ? '#2563EB' : '#16A34A',
+                                                color: '#2563EB',
                                                 flexShrink: 0,
                                             }}
                                         >
@@ -224,47 +275,33 @@ export default function PurchasedItemsPage() {
                                         </div>
                                         <div style={{ flex: 1, minWidth: 0 }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.25rem' }}>
-                                                <span style={{ fontSize: '0.625rem', fontWeight: 800, padding: '0.125rem 0.375rem', borderRadius: '0.25rem', backgroundColor: isDrmProtected ? '#DBEAFE' : '#DCFCE7', color: isDrmProtected ? '#1E40AF' : '#166534', textTransform: 'uppercase' }}>
+                                                <span style={{ fontSize: '0.625rem', fontWeight: 800, padding: '0.125rem 0.375rem', borderRadius: '0.25rem', backgroundColor: '#DBEAFE', color: '#1E40AF', textTransform: 'uppercase' }}>
                                                     {product.category || 'PDF Material'}
+                                                </span>
+                                                <span style={{ fontSize: '0.625rem', fontWeight: 800, padding: '0.125rem 0.375rem', borderRadius: '0.25rem', backgroundColor: '#ECFDF5', color: '#059669' }}>
+                                                    ✓ Verified
                                                 </span>
                                             </div>
                                             <h3 style={{ margin: '0 0 0.125rem', fontSize: '0.9375rem', fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                                 {product.title || 'Digital Study Material'}
                                             </h3>
                                             <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
-                                                Purchased on {formatDate(order.created_at)} • {formatNaira(order.amount / 100)}
+                                                Purchased {formatDate(order.created_at)} • {formatNaira(order.amount / 100)}
                                             </p>
                                         </div>
                                     </div>
 
-                                    {/* Password / Access Card */}
-                                    {isDrmProtected ? (
-                                        <div style={{ backgroundColor: '#F8FAFC', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid #E2E8F0' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                                <div>
-                                                    <span style={{ fontSize: '0.625rem', fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Unlock Password:</span>
-                                                    <p style={{ margin: '0.125rem 0 0', fontFamily: 'monospace', fontWeight: 800, fontSize: '0.9375rem', color: '#1E40AF' }}>
-                                                        {order.unique_password}
-                                                    </p>
-                                                </div>
-                                                <button
-                                                    onClick={() => handleCopyPassword(order.id, order.unique_password)}
-                                                    style={{ padding: '0.375rem 0.625rem', borderRadius: '0.375rem', border: '1px solid #BFDBFE', backgroundColor: '#EFF6FF', color: '#2563EB', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-                                                >
-                                                    {copiedId === order.id ? <Check size={12} /> : <Copy size={12} />}
-                                                    {copiedId === order.id ? 'Copied!' : 'Copy'}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div style={{ backgroundColor: '#F0FDF4', padding: '0.625rem 0.75rem', borderRadius: '0.75rem', border: '1px solid #DCFCE7', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                            <span style={{ fontSize: '0.9375rem' }}>🔓</span>
-                                            <div>
-                                                <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, color: '#166534' }}>Open PDF (No Password Required)</p>
-                                                <p style={{ margin: 0, fontSize: '0.625rem', color: '#15803D' }}>Standard unencrypted document</p>
-                                            </div>
-                                        </div>
-                                    )}
+                                    {/* Reference metadata strip */}
+                                    <div style={{ backgroundColor: '#F8FAFC', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.6875rem' }}>
+                                        <span style={{ color: 'var(--color-text-muted)' }}>Ref: <code style={{ color: '#0F172A', fontFamily: 'monospace', fontWeight: 600 }}>{order.paystack_reference}</code></span>
+                                        <button
+                                            onClick={() => handleCopyText(order.id, order.paystack_reference)}
+                                            style={{ background: 'none', border: 'none', color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.6875rem', fontWeight: 700 }}
+                                        >
+                                            {copiedId === order.id ? <Check size={12} /> : <Copy size={12} />}
+                                            <span>{copiedId === order.id ? 'Copied' : 'Copy Ref'}</span>
+                                        </button>
+                                    </div>
 
                                     {/* Download Button */}
                                     <button
@@ -290,12 +327,12 @@ export default function PurchasedItemsPage() {
                                         {downloadingId === order.id ? (
                                             <>
                                                 <Loader2 size={16} className="animate-spin" />
-                                                <span>Preparing PDF Download...</span>
+                                                <span>Personalizing PDF Copy...</span>
                                             </>
                                         ) : (
                                             <>
                                                 <Download size={16} />
-                                                <span>Download PDF Document</span>
+                                                <span>Download Licensed PDF</span>
                                             </>
                                         )}
                                     </button>
@@ -305,6 +342,92 @@ export default function PurchasedItemsPage() {
                     </div>
                 )}
             </div>
+
+            {/* Self-Service Dispute / Claim Modal */}
+            {showClaimModal && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(5px)', padding: '1rem' }}>
+                    <div style={{ backgroundColor: 'white', borderRadius: '1.25rem', width: '100%', maxWidth: '28rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
+                        <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#F8FAFC' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <Sparkles size={18} color="#2563EB" />
+                                <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 800 }}>Claim Missing Purchase</h3>
+                            </div>
+                            <button onClick={() => setShowClaimModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', display: 'flex', color: 'var(--color-text-muted)' }}>
+                                <X size={18} />
+                            </button>
+                        </div>
+
+                        <form onSubmit={handleClaimSubmit} style={{ padding: '1.25rem' }}>
+                            <p style={{ margin: '0 0 1rem', fontSize: '0.75rem', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
+                                If you were debited by your bank or received a Paystack email confirmation but your document isn't appearing, paste the transaction reference below to verify and unlock it.
+                            </p>
+
+                            <div style={{ marginBottom: '1rem' }}>
+                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.375rem', color: '#0F172A' }}>
+                                    Paystack Reference or Transaction ID *
+                                </label>
+                                <input
+                                    type="text"
+                                    value={claimReference}
+                                    onChange={e => setClaimReference(e.target.value)}
+                                    placeholder="e.g. ZKS-1787258553381-P1A807T"
+                                    required
+                                    autoFocus
+                                    style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.5rem', border: '1.5px solid #3B82F6', fontSize: '0.8125rem', fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box' }}
+                                />
+                            </div>
+
+                            {claimError && (
+                                <div style={{ padding: '0.625rem 0.75rem', borderRadius: '0.5rem', backgroundColor: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontSize: '0.75rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                    <AlertCircle size={15} style={{ flexShrink: 0 }} />
+                                    <span>{claimError}</span>
+                                </div>
+                            )}
+
+                            <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => setShowClaimModal(false)}
+                                    style={{ flex: 1, padding: '0.625rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', backgroundColor: 'white', fontWeight: 600, fontSize: '0.8125rem', cursor: 'pointer' }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={claiming || !claimReference.trim()}
+                                    style={{
+                                        flex: 2,
+                                        padding: '0.625rem',
+                                        borderRadius: '0.625rem',
+                                        border: 'none',
+                                        background: claiming ? '#94A3B8' : 'linear-gradient(135deg, #3B82F6, #2563EB)',
+                                        color: 'white',
+                                        fontWeight: 800,
+                                        fontSize: '0.8125rem',
+                                        cursor: claiming ? 'not-allowed' : 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '0.375rem'
+                                    }}
+                                >
+                                    {claiming ? (
+                                        <>
+                                            <Loader2 size={15} className="animate-spin" />
+                                            <span>Verifying with Paystack...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <Sparkles size={15} />
+                                            <span>Verify & Unlock Material</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

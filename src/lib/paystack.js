@@ -195,7 +195,7 @@ export async function createPaystackSubaccount({ userId, businessName, bankCode,
 /**
  * Server-verified Paystack payment status check and instant fulfillment
  */
-export async function verifyPaystackPayment(reference) {
+export async function verifyPaystackPayment(reference, userId = null) {
   if (!reference) return { success: false, error: 'Reference required' };
 
   try {
@@ -206,13 +206,14 @@ export async function verifyPaystackPayment(reference) {
         apikey: SUPABASE_ANON_KEY,
         Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
       },
-      body: JSON.stringify({ reference }),
+      body: JSON.stringify({ reference, user_id: userId }),
     });
 
     const result = await res.json();
     return {
       success: !!result?.verified,
       order: result?.order || null,
+      download_url: result?.download_url || null,
       transaction: result?.transaction || null,
       message: result?.message,
     };
@@ -220,6 +221,17 @@ export async function verifyPaystackPayment(reference) {
     console.warn('Payment verification service fallback:', err);
     return { success: false, error: err.message };
   }
+}
+
+/**
+ * Self-service dispute and payment claiming tool
+ * Validates a Paystack transaction reference and links/fulfills the purchase to the student's account.
+ */
+export async function claimPurchaseByReference(reference, userId) {
+  if (!reference || !reference.trim()) {
+    return { success: false, error: 'Please enter a valid Paystack reference or transaction ID.' };
+  }
+  return await verifyPaystackPayment(reference.trim(), userId);
 }
 
 /**

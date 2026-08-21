@@ -1,5 +1,4 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { PDFDocument, rgb, degrees, StandardFonts } from 'https://esm.sh/pdf-lib@1.17.9?target=deno';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
@@ -20,18 +19,47 @@ Deno.serve(async (req: Request) => {
       console.error('[paystack-webhook] Missing PAYSTACK_SECRET_KEY — rejecting webhook');
       return new Response('Server misconfigured: missing PAYSTACK_SECRET_KEY', { status: 500 });
     }
-    {
-      const expectedSig = await hmacSha512(payload, PAYSTACK_SECRET);
-      if (signature !== expectedSig) {
-        console.warn('Invalid Paystack signature');
-        return new Response('Unauthorized', { status: 401 });
-      }
+
+    const expectedSig = await hmacSha512(payload, PAYSTACK_SECRET);
+    if (signature !== expectedSig) {
+      console.warn('Invalid Paystack webhook signature');
+      return new Response('Unauthorized', { status: 401 });
     }
 
     const event = JSON.parse(payload);
-    if (event.event === 'charge.success') {
-      const reference = event.data.reference;
-      await processAndWatermarkOrder(reference, event.data);
+    const eventType = event?.event;
+    const eventData = event?.data;
+
+    // Handle Charge Success
+    if (eventType === 'charge.success') {
+      const reference = eventData?.reference;
+      if (reference) {
+        await fulfillWebhookOrder(reference, eventData);
+      }
+    }
+
+    // Handle Transfer (Seller Payout) Success / Failed
+    if (eventType === 'transfer.success' || eventType === 'transfer.failed' || eventType === 'transfer.reversed') {
+      const transferCode = eventData?.transfer_code;
+      const transferRef = eventData?.reference;
+      const status = eventType === 'transfer.success' ? 'success' : 'failed';
+      const failureReason = eventData?.reason || (eventType === 'transfer.failed' ? 'Transfer failed at bank' : null);
+
+      if (transferCode || transferRef) {
+        const query = supabase.from('payouts').update({
+          status,
+          failure_reason: failureReason,
+          updated_at: new Date().toISOString(),
+        });
+
+        if (transferCode) {
+          query.eq('transfer_code', transferCode);
+        } else {
+          query.eq('paystack_reference', transferRef);
+        }
+
+        await query;
+      }
     }
 
     return new Response('OK', { status: 200 });
@@ -41,183 +69,68 @@ Deno.serve(async (req: Request) => {
   }
 });
 
-function calculatePaystackFeeAndTotal(amountInKobo: number): { totalToCharge: number; fee: number } {
-  const p = amountInKobo / 100
-  let totalNgn: number
-  const totalIfUnder2500 = p / 0.985
-  if (totalIfUnder2500 < 2500) totalNgn = totalIfUnder2500
-  else totalNgn = (p + 100) / 0.985
-  if (totalNgn - p > 2000) totalNgn = p + 2000
-  const fee = totalNgn - p
-  return { totalToCharge: Math.ceil(totalNgn * 100), fee: Math.ceil(fee * 100) }
-}
-
-async function processAndWatermarkOrder(paystackRef: string, txData?: any) {
+async function fulfillWebhookOrder(paystackRef: string, txData: any) {
   const { data: order } = await supabase
     .from('orders')
     .select('*, product:digital_products(*), buyer:users!buyer_id(*)')
     .eq('paystack_reference', paystackRef)
-    .single();
+    .maybeSingle();
 
-  if (!order || order.status === 'delivered') return;
-
-  // P1: Server-side fee/amount validation — reject tampered webhook payloads
-  if (txData?.amount != null && order.amount != null) {
-    const txAmount = Number(txData.amount)
-    if (Math.abs(txAmount - Number(order.amount)) > 1) {
-      console.error(`[paystack-webhook] Amount mismatch for ${paystackRef}: tx ${txAmount} vs order ${order.amount} — refusing fulfillment`)
-      // Mark as failed for manual review instead of delivering
-      await supabase.from('orders').update({ status: 'amount_mismatch', updated_at: new Date().toISOString() }).eq('id', order.id)
-      return
-    }
-    if (order.seller_settlement) {
-      const expected = calculatePaystackFeeAndTotal(Number(order.seller_settlement))
-      if (Math.abs(txAmount - expected.totalToCharge) > 1 && Math.abs(txAmount - Number(order.amount)) > 1) {
-        console.warn(`[paystack-webhook] Fee recompute mismatch tx ${txAmount} vs expected ${expected.totalToCharge}`)
-      }
-    }
+  if (!order) {
+    console.warn(`[paystack-webhook] Order not found for reference: ${paystackRef}`);
+    return;
   }
 
-  try {
-    const buyerEmail = order.buyer?.email || '';
-    const buyerName = (order.buyer?.displayName || buyerEmail.split('@')[0] || 'UNIZIK STUDENT').replace(/[._-]/g, ' ').toUpperCase();
-    const regNumber = txData?.metadata?.reg_number || 'UNIZIK-STUDENT';
-    const watermarkText = order.watermark_text || `LICENSED TO: ${buyerName} | REG NO: ${regNumber} | ORDER: ${order.id} | UNIZIK SECURE COPY`;
-    const password = order.unique_password || generateSecurePassword(16);
-
-    let finalStoragePath = order.product?.original_storage_path;
-
-    // Download original PDF and apply native PDF-LIB watermarking
-    if (order.product?.original_storage_path) {
-      try {
-        const { data: originalFile } = await supabase
-          .storage
-          .from('digital-originals')
-          .download(order.product.original_storage_path);
-
-        if (originalFile) {
-          const originalBytes = new Uint8Array(await originalFile.arrayBuffer());
-          const pdfDoc = await PDFDocument.load(originalBytes);
-          const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
-          const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
-
-          const pages = pdfDoc.getPages();
-          for (let i = 0; i < pages.length; i++) {
-            const page = pages[i];
-            const { width, height } = page.getSize();
-
-            // 1. Large prominent diagonal watermark in center
-            page.drawText(`UNIZIK LICENSED: ${regNumber}`, {
-              x: width * 0.12,
-              y: height * 0.45,
-              size: Math.min(24, width / 20),
-              font: helveticaBold,
-              color: rgb(0.85, 0.15, 0.15),
-              opacity: 0.20,
-              rotate: degrees(40),
-            });
-
-            page.drawText(buyerName, {
-              x: width * 0.18,
-              y: height * 0.38,
-              size: Math.min(18, width / 24),
-              font: helveticaBold,
-              color: rgb(0.85, 0.15, 0.15),
-              opacity: 0.20,
-              rotate: degrees(40),
-            });
-
-            // 2. Top Anti-Piracy Warning Banner
-            page.drawRectangle({
-              x: 0,
-              y: height - 20,
-              width: width,
-              height: 20,
-              color: rgb(0.98, 0.94, 0.94),
-              opacity: 0.95,
-            });
-            page.drawText(`⚠️ LICENSED TO: ${buyerName} (${regNumber}) • PERSONAL ACADEMIC USE ONLY • REDISTRIBUTION PROHIBITED`, {
-              x: 12,
-              y: height - 14,
-              size: 6.5,
-              font: helveticaBold,
-              color: rgb(0.75, 0.1, 0.1),
-            });
-
-            // 3. Bottom Traceable Security Ribbon
-            page.drawRectangle({
-              x: 0,
-              y: 0,
-              width: width,
-              height: 16,
-              color: rgb(0.95, 0.96, 0.98),
-              opacity: 0.95,
-            });
-            page.drawText(`ZIKSHARE DRM SECURE • ORDER #${order.id.slice(0, 8).toUpperCase()} • PAGE ${i + 1} OF ${pages.length}`, {
-              x: 12,
-              y: 5,
-              size: 6,
-              font: helvetica,
-              color: rgb(0.3, 0.35, 0.4),
-            });
-          }
-
-          const watermarkedBytes = await pdfDoc.save();
-          finalStoragePath = `orders/${order.id}/${order.product_id}_watermarked.pdf`;
-
-          await supabase.storage.from('digital-orders').upload(finalStoragePath, watermarkedBytes, {
-            contentType: 'application/pdf',
-            upsert: true,
-          });
-        }
-      } catch (pdfErr) {
-        console.warn('PDF watermarking warning:', pdfErr);
-      }
+  // If already delivered, just ensure paystack_transaction_id is attached
+  if (order.status === 'delivered') {
+    if (!order.paystack_transaction_id && txData?.id) {
+      await supabase.from('orders').update({
+        paystack_transaction_id: String(txData.id),
+        updated_at: new Date().toISOString(),
+      }).eq('id', order.id);
     }
+    return;
+  }
 
-    const downloadToken = generateSecureToken();
-
+  // Amount integrity check
+  const txAmount = Number(txData?.amount);
+  if (order.amount && txAmount && Math.abs(txAmount - Number(order.amount)) > 1) {
+    console.error(`[paystack-webhook] Amount mismatch for ${paystackRef}: tx ${txAmount} vs order ${order.amount}`);
     await supabase.from('orders').update({
-      status: 'delivered',
-      unique_storage_path: finalStoragePath,
-      unique_password: password,
-      watermark_text: watermarkText,
-      download_token: downloadToken,
-      paystack_transaction_id: txData?.id ? String(txData.id) : order.paystack_transaction_id,
-      download_expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-      updated_at: new Date().toISOString()
+      status: 'amount_mismatch',
+      paystack_transaction_id: String(txData.id),
+      updated_at: new Date().toISOString(),
     }).eq('id', order.id);
-
-  } catch (error) {
-    console.error('Order processing error:', error);
+    return;
   }
-}
 
-function generateSecurePassword(length = 16): string {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%*';
-  let password = '';
-  const randomValues = new Uint8Array(length);
-  crypto.getRandomValues(randomValues);
-  for (let i = 0; i < length; i++) {
-    password += chars[randomValues[i] % chars.length];
-  }
-  return password;
-}
+  const storagePath = order.unique_storage_path || order.product?.original_storage_path;
+  const buyerEmail = order.buyer?.email || txData?.customer?.email || '';
+  const buyerName = (order.buyer?.displayName || txData.metadata?.buyer_name || buyerEmail.split('@')[0] || 'UNIZIK STUDENT').replace(/[._-]/g, ' ').toUpperCase();
+  const regNumber = txData?.metadata?.reg_number || order.watermark_text?.match(/REG NO: ([^|]+)/i)?.[1]?.trim() || 'UNIZIK-STUDENT';
+  const watermarkText = order.watermark_text || `LICENSED TO: ${buyerName} | REG NO: ${regNumber} | ORDER: ${order.id} | UNIZIK SECURE COPY`;
 
-function generateSecureToken(): string {
-  const bytes = new Uint8Array(32);
-  crypto.getRandomValues(bytes);
-  return btoa(String.fromCharCode(...bytes)).replace(/[+/=]/g, '');
+  await supabase.from('orders').update({
+    status: 'delivered',
+    paystack_transaction_id: String(txData.id),
+    unique_storage_path: storagePath,
+    watermark_text: watermarkText,
+    download_expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+    updated_at: new Date().toISOString(),
+  }).eq('id', order.id);
 }
 
 async function hmacSha512(message: string, secret: string): Promise<string> {
   const encoder = new TextEncoder();
   const key = await crypto.subtle.importKey(
-    'raw', encoder.encode(secret),
+    'raw',
+    encoder.encode(secret),
     { name: 'HMAC', hash: 'SHA-512' },
-    false, ['sign']
+    false,
+    ['sign']
   );
   const signature = await crypto.subtle.sign('HMAC', key, encoder.encode(message));
   return Array.from(new Uint8Array(signature))
-    .map(b => b.toString(16).padStart(2, '0')).join('');
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
 }

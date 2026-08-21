@@ -101,37 +101,18 @@ export default function ItemDetailPage() {
         if (!existingOrder) return
         setDownloadingExisting(true)
         try {
-            let activeOrder = existingOrder
-            if (!activeOrder.unique_storage_path || activeOrder.status === 'pending') {
-                activeOrder = await fulfillDigitalOrder(activeOrder)
-                setExistingOrder(activeOrder)
-            }
-
-            const storagePath = activeOrder?.unique_storage_path || activeOrder?.product?.original_storage_path || item?.original_storage_path
+            const storagePath = existingOrder?.unique_storage_path || existingOrder?.product?.original_storage_path || item?.original_storage_path
             const url = await createSignedDownloadUrl(storagePath, 3600)
             if (url) {
                 const buyerName = user?.displayName || session?.user?.user_metadata?.full_name || 'UNIZIK STUDENT'
-                const regNumber = activeOrder?.watermark_text?.match(/REG NO: ([^|]+)/i)?.[1]?.trim() || 'STUDENT'
+                const regNumber = existingOrder?.watermark_text?.match(/REG NO: ([^|]+)/i)?.[1]?.trim() || 'STUDENT'
                 const title = item?.title || 'ZikShare Study Material'
 
-                if (activeOrder?.unique_password && item?.drm_enabled !== false) {
-                    await downloadWatermarkedPdf(url, title, {
-                        buyerName,
-                        regNumber,
-                        orderId: activeOrder?.id
-                    })
-                } else {
-                    const res = await fetch(url)
-                    const blob = await res.blob()
-                    const blobUrl = window.URL.createObjectURL(blob)
-                    const a = document.createElement('a')
-                    a.href = blobUrl
-                    a.download = `${title.replace(/[^a-zA-Z0-9_-]/g, '_')}.pdf`
-                    document.body.appendChild(a)
-                    a.click()
-                    document.body.removeChild(a)
-                    window.URL.revokeObjectURL(blobUrl)
-                }
+                await downloadWatermarkedPdf(url, title, {
+                    buyerName,
+                    regNumber,
+                    orderId: existingOrder?.id
+                })
             } else {
                 alert('Could not generate download link. Please refresh or contact support.')
             }

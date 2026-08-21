@@ -4,7 +4,6 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 const PAYSTACK_SECRET = Deno.env.get('PAYSTACK_SECRET_KEY') || '';
-if (!PAYSTACK_SECRET) console.error('[initiate-seller-payout] Missing PAYSTACK_SECRET_KEY env');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,16 +20,24 @@ serve(async (req) => {
   try {
     const { seller_id, amount_in_naira, reason } = await req.json();
 
-    if (!seller_id || !amount_in_naira || amount_in_naira <= 0) {
+    const numericAmount = Number(amount_in_naira);
+    if (!seller_id || !numericAmount || numericAmount <= 0) {
       return new Response(
-        JSON.stringify({ status: false, message: 'seller_id and valid amount_in_naira are required' }),
+        JSON.stringify({ status: false, message: 'Valid seller_id and positive amount_in_naira are required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!PAYSTACK_SECRET) {
+      return new Response(
+        JSON.stringify({ status: false, message: 'Server configuration error: missing payment secret' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
-    // 1. Fetch seller bank details
+    // 1. Fetch seller profile and bank details
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('*')
@@ -39,7 +46,7 @@ serve(async (req) => {
 
     if (userError || !user) {
       return new Response(
-        JSON.stringify({ status: false, message: 'Seller user account not found' }),
+        JSON.stringify({ status: false, message: 'Seller account not found' }),
         { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -48,15 +55,36 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           status: false,
-          message: 'Seller has not set up a bank account yet. Please add bank details on the Payouts tab.',
+          message: 'Please link and verify your Nigerian bank account on the Payouts tab before withdrawing.',
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    const amountInKobo = Math.round(amount_in_naira * 100);
+    // 2. Ledger Check: Calculate true available balance
+    const [ordersRes, payoutsRes] = await Promise.all([
+      supabase.from('orders').select('seller_settlement, amount, status').eq('seller_id', seller_id).eq('status', 'delivered'),
+      supabase.from('payouts').select('amount_naira, status').eq('seller_id', seller_id).neq('status', 'failed'),
+    ]);
 
-    // 2. Create or retrieve Paystack Transfer Recipient
+    const totalEarnedNaira = (ordersRes.data || []).reduce((sum, o) => sum + ((o.seller_settlement || o.amount || 0) / 100), 0);
+    const totalWithdrawnNaira = (payoutsRes.data || []).reduce((sum, p) => sum + Number(p.amount_naira || 0), 0);
+    const availableBalanceNaira = Math.max(0, totalEarnedNaira - totalWithdrawnNaira);
+
+    if (numericAmount > availableBalanceNaira) {
+      return new Response(
+        JSON.stringify({
+          status: false,
+          message: `Insufficient earnings balance. Available: ₦${availableBalanceNaira.toLocaleString()}, Requested: ₦${numericAmount.toLocaleString()}`,
+        }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const amountInKobo = Math.round(numericAmount * 100);
+    const payoutRef = `PO-${Date.now()}-${Math.random().toString(36).substring(2, 7).toUpperCase()}`;
+
+    // 3. Create or retrieve Paystack Transfer Recipient
     const recipientRes = await fetch('https://api.paystack.co/transferrecipient', {
       method: 'POST',
       headers: {
@@ -80,13 +108,35 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           status: false,
-          message: recipientData?.message || 'Failed to create Paystack transfer recipient',
+          message: recipientData?.message || 'Failed to verify Paystack transfer recipient with bank',
         }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
-    // 3. Initiate Transfer from Paystack Balance
+    // 4. Create pending payout ledger entry
+    const { data: payoutEntry, error: insertError } = await supabase
+      .from('payouts')
+      .insert({
+        seller_id,
+        amount: amountInKobo,
+        amount_naira: numericAmount,
+        bank_name: user.bank_name,
+        bank_code: user.bank_code,
+        account_number: user.account_number,
+        account_name: user.account_name || user.displayName,
+        recipient_code: recipientCode,
+        paystack_reference: payoutRef,
+        status: 'pending',
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error('[initiate-seller-payout] Error creating payout record:', insertError);
+    }
+
+    // 5. Initiate Transfer via Paystack
     const transferRes = await fetch('https://api.paystack.co/transfer', {
       method: 'POST',
       headers: {
@@ -97,6 +147,7 @@ serve(async (req) => {
         source: 'balance',
         amount: amountInKobo,
         recipient: recipientCode,
+        reference: payoutRef,
         reason: reason || `ZikShare Earnings Payout for ${user.displayName || 'Seller'}`,
       }),
     });
@@ -104,6 +155,18 @@ serve(async (req) => {
     const transferResult = await transferRes.json();
 
     if (!transferResult?.status) {
+      // Mark payout entry as failed
+      if (payoutEntry?.id) {
+        await supabase
+          .from('payouts')
+          .update({
+            status: 'failed',
+            failure_reason: transferResult?.message || 'Transfer initiation failed',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', payoutEntry.id);
+      }
+
       return new Response(
         JSON.stringify({
           status: false,
@@ -114,10 +177,22 @@ serve(async (req) => {
       );
     }
 
+    // Update payout entry with transfer code
+    if (payoutEntry?.id) {
+      await supabase
+        .from('payouts')
+        .update({
+          transfer_code: transferResult.data?.transfer_code,
+          status: transferResult.data?.status === 'success' ? 'success' : 'pending',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', payoutEntry.id);
+    }
+
     return new Response(
       JSON.stringify({
         status: true,
-        message: 'Payout transfer initiated successfully! Funds will reflect shortly.',
+        message: 'Payout transfer initiated successfully! Funds will reflect in your bank account shortly.',
         data: transferResult.data,
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -125,7 +200,7 @@ serve(async (req) => {
   } catch (error) {
     console.error('Initiate payout error:', error);
     return new Response(
-      JSON.stringify({ status: false, message: error.message || 'Internal server error' }),
+      JSON.stringify({ status: false, message: error.message || 'Internal server error during payout' }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

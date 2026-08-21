@@ -15,6 +15,7 @@ import {
 } from '../lib/database'
 import { useToast } from '../components/Toast'
 import { invalidateCacheByPrefix } from '../lib/cache'
+import { verifyPaystackPayment } from '../lib/paystack'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount || 0)
@@ -93,6 +94,9 @@ export default function AdminPage() {
     const [listingStatus] = useState('all')
 
     const [orderSearch, setOrderSearch] = useState('')
+    const [orderFilter, setOrderFilter] = useState('all') // 'all' | 'delivered' | 'pending' | 'amount_mismatch'
+    const [disputeRefInput, setDisputeRefInput] = useState('')
+    const [resolvingDispute, setResolvingDispute] = useState(false)
 
     // Broadcast Composer States
     const [broadcastTitle, setBroadcastTitle] = useState('')
@@ -190,6 +194,9 @@ export default function AdminPage() {
     // Filtered Orders
     const filteredOrders = useMemo(() => {
         let list = ordersList
+        if (orderFilter !== 'all') {
+            list = list.filter(o => o.status === orderFilter)
+        }
         if (orderSearch.trim()) {
             const q = orderSearch.toLowerCase().trim()
             list = list.filter(o =>
@@ -201,7 +208,50 @@ export default function AdminPage() {
             )
         }
         return list
-    }, [ordersList, orderSearch])
+    }, [ordersList, orderFilter, orderSearch])
+
+    // Reconcile / Re-Verify Paystack Transaction (Dispute Tool)
+    const handleReverifyOrder = async (reference) => {
+        if (!reference) return
+        setActionLoading(true)
+        try {
+            const res = await verifyPaystackPayment(reference)
+            if (res?.success) {
+                toast.success(res.message || 'Payment verified & order status synced with Paystack! 🎉')
+                await loadAllData(true)
+            } else {
+                toast.error(res?.message || res?.error || 'Paystack check returned unverified/failed status.')
+            }
+        } catch (err) {
+            toast.error('Re-verification failed: ' + err.message)
+        } finally {
+            setActionLoading(false)
+        }
+    }
+
+    const handleDisputeReconcile = async (e) => {
+        e.preventDefault()
+        if (!disputeRefInput.trim()) {
+            toast.error('Please enter a Paystack reference.')
+            return
+        }
+
+        setResolvingDispute(true)
+        try {
+            const res = await verifyPaystackPayment(disputeRefInput.trim())
+            if (res?.success) {
+                toast.success(`✓ Resolved! Order for "${res.order?.product?.title || 'Material'}" confirmed delivered.`)
+                setDisputeRefInput('')
+                await loadAllData(true)
+            } else {
+                toast.error(res?.message || res?.error || 'No successful charge found on Paystack for this reference.')
+            }
+        } catch (err) {
+            toast.error('Dispute lookup failed: ' + err.message)
+        } finally {
+            setResolvingDispute(false)
+        }
+    }
 
     // User Actions
     const handleToggleBan = async (u) => {
@@ -1255,90 +1305,165 @@ export default function AdminPage() {
 
                         {/* ── TAB 5: ORDERS & REVENUE AUDIT ── */}
                         {activeTab === 'orders' && (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                                {/* Search */}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#1E293B', padding: '0.5rem 0.75rem', borderRadius: '0.625rem', border: '1px solid #334155' }}>
-                                    <Search size={15} color="#94A3B8" />
-                                    <input
-                                        type="text"
-                                        placeholder="Search by Paystack ref (ZKS-...), buyer email..."
-                                        value={orderSearch}
-                                        onChange={e => setOrderSearch(e.target.value)}
-                                        style={{ flex: 1, border: 'none', outline: 'none', backgroundColor: 'transparent', color: 'white', fontSize: '0.75rem', fontFamily: 'inherit' }}
-                                    />
-                                    {orderSearch && (
-                                        <button onClick={() => setOrderSearch('')} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: 0, fontSize: '0.75rem' }}>✕</button>
-                                    )}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
+                                {/* Dispute Resolution & Reference Lookup Bar */}
+                                <form onSubmit={handleDisputeReconcile} style={{ backgroundColor: '#1E293B', padding: '0.875rem', borderRadius: '0.75rem', border: '1px solid #3B82F6', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                        <Sparkles size={16} color="#60A5FA" />
+                                        <h4 style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 800, color: 'white' }}>Paystack Dispute Lookup & Instant Reconciliation</h4>
+                                    </div>
+                                    <p style={{ margin: 0, fontSize: '0.6875rem', color: '#94A3B8' }}>
+                                        Enter any Paystack transaction reference (e.g. <code>ZKS-...</code>) to check Paystack live status, verify payment amount, and deliver the material.
+                                    </p>
+                                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                        <input
+                                            type="text"
+                                            placeholder="Paste Paystack reference here..."
+                                            value={disputeRefInput}
+                                            onChange={e => setDisputeRefInput(e.target.value)}
+                                            style={{ flex: 1, padding: '0.5rem 0.75rem', backgroundColor: '#0F172A', border: '1px solid #334155', borderRadius: '0.5rem', color: 'white', fontSize: '0.75rem', fontFamily: 'monospace', outline: 'none' }}
+                                        />
+                                        <button
+                                            type="submit"
+                                            disabled={resolvingDispute || !disputeRefInput.trim()}
+                                            style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontWeight: 800, fontSize: '0.75rem', cursor: resolvingDispute ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '0.375rem', whiteSpace: 'nowrap' }}
+                                        >
+                                            {resolvingDispute ? <RefreshCw size={13} className="animate-spin" /> : <Shield size={13} />}
+                                            <span>{resolvingDispute ? 'Checking...' : 'Reconcile'}</span>
+                                        </button>
+                                    </div>
+                                </form>
+
+                                {/* Search and Status Filter Strip */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', backgroundColor: '#1E293B', padding: '0.5rem 0.75rem', borderRadius: '0.625rem', border: '1px solid #334155' }}>
+                                        <Search size={15} color="#94A3B8" />
+                                        <input
+                                            type="text"
+                                            placeholder="Search orders by ref, buyer, title..."
+                                            value={orderSearch}
+                                            onChange={e => setOrderSearch(e.target.value)}
+                                            style={{ flex: 1, border: 'none', outline: 'none', backgroundColor: 'transparent', color: 'white', fontSize: '0.75rem', fontFamily: 'inherit' }}
+                                        />
+                                        {orderSearch && (
+                                            <button onClick={() => setOrderSearch('')} style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: 0, fontSize: '0.75rem' }}>✕</button>
+                                        )}
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: '0.375rem', overflowX: 'auto', paddingBottom: '0.25rem' }}>
+                                        {[
+                                            { key: 'all', label: `All (${ordersList.length})` },
+                                            { key: 'delivered', label: `Delivered (${ordersList.filter(o => o.status === 'delivered').length})` },
+                                            { key: 'pending', label: `Pending (${ordersList.filter(o => o.status === 'pending').length})` },
+                                            { key: 'amount_mismatch', label: `Amount Mismatch (${ordersList.filter(o => o.status === 'amount_mismatch').length})` },
+                                        ].map(f => (
+                                            <button
+                                                key={f.key}
+                                                onClick={() => setOrderFilter(f.key)}
+                                                style={{
+                                                    padding: '0.25rem 0.625rem',
+                                                    borderRadius: '9999px',
+                                                    border: `1px solid ${orderFilter === f.key ? '#3B82F6' : '#334155'}`,
+                                                    backgroundColor: orderFilter === f.key ? '#1E3A8A' : '#1E293B',
+                                                    color: orderFilter === f.key ? '#93C5FD' : '#94A3B8',
+                                                    fontSize: '0.6875rem',
+                                                    fontWeight: 700,
+                                                    cursor: 'pointer',
+                                                    whiteSpace: 'nowrap'
+                                                }}
+                                            >
+                                                {f.label}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
 
                                 {/* Order Cards */}
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.625rem' }}>
-                                    {filteredOrders.map(order => (
-                                        <div
-                                            key={order.id}
-                                            style={{
-                                                backgroundColor: '#1E293B',
-                                                border: '1px solid #334155',
-                                                borderRadius: '0.75rem',
-                                                padding: '0.875rem',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                gap: '0.5rem'
-                                            }}
-                                        >
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
-                                                <div style={{ minWidth: 0, flex: 1 }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                                        <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: '#38BDF8', fontFamily: 'monospace' }}>
-                                                            {order.paystack_reference}
-                                                        </span>
-                                                        <button
-                                                            onClick={() => handleCopyText(order.paystack_reference, order.id + '_ref')}
-                                                            style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: 0 }}
-                                                        >
-                                                            {copiedRef === order.id + '_ref' ? <Check size={11} color="#34D399" /> : <Copy size={11} />}
-                                                        </button>
-                                                    </div>
-                                                    <h4 style={{ margin: '0.2rem 0 0', fontSize: '0.875rem', fontWeight: 800, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                        {order.product?.title || 'Study Material'}
-                                                    </h4>
-                                                </div>
-                                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                                    <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 900, color: '#34D399' }}>
-                                                        {formatNaira(order.amount / 100)}
-                                                    </p>
-                                                    <p style={{ margin: 0, fontSize: '0.5625rem', color: '#94A3B8' }}>
-                                                        Fee: {formatNaira(order.platform_fee / 100)}
-                                                    </p>
-                                                </div>
-                                            </div>
-
-                                            <div style={{ backgroundColor: '#0F172A', padding: '0.5rem 0.625rem', borderRadius: '0.5rem', fontSize: '0.625rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <span style={{ color: '#64748B' }}>Buyer:</span>
-                                                    <span style={{ color: '#E2E8F0', fontWeight: 600 }}>{order.buyer?.displayName || 'Student'} ({order.buyer?.email || 'N/A'})</span>
-                                                </div>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <span style={{ color: '#64748B' }}>Seller:</span>
-                                                    <span style={{ color: '#E2E8F0', fontWeight: 600 }}>{order.seller?.displayName || 'Seller'}</span>
-                                                </div>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                    <span style={{ color: '#64748B' }}>Date:</span>
-                                                    <span style={{ color: '#E2E8F0' }}>{formatDate(order.created_at)}</span>
-                                                </div>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <span style={{ color: '#64748B' }}>Password:</span>
-                                                    <code style={{ color: '#60A5FA', fontWeight: 800 }}>{order.unique_password || 'None (Open PDF)'}</code>
-                                                </div>
-                                            </div>
-
-                                            {order.watermark_text && (
-                                                <div style={{ fontSize: '0.5625rem', color: '#94A3B8', backgroundColor: '#111827', padding: '0.35rem 0.5rem', borderRadius: '0.375rem', fontFamily: 'monospace', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                    🛡️ {order.watermark_text}
-                                                </div>
-                                            )}
+                                    {filteredOrders.length === 0 ? (
+                                        <div style={{ padding: '2rem', textAlign: 'center', backgroundColor: '#1E293B', borderRadius: '0.75rem', color: '#94A3B8', fontSize: '0.8125rem' }}>
+                                            No orders match your filter criteria.
                                         </div>
-                                    ))}
+                                    ) : filteredOrders.map(order => {
+                                        const isDelivered = order.status === 'delivered'
+                                        const isMismatch = order.status === 'amount_mismatch'
+                                        return (
+                                            <div
+                                                key={order.id}
+                                                style={{
+                                                    backgroundColor: '#1E293B',
+                                                    border: `1px solid ${isMismatch ? '#EF4444' : isDelivered ? '#334155' : '#F59E0B'}`,
+                                                    borderRadius: '0.75rem',
+                                                    padding: '0.875rem',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    gap: '0.5rem'
+                                                }}
+                                            >
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '0.5rem' }}>
+                                                    <div style={{ minWidth: 0, flex: 1 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.125rem' }}>
+                                                            <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: '#38BDF8', fontFamily: 'monospace' }}>
+                                                                {order.paystack_reference}
+                                                            </span>
+                                                            <button
+                                                                onClick={() => handleCopyText(order.paystack_reference, order.id + '_ref')}
+                                                                style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: 0 }}
+                                                            >
+                                                                {copiedRef === order.id + '_ref' ? <Check size={11} color="#34D399" /> : <Copy size={11} />}
+                                                            </button>
+                                                            <span style={{ fontSize: '0.5625rem', fontWeight: 800, padding: '0.125rem 0.375rem', borderRadius: '0.25rem', backgroundColor: isDelivered ? '#064E3B' : isMismatch ? '#7F1D1D' : '#78350F', color: isDelivered ? '#6EE7B7' : isMismatch ? '#FCA5A5' : '#FCD34D', textTransform: 'uppercase' }}>
+                                                                {order.status}
+                                                            </span>
+                                                        </div>
+                                                        <h4 style={{ margin: '0.2rem 0 0', fontSize: '0.875rem', fontWeight: 800, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                            {order.product?.title || 'Study Material'}
+                                                        </h4>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                                        <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 900, color: '#34D399' }}>
+                                                            {formatNaira(order.amount / 100)}
+                                                        </p>
+                                                        <p style={{ margin: 0, fontSize: '0.5625rem', color: '#94A3B8' }}>
+                                                            Fee: {formatNaira(order.platform_fee / 100)}
+                                                        </p>
+                                                    </div>
+                                                </div>
+
+                                                <div style={{ backgroundColor: '#0F172A', padding: '0.5rem 0.625rem', borderRadius: '0.5rem', fontSize: '0.625rem', display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <span style={{ color: '#64748B' }}>Buyer:</span>
+                                                        <span style={{ color: '#E2E8F0', fontWeight: 600 }}>{order.buyer?.displayName || 'Student'} ({order.buyer?.email || 'N/A'})</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <span style={{ color: '#64748B' }}>Seller:</span>
+                                                        <span style={{ color: '#E2E8F0', fontWeight: 600 }}>{order.seller?.displayName || 'Seller'}</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                        <span style={{ color: '#64748B' }}>Date:</span>
+                                                        <span style={{ color: '#E2E8F0' }}>{formatDate(order.created_at)}</span>
+                                                    </div>
+                                                    {order.paystack_transaction_id && (
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                                            <span style={{ color: '#64748B' }}>Paystack TX ID:</span>
+                                                            <span style={{ color: '#38BDF8', fontFamily: 'monospace' }}>{order.paystack_transaction_id}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                <div style={{ display: 'flex', gap: '0.375rem', marginTop: '0.25rem' }}>
+                                                    <button
+                                                        onClick={() => handleReverifyOrder(order.paystack_reference)}
+                                                        disabled={actionLoading}
+                                                        style={{ flex: 1, padding: '0.375rem', borderRadius: '0.375rem', border: '1px solid #3B82F6', backgroundColor: '#1E3A8A', color: '#93C5FD', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.25rem' }}
+                                                    >
+                                                        <RefreshCw size={11} />
+                                                        <span>Re-Verify Paystack</span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                             </div>
                         )}

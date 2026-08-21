@@ -3,7 +3,7 @@ import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, Ch
 import { useState, useEffect } from 'react'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListing, getUserPurchaseForProduct, fulfillDigitalOrder, createSignedDownloadUrl } from '../lib/database'
-import { downloadWatermarkedPdf } from '../lib/pdfWatermark'
+import { downloadWatermarkedPdf, getDrmPassword } from '../lib/pdfWatermark'
 import PaystackCheckout from '../components/PaystackCheckout'
 import { isSaved as checkSaved, toggleSaved } from '../lib/savedItems'
 import { getOrCreateConversation } from '../lib/messaging'
@@ -107,11 +107,13 @@ export default function ItemDetailPage() {
                 const buyerName = user?.displayName || session?.user?.user_metadata?.full_name || 'UNIZIK STUDENT'
                 const regNumber = existingOrder?.watermark_text?.match(/REG NO: ([^|]+)/i)?.[1]?.trim() || 'STUDENT'
                 const title = item?.title || 'ZikShare Study Material'
+                const drmPassword = getDrmPassword(existingOrder, user)
 
                 await downloadWatermarkedPdf(url, title, {
                     buyerName,
                     regNumber,
-                    orderId: existingOrder?.id
+                    orderId: existingOrder?.id,
+                    password: drmPassword
                 })
             } else {
                 alert('Could not generate download link. Please refresh or contact support.')
@@ -185,7 +187,6 @@ export default function ItemDetailPage() {
 
     return (
         <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-background)', paddingBottom: '5.5rem', maxWidth: '42rem', margin: '0 auto' }}>
-            {/* Image Carousel / Banner */}
             <div style={{ position: 'relative' }}>
                 <div style={{ width: '100%', height: '300px', backgroundColor: placeholderColors[currentImage % placeholderColors.length], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem', overflow: 'hidden' }}>
                     {images[currentImage] ? (
@@ -198,7 +199,6 @@ export default function ItemDetailPage() {
                     ) : '📦'}
                 </div>
 
-                {/* Top navigation overlay */}
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', background: 'linear-gradient(to bottom, rgba(0,0,0,0.25), transparent)' }}>
                     <button onClick={() => navigate(-1)} style={{ width: '2.25rem', height: '2.25rem', borderRadius: '9999px', backgroundColor: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
                         <ArrowLeft size={18} />
@@ -213,14 +213,12 @@ export default function ItemDetailPage() {
                     </div>
                 </div>
 
-                {/* Photo count */}
                 {images.length > 1 && (
                     <div style={{ position: 'absolute', bottom: '0.75rem', right: '0.75rem', padding: '0.25rem 0.625rem', borderRadius: '9999px', backgroundColor: 'rgba(0,0,0,0.6)', color: 'white', fontSize: '0.6875rem', fontWeight: 600 }}>
                         📷 {currentImage + 1}/{images.length}
                     </div>
                 )}
 
-                {/* Dots */}
                 {images.length > 1 && (
                     <div style={{ position: 'absolute', bottom: '0.75rem', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '0.375rem' }}>
                         {images.map((_, i) => (
@@ -229,7 +227,6 @@ export default function ItemDetailPage() {
                     </div>
                 )}
 
-                {/* Arrows */}
                 {currentImage > 0 && (
                     <button onClick={() => setCurrentImage(currentImage - 1)} style={{ position: 'absolute', left: '0.5rem', top: '50%', transform: 'translateY(-50%)', width: '2rem', height: '2rem', borderRadius: '9999px', backgroundColor: 'rgba(255,255,255,0.8)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                         <ChevronLeft size={16} />
@@ -242,7 +239,6 @@ export default function ItemDetailPage() {
                 )}
             </div>
 
-            {/* Price & Title Card */}
             <div style={{ padding: '1rem', backgroundColor: 'white', borderRadius: '1rem 1rem 0 0', marginTop: '-0.75rem', position: 'relative' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.6875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
                     <MapPin size={12} />
@@ -259,7 +255,6 @@ export default function ItemDetailPage() {
                     <span className={`condition-badge ${condClass[item.condition] || 'condition-like-new'}`}>{item.condition || 'Available'}</span>
                 </div>
 
-                {/* Action Buttons */}
                 {!isOwnListing && (
                     item.isDigital ? (
                         <div style={{ marginBottom: '0.5rem' }}>
@@ -278,13 +273,13 @@ export default function ItemDetailPage() {
                                         You previously purchased this study material on {formatDate(existingOrder.created_at)}. Your unlocked PDF is ready to download.
                                     </p>
 
-                                    {existingOrder.unique_password && (
+                                    {item.drm_enabled !== false && (
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px dashed #10B981', marginBottom: '0.75rem' }}>
                                             <span style={{ fontSize: '0.75rem', color: '#065F46', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                                 <Lock size={13} color="#10B981" /> PDF Password:
                                             </span>
                                             <code style={{ fontSize: '0.875rem', fontWeight: 800, color: '#1E40AF', fontFamily: 'monospace' }}>
-                                                {existingOrder.unique_password}
+                                                {getDrmPassword(existingOrder, user)}
                                             </code>
                                         </div>
                                     )}

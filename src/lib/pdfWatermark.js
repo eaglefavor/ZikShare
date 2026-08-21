@@ -1,52 +1,51 @@
+import { PDFDocument, rgb, degrees, StandardFonts } from 'pdf-lib';
+import { encryptPDF } from '@pdfsmaller/pdf-encrypt';
+
 /**
- * Dynamic Client-Side Watermarking Engine for ZikShare
- * Embeds unremovable visual DRM watermarks & student identification ribbons
- * onto every page of purchased PDFs before download.
+ * Dynamic Client-Side DRM & Watermarking Engine for ZikShare
+ * 1. Embeds unremovable visual DRM watermarks & student identification ribbons onto every page.
+ * 2. Encrypts the PDF with AES password protection so only the purchasing student can open it.
  */
 
-let pdfLibPromise = null;
+/**
+ * Derives a clean, consistent DRM password for an order/user.
+ * Preference: order.unique_password -> reg_number -> phone -> order_id -> 'UNIZIK-STUDENT'
+ */
+export function getDrmPassword(order = {}, user = {}) {
+  if (order?.unique_password) return String(order.unique_password).trim();
 
-export async function loadPdfLib() {
-  if (window.PDFLib) return window.PDFLib;
-  if (pdfLibPromise) return pdfLibPromise;
+  // Try extracting from watermark_text
+  const regMatch = order?.watermark_text?.match(/REG NO: ([^|]+)/i);
+  if (regMatch && regMatch[1] && regMatch[1].trim() && regMatch[1].trim() !== 'STUDENT' && regMatch[1].trim() !== 'UNIZIK-STUDENT') {
+    return regMatch[1].trim();
+  }
 
-  pdfLibPromise = new Promise((resolve, reject) => {
-    if (window.PDFLib) {
-      resolve(window.PDFLib);
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.9/pdf-lib.min.js';
-    script.crossOrigin = 'anonymous';
-    script.onload = () => {
-      if (window.PDFLib) resolve(window.PDFLib);
-      else reject(new Error('PDFLib failed to initialize'));
-    };
-    script.onerror = () => {
-      // Fallback CDN
-      const fallback = document.createElement('script');
-      fallback.src = 'https://unpkg.com/pdf-lib@1.17.9/dist/pdf-lib.min.js';
-      fallback.onload = () => resolve(window.PDFLib);
-      fallback.onerror = (_e) => reject(new Error('Failed to load PDF watermark library'));
-      document.head.appendChild(fallback);
-    };
-    document.head.appendChild(script);
-  });
+  // Try user registration number / phone
+  if (user?.regNumber || user?.reg_number) return String(user.regNumber || user.reg_number).trim();
+  if (user?.phoneNumber || user?.phone_number) return String(user.phoneNumber || user.phone_number).trim();
+  if (user?.displayName) return String(user.displayName).replace(/\s+/g, '').toUpperCase();
 
-  return pdfLibPromise;
+  // Fallback to order ID prefix or reference
+  if (order?.id) return `ZKS-${String(order.id).slice(0, 8).toUpperCase()}`;
+  if (order?.paystack_reference) return String(order.paystack_reference).trim();
+
+  return 'UNIZIK2025';
 }
 
 /**
- * Watermarks a PDF buffer with student name, registration number, and anti-piracy ribbons.
+ * Watermarks and encrypts a PDF buffer with student credentials and DRM lock.
  * @param {ArrayBuffer|Uint8Array} pdfBytes - Original PDF binary data
- * @param {Object} metadata - Buyer name, reg number, order ID
- * @returns {Promise<Uint8Array>} Watermarked PDF bytes
+ * @param {Object} metadata - Buyer name, reg number, order ID, password, drmEnabled
+ * @returns {Promise<Uint8Array>} Watermarked and encrypted PDF bytes
  */
-export async function watermarkPdfBytes(pdfBytes, { buyerName, regNumber, orderId }) {
+export async function watermarkAndEncryptPdf(pdfBytes, {
+  buyerName,
+  regNumber,
+  orderId,
+  password,
+  drmEnabled = true,
+}) {
   try {
-    const PDFLib = await loadPdfLib();
-    const { PDFDocument, rgb, degrees, StandardFonts } = PDFLib;
-
     const pdfDoc = await PDFDocument.load(pdfBytes, { ignoreEncryption: true });
     const helveticaBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
     const helvetica = await pdfDoc.embedFont(StandardFonts.Helvetica);
@@ -119,40 +118,39 @@ export async function watermarkPdfBytes(pdfBytes, { buyerName, regNumber, orderI
       });
     }
 
-    const watermarkedPdf = await pdfDoc.save();
-    return watermarkedPdf;
+    const watermarkedBytes = await pdfDoc.save();
+
+    // 4. DRM Password Encryption
+    if (drmEnabled !== false && password) {
+      const encryptedBytes = await encryptPDF(watermarkedBytes, String(password));
+      return encryptedBytes;
+    }
+
+    return watermarkedBytes;
   } catch (err) {
-    console.warn('Client-side watermarking warning:', err);
-    // If watermarking encounters any issue, return original bytes safely
+    console.warn('PDF watermarking / encryption error:', err);
+    // If anything fails in processing, attempt direct encryption or return original
+    if (password && drmEnabled !== false) {
+      try {
+        return await encryptPDF(new Uint8Array(pdfBytes), String(password));
+      } catch (encErr) {
+        console.error('Direct fallback encryption error:', encErr);
+      }
+    }
     return pdfBytes;
   }
 }
 
 /**
- * Downloads a watermarked PDF directly to the user's browser / phone device.
+ * Downloads a DRM-protected & watermarked PDF directly to the student's device.
  */
-export async function downloadWatermarkedPdf(signedPdfUrl, filename, metadata) {
+export async function downloadWatermarkedPdf(signedPdfUrl, filename, metadata = {}) {
   const response = await fetch(signedPdfUrl);
   if (!response.ok) throw new Error('Could not download file from storage');
 
   const originalBuffer = await response.arrayBuffer();
-  
-  // Check if buffer is already a password-encrypted protected PDF
-  const bufferSlice = new Uint8Array(originalBuffer.slice(0, Math.min(originalBuffer.byteLength, 8192)));
-  const tailSlice = new Uint8Array(originalBuffer.slice(Math.max(0, originalBuffer.byteLength - 8192)));
-  const headerStr = new TextDecoder('latin1').decode(bufferSlice);
-  const tailStr = new TextDecoder('latin1').decode(tailSlice);
-  
-  const isAlreadyEncrypted = headerStr.includes('/Encrypt') || tailStr.includes('/Encrypt');
-  
-  let finalBytes;
-  if (isAlreadyEncrypted) {
-    // Preserve the encrypted & watermarked binary payload exactly as generated
-    finalBytes = originalBuffer;
-  } else {
-    // Dynamically apply watermark for legacy unencrypted uploads
-    finalBytes = await watermarkPdfBytes(originalBuffer, metadata);
-  }
+
+  const finalBytes = await watermarkAndEncryptPdf(originalBuffer, metadata);
 
   const blob = new Blob([finalBytes], { type: 'application/pdf' });
   const blobUrl = URL.createObjectURL(blob);

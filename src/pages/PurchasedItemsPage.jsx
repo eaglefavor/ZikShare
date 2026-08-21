@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, FileText, Download, Loader2, Search, X, Check, Copy, HelpCircle, Sparkles, RefreshCw, AlertCircle } from 'lucide-react'
+import { ArrowLeft, FileText, Download, Loader2, Search, X, Check, Copy, HelpCircle, Sparkles, RefreshCw, AlertCircle, Key } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getBuyerOrders, createSignedDownloadUrl } from '../lib/database'
 import { claimPurchaseByReference } from '../lib/paystack'
-import { downloadWatermarkedPdf } from '../lib/pdfWatermark'
+import { downloadWatermarkedPdf, getDrmPassword } from '../lib/pdfWatermark'
 import { useToast } from '../components/Toast'
 
 function formatNaira(amount) {
@@ -80,13 +80,17 @@ export default function PurchasedItemsPage() {
                 const buyerName = user?.displayName || session?.user?.user_metadata?.full_name || 'UNIZIK STUDENT'
                 const regNumber = order?.watermark_text?.match(/REG NO: ([^|]+)/i)?.[1]?.trim() || 'STUDENT'
                 const title = order?.product?.title || 'ZikShare Study Material'
+                const isDrmProtected = order?.product?.drm_enabled !== false
+                const drmPassword = getDrmPassword(order, user)
 
                 await downloadWatermarkedPdf(url, title, {
                     buyerName,
                     regNumber,
-                    orderId: order?.id
+                    orderId: order?.id,
+                    password: drmPassword,
+                    drmEnabled: isDrmProtected,
                 })
-                toast.success('Personalized study material downloaded! 🚀')
+                toast.success('DRM-protected study material downloaded! 🚀')
             } else {
                 toast.error('Could not generate download link. Please refresh.')
             }
@@ -243,6 +247,8 @@ export default function PurchasedItemsPage() {
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
                         {filteredOrders.map(order => {
                             const product = order.product || {}
+                            const isDrm = product.drm_enabled !== false
+                            const orderPassword = getDrmPassword(order, user)
                             return (
                                 <div
                                     key={order.id}
@@ -263,11 +269,11 @@ export default function PurchasedItemsPage() {
                                                 width: '3.25rem',
                                                 height: '3.25rem',
                                                 borderRadius: '0.75rem',
-                                                backgroundColor: '#EFF6FF',
+                                                backgroundColor: isDrm ? '#FEF3C7' : '#EFF6FF',
                                                 display: 'flex',
                                                 alignItems: 'center',
                                                 justifyContent: 'center',
-                                                color: '#2563EB',
+                                                color: isDrm ? '#B45309' : '#2563EB',
                                                 flexShrink: 0,
                                             }}
                                         >
@@ -278,8 +284,8 @@ export default function PurchasedItemsPage() {
                                                 <span style={{ fontSize: '0.625rem', fontWeight: 800, padding: '0.125rem 0.375rem', borderRadius: '0.25rem', backgroundColor: '#DBEAFE', color: '#1E40AF', textTransform: 'uppercase' }}>
                                                     {product.category || 'PDF Material'}
                                                 </span>
-                                                <span style={{ fontSize: '0.625rem', fontWeight: 800, padding: '0.125rem 0.375rem', borderRadius: '0.25rem', backgroundColor: '#ECFDF5', color: '#059669' }}>
-                                                    ✓ Verified
+                                                <span style={{ fontSize: '0.625rem', fontWeight: 800, padding: '0.125rem 0.375rem', borderRadius: '0.25rem', backgroundColor: isDrm ? '#FEF3C7' : '#ECFDF5', color: isDrm ? '#B45309' : '#059669' }}>
+                                                    {isDrm ? '🛡️ DRM Locked' : '✓ Verified'}
                                                 </span>
                                             </div>
                                             <h3 style={{ margin: '0 0 0.125rem', fontSize: '0.9375rem', fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -290,6 +296,23 @@ export default function PurchasedItemsPage() {
                                             </p>
                                         </div>
                                     </div>
+
+                                    {/* DRM Password Box */}
+                                    {isDrm && (
+                                        <div style={{ backgroundColor: '#FEF3C7', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px dashed #F59E0B', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.6875rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: '#92400E' }}>
+                                                <Key size={13} color="#B45309" />
+                                                <span>Open Password: <strong style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#B45309' }}>{orderPassword}</strong></span>
+                                            </div>
+                                            <button
+                                                onClick={() => handleCopyText(`pwd-${order.id}`, orderPassword)}
+                                                style={{ background: 'none', border: 'none', color: '#B45309', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.6875rem', fontWeight: 700 }}
+                                            >
+                                                {copiedId === `pwd-${order.id}` ? <Check size={12} /> : <Copy size={12} />}
+                                                <span>{copiedId === `pwd-${order.id}` ? 'Copied' : 'Copy'}</span>
+                                            </button>
+                                        </div>
+                                    )}
 
                                     {/* Reference metadata strip */}
                                     <div style={{ backgroundColor: '#F8FAFC', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.6875rem' }}>
@@ -327,12 +350,12 @@ export default function PurchasedItemsPage() {
                                         {downloadingId === order.id ? (
                                             <>
                                                 <Loader2 size={16} className="animate-spin" />
-                                                <span>Personalizing PDF Copy...</span>
+                                                <span>Encrypting & Personalizing PDF...</span>
                                             </>
                                         ) : (
                                             <>
                                                 <Download size={16} />
-                                                <span>Download Licensed PDF</span>
+                                                <span>{isDrm ? 'Download DRM-Locked PDF' : 'Download Licensed PDF'}</span>
                                             </>
                                         )}
                                     </button>

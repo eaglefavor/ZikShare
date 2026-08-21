@@ -1,9 +1,9 @@
 import { useEffect, useState, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { ShieldAlert, CheckCircle2, Lock, ArrowRight, FileText, Loader2, Sparkles, RefreshCw, AlertTriangle } from 'lucide-react';
+import { ShieldAlert, CheckCircle2, Lock, ArrowRight, FileText, Loader2, Sparkles, RefreshCw, AlertTriangle, Key, Copy, Check } from 'lucide-react';
 import { getOrder, createSignedDownloadUrl } from '../lib/database';
 import { verifyPaystackPayment } from '../lib/paystack';
-import { downloadWatermarkedPdf } from '../lib/pdfWatermark';
+import { downloadWatermarkedPdf, getDrmPassword } from '../lib/pdfWatermark';
 
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -13,6 +13,7 @@ const PaymentSuccess = () => {
   const [directDownloadUrl, setDirectDownloadUrl] = useState(null);
   const [downloading, setDownloading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [copiedPassword, setCopiedPassword] = useState(false);
   const isVerifyingRef = useRef(false);
   const navigate = useNavigate();
 
@@ -95,6 +96,15 @@ const PaymentSuccess = () => {
     }
   };
 
+  const isDrmProtected = order?.product?.drm_enabled !== false;
+  const drmPassword = getDrmPassword(order);
+
+  const handleCopyPassword = () => {
+    navigator.clipboard.writeText(drmPassword);
+    setCopiedPassword(true);
+    setTimeout(() => setCopiedPassword(false), 2500);
+  };
+
   const handleDownloadPdf = async () => {
     const storagePath = order?.unique_storage_path || order?.product?.original_storage_path;
     if (!storagePath && !directDownloadUrl) {
@@ -118,6 +128,8 @@ const PaymentSuccess = () => {
           buyerName,
           regNumber,
           orderId: order?.id,
+          password: drmPassword,
+          drmEnabled: isDrmProtected,
         });
       } else {
         alert('Could not generate secure download link. Please click Re-Check Payment.');
@@ -188,6 +200,46 @@ const PaymentSuccess = () => {
           Your licensed study material is ready for download.
         </p>
 
+        {/* DRM PASSWORD BOX */}
+        {isDrmProtected && (
+          <div style={{ backgroundColor: '#FEF3C7', border: '2px solid #F59E0B', borderRadius: '0.875rem', padding: '1rem 1.125rem', marginBottom: '1.25rem' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                <Key size={18} color="#B45309" />
+                <span style={{ fontSize: '0.8125rem', fontWeight: 800, color: '#92400E', textTransform: 'uppercase' }}>PDF Open Password</span>
+              </div>
+              <button
+                onClick={handleCopyPassword}
+                style={{
+                  background: 'none',
+                  border: '1px solid #D97706',
+                  borderRadius: '0.375rem',
+                  padding: '0.2rem 0.5rem',
+                  color: '#92400E',
+                  fontSize: '0.6875rem',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.25rem',
+                  backgroundColor: '#FFFBEB'
+                }}
+              >
+                {copiedPassword ? <Check size={12} /> : <Copy size={12} />}
+                <span>{copiedPassword ? 'Copied!' : 'Copy'}</span>
+              </button>
+            </div>
+            <div style={{ backgroundColor: 'white', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px dashed #F59E0B', textAlign: 'center', marginBottom: '0.5rem' }}>
+              <span style={{ fontSize: '1.125rem', fontWeight: 900, fontFamily: 'monospace', color: '#B45309', letterSpacing: '0.08em' }}>
+                {drmPassword}
+              </span>
+            </div>
+            <p style={{ margin: 0, fontSize: '0.6875rem', color: '#78350F', lineHeight: 1.3 }}>
+              Enter this password when opening the file in Adobe Acrobat, WPS Office, Chrome, or your phone PDF reader.
+            </p>
+          </div>
+        )}
+
         {/* BOLD ANTI-PIRACY & WATERMARK NOTICE */}
         <div style={{ backgroundColor: '#FEF2F2', padding: '1.125rem', borderRadius: '0.875rem', border: '2px solid #DC2626', marginBottom: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
@@ -215,8 +267,10 @@ const PaymentSuccess = () => {
             <span style={{ fontSize: '0.6875rem', fontFamily: 'monospace', color: '#2563EB', fontWeight: 700 }}>{order?.paystack_reference || reference}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>License Status:</span>
-            <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: '#059669', backgroundColor: '#ECFDF5', padding: '0.125rem 0.375rem', borderRadius: '0.25rem' }}>✓ Active & Verified</span>
+            <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Security Mode:</span>
+            <span style={{ fontSize: '0.6875rem', fontWeight: 800, color: isDrmProtected ? '#B45309' : '#059669', backgroundColor: isDrmProtected ? '#FEF3C7' : '#ECFDF5', padding: '0.125rem 0.375rem', borderRadius: '0.25rem' }}>
+              {isDrmProtected ? '🛡️ AES Password Locked' : '✓ Open Licensed Copy'}
+            </span>
           </div>
         </div>
 
@@ -245,7 +299,7 @@ const PaymentSuccess = () => {
             }}
           >
             {downloading ? <Loader2 size={18} className="animate-spin" /> : <FileText size={18} />}
-            <span>{downloading ? 'Preparing Personalized Copy...' : 'Download Study Material PDF'}</span>
+            <span>{downloading ? 'Encrypting & Personalizing PDF...' : 'Download DRM-Protected PDF'}</span>
           </button>
 
           <button

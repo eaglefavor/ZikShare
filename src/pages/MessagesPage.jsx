@@ -1,10 +1,11 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MessageCircle, Loader2, Shield, Check, Sparkles, Pin } from 'lucide-react'
+import { MessageCircle, Loader2, Shield, Check, Sparkles, Pin, Search, X } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getConversations } from '../lib/messaging'
 import { getUser, getAnnouncements } from '../lib/database'
 import { getUnreadAnnouncementsCount } from '../lib/announcements'
+import { getLastReadAt } from '../lib/readStatus'
 
 function timeAgo(iso) {
     if (!iso) return 'Recent'
@@ -25,6 +26,7 @@ export default function MessagesPage() {
     const [otherUsers, setOtherUsers] = useState({})
     const [latestAnnouncement, setLatestAnnouncement] = useState(null)
     const [unreadAnnouncements, setUnreadAnnouncements] = useState(0)
+    const [searchQuery, setSearchQuery] = useState('')
     const [loading, setLoading] = useState(false)
 
     const currentUserId = session?.user?.id || user?.uid || user?.id
@@ -97,10 +99,40 @@ export default function MessagesPage() {
         }
     }, [isAuthenticated, currentUserId])
 
+    const filteredConversations = useMemo(() => {
+        if (!searchQuery.trim()) return conversations
+        const q = searchQuery.toLowerCase().trim()
+        return conversations.filter(conv => {
+            const otherId = conv.buyerId === currentUserId ? conv.sellerId : conv.buyerId
+            const other = otherUsers[otherId]
+            const name = (other?.displayName || '').toLowerCase()
+            const itemTitle = (conv.item?.title || conv.listings?.title || '').toLowerCase()
+            const lastMsg = (conv.lastMessage || '').toLowerCase()
+            return name.includes(q) || itemTitle.includes(q) || lastMsg.includes(q)
+        })
+    }, [conversations, searchQuery, currentUserId, otherUsers])
+
     return (
         <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', paddingBottom: '5rem' }}>
             <header style={{ position: 'sticky', top: 0, zIndex: 40, backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', padding: '0.875rem 1rem' }}>
-                <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 800, color: '#0F172A' }}>Messages</h1>
+                <h1 style={{ margin: '0 0 0.5rem', fontSize: '1.125rem', fontWeight: 800, color: '#0F172A' }}>Messages & Chats</h1>
+                {conversations.length > 0 && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.45rem 0.75rem', backgroundColor: '#F1F5F9', borderRadius: '0.625rem', border: '1px solid #E2E8F0' }}>
+                        <Search size={15} color="#64748B" />
+                        <input
+                            type="text"
+                            placeholder="Search messages or students..."
+                            value={searchQuery}
+                            onChange={e => setSearchQuery(e.target.value)}
+                            style={{ flex: 1, border: 'none', outline: 'none', backgroundColor: 'transparent', fontSize: '0.8125rem', fontFamily: 'inherit' }}
+                        />
+                        {searchQuery && (
+                            <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#94A3B8' }}>
+                                <X size={14} />
+                            </button>
+                        )}
+                    </div>
+                )}
             </header>
 
             <div style={{ maxWidth: '36rem', margin: '0 auto' }}>
@@ -175,14 +207,16 @@ export default function MessagesPage() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem 0' }}>
                     <Loader2 size={28} color="var(--color-brand)" className="animate-spin" />
                 </div>
-            ) : conversations.length === 0 ? (
+            ) : filteredConversations.length === 0 ? (
                 <div style={{ padding: '4rem 2rem', textAlign: 'center' }}>
                     <div style={{ width: '5rem', height: '5rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #DBEAFE, #93C5FD)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.25rem' }}>
                         <MessageCircle size={32} color="#3B82F6" />
                     </div>
-                    <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>No messages yet</h2>
+                    <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>
+                        {searchQuery ? 'No matching conversations' : 'No messages yet'}
+                    </h2>
                     <p style={{ margin: '0.5rem 0 1.5rem', fontSize: '0.8125rem', color: 'var(--color-text-secondary)', maxWidth: '18rem', marginLeft: 'auto', marginRight: 'auto' }}>
-                        Tap "Contact Seller" on any listing to start a conversation
+                        {searchQuery ? `No chats match "${searchQuery}".` : 'Tap "Contact Seller" on any physical listing or study material to start a conversation.'}
                     </p>
                     <button onClick={() => navigate('/')} style={{ padding: '0.75rem 2rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontSize: '0.875rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', boxShadow: '0 4px 12px rgba(59,130,246,0.3)' }}>
                         Browse Listings
@@ -190,12 +224,16 @@ export default function MessagesPage() {
                 </div>
             ) : (
                 <div style={{ padding: '0.5rem 0' }}>
-                    {conversations.map(conv => {
+                    {filteredConversations.map(conv => {
                         const otherId = conv.buyerId === currentUserId ? conv.sellerId : conv.buyerId
                         const other = otherUsers[otherId]
-                        const otherName = other?.displayName || 'User'
-                        const listing = conv.listings || {}
-                        const imageUrl = listing.images?.[0]
+                        const otherName = other?.displayName || 'Campus User'
+                        const item = conv.item || conv.listings || {}
+                        const imageUrl = item.images?.[0]
+                        const isDigital = item.isDigital || false
+
+                        const lastRead = getLastReadAt(conv.id)
+                        const isUnread = !lastRead || new Date(conv.lastMessageAt) > new Date(lastRead)
 
                         return (
                             <button
@@ -208,7 +246,7 @@ export default function MessagesPage() {
                                     gap: '0.75rem',
                                     padding: '0.75rem 1rem',
                                     border: 'none',
-                                    backgroundColor: 'white',
+                                    backgroundColor: isUnread ? '#F0F7FF' : 'white',
                                     cursor: 'pointer',
                                     fontFamily: 'inherit',
                                     textAlign: 'left',
@@ -216,21 +254,40 @@ export default function MessagesPage() {
                                     transition: 'background-color 0.15s',
                                 }}
                             >
-                                {/* Listing thumbnail */}
-                                <div style={{ width: '3rem', height: '3rem', borderRadius: '0.5rem', overflow: 'hidden', flexShrink: 0, backgroundColor: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.25rem' }}>
-                                    {imageUrl ? <img src={imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '📦'}
+                                {/* Item thumbnail */}
+                                <div style={{ position: 'relative', width: '3.25rem', height: '3.25rem', borderRadius: '0.625rem', overflow: 'hidden', flexShrink: 0, backgroundColor: isDigital ? '#EFF6FF' : '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #E2E8F0' }}>
+                                    {imageUrl ? (
+                                        <img src={imageUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    ) : (
+                                        <span style={{ fontSize: '1.25rem' }}>{isDigital ? '📄' : '📦'}</span>
+                                    )}
+                                    {isDigital && (
+                                        <span style={{ position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(37,99,235,0.85)', color: 'white', fontSize: '0.5rem', fontWeight: 800, textAlign: 'center', padding: '0.05rem 0', textTransform: 'uppercase' }}>
+                                            PDF
+                                        </span>
+                                    )}
                                 </div>
 
                                 {/* Content */}
                                 <div style={{ flex: 1, minWidth: 0 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.125rem' }}>
-                                        <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{otherName}</p>
-                                        <span style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', flexShrink: 0 }}>{timeAgo(conv.lastMessageAt)}</span>
+                                        <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: isUnread ? 800 : 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#0F172A' }}>
+                                            {otherName}
+                                        </p>
+                                        <span style={{ fontSize: '0.625rem', color: isUnread ? '#2563EB' : 'var(--color-text-muted)', fontWeight: isUnread ? 800 : 500, flexShrink: 0 }}>
+                                            {timeAgo(conv.lastMessageAt)}
+                                        </span>
                                     </div>
-                                    <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                        {conv.lastMessage || `Re: ${listing.title || 'Listing'}`}
+                                    <p style={{ margin: '0 0 0.125rem', fontSize: '0.6875rem', color: '#2563EB', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        Re: {item.title || 'Campus Item'}
+                                    </p>
+                                    <p style={{ margin: 0, fontSize: '0.75rem', color: isUnread ? '#0F172A' : '#64748B', fontWeight: isUnread ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        {conv.lastMessage || 'Start conversation...'}
                                     </p>
                                 </div>
+                                {isUnread && (
+                                    <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '9999px', backgroundColor: '#2563EB', flexShrink: 0 }} />
+                                )}
                             </button>
                         )
                     })}

@@ -6,6 +6,7 @@ import { createListing, createDigitalProduct, upsertUser } from '../lib/database
 import supabase from '../lib/supabase'
 import { uploadImage, uploadImages } from '../lib/cloudinary'
 import { invalidateCacheByPrefix } from '../lib/cache'
+import { extractFirstPageThumbnail } from '../lib/pdfPreview'
 
 const physicalCategories = ['Electronics', 'Books', 'Fashion', 'Services', 'Engineering', 'Science', 'Arts', 'Medical', 'Other']
 const digitalCategories = ['Engineering', 'Science', 'Arts', 'Medical', 'Past Questions', 'Notes', 'Law', 'Management', 'Other']
@@ -81,6 +82,8 @@ export default function PostPage() {
     const [coverPreview, setCoverPreview] = useState(null)
     const [drmEnabled, setDrmEnabled] = useState(true)
     const [showDrmModal, setShowDrmModal] = useState(false)
+    const [pageCount, setPageCount] = useState(null)
+    const [extractingThumbnail, setExtractingThumbnail] = useState(false)
 
     // Status / Progress
     const [loading, setLoading] = useState(false)
@@ -135,7 +138,7 @@ export default function PostPage() {
         setCoverPreview(null)
     }
 
-    const handleDigitalFileSelect = (e) => {
+    const handleDigitalFileSelect = async (e) => {
         const file = e.target.files?.[0]
         if (!file) return
         if (file.size > 50 * 1024 * 1024) {
@@ -144,6 +147,29 @@ export default function PostPage() {
         }
         setDigitalFile(file)
         setError('')
+
+        // If it is a PDF and user hasn't uploaded a custom cover, automatically extract first page thumbnail
+        const ext = (file.name || '').split('.').pop().toLowerCase()
+        if (ext === 'pdf') {
+            try {
+                setExtractingThumbnail(true)
+                const result = await extractFirstPageThumbnail(file)
+                if (result) {
+                    setPageCount(result.pageCount)
+                    if (!coverPhoto) {
+                        setCoverPreview(result.dataUrl)
+                        // Convert blob to File object
+                        const generatedFile = new File([result.blob], `${file.name.replace(/\.pdf$/i, '')}_cover.jpg`, { type: 'image/jpeg' })
+                        setCoverPhoto(generatedFile)
+                    }
+                }
+            } catch (thumbErr) {
+                console.warn('First page thumbnail extraction warning:', thumbErr)
+            } finally {
+                setExtractingThumbnail(false)
+            }
+        }
+
         // Automatically trigger DRM selection pop-up!
         setShowDrmModal(true)
     }
@@ -524,7 +550,9 @@ export default function PostPage() {
                                             {digitalFile ? digitalFile.name : 'Tap to upload PDF, Excel, CSV, or Word'}
                                         </p>
                                         <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
-                                            {digitalFile ? `${(digitalFile.size / 1024 / 1024).toFixed(2)} MB • Ready` : 'Past questions, notes, worksheets (PDF, XLSX, CSV, DOCX)'}
+                                            {digitalFile 
+                                                ? `${(digitalFile.size / 1024 / 1024).toFixed(2)} MB ${pageCount ? `• ${pageCount} Pages` : ''} ${extractingThumbnail ? '• Extracting cover...' : '• Ready'}`
+                                                : 'Past questions, notes, worksheets (PDF, XLSX, CSV, DOCX)'}
                                         </p>
                                     </div>
                                     <input

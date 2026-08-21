@@ -1,9 +1,10 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, FileText, ShieldAlert, ChevronRight as ChevronRightIcon, CheckCircle2, Lock, Download, Sparkles } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, FileText, ShieldAlert, ChevronRight as ChevronRightIcon, CheckCircle2, Lock, Download, Sparkles, Eye, CheckCircle } from 'lucide-react'
+import { useState, useEffect, useRef } from 'react'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListing, getUserPurchaseForProduct, fulfillDigitalOrder, createSignedDownloadUrl } from '../lib/database'
 import { downloadWatermarkedPdf, getDrmPassword } from '../lib/pdfWatermark'
+import { renderPdfSampleCanvas } from '../lib/pdfPreview'
 import PaystackCheckout from '../components/PaystackCheckout'
 import { isSaved as checkSaved, toggleSaved } from '../lib/savedItems'
 import { getOrCreateConversation } from '../lib/messaging'
@@ -43,6 +44,11 @@ export default function ItemDetailPage() {
     const [contacting, setContacting] = useState(false)
     const [existingOrder, setExistingOrder] = useState(null)
     const [downloadingExisting, setDownloadingExisting] = useState(false)
+    const [showPreviewModal, setShowPreviewModal] = useState(false)
+    const [previewLoading, setPreviewLoading] = useState(false)
+    const [previewError, setPreviewError] = useState('')
+    const [previewPageCount, setPreviewPageCount] = useState(null)
+    const previewCanvasRef = useRef(null)
 
     const currentUserId = session?.user?.id || user?.uid || user?.id
 
@@ -125,6 +131,41 @@ export default function ItemDetailPage() {
         }
     }
 
+    const handleOpenPreview = async () => {
+        setShowPreviewModal(true)
+        setPreviewLoading(true)
+        setPreviewError('')
+        try {
+            const storagePath = item?.original_storage_path
+            if (!storagePath) {
+                throw new Error('Preview document path not found.')
+            }
+            const signedUrl = await createSignedDownloadUrl(storagePath, 300)
+            if (!signedUrl) throw new Error('Could not generate sample preview link.')
+
+            setTimeout(async () => {
+                try {
+                    if (previewCanvasRef.current) {
+                        const info = await renderPdfSampleCanvas(signedUrl, previewCanvasRef.current, {
+                            scale: 1.3,
+                            watermarkText: 'SAMPLE PREVIEW • ZIKSHARE ACADEMIC'
+                        })
+                        if (info?.numPages) setPreviewPageCount(info.numPages)
+                        setPreviewLoading(false)
+                    }
+                } catch (canvasErr) {
+                    console.error('Canvas render error:', canvasErr)
+                    setPreviewError('Could not render document preview.')
+                    setPreviewLoading(false)
+                }
+            }, 150)
+        } catch (err) {
+            console.error('Preview error:', err)
+            setPreviewError(err.message || 'Failed to generate preview')
+            setPreviewLoading(false)
+        }
+    }
+
     const condClass = {
         'Brand New': 'condition-new',
         'Like New': 'condition-like-new',
@@ -160,43 +201,41 @@ export default function ItemDetailPage() {
         )
     }
 
-    if (error || !item) {
+    if (itemError || !item) {
         return (
-            <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-background)' }}>
-                <header style={{ padding: '0.75rem 1rem', backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
-                        <ArrowLeft size={20} />
-                    </button>
-                    <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 700 }}>Item Not Found</h1>
-                </header>
-                <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                    <p style={{ fontSize: '2rem' }}>😕</p>
-                    <p style={{ fontSize: '0.875rem', fontWeight: 600 }}>This listing may have been removed</p>
-                </div>
+            <div style={{ padding: '2rem', textAlign: 'center' }}>
+                <h2 style={{ fontSize: '1.25rem', fontWeight: 700, marginBottom: '0.5rem' }}>Listing Not Found</h2>
+                <p style={{ color: 'var(--color-text-secondary)', marginBottom: '1.5rem' }}>This item may have been removed or is no longer available.</p>
+                <button
+                    onClick={() => navigate('/')}
+                    style={{
+                        padding: '0.75rem 1.5rem',
+                        backgroundColor: 'var(--color-brand)',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '0.5rem',
+                        fontWeight: 600,
+                        cursor: 'pointer',
+                    }}
+                >
+                    Back to Feed
+                </button>
             </div>
         )
     }
 
+    const images = item.images && item.images.length > 0 ? item.images : [null]
     const seller = item.users || {}
-    const sellerId = item.sellerId || item.seller_id || seller.uid
-    const images = item.images?.length ? item.images : [null]
-    const sellerPhone = seller.phoneNumber || ''
-    const isOwnListing = currentUserId && (currentUserId === item.sellerId || currentUserId === item.seller_id)
-
-    const placeholderColors = ['#DBEAFE', '#E0E7FF', '#D1FAE5']
+    const sellerId = item.sellerId || item.seller_id
+    const isOwnListing = currentUserId === sellerId
 
     return (
         <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-background)', paddingBottom: '5.5rem', maxWidth: '42rem', margin: '0 auto' }}>
             <div style={{ position: 'relative' }}>
-                <div style={{ width: '100%', height: '300px', backgroundColor: placeholderColors[currentImage % placeholderColors.length], display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem', overflow: 'hidden' }}>
+                <div style={{ width: '100%', height: '300px', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem', overflow: 'hidden' }}>
                     {images[currentImage] ? (
-                        <img src={images[currentImage]} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : item.isDigital ? (
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', color: '#3B82F6' }}>
-                            <FileText size={56} />
-                            <span style={{ fontSize: '0.875rem', fontWeight: 600, color: 'var(--color-text-secondary)' }}>PDF Material</span>
-                        </div>
-                    ) : '📦'}
+                        <img src={images[currentImage]} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    ) : item.isDigital ? '📄' : '📦'}
                 </div>
 
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', background: 'linear-gradient(to bottom, rgba(0,0,0,0.25), transparent)' }}>
@@ -205,10 +244,10 @@ export default function ItemDetailPage() {
                     </button>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button onClick={handleShare} style={{ width: '2.25rem', height: '2.25rem', borderRadius: '9999px', backgroundColor: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
-                            <Share2 size={16} />
+                            <Share2 size={18} />
                         </button>
                         <button onClick={handleToggleSave} style={{ width: '2.25rem', height: '2.25rem', borderRadius: '9999px', backgroundColor: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
-                            <Heart size={16} fill={isSaved ? '#EF4444' : 'none'} color={isSaved ? '#EF4444' : '#1E293B'} />
+                            <Heart size={18} color={isSaved ? '#EF4444' : '#1E293B'} fill={isSaved ? '#EF4444' : 'none'} />
                         </button>
                     </div>
                 </div>
@@ -217,25 +256,6 @@ export default function ItemDetailPage() {
                     <div style={{ position: 'absolute', bottom: '0.75rem', right: '0.75rem', padding: '0.25rem 0.625rem', borderRadius: '9999px', backgroundColor: 'rgba(0,0,0,0.6)', color: 'white', fontSize: '0.6875rem', fontWeight: 600 }}>
                         📷 {currentImage + 1}/{images.length}
                     </div>
-                )}
-
-                {images.length > 1 && (
-                    <div style={{ position: 'absolute', bottom: '0.75rem', left: '50%', transform: 'translateX(-50%)', display: 'flex', gap: '0.375rem' }}>
-                        {images.map((_, i) => (
-                            <button key={i} onClick={() => setCurrentImage(i)} style={{ width: currentImage === i ? '1.25rem' : '0.375rem', height: '0.375rem', borderRadius: '9999px', border: 'none', cursor: 'pointer', backgroundColor: currentImage === i ? 'white' : 'rgba(255,255,255,0.5)', transition: 'all 0.2s ease' }} />
-                        ))}
-                    </div>
-                )}
-
-                {currentImage > 0 && (
-                    <button onClick={() => setCurrentImage(currentImage - 1)} style={{ position: 'absolute', left: '0.5rem', top: '50%', transform: 'translateY(-50%)', width: '2rem', height: '2rem', borderRadius: '9999px', backgroundColor: 'rgba(255,255,255,0.8)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                        <ChevronLeft size={16} />
-                    </button>
-                )}
-                {currentImage < images.length - 1 && (
-                    <button onClick={() => setCurrentImage(currentImage + 1)} style={{ position: 'absolute', right: '0.5rem', top: '50%', transform: 'translateY(-50%)', width: '2rem', height: '2rem', borderRadius: '9999px', backgroundColor: 'rgba(255,255,255,0.8)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                        <ChevronRight size={16} />
-                    </button>
                 )}
             </div>
 
@@ -283,7 +303,6 @@ export default function ItemDetailPage() {
                                             </code>
                                         </div>
                                     )}
-
                                     <button
                                         onClick={handleDownloadExistingPdf}
                                         disabled={downloadingExisting}
@@ -296,7 +315,6 @@ export default function ItemDetailPage() {
                                             color: 'white',
                                             fontSize: '0.875rem',
                                             fontWeight: 800,
-                                            fontFamily: 'inherit',
                                             cursor: downloadingExisting ? 'not-allowed' : 'pointer',
                                             display: 'flex',
                                             alignItems: 'center',
@@ -318,16 +336,51 @@ export default function ItemDetailPage() {
                                         )}
                                     </button>
                                 </div>
-                            ) : session?.user ? (
-                                <PaystackCheckout
-                                    product={item}
-                                    user={session.user}
-                                    onSuccess={(ref) => navigate(`/payment/success?ref=${ref}`)}
-                                />
                             ) : (
-                                <button onClick={() => navigate('/login')} style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.9375rem', fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>
-                                    <span>🔒 Sign in to Purchase PDF ({formatNaira(item.price)})</span>
-                                </button>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    {/* Free First-Page Sample Preview Card */}
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.625rem 0.875rem', backgroundColor: '#F8FAFC', borderRadius: '0.75rem', border: '1px solid #E2E8F0' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                            <span style={{ fontSize: '1.25rem' }}>📄</span>
+                                            <div>
+                                                <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, color: '#0F172A' }}>Want to check the questions?</p>
+                                                <p style={{ margin: 0, fontSize: '0.625rem', color: '#64748B' }}>Preview Page 1 sample before purchasing</p>
+                                            </div>
+                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={handleOpenPreview}
+                                            style={{
+                                                padding: '0.4rem 0.75rem',
+                                                borderRadius: '0.5rem',
+                                                border: '1.5px solid #2563EB',
+                                                backgroundColor: '#EFF6FF',
+                                                color: '#1E40AF',
+                                                fontSize: '0.6875rem',
+                                                fontWeight: 800,
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.25rem',
+                                            }}
+                                        >
+                                            <Eye size={13} />
+                                            <span>View Sample</span>
+                                        </button>
+                                    </div>
+
+                                    {session?.user ? (
+                                        <PaystackCheckout
+                                            product={item}
+                                            user={session.user}
+                                            onSuccess={(ref) => navigate(`/payment/success?ref=${ref}`)}
+                                        />
+                                    ) : (
+                                        <button onClick={() => navigate('/login')} style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.9375rem', fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>
+                                            <span>🔒 Sign in to Purchase PDF ({formatNaira(item.price)})</span>
+                                        </button>
+                                    )}
+                                </div>
                             )}
                         </div>
                     ) : (
@@ -343,6 +396,31 @@ export default function ItemDetailPage() {
                     )
                 )}
             </div>
+
+            {/* Preview Modal */}
+            {showPreviewModal && (
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'white', zIndex: 1000, overflowY: 'auto' }}>
+                    <div style={{ padding: '1rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--color-border)' }}>
+                        <button onClick={() => setShowPreviewModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
+                            <X size={24} />
+                        </button>
+                        <h2 style={{ margin: '0 auto', fontSize: '1rem' }}>Material Preview</h2>
+                    </div>
+                    {previewLoading ? (
+                        <div style={{ padding: '3rem', textAlign: 'center' }}>
+                            <Loader2 size={32} className="animate-spin" />
+                            <p style={{ marginTop: '1rem', color: 'var(--color-text-secondary)' }}>Loading preview...</p>
+                        </div>
+                    ) : previewError ? (
+                        <div style={{ padding: '3rem', textAlign: 'center', color: '#DC2626' }}>{previewError}</div>
+                    ) : (
+                        <div style={{ padding: '1rem' }}>
+                            <canvas ref={previewCanvasRef} style={{ width: '100%', height: 'auto', boxShadow: '0 0 10px rgba(0,0,0,0.1)' }} />
+                            <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.875rem' }}>Page 1 of {previewPageCount || '?'}</p>
+                        </div>
+                    )}
+                </div>
+            )}
 
             {/* Description */}
             {item.description && (

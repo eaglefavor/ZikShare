@@ -1,8 +1,7 @@
-import { usePaystackPayment } from 'react-paystack'
 import { useState, useMemo } from 'react'
 import { supabase } from '../lib/supabase'
-import { calculatePaystackFeeAndTotal, PAYSTACK_PUBLIC_KEY } from '../lib/paystack'
-import { ShieldAlert, X, FileText, Lock, ArrowRight, Loader2, CheckCircle2 } from 'lucide-react'
+import { calculatePaystackFeeAndTotal, PAYSTACK_PUBLIC_KEY, loadPaystackInlineScript } from '../lib/paystack'
+import { ShieldAlert, X, FileText, Lock, ArrowRight, Loader2, AlertCircle } from 'lucide-react'
 
 function formatNaira(amount) {
   return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount || 0)
@@ -46,6 +45,7 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
   const [regNumber, setRegNumber] = useState('')
   const [acknowledged, setAcknowledged] = useState(false)
   const [creatingOrder, setCreatingOrder] = useState(false)
+  const [statusMessage, setStatusMessage] = useState('')
   const [inputError, setInputError] = useState('')
 
   // Strictly get full account name from Google / User profile
@@ -57,30 +57,14 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
 
   const watermarkText = `LICENSED TO: ${buyerName.toUpperCase()} | REG NO: ${regNumber.trim().toUpperCase()} | EMAIL: ${user?.email || 'UNIZIK'} | ORDER TRACEABLE COPY - DO NOT REDISTRIBUTE`
 
-  const [currentReference, setCurrentReference] = useState(() => `ZKS-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`)
-
-  // Base config for hook registration
-  const baseConfig = useMemo(() => ({
-    publicKey: PAYSTACK_PUBLIC_KEY,
-    reference: currentReference,
-    email: user?.email || '',
-    amount: totalToCharge,
-    currency: 'NGN',
-    channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'],
-    ...(product.users?.paystack_subaccount_code ? { subaccount: product.users.paystack_subaccount_code } : {}),
-  }), [user, product, totalToCharge, currentReference])
-
-  const initializePayment = usePaystackPayment(baseConfig)
-
   const handleOpenModal = () => {
     if (!user) {
       alert('Please sign in with your UNIZIK student email to purchase study materials.')
       window.location.href = '/login'
       return
     }
-    // Refresh reference whenever opening modal
-    const freshRef = `ZKS-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`
-    setCurrentReference(freshRef)
+    setInputError('')
+    setStatusMessage('')
     setShowModal(true)
   }
 
@@ -95,38 +79,24 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
       return
     }
 
-    setCreatingOrder(true)
-    setInputError('')
-
-    // Generate guaranteed unique reference for this exact payment initiation attempt
-    const activeReference = `ZKS-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`
-    setCurrentReference(activeReference)
-
-    const paymentConfig = {
-      publicKey: PAYSTACK_PUBLIC_KEY,
-      reference: activeReference,
-      email: user?.email || '',
-      amount: totalToCharge,
-      currency: 'NGN',
-      channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'],
-      ...(product.users?.paystack_subaccount_code ? { subaccount: product.users.paystack_subaccount_code } : {}),
-      metadata: {
-        product_id: product.id,
-        product_type: 'digital_pdf',
-        buyer_name: buyerName,
-        reg_number: regNumber.trim().toUpperCase(),
-        watermark_text: watermarkText,
-        custom_fields: [
-          { display_name: 'Product', variable_name: 'product_name', value: product.title },
-          { display_name: 'Buyer Name (Verified)', variable_name: 'buyer_name', value: buyerName },
-          { display_name: 'Reg Number', variable_name: 'reg_number', value: regNumber.trim().toUpperCase() },
-          { display_name: 'Seller', variable_name: 'seller_id', value: product.seller_id || product.sellerId }
-        ]
-      }
+    if (!PAYSTACK_PUBLIC_KEY) {
+      setInputError('Payment system configuration error: VITE_PAYSTACK_PUBLIC_KEY is not configured in environment. Please contact admin.')
+      return
     }
 
+    setCreatingOrder(true)
+    setInputError('')
+    setStatusMessage('Connecting to secure payment gateway...')
+
+    const activeReference = `ZKS-${Date.now()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`
+
     try {
-      // Insert pending order in supabase with watermark metadata
+      // 1. Ensure Paystack inline script is loaded
+      setStatusMessage('Loading payment interface...')
+      const PaystackPop = await loadPaystackInlineScript()
+
+      // 2. Insert pending order in supabase with watermark metadata
+      setStatusMessage('Creating verified license record...')
       const { error } = await supabase
         .from('orders')
         .insert({
@@ -145,22 +115,50 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
 
       if (error) {
         console.error('Order creation error:', error)
-        throw new Error('Failed to create order: ' + error.message)
+        throw new Error('Failed to create order record: ' + error.message)
       }
 
-      setShowModal(false)
+      setStatusMessage('Opening Paystack checkout...')
 
-      initializePayment({
-        config: paymentConfig,
-        onSuccess: (ref) => onSuccess(ref?.reference || activeReference),
-        onClose: () => {
-          console.log('Payment sheet closed')
+      // 3. Initialize Paystack Inline popup
+      const handler = PaystackPop.setup({
+        key: PAYSTACK_PUBLIC_KEY,
+        email: user?.email || '',
+        amount: totalToCharge,
+        currency: 'NGN',
+        ref: activeReference,
+        channels: ['card', 'bank', 'ussd', 'qr', 'mobile_money', 'bank_transfer'],
+        ...(product.users?.paystack_subaccount_code ? { subaccount: product.users.paystack_subaccount_code } : {}),
+        metadata: {
+          product_id: product.id,
+          product_type: 'digital_pdf',
+          buyer_name: buyerName,
+          reg_number: regNumber.trim().toUpperCase(),
+          watermark_text: watermarkText,
+          custom_fields: [
+            { display_name: 'Product', variable_name: 'product_name', value: product.title },
+            { display_name: 'Buyer Name', variable_name: 'buyer_name', value: buyerName },
+            { display_name: 'Reg Number', variable_name: 'reg_number', value: regNumber.trim().toUpperCase() },
+            { display_name: 'Seller', variable_name: 'seller_id', value: product.seller_id || product.sellerId }
+          ]
+        },
+        callback: function (response) {
+          setShowModal(false)
+          setCreatingOrder(false)
+          onSuccess(response?.reference || activeReference)
+        },
+        onClose: function () {
+          setCreatingOrder(false)
+          setStatusMessage('')
         }
       })
+
+      handler.openIframe()
     } catch (err) {
-      setInputError(err.message || 'Payment setup failed. Please try again.')
-    } finally {
+      console.error('Payment launch error:', err)
+      setInputError(err.message || 'Could not launch payment window. Please try again.')
       setCreatingOrder(false)
+      setStatusMessage('')
     }
   }
 
@@ -203,7 +201,11 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
                 <FileText size={20} color="#2563EB" />
                 <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>License & Watermark Verification</h3>
               </div>
-              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', display: 'flex', color: 'var(--color-text-muted)' }}>
+              <button 
+                onClick={() => !creatingOrder && setShowModal(false)} 
+                disabled={creatingOrder}
+                style={{ background: 'none', border: 'none', cursor: creatingOrder ? 'not-allowed' : 'pointer', padding: '0.25rem', display: 'flex', color: 'var(--color-text-muted)' }}
+              >
                 <X size={20} />
               </button>
             </div>
@@ -220,6 +222,17 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
                   {formatNaira(totalToCharge / 100)}
                 </span>
               </div>
+
+              {/* Missing Key Warning for Admin/Dev */}
+              {!PAYSTACK_PUBLIC_KEY && (
+                <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: '#FEF2F2', border: '1.5px solid #F87171', color: '#991B1B', marginBottom: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                  <AlertCircle size={18} color="#DC2626" style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <div style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
+                    <strong>Paystack Public Key Missing:</strong><br />
+                    <code>VITE_PAYSTACK_PUBLIC_KEY</code> is not set in environment variables. Please add your Paystack Public Key to enable checkout.
+                  </div>
+                </div>
+              )}
 
               {/* BOLD ANTI-PIRACY WATERMARK NOTICE */}
               <div style={{ padding: '1rem', borderRadius: '0.875rem', backgroundColor: '#FEF2F2', border: '2px solid #DC2626', marginBottom: '1.25rem' }}>
@@ -272,6 +285,7 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
                   placeholder="e.g. 2021174092 or 2022/REG/..."
                   required
                   autoFocus
+                  disabled={creatingOrder}
                   style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: '2px solid #3B82F6', fontSize: '0.875rem', fontFamily: 'monospace', letterSpacing: '0.05em', outline: 'none', boxSizing: 'border-box' }}
                 />
               </div>
@@ -291,6 +305,7 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
                 <input
                   type="checkbox"
                   checked={acknowledged}
+                  disabled={creatingOrder}
                   onChange={(e) => setAcknowledged(e.target.checked)}
                   style={{ marginTop: '0.125rem', width: '1rem', height: '1rem' }}
                 />
@@ -305,32 +320,40 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
                 </div>
               )}
 
+              {/* Status indicator when opening */}
+              {creatingOrder && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', backgroundColor: '#EFF6FF', borderRadius: '0.5rem', border: '1px solid #BFDBFE', color: '#1E40AF', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '1rem' }}>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>{statusMessage || 'Preparing secure payment...'}</span>
+                </div>
+              )}
+
               {/* Confirm and Pay Button */}
               <button
                 type="submit"
-                disabled={creatingOrder || !acknowledged || !regNumber.trim()}
+                disabled={creatingOrder || !acknowledged || !regNumber.trim() || !PAYSTACK_PUBLIC_KEY}
                 style={{
                   width: '100%',
                   padding: '0.875rem',
                   borderRadius: '0.75rem',
                   border: 'none',
-                  background: (!acknowledged || !regNumber.trim()) ? '#94A3B8' : 'linear-gradient(135deg, #10B981, #059669)',
+                  background: (!acknowledged || !regNumber.trim() || !PAYSTACK_PUBLIC_KEY) ? '#94A3B8' : 'linear-gradient(135deg, #10B981, #059669)',
                   color: 'white',
                   fontSize: '0.9375rem',
                   fontWeight: 800,
                   fontFamily: 'inherit',
-                  cursor: (!acknowledged || !regNumber.trim() || creatingOrder) ? 'not-allowed' : 'pointer',
+                  cursor: (!acknowledged || !regNumber.trim() || creatingOrder || !PAYSTACK_PUBLIC_KEY) ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '0.5rem',
-                  boxShadow: (acknowledged && regNumber.trim()) ? '0 4px 14px rgba(16,185,129,0.35)' : 'none'
+                  boxShadow: (acknowledged && regNumber.trim() && PAYSTACK_PUBLIC_KEY) ? '0 4px 14px rgba(16,185,129,0.35)' : 'none'
                 }}
               >
                 {creatingOrder ? (
                   <>
                     <Loader2 size={18} className="animate-spin" />
-                    <span>Preparing Secure Payment...</span>
+                    <span>Launching Paystack...</span>
                   </>
                 ) : (
                   <>

@@ -1,9 +1,37 @@
 import supabase from './supabase';
 
 export const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || '';
-if (!PAYSTACK_PUBLIC_KEY) console.warn('[ZikShare] Missing VITE_PAYSTACK_PUBLIC_KEY — Paystack checkout will fail.');
+if (!PAYSTACK_PUBLIC_KEY) console.warn('[ZikShare] Missing VITE_PAYSTACK_PUBLIC_KEY — Paystack checkout will require key.');
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
+
+/**
+ * Dynamically loads Paystack Inline JS SDK into DOM
+ */
+export function loadPaystackInlineScript() {
+  return new Promise((resolve, reject) => {
+    if (typeof window === 'undefined') return reject(new Error('Window not available'));
+    if (window.PaystackPop) return resolve(window.PaystackPop);
+
+    const existing = document.querySelector('script[src*="paystack.co/v1/inline.js"]');
+    if (existing) {
+      if (window.PaystackPop) return resolve(window.PaystackPop);
+      existing.addEventListener('load', () => resolve(window.PaystackPop));
+      existing.addEventListener('error', () => reject(new Error('Paystack SDK failed to load')));
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://js.paystack.co/v1/inline.js';
+    script.async = true;
+    script.onload = () => {
+      if (window.PaystackPop) resolve(window.PaystackPop);
+      else reject(new Error('Paystack SDK not initialized'));
+    };
+    script.onerror = () => reject(new Error('Failed to load Paystack payment script. Please check your network.'));
+    document.head.appendChild(script);
+  });
+}
 
 export const NIGERIAN_BANKS = [
   { name: 'Access Bank', code: '044' },

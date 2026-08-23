@@ -1,15 +1,9 @@
-import { Search, SlidersHorizontal, ChevronRight, MapPin, ShieldCheck, Zap, TrendingUp } from 'lucide-react'
+import { Search, SlidersHorizontal, ChevronRight, MapPin, ShieldCheck, Zap, TrendingUp, Sparkles, Tag } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListings, getDigitalProducts } from '../lib/database'
 import { HomeAnnouncementBanner } from '../components/AnnouncementModal'
-
-const categories = [
-    { name: 'Electronics', emoji: '📱', color: '#3B82F6' },
-    { name: 'Books', emoji: '📚', color: '#8B5CF6' },
-    { name: 'Fashion', emoji: '👕', color: '#EC4899' },
-    { name: 'Services', emoji: '🔧', color: '#F59E0B' },
-]
+import { MARKETPLACE_SEGMENTS } from '../lib/categories'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', {
@@ -33,6 +27,7 @@ function ListingCard({ listing, navigate }) {
     const placeholderColors = ['#DBEAFE', '#E0E7FF', '#D9F99D', '#FBCFE8', '#E9D5FF', '#FDE68A']
     const bgColor = placeholderColors[(listing.id?.charCodeAt?.(0) || 0) % placeholderColors.length]
     const imageUrl = listing.images?.[0]
+    const isBoosted = listing.is_boosted && (!listing.boosted_until || new Date(listing.boosted_until) > new Date())
 
     return (
         <div
@@ -41,7 +36,8 @@ function ListingCard({ listing, navigate }) {
                 borderRadius: '0.75rem',
                 overflow: 'hidden',
                 backgroundColor: 'white',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                boxShadow: isBoosted ? '0 4px 14px rgba(234, 179, 8, 0.25)' : '0 1px 3px rgba(0,0,0,0.06)',
+                border: isBoosted ? '1.5px solid #FACC15' : '1px solid var(--color-border)',
                 transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                 cursor: 'pointer',
             }}
@@ -51,7 +47,7 @@ function ListingCard({ listing, navigate }) {
             }}
             onMouseLeave={e => {
                 e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.06)'
+                e.currentTarget.style.boxShadow = isBoosted ? '0 4px 14px rgba(234, 179, 8, 0.25)' : '0 1px 3px rgba(0,0,0,0.06)'
             }}
         >
             <div
@@ -72,8 +68,13 @@ function ListingCard({ listing, navigate }) {
                 ) : (
                     listing.isDigital ? '📄' : '📦'
                 )}
-                <div style={{ position: 'absolute', top: '0.5rem', left: '0.5rem' }}>
+                <div style={{ position: 'absolute', top: '0.5rem', left: '0.5rem', display: 'flex', gap: '0.25rem', flexDirection: 'column' }}>
                     <ConditionBadge condition={listing.condition} />
+                    {isBoosted && (
+                        <span style={{ fontSize: '0.625rem', fontWeight: 800, padding: '0.125rem 0.375rem', borderRadius: '0.25rem', backgroundColor: '#FEF08A', color: '#854D0E', display: 'flex', alignItems: 'center', gap: '0.125rem' }}>
+                            <Sparkles size={10} /> PROMOTED
+                        </span>
+                    )}
                 </div>
             </div>
             <div style={{ padding: '0.75rem' }}>
@@ -90,9 +91,16 @@ function ListingCard({ listing, navigate }) {
                 >
                     {listing.title}
                 </h3>
-                <p className="price-tag" style={{ margin: '0.375rem 0 0', fontSize: '0.9375rem' }}>
-                    {formatNaira(listing.price)}
-                </p>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.375rem' }}>
+                    <p className="price-tag" style={{ margin: 0, fontSize: '0.9375rem' }}>
+                        {formatNaira(listing.price)}
+                    </p>
+                    {listing.subcategory && (
+                        <span style={{ fontSize: '0.625rem', color: '#64748B', backgroundColor: '#F1F5F9', padding: '0.125rem 0.375rem', borderRadius: '0.25rem' }}>
+                            {listing.subcategory}
+                        </span>
+                    )}
+                </div>
             </div>
         </div>
     )
@@ -259,10 +267,13 @@ export default function HomePage() {
                 <ChevronRight size={18} style={{ opacity: 0.7 }} />
             </div>
 
-            {/* Categories */}
+            {/* JiJi-Style Campus Marketplace Categories */}
             <section style={{ padding: '0 1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.625rem' }}>
-                    <h2 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700 }}>Categories</h2>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                        <Tag size={16} color="var(--color-brand)" />
+                        <h2 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700 }}>Browse by Category</h2>
+                    </div>
                     <button
                         onClick={() => navigate('/search')}
                         style={{
@@ -277,41 +288,87 @@ export default function HomePage() {
                             gap: '0.125rem',
                         }}
                     >
-                        See all <ChevronRight size={14} />
+                        All Categories <ChevronRight size={14} />
                     </button>
                 </div>
+                
+                {/* Parent Category Segments */}
                 <div
                     className="hide-scrollbar"
                     style={{
                         display: 'flex',
                         gap: '0.625rem',
                         overflowX: 'auto',
-                        paddingBottom: '0.25rem',
+                        paddingBottom: '0.5rem',
                     }}
                 >
-                    {categories.map(cat => (
+                    {MARKETPLACE_SEGMENTS.map(seg => (
                         <div
-                            key={cat.name}
-                            onClick={() => navigate(`/search?category=${cat.name}`)}
+                            key={seg.id}
+                            onClick={() => navigate(`/search?segment=${seg.id}`)}
                             style={{
-                                minWidth: '5rem',
+                                minWidth: '6.5rem',
                                 padding: '0.75rem 0.5rem',
-                                borderRadius: '0.75rem',
+                                borderRadius: '0.875rem',
                                 backgroundColor: 'white',
                                 textAlign: 'center',
                                 cursor: 'pointer',
-                                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-                                transition: 'transform 0.2s ease',
+                                boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                                transition: 'transform 0.2s ease, border-color 0.2s ease',
                                 border: '1px solid var(--color-border)',
+                                flexShrink: 0,
                             }}
-                            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.05)')}
-                            onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
+                            onMouseEnter={e => {
+                                e.currentTarget.style.transform = 'scale(1.04)'
+                                e.currentTarget.style.borderColor = seg.color
+                            }}
+                            onMouseLeave={e => {
+                                e.currentTarget.style.transform = 'scale(1)'
+                                e.currentTarget.style.borderColor = 'var(--color-border)'
+                            }}
                         >
-                            <div style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}>{cat.emoji}</div>
-                            <p style={{ margin: 0, fontSize: '0.6875rem', fontWeight: 600, color: 'var(--color-text-primary)' }}>
-                                {cat.name}
+                            <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', backgroundColor: seg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.375rem', fontSize: '1.25rem' }}>
+                                {seg.emoji}
+                            </div>
+                            <p style={{ margin: 0, fontSize: '0.6875rem', fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
+                                {seg.name}
                             </p>
                         </div>
+                    ))}
+                </div>
+
+                {/* Popular Campus Subcategories Quick-Bar */}
+                <div style={{ display: 'flex', gap: '0.375rem', overflowX: 'auto', paddingBottom: '0.25rem', marginTop: '0.375rem' }} className="hide-scrollbar">
+                    {[
+                        { label: '📱 Phones', sub: 'phones' },
+                        { label: '💻 Laptops', sub: 'laptops' },
+                        { label: '⚡ Generators', sub: 'generators' },
+                        { label: '🌀 Fans', sub: 'fans' },
+                        { label: '🛏️ Beds/Mattress', sub: 'beds' },
+                        { label: '📝 Past Questions', sub: 'past-questions' },
+                        { label: '👔 Irons', sub: 'iron' },
+                        { label: '☁️ Pillows', sub: 'pillows' },
+                        { label: '🪟 Curtains', sub: 'curtains' },
+                        { label: '📺 TVs', sub: 'tvs' },
+                    ].map(item => (
+                        <button
+                            key={item.sub}
+                            onClick={() => navigate(`/search?subcategory=${item.sub}`)}
+                            style={{
+                                padding: '0.375rem 0.625rem',
+                                borderRadius: '9999px',
+                                border: '1px solid var(--color-border)',
+                                backgroundColor: '#F8FAFC',
+                                color: '#334155',
+                                fontSize: '0.6875rem',
+                                fontWeight: 600,
+                                whiteSpace: 'nowrap',
+                                cursor: 'pointer',
+                                flexShrink: 0,
+                            }}
+                        >
+                            {item.label}
+                        </button>
                     ))}
                 </div>
             </section>

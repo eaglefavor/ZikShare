@@ -1,8 +1,8 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, FileText, ShieldAlert, ChevronRight as ChevronRightIcon, CheckCircle2, Lock, Download, Sparkles, Eye, CheckCircle } from 'lucide-react'
+import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, FileText, ShieldAlert, ChevronRight as ChevronRightIcon, CheckCircle2, Lock, Download, Sparkles, Eye, CheckCircle, Star, Tag, BookOpen, GraduationCap } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useCachedQuery } from '../hooks/useCachedQuery'
-import { getListing, getUserPurchaseForProduct, createSignedDownloadUrl } from '../lib/database'
+import { getListing, getUserPurchaseForProduct, createSignedDownloadUrl, getSellerReviews, getSellerRatingSummary } from '../lib/database'
 import { downloadWatermarkedPdf, getDrmPassword } from '../lib/pdfWatermark'
 import { renderPdfSampleCanvas } from '../lib/pdfPreview'
 import PaystackCheckout from '../components/PaystackCheckout'
@@ -49,6 +49,10 @@ export default function ItemDetailPage() {
     const [previewError, setPreviewError] = useState('')
     const [previewPageCount, setPreviewPageCount] = useState(null)
     const previewCanvasRef = useRef(null)
+
+    // Seller Reputation & Reviews State
+    const [sellerReviews, setSellerReviews] = useState([])
+    const [sellerRatingSummary, setSellerRatingSummary] = useState({ averageRating: 5, totalReviews: 0 })
 
     const currentUserId = session?.user?.id || user?.uid || user?.id
 
@@ -100,6 +104,11 @@ export default function ItemDetailPage() {
             getUserPurchaseForProduct(currentUserId, item.id).then(order => {
                 if (order) setExistingOrder(order)
             })
+        }
+        const sId = item?.sellerId || item?.seller_id
+        if (sId) {
+            getSellerReviews(sId).then(r => setSellerReviews(r || [])).catch(() => {})
+            getSellerRatingSummary(sId).then(s => setSellerRatingSummary(s || { averageRating: 5, totalReviews: 0 })).catch(() => {})
         }
     }, [isAuthenticated, currentUserId, item])
 
@@ -282,13 +291,33 @@ export default function ItemDetailPage() {
             <div style={{ padding: '1rem', backgroundColor: 'white', borderRadius: '1rem 1rem 0 0', marginTop: '-0.75rem', position: 'relative' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.6875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
                     <MapPin size={12} />
-                    <span>UNIZIK Campus</span>
+                    <span>{item.lodge_location || 'UNIZIK Campus'}</span>
                     <span>•</span>
                     <Clock size={12} />
                     <span>{timeAgo(item.createdAt)}</span>
                 </div>
 
                 <h1 style={{ margin: '0 0 0.5rem', fontSize: '1.0625rem', fontWeight: 700, lineHeight: 1.3 }}>{item.title}</h1>
+
+                {/* Subcategory & Academic Tags */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+                    {item.subcategory && (
+                        <span style={{ fontSize: '0.6875rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '0.375rem', backgroundColor: '#EFF6FF', color: '#1D4ED8' }}>
+                            🏷️ {item.subcategory}
+                        </span>
+                    )}
+                    {item.course_code && (
+                        <span style={{ fontSize: '0.6875rem', fontWeight: 800, padding: '0.15rem 0.5rem', borderRadius: '0.375rem', backgroundColor: '#ECFDF5', color: '#047857' }}>
+                            <BookOpen size={11} style={{ display: 'inline', marginRight: '3px' }} />
+                            {item.course_code}
+                        </span>
+                    )}
+                    {item.level && (
+                        <span style={{ fontSize: '0.6875rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '0.375rem', backgroundColor: '#FEF3C7', color: '#B45309' }}>
+                            🎓 {item.level}
+                        </span>
+                    )}
+                </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                     <p className="price-tag" style={{ margin: 0, fontSize: '1.5rem' }}>{formatNaira(item.price)}</p>
@@ -477,7 +506,7 @@ export default function ItemDetailPage() {
                 </div>
             </div>
 
-            {/* Clickable Seller Card (routes to /seller/:id) */}
+            {/* Clickable Seller Card & Rating Score (routes to /seller/:id) */}
             <div 
                 onClick={() => sellerId && navigate(`/seller/${sellerId}`)}
                 style={{ 
@@ -489,7 +518,7 @@ export default function ItemDetailPage() {
                 }}
             >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                    <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700 }}>Seller</h3>
+                    <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700 }}>Seller & Reputation</h3>
                     {sellerId && (
                         <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-brand)', display: 'flex', alignItems: 'center', gap: '0.125rem' }}>
                             View Store <ChevronRightIcon size={14} />
@@ -505,11 +534,41 @@ export default function ItemDetailPage() {
                             <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700 }}>{seller.displayName || 'Seller'}</p>
                             {seller.isVerified && <ShieldCheck size={14} color="var(--color-campus-green)" />}
                         </div>
-                        {seller.department && (
-                            <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>{seller.department}</p>
-                        )}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.125rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', color: '#F59E0B' }}>
+                                <Star size={12} fill="#F59E0B" />
+                                <span style={{ fontSize: '0.75rem', fontWeight: 800, marginLeft: '0.25rem', color: '#0F172A' }}>
+                                    {sellerRatingSummary.averageRating.toFixed(1)}
+                                </span>
+                            </div>
+                            <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
+                                ({sellerRatingSummary.totalReviews} verified {sellerRatingSummary.totalReviews === 1 ? 'review' : 'reviews'})
+                            </span>
+                        </div>
                     </div>
                 </div>
+
+                {/* Seller Reviews Preview */}
+                {sellerReviews.length > 0 && (
+                    <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #F1F5F9' }}>
+                        <p style={{ margin: '0 0 0.5rem', fontSize: '0.6875rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Recent Buyer Feedback</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                            {sellerReviews.slice(0, 2).map(rev => (
+                                <div key={rev.id} style={{ padding: '0.5rem', backgroundColor: '#F8FAFC', borderRadius: '0.5rem', border: '1px solid #E2E8F0' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.125rem' }}>
+                                        <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#1E293B' }}>{rev.users?.displayName || 'Campus Buyer'}</span>
+                                        <div style={{ display: 'flex', color: '#F59E0B' }}>
+                                            {[...Array(rev.rating || 5)].map((_, i) => (
+                                                <Star key={i} size={10} fill="#F59E0B" />
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <p style={{ margin: 0, fontSize: '0.6875rem', color: '#475569' }}>{rev.comment}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
             </div>
 
             {/* Safe Meetup (Physical Items) or Anti-Piracy Notice (Digital Items) */}
@@ -540,7 +599,7 @@ export default function ItemDetailPage() {
                     <div style={{ padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                         <MapPin size={16} color="#166534" />
                         <p style={{ margin: 0, fontSize: '0.6875rem', color: '#166534', lineHeight: 1.3 }}>
-                            <strong>Safe Meetup:</strong> Meet at Garba Square, Chisco Park, or the Student Center.
+                            <strong>Safe Meetup & Escrow:</strong> Arrange physical pickup at Garba Square, Chisco Park, or Admin Block.
                         </p>
                     </div>
                 )}
@@ -548,7 +607,7 @@ export default function ItemDetailPage() {
 
             {/* Sticky Bottom CTA */}
             {!isOwnListing && (
-                <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '42rem', padding: '0.625rem 1rem', backgroundColor: 'white', borderTop: '1px solid var(--color-border)', display: 'flex', gap: '0.625rem', zIndex: 50, paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box' }}>
+                <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '42rem', padding: '0.625rem 1rem', backgroundColor: 'white', borderTop: '1px solid var(--color-border)', display: 'flex', gap: '0.5rem', zIndex: 50, paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box' }}>
                     {item.isDigital ? (
                         existingOrder ? (
                             <button
@@ -570,12 +629,18 @@ export default function ItemDetailPage() {
                         )
                     ) : (
                         <>
-                            <button onClick={() => setShowCallSheet(true)} style={{ width: '3.5rem', height: '3rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-primary)' }}>
-                                <Phone size={20} />
+                            <button onClick={() => setShowCallSheet(true)} style={{ width: '3rem', height: '3rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-primary)', flexShrink: 0 }}>
+                                <Phone size={18} />
                             </button>
-                            <button onClick={handleContactSeller} disabled={contacting} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontSize: '0.9375rem', fontWeight: 700, fontFamily: 'inherit', cursor: contacting ? 'not-allowed' : 'pointer', textAlign: 'center', boxShadow: '0 4px 12px rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', opacity: contacting ? 0.7 : 1 }}>
-                                <MessageCircle size={18} />
-                                {contacting ? 'Opening...' : 'Contact Seller'}
+                            <button
+                                onClick={handleContactSeller}
+                                style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: '1.5px solid #2563EB', backgroundColor: '#EFF6FF', color: '#1D4ED8', fontSize: '0.8125rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem' }}
+                            >
+                                <Tag size={15} /> Make Offer
+                            </button>
+                            <button onClick={handleContactSeller} disabled={contacting} style={{ flex: 1.2, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontSize: '0.8125rem', fontWeight: 800, fontFamily: 'inherit', cursor: contacting ? 'not-allowed' : 'pointer', textAlign: 'center', boxShadow: '0 4px 12px rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem', opacity: contacting ? 0.7 : 1 }}>
+                                <MessageCircle size={16} />
+                                {contacting ? 'Opening...' : 'Chat Now'}
                             </button>
                         </>
                     )}

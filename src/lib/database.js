@@ -1009,4 +1009,333 @@ export async function toggleAnnouncementStatus(id, is_active) {
     return true
 }
 
+// ============================================
+// In-Chat Price Bargaining & Offers
+// ============================================
+
+export async function createOffer({ conversationId, listingId, buyerId, sellerId, originalPrice, offerAmountNaira, message }) {
+    if (!conversationId || !buyerId || !sellerId || !offerAmountNaira) {
+        throw new Error('Missing required offer parameters')
+    }
+
+    const { data, error } = await supabase
+        .from('offers')
+        .insert({
+            conversation_id: conversationId,
+            listing_id: String(listingId || ''),
+            buyer_id: buyerId,
+            seller_id: sellerId,
+            original_price: Number(originalPrice || 0),
+            offer_amount_naira: Number(offerAmountNaira),
+            offer_amount_kobo: Math.round(Number(offerAmountNaira) * 100),
+            message: message || `Offered ₦${Number(offerAmountNaira).toLocaleString()}`,
+            status: 'pending',
+        })
+        .select('*')
+        .single()
+
+    if (error) {
+        console.error('[DB] createOffer error:', error)
+        throw error
+    }
+    return data
+}
+
+export async function getOffersForConversation(conversationId) {
+    if (!conversationId) return []
+    try {
+        const { data, error } = await supabase
+            .from('offers')
+            .select('*')
+            .eq('conversation_id', conversationId)
+            .order('created_at', { ascending: false })
+
+        if (error) throw error
+        return data || []
+    } catch (err) {
+        console.warn('[DB] getOffersForConversation error:', err?.message)
+        return []
+    }
+}
+
+export async function respondToOffer(offerId, status, counterAmountNaira = null) {
+    if (!offerId || !status) throw new Error('Offer ID and status required')
+    
+    const updatePayload = {
+        status,
+        updated_at: new Date().toISOString(),
+    }
+    if (counterAmountNaira) {
+        updatePayload.counter_amount_naira = Number(counterAmountNaira)
+    }
+
+    const { data, error } = await supabase
+        .from('offers')
+        .update(updatePayload)
+        .eq('id', offerId)
+        .select('*')
+        .single()
+
+    if (error) throw error
+    return data
+}
+
+// ============================================
+// Verified Student Ratings & Reviews
+// ============================================
+
+export async function createReview({ sellerId, reviewerId, listingId, orderId, itemTitle, rating, comment }) {
+    if (!sellerId || !reviewerId || !rating || !comment) {
+        throw new Error('Seller, rating (1-5), and review text are required')
+    }
+
+    const { data, error } = await supabase
+        .from('reviews')
+        .insert({
+            seller_id: sellerId,
+            reviewer_id: reviewerId,
+            listing_id: listingId ? String(listingId) : null,
+            order_id: orderId || null,
+            item_title: itemTitle || 'Campus Marketplace Purchase',
+            rating: Math.min(5, Math.max(1, Math.round(rating))),
+            comment: comment.trim(),
+            is_verified_buyer: true,
+        })
+        .select('*, reviewer:users!reviewer_id(displayName, email, photoURL)')
+        .single()
+
+    if (error) {
+        console.error('[DB] createReview error:', error)
+        throw error
+    }
+    return data
+}
+
+export async function getSellerReviews(sellerId) {
+    if (!sellerId) return []
+    try {
+        const { data, error } = await supabase
+            .from('reviews')
+            .select('*, reviewer:users!reviewer_id(displayName, email, photoURL, faculty, level)')
+            .eq('seller_id', sellerId)
+            .order('created_at', { ascending: false })
+
+        if (error) throw error
+        return data || []
+    } catch (err) {
+        console.warn('[DB] getSellerReviews error:', err?.message)
+        return []
+    }
+}
+
+export async function getSellerRatingSummary(sellerId) {
+    if (!sellerId) return { averageRating: 5.0, totalReviews: 0, breakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } }
+    const reviews = await getSellerReviews(sellerId)
+    if (!reviews || reviews.length === 0) {
+        return { averageRating: 5.0, totalReviews: 0, breakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } }
+    }
+
+    const breakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 }
+    let sum = 0
+    reviews.forEach(r => {
+        const score = r.rating || 5
+        if (breakdown[score] !== undefined) breakdown[score]++
+        sum += score
+    })
+
+    return {
+        averageRating: Number((sum / reviews.length).toFixed(1)),
+        totalReviews: reviews.length,
+        breakdown,
+    }
+}
+
+// ============================================
+// Student "Looking For (ISO)" Demand Board
+// ============================================
+
+export async function createStudentRequest({ userId, title, description, category, subcategory, budgetNaira, preferredLocation }) {
+    if (!userId || !title || !category) {
+        throw new Error('User, request title, and category are required')
+    }
+
+    const { data, error } = await supabase
+        .from('requests')
+        .insert({
+            user_id: userId,
+            title: title.trim(),
+            description: (description || '').trim(),
+            category,
+            subcategory: subcategory || null,
+            budget_naira: budgetNaira ? Number(budgetNaira) : null,
+            preferred_location: preferredLocation || 'UNIZIK Perm Site',
+            status: 'open',
+        })
+        .select('*, requester:users!user_id(displayName, email, phoneNumber, photoURL)')
+        .single()
+
+    if (error) {
+        console.error('[DB] createStudentRequest error:', error)
+        throw error
+    }
+    return data
+}
+
+export async function getStudentRequests({ category = null, limit = 50 } = {}) {
+    try {
+        let query = supabase
+            .from('requests')
+            .select('*, requester:users!user_id(displayName, email, phoneNumber, photoURL, faculty, level, lodge_location)')
+            .eq('status', 'open')
+            .order('created_at', { ascending: false })
+            .limit(limit)
+
+        if (category && category !== 'All') {
+            query = query.eq('category', category)
+        }
+
+        const { data, error } = await query
+        if (error) throw error
+        return data || []
+    } catch (err) {
+        console.warn('[DB] getStudentRequests error:', err?.message)
+        return []
+    }
+}
+
+export async function updateStudentRequestStatus(requestId, status) {
+    if (!requestId || !status) return false
+    const { error } = await supabase
+        .from('requests')
+        .update({ status, updated_at: new Date().toISOString() })
+        .eq('id', requestId)
+
+    if (error) throw error
+    return true
+}
+
+// ============================================
+// Physical Escrow & Handshake PIN Exchange
+// ============================================
+
+export async function createEscrowTrade({ listingId, itemTitle, buyerId, sellerId, amountNaira, meetupLocation, paystackReference }) {
+    if (!listingId || !buyerId || !sellerId || !amountNaira) {
+        throw new Error('Missing escrow trade parameters')
+    }
+
+    // Generate random 4-digit PIN for the buyer
+    const pin = Math.floor(1000 + Math.random() * 9000).toString()
+
+    const { data, error } = await supabase
+        .from('escrow_trades')
+        .insert({
+            listing_id: String(listingId),
+            item_title: itemTitle || 'Physical Marketplace Item',
+            buyer_id: buyerId,
+            seller_id: sellerId,
+            amount_naira: Number(amountNaira),
+            amount_kobo: Math.round(Number(amountNaira) * 100),
+            meetup_location: meetupLocation || 'Garba Square (Perm Site)',
+            handshake_pin: pin,
+            paystack_reference: paystackReference || null,
+            status: 'escrow_held',
+        })
+        .select('*')
+        .single()
+
+    if (error) {
+        console.error('[DB] createEscrowTrade error:', error)
+        throw error
+    }
+    return data
+}
+
+export async function verifyHandshakePin(tradeId, enteredPin) {
+    if (!tradeId || !enteredPin) {
+        return { success: false, error: 'Trade ID and 4-digit PIN are required' }
+    }
+
+    const { data: trade, error } = await supabase
+        .from('escrow_trades')
+        .select('*')
+        .eq('id', tradeId)
+        .single()
+
+    if (error || !trade) {
+        return { success: false, error: 'Escrow trade not found' }
+    }
+
+    if (trade.status === 'delivered') {
+        return { success: false, error: 'This trade has already been completed and funds released.' }
+    }
+
+    if (trade.handshake_pin.trim() !== String(enteredPin).trim()) {
+        return { success: false, error: 'Incorrect Handshake PIN. Please verify with the buyer after inspecting the item.' }
+    }
+
+    // PIN match! Release escrow trade
+    const { data: updated, error: updateError } = await supabase
+        .from('escrow_trades')
+        .update({
+            status: 'delivered',
+            completed_at: new Date().toISOString(),
+        })
+        .eq('id', tradeId)
+        .select('*')
+        .single()
+
+    if (updateError) throw updateError
+    return { success: true, trade: updated }
+}
+
+export async function getEscrowTradesForUser(userId) {
+    if (!userId) return []
+    try {
+        const { data, error } = await supabase
+            .from('escrow_trades')
+            .select('*')
+            .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+            .order('created_at', { ascending: false })
+
+        if (error) throw error
+        return data || []
+    } catch (err) {
+        console.warn('[DB] getEscrowTradesForUser error:', err?.message)
+        return []
+    }
+}
+
+// ============================================
+// Listing Boost & Promotion
+// ============================================
+
+export async function boostListing(listingId, durationDays = 3) {
+    if (!listingId) throw new Error('Listing ID required')
+    const until = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString()
+
+    const { error } = await supabase
+        .from('listings')
+        .update({
+            is_boosted: true,
+            boosted_until: until,
+        })
+        .eq('id', listingId)
+
+    if (error) {
+        // Try digital products as fallback
+        const { error: digitalErr } = await supabase
+            .from('digital_products')
+            .update({
+                is_boosted: true,
+                boosted_until: until,
+            })
+            .eq('id', listingId)
+        if (digitalErr) throw digitalErr
+    }
+
+    invalidateCacheByPrefix('listings')
+    return { success: true, boostedUntil: until }
+}
+
+
 

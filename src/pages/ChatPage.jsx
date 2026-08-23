@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Send, Phone, Loader2, AlertTriangle, X, Image as ImageIcon, Check, CheckCheck, ExternalLink, ShieldCheck, MapPin, Sparkles } from 'lucide-react'
+import { ArrowLeft, Send, Phone, Loader2, AlertTriangle, X, Image as ImageIcon, Check, CheckCheck, ExternalLink, ShieldCheck, MapPin, Sparkles, Tag, Key, DollarSign, CheckCircle2, ShieldAlert } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getConversation, getMessages, sendMessage, subscribeToMessages, uploadChatAttachment } from '../lib/messaging'
-import { getUser } from '../lib/database'
+import { getUser, createOffer, getOffersForConversation, respondToOffer, verifyHandshakePin, getEscrowTradesForUser } from '../lib/database'
 import { markConversationRead } from '../lib/readStatus'
 import { useToast } from '../components/Toast'
+import PaystackCheckout from '../components/PaystackCheckout'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount || 0)
@@ -41,8 +42,8 @@ export default function ChatPage() {
     const { conversationId } = useParams()
     const navigate = useNavigate()
     const toast = useToast()
-    const { session, isAuthenticated } = useAuth()
-    const myId = session?.user?.id
+    const { session, user, isAuthenticated } = useAuth()
+    const myId = session?.user?.id || user?.uid || user?.id
 
     const [conversation, setConversation] = useState(null)
     const [messages, setMessages] = useState([])
@@ -56,10 +57,27 @@ export default function ChatPage() {
     const [showCallSheet, setShowCallSheet] = useState(false)
     const [showItemCard, setShowItemCard] = useState(true)
 
+    // Offers & Bargaining State
+    const [offers, setOffers] = useState([])
+    const [showOfferModal, setShowOfferModal] = useState(false)
+    const [offerAmount, setOfferAmount] = useState('')
+    const [offerMessage, setOfferMessage] = useState('')
+    const [submittingOffer, setSubmittingOffer] = useState(false)
+
+    // Checkout on accepted offer state
+    const [checkoutProduct, setCheckoutProduct] = useState(null)
+
+    // Escrow & Handshake State
+    const [escrowTrades, setEscrowTrades] = useState([])
+    const [showHandshakeModal, setShowHandshakeModal] = useState(false)
+    const [enteredPin, setEnteredPin] = useState('')
+    const [verifyingPin, setVerifyingPin] = useState(false)
+    const [pinResult, setPinResult] = useState(null)
+
     const messagesEndRef = useRef(null)
     const fileInputRef = useRef(null)
 
-    // Load conversation + messages
+    // Load conversation + messages + offers + escrow trades
     useEffect(() => {
         if (!conversationId || !myId) return
         let unsubscribe = null
@@ -75,9 +93,15 @@ export default function ChatPage() {
                 if (!isMounted) return
                 setConversation(conv)
 
-                const msgs = await getMessages(conversationId)
+                const [msgs, ofrs, trades] = await Promise.all([
+                    getMessages(conversationId).catch(() => []),
+                    getOffersForConversation(conversationId).catch(() => []),
+                    getEscrowTradesForUser(myId).catch(() => []),
+                ])
                 if (!isMounted) return
                 setMessages(msgs || [])
+                setOffers(ofrs || [])
+                setEscrowTrades(trades || [])
 
                 // Mark as read
                 markConversationRead(conversationId)
@@ -100,7 +124,6 @@ export default function ChatPage() {
             unsubscribe = subscribeToMessages(conversationId, (newMsg) => {
                 if (!isMounted) return
                 setMessages(prev => {
-                    // If optimistic message with tempId exists, replace or deduplicate
                     const existingIdx = prev.findIndex(m => m.id === newMsg.id || (m.isOptimistic && m.text === newMsg.text && m.senderId === newMsg.senderId))
                     if (existingIdx !== -1) {
                         const copy = [...prev]
@@ -203,6 +226,72 @@ export default function ChatPage() {
         }
     }
 
+    const handleCreateOffer = async (e) => {
+        e.preventDefault()
+        if (!offerAmount || Number(offerAmount) <= 0) return
+        setSubmittingOffer(true)
+        try {
+            const newOffer = await createOffer({
+                conversationId,
+                listingId: item?.id || '',
+                buyerId: myId,
+                sellerId: conversation?.sellerId || otherUser?.uid || otherUser?.id,
+                originalPrice: item?.price || 0,
+                offerAmountNaira: Number(offerAmount),
+                message: offerMessage || `Offered ₦${Number(offerAmount).toLocaleString()}`,
+            })
+            setOffers(prev => [newOffer, ...prev])
+            setShowOfferModal(false)
+            setOfferAmount('')
+            setOfferMessage('')
+            handleSend(`🤝 Made an offer of ₦${Number(offerAmount).toLocaleString()}`)
+            toast.success('Offer sent to seller!')
+        } catch (err) {
+            console.error('Create offer error:', err)
+            toast.error('Failed to submit offer')
+        } finally {
+            setSubmittingOffer(false)
+        }
+    }
+
+    const handleRespondOffer = async (offerId, status) => {
+        try {
+            const updated = await respondToOffer(offerId, status)
+            setOffers(prev => prev.map(o => o.id === offerId ? updated : o))
+            if (status === 'accepted') {
+                handleSend(`✅ Accepted offer of ₦${Number(updated.offer_amount_naira).toLocaleString()}! You can tap Pay to complete checkout.`)
+                toast.success('Offer accepted!')
+            } else {
+                handleSend(`❌ Declined the offer of ₦${Number(updated.offer_amount_naira).toLocaleString()}.`)
+                toast.info('Offer declined.')
+            }
+        } catch (err) {
+            console.error('Respond offer error:', err)
+            toast.error('Failed to update offer')
+        }
+    }
+
+    const handleVerifyPin = async (tradeId) => {
+        if (!enteredPin || enteredPin.length !== 4) return
+        setVerifyingPin(true)
+        setPinResult(null)
+        try {
+            const res = await verifyHandshakePin(tradeId, enteredPin)
+            if (res.success) {
+                setPinResult({ success: true, message: 'Handshake PIN verified! Funds released to your seller balance.' })
+                setEscrowTrades(prev => prev.map(t => t.id === tradeId ? res.trade : t))
+                handleSend(`🎉 Handshake PIN verified! Item successfully delivered and payment released.`)
+                toast.success('Trade completed!')
+            } else {
+                setPinResult({ success: false, message: res.error || 'Invalid Handshake PIN.' })
+            }
+        } catch (err) {
+            setPinResult({ success: false, message: err.message || 'Verification failed.' })
+        } finally {
+            setVerifyingPin(false)
+        }
+    }
+
     if (!isAuthenticated) {
         return (
             <div>
@@ -231,6 +320,8 @@ export default function ChatPage() {
     const otherName = otherUser?.displayName || 'Campus User'
     const otherPhone = otherUser?.phoneNumber || ''
     const itemImage = item?.images?.[0] || null
+    const isBuyer = conversation?.buyerId === myId
+    const activeOffer = offers[0] || null
 
     let lastDate = ''
 
@@ -258,20 +349,40 @@ export default function ChatPage() {
                     </div>
                     {otherUser?.department && (
                         <p style={{ margin: 0, fontSize: '0.625rem', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {otherUser.department}
+                            {otherUser.department} {otherUser?.level ? `• ${otherUser.level}` : ''}
                         </p>
                     )}
                 </div>
-                <button
-                    onClick={() => setShowCallSheet(true)}
-                    title="Call seller"
-                    style={{ width: '2.25rem', height: '2.25rem', borderRadius: '9999px', border: '1px solid var(--color-border)', backgroundColor: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#059669' }}
-                >
-                    <Phone size={16} />
-                </button>
+                
+                {/* Header Actions */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                    {isBuyer && item?.id && (
+                        <button
+                            onClick={() => setShowOfferModal(true)}
+                            title="Make an offer"
+                            style={{ padding: '0.375rem 0.625rem', borderRadius: '0.5rem', border: '1px solid #BFDBFE', backgroundColor: '#EFF6FF', color: '#1D4ED8', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                        >
+                            <Tag size={12} /> Make Offer
+                        </button>
+                    )}
+                    <button
+                        onClick={() => setShowHandshakeModal(true)}
+                        title="Campus Handshake PIN Escrow"
+                        style={{ width: '2.25rem', height: '2.25rem', borderRadius: '9999px', border: '1px solid #BBF7D0', backgroundColor: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#166534' }}
+                    >
+                        <Key size={14} />
+                    </button>
+                    <button
+                        onClick={() => setShowCallSheet(true)}
+                        title="Call seller"
+                        style={{ width: '2.25rem', height: '2.25rem', borderRadius: '9999px', border: '1px solid var(--color-border)', backgroundColor: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#059669' }}
+                    >
+                        <Phone size={16} />
+                    </button>
+                </div>
             </header>
 
-            {/* Contextual Top Item Action Card */}
+            {/* Contextual Top Item Action Card & Active Offer Banner */}
             {item?.title && showItemCard && (
                 <div style={{ flexShrink: 0, backgroundColor: '#EFF6FF', borderBottom: '1px solid #BFDBFE', padding: '0.5rem 0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', minWidth: 0 }}>
@@ -321,6 +432,62 @@ export default function ChatPage() {
                         <button onClick={() => setShowItemCard(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: '#64748B' }}>
                             <X size={14} />
                         </button>
+                    </div>
+                </div>
+            )}
+
+            {/* In-Chat Bargaining Active Offer Card (if any pending/accepted offer exists) */}
+            {activeOffer && (
+                <div style={{ margin: '0.5rem 1rem 0', padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: activeOffer.status === 'accepted' ? '#F0FDF4' : activeOffer.status === 'declined' ? '#FEF2F2' : '#FFFBEB', border: `1.5px solid ${activeOffer.status === 'accepted' ? '#86EFAC' : activeOffer.status === 'declined' ? '#FECACA' : '#FDE68A'}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                            <Tag size={14} color={activeOffer.status === 'accepted' ? '#166534' : activeOffer.status === 'declined' ? '#991B1B' : '#B45309'} />
+                            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: activeOffer.status === 'accepted' ? '#166534' : activeOffer.status === 'declined' ? '#991B1B' : '#B45309' }}>
+                                Offer: {formatNaira(activeOffer.offer_amount_naira)}
+                            </span>
+                            <span style={{ fontSize: '0.625rem', fontWeight: 700, padding: '0.05rem 0.35rem', borderRadius: '0.25rem', textTransform: 'uppercase', backgroundColor: activeOffer.status === 'accepted' ? '#DCFCE7' : activeOffer.status === 'declined' ? '#FEE2E2' : '#FEF3C7', color: activeOffer.status === 'accepted' ? '#166534' : activeOffer.status === 'declined' ? '#991B1B' : '#92400E' }}>
+                                {activeOffer.status}
+                            </span>
+                        </div>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: '#64748B' }}>
+                            {activeOffer.buyer_id === myId ? 'You made this offer' : `${otherName} offered this price`}
+                        </p>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                        {/* Seller Actions on Pending Offer */}
+                        {!isBuyer && activeOffer.status === 'pending' && (
+                            <>
+                                <button
+                                    onClick={() => handleRespondOffer(activeOffer.id, 'accepted')}
+                                    style={{ padding: '0.375rem 0.625rem', borderRadius: '0.375rem', border: 'none', backgroundColor: '#10B981', color: 'white', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer' }}
+                                >
+                                    Accept
+                                </button>
+                                <button
+                                    onClick={() => handleRespondOffer(activeOffer.id, 'declined')}
+                                    style={{ padding: '0.375rem 0.625rem', borderRadius: '0.375rem', border: '1px solid #FECACA', backgroundColor: '#FEF2F2', color: '#DC2626', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer' }}
+                                >
+                                    Decline
+                                </button>
+                            </>
+                        )}
+
+                        {/* Buyer Action on Accepted Offer -> Instant Checkout */}
+                        {isBuyer && activeOffer.status === 'accepted' && (
+                            <button
+                                onClick={() => setCheckoutProduct({
+                                    id: item?.id,
+                                    title: item?.title || 'Negotiated Purchase',
+                                    price: activeOffer.offer_amount_naira * 100, // kobo
+                                    isDigital: item?.isDigital || false,
+                                    seller_id: conversation?.sellerId || otherUser?.uid || otherUser?.id,
+                                })}
+                                style={{ padding: '0.375rem 0.75rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#2563EB', color: 'white', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', boxShadow: '0 2px 6px rgba(37,99,235,0.3)' }}
+                            >
+                                <DollarSign size={12} /> Pay {formatNaira(activeOffer.offer_amount_naira)} Now
+                            </button>
+                        )}
                     </div>
                 </div>
             )}
@@ -543,6 +710,126 @@ export default function ChatPage() {
                         </div>
                     </div>
                 </>
+            )}
+
+            {/* Make Offer Modal */}
+            {showOfferModal && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 110, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                    <div style={{ width: '100%', maxWidth: '24rem', backgroundColor: 'white', borderRadius: '1rem', padding: '1.25rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                            <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 800, color: '#0F172A' }}>Make a Price Offer</h3>
+                            <button onClick={() => setShowOfferModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem' }}>
+                                <X size={16} />
+                            </button>
+                        </div>
+                        <p style={{ margin: '0 0 1rem', fontSize: '0.75rem', color: '#64748B' }}>
+                            Original Price: <strong>{formatNaira(item?.price)}</strong>. Enter your proposed price to negotiate with the seller.
+                        </p>
+                        <form onSubmit={handleCreateOffer}>
+                            <div style={{ marginBottom: '0.75rem' }}>
+                                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.25rem' }}>Your Offer (₦)</label>
+                                <input
+                                    type="number"
+                                    placeholder="e.g. 2500"
+                                    value={offerAmount}
+                                    onChange={e => setOfferAmount(e.target.value)}
+                                    required
+                                    min="1"
+                                    style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.5rem', border: '1.5px solid var(--color-brand)', fontSize: '1rem', fontWeight: 800, boxSizing: 'border-box' }}
+                                />
+                            </div>
+                            <div style={{ marginBottom: '1rem' }}>
+                                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.25rem' }}>Note to Seller (Optional)</label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. I can pick it up today at Garba Square"
+                                    value={offerMessage}
+                                    onChange={e => setOfferMessage(e.target.value)}
+                                    style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-border)', fontSize: '0.75rem', boxSizing: 'border-box' }}
+                                />
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={submittingOffer}
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.625rem', border: 'none', backgroundColor: '#2563EB', color: 'white', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem' }}
+                            >
+                                {submittingOffer ? <Loader2 size={16} className="animate-spin" /> : <Tag size={16} />}
+                                {submittingOffer ? 'Sending Offer...' : 'Send Bargain Offer'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Handshake PIN Escrow Modal */}
+            {showHandshakeModal && (
+                <div style={{ position: 'fixed', inset: 0, zIndex: 110, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
+                    <div style={{ width: '100%', maxWidth: '24rem', backgroundColor: 'white', borderRadius: '1rem', padding: '1.25rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                            <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                <Key size={16} color="#166534" /> Campus Handshake Escrow
+                            </h3>
+                            <button onClick={() => setShowHandshakeModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem' }}>
+                                <X size={16} />
+                            </button>
+                        </div>
+                        <p style={{ margin: '0 0 1rem', fontSize: '0.75rem', color: '#64748B' }}>
+                            {isBuyer
+                                ? 'Give your 4-digit Handshake PIN to the seller only after physically inspecting the item on campus.'
+                                : 'Enter the buyer’s 4-digit PIN upon handing over the physical item to release escrow payment to your bank.'}
+                        </p>
+
+                        {!isBuyer ? (
+                            <div>
+                                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.25rem' }}>Buyer’s 4-Digit Handshake PIN</label>
+                                <input
+                                    type="text"
+                                    maxLength={4}
+                                    placeholder="e.g. 8492"
+                                    value={enteredPin}
+                                    onChange={e => setEnteredPin(e.target.value)}
+                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1.5px solid var(--color-brand)', fontSize: '1.25rem', fontWeight: 800, textAlign: 'center', letterSpacing: '0.25em', boxSizing: 'border-box' }}
+                                />
+                                {pinResult && (
+                                    <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', fontWeight: 700, color: pinResult.success ? '#059669' : '#DC2626' }}>
+                                        {pinResult.message}
+                                    </p>
+                                )}
+                                <button
+                                    onClick={() => handleVerifyPin(escrowTrades[0]?.id)}
+                                    disabled={verifyingPin || enteredPin.length !== 4}
+                                    style={{ marginTop: '0.75rem', width: '100%', padding: '0.75rem', borderRadius: '0.625rem', border: 'none', backgroundColor: '#10B981', color: 'white', fontSize: '0.875rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem' }}
+                                >
+                                    {verifyingPin ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
+                                    {verifyingPin ? 'Verifying...' : 'Verify PIN & Release Funds'}
+                                </button>
+                            </div>
+                        ) : (
+                            <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: '#F0FDF4', borderRadius: '0.75rem', border: '1px dashed #86EFAC' }}>
+                                <p style={{ margin: 0, fontSize: '0.6875rem', color: '#166534', fontWeight: 700, textTransform: 'uppercase' }}>Your Delivery Confirmation PIN</p>
+                                <p style={{ margin: '0.5rem 0', fontSize: '2rem', fontWeight: 900, fontFamily: 'monospace', letterSpacing: '0.2em', color: '#047857' }}>
+                                    {escrowTrades[0]?.handshake_pin || '••••'}
+                                </p>
+                                <p style={{ margin: 0, fontSize: '0.6875rem', color: '#065F46' }}>
+                                    Share this PIN with {otherName} at the meetup spot after you check the item.
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+
+            {/* Direct Paystack Checkout for Accepted Offers */}
+            {checkoutProduct && (
+                <PaystackCheckout
+                    product={checkoutProduct}
+                    onSuccess={() => {
+                        setCheckoutProduct(null)
+                        handleSend(`💳 Payment of ${formatNaira(checkoutProduct.price / 100)} completed successfully!`)
+                        toast.success('Payment completed!')
+                    }}
+                    onClose={() => setCheckoutProduct(null)}
+                />
             )}
         </div>
     )

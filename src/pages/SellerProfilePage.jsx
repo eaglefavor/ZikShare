@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { 
     ArrowLeft, ShieldCheck, MapPin, Phone, MessageCircle, 
-    FileText, Package, Share2, Loader2, Sparkles 
+    FileText, Package, Share2, Loader2, Sparkles, Star, CheckCircle2 
 } from 'lucide-react'
-import { getSellerPublicProfile } from '../lib/database'
+import { getSellerPublicProfile, getSellerReviews, getSellerRatingSummary } from '../lib/database'
 import { getOrCreateConversation } from '../lib/messaging'
 import { useAuth } from '../contexts/AuthContext'
 
@@ -24,6 +24,8 @@ export default function SellerProfilePage() {
 
     const [loading, setLoading] = useState(true)
     const [data, setData] = useState(null)
+    const [reviews, setReviews] = useState([])
+    const [ratingSummary, setRatingSummary] = useState({ averageRating: 5, totalReviews: 0 })
     const [filter, setFilter] = useState('All') // 'All', 'Digital', 'Physical'
     const [contacting, setContacting] = useState(false)
 
@@ -31,8 +33,14 @@ export default function SellerProfilePage() {
         if (!id) return
         setLoading(true)
         try {
-            const profileData = await getSellerPublicProfile(id)
+            const [profileData, revs, rSummary] = await Promise.all([
+                getSellerPublicProfile(id),
+                getSellerReviews(id).catch(() => []),
+                getSellerRatingSummary(id).catch(() => ({ averageRating: 5, totalReviews: 0 }))
+            ])
             setData(profileData)
+            setReviews(revs || [])
+            setRatingSummary(rSummary || { averageRating: 5, totalReviews: 0 })
         } catch (err) {
             console.error('Failed to load seller profile:', err)
         } finally {
@@ -153,23 +161,27 @@ export default function SellerProfilePage() {
                     </div>
                 </div>
 
-                {/* Seller Quick Stats */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: '#F8FAFC', border: '1px solid var(--color-border)', marginBottom: '1rem', textAlign: 'center' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.375rem', padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: '#F8FAFC', border: '1px solid var(--color-border)', marginBottom: '1rem', textAlign: 'center' }}>
                     <div>
-                        <span style={{ fontSize: '1.125rem', fontWeight: 800, color: 'var(--color-brand)' }}>{totalListings}</span>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Listings</p>
+                        <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: 'var(--color-brand)' }}>{totalListings}</span>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Listings</p>
                     </div>
                     <div>
-                        <span style={{ fontSize: '1.125rem', fontWeight: 800, color: '#10B981' }}>{digitalCount}</span>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>PDF Materials</p>
+                        <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#10B981' }}>{digitalCount}</span>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>PDFs</p>
                     </div>
                     <div>
-                        <span style={{ fontSize: '1.125rem', fontWeight: 800, color: '#F59E0B' }}>{seller.isVerified ? 'Verified' : 'Active'}</span>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Status</p>
+                        <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#F59E0B', display: 'inline-flex', alignItems: 'center', gap: '0.125rem' }}>
+                            <Star size={12} fill="#F59E0B" /> {ratingSummary.averageRating.toFixed(1)}
+                        </span>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Rating</p>
+                    </div>
+                    <div>
+                        <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#6366F1' }}>{ratingSummary.totalReviews}</span>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Reviews</p>
                     </div>
                 </div>
 
-                {/* Contact Actions */}
                 <div style={{ display: 'flex', gap: '0.5rem' }}>
                     <button
                         onClick={handleContact}
@@ -222,12 +234,10 @@ export default function SellerProfilePage() {
                 </div>
             </div>
 
-            {/* Catalog Section */}
             <div style={{ padding: '1rem', maxWidth: '48rem', margin: '0 auto' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                     <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 800 }}>Store Items ({filteredListings.length})</h3>
 
-                    {/* Filter Pills */}
                     <div style={{ display: 'flex', gap: '0.25rem' }}>
                         {[
                             { id: 'All', label: 'All' },
@@ -256,9 +266,9 @@ export default function SellerProfilePage() {
                 </div>
 
                 {filteredListings.length === 0 ? (
-                    <div style={{ backgroundColor: 'white', borderRadius: '1rem', padding: '3rem 1rem', textAlign: 'center', border: '1px solid var(--color-border)', color: 'var(--color-text-muted)' }}>
-                        <Package size={36} style={{ margin: '0 auto 0.5rem', opacity: 0.4 }} />
-                        <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 600 }}>No items available in this category</p>
+                    <div style={{ padding: '2.5rem 1rem', textAlign: 'center', backgroundColor: 'white', borderRadius: '0.75rem', border: '1px solid var(--color-border)' }}>
+                        <p style={{ fontSize: '1.75rem', margin: '0 0 0.5rem' }}>📦</p>
+                        <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>No items listed under this category yet.</p>
                     </div>
                 ) : (
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
@@ -304,6 +314,42 @@ export default function SellerProfilePage() {
                         })}
                     </div>
                 )}
+
+                {/* Verified Student Reviews Section */}
+                <div style={{ marginTop: '1.5rem', backgroundColor: 'white', borderRadius: '0.875rem', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                        <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                            <CheckCircle2 size={16} color="#10B981" /> Verified Buyer Reviews ({reviews.length})
+                        </h3>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#F59E0B' }}>
+                            <Star size={14} fill="#F59E0B" />
+                            <span style={{ fontSize: '0.875rem', fontWeight: 800, color: '#0F172A' }}>{ratingSummary.averageRating.toFixed(1)}</span>
+                        </div>
+                    </div>
+
+                    {reviews.length > 0 ? (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                            {reviews.map(rev => (
+                                <div key={rev.id} style={{ padding: '0.75rem', backgroundColor: '#F8FAFC', borderRadius: '0.625rem', border: '1px solid #E2E8F0' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                                        <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A' }}>{rev.users?.displayName || 'Campus Buyer'}</span>
+                                        <div style={{ display: 'flex', color: '#F59E0B' }}>
+                                            {[...Array(rev.rating || 5)].map((_, i) => (
+                                                <Star key={i} size={11} fill="#F59E0B" />
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#334155', lineHeight: 1.4 }}>{rev.comment}</p>
+                                    <span style={{ fontSize: '0.5625rem', color: '#94A3B8', marginTop: '0.25rem', display: 'block' }}>{formatDate(rev.created_at)}</span>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748B', textAlign: 'center', padding: '1rem 0' }}>
+                            No buyer reviews yet. Buyers can leave feedback after completing trades.
+                        </p>
+                    )}
+                </div>
             </div>
         </div>
     )

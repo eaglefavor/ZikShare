@@ -8,19 +8,15 @@ import { uploadImage, uploadImages } from '../lib/cloudinary'
 import { invalidateCacheByPrefix } from '../lib/cache'
 import { extractFirstPageThumbnail } from '../lib/pdfPreview'
 
-const physicalCategories = ['Electronics', 'Books', 'Fashion', 'Services', 'Engineering', 'Science', 'Arts', 'Medical', 'Other']
-const digitalCategories = ['Engineering', 'Science', 'Arts', 'Medical', 'Past Questions', 'Notes', 'Law', 'Management', 'Other']
-const conditions = ['Fairly Used', 'Like New', 'Brand New']
+import { MARKETPLACE_SEGMENTS, UNIZIK_LOCATIONS, ACADEMIC_LEVELS, UNIZIK_FACULTIES } from '../lib/categories'
+
+const conditions = ['Brand New', 'Like New', 'Fairly Used']
 
 function generateUUID() {
-    if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-        try {
-            return crypto.randomUUID()
-        } catch {
-            // fallback
-        }
+    if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID()
     }
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
         const r = (Math.random() * 16) | 0
         const v = c === 'x' ? r : (r & 0x3) | 0x8
         return v.toString(16)
@@ -69,10 +65,17 @@ export default function PostPage() {
     const [title, setTitle] = useState('')
     const [description, setDescription] = useState('')
     const [price, setPrice] = useState('')
-    const [category, setCategory] = useState('Electronics')
+    const [category, setCategory] = useState('Electronics & Tech')
+    const [subcategory, setSubcategory] = useState('Phones & Tablets')
+
+    // Academic Specific fields
+    const [courseCode, setCourseCode] = useState('')
+    const [academicLevel, setAcademicLevel] = useState('100L')
+    const [faculty, setFaculty] = useState(UNIZIK_FACULTIES[0] || 'Physical Sciences')
 
     // Physical fields
     const [condition, setCondition] = useState('Fairly Used')
+    const [meetupSpot, setMeetupSpot] = useState('Garba Square (Perm Site)')
     const [physicalPhotos, setPhysicalPhotos] = useState([])
     const [photoPreviews, setPhotoPreviews] = useState([])
 
@@ -248,7 +251,12 @@ export default function PostPage() {
                         description: description.trim(),
                         price: numericPrice,
                         category,
+                        subcategory,
                         condition,
+                        course_code: courseCode ? courseCode.trim().toUpperCase() : null,
+                        level: academicLevel || null,
+                        faculty: faculty || null,
+                        lodge_location: meetupSpot,
                         images: imageUrls,
                         status: 'Active',
                     }),
@@ -305,6 +313,10 @@ export default function PostPage() {
                         description: description.trim(),
                         price: Math.round(numericPrice * 100), // in kobo
                         category,
+                        subcategory,
+                        course_code: courseCode ? courseCode.trim().toUpperCase() : null,
+                        level: academicLevel || null,
+                        faculty: faculty || null,
                         original_storage_path: fileName,
                         file_size_bytes: digitalFile.size,
                         seller_id: currentUserId,
@@ -677,31 +689,124 @@ export default function PostPage() {
 
                     {/* Category Selection */}
                     <div>
-                        <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A', marginBottom: '0.5rem' }}>
-                            Category <span style={{ color: '#DC2626' }}>*</span>
+                        <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A', marginBottom: '0.375rem' }}>
+                            Category Segment <span style={{ color: '#DC2626' }}>*</span>
                         </label>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem' }}>
-                            {(postType === 'physical' ? physicalCategories : digitalCategories).map(cat => (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginBottom: '0.625rem' }}>
+                            {MARKETPLACE_SEGMENTS.map(seg => (
                                 <button
-                                    key={cat}
+                                    key={seg.id}
                                     type="button"
-                                    onClick={() => setCategory(cat)}
+                                    onClick={() => {
+                                        setCategory(seg.name)
+                                        if (seg.subcategories?.[0]) setSubcategory(seg.subcategories[0].name)
+                                    }}
                                     style={{
-                                        padding: '0.375rem 0.75rem',
-                                        borderRadius: '9999px',
-                                        border: 'none',
-                                        backgroundColor: category === cat ? 'var(--color-brand)' : '#F1F5F9',
-                                        color: category === cat ? '#FFFFFF' : '#334155',
-                                        fontSize: '0.75rem',
+                                        padding: '0.375rem 0.625rem',
+                                        borderRadius: '0.5rem',
+                                        border: category === seg.name ? `2px solid ${seg.color}` : '1px solid var(--color-border)',
+                                        backgroundColor: category === seg.name ? seg.bg : '#FFFFFF',
+                                        color: category === seg.name ? seg.color : '#334155',
+                                        fontSize: '0.6875rem',
                                         fontWeight: 700,
                                         cursor: 'pointer',
                                     }}
                                 >
-                                    {cat}
+                                    {seg.emoji} {seg.name}
                                 </button>
                             ))}
                         </div>
+
+                        {/* Granular Subcategory Pills */}
+                        {category && (
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
+                                    Specific Item Type (Subcategory) <span style={{ color: '#DC2626' }}>*</span>
+                                </label>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3125rem' }}>
+                                    {(MARKETPLACE_SEGMENTS.find(s => s.name === category)?.subcategories || []).map(sub => (
+                                        <button
+                                            key={sub.id}
+                                            type="button"
+                                            onClick={() => setSubcategory(sub.name)}
+                                            style={{
+                                                padding: '0.3125rem 0.5rem',
+                                                borderRadius: '9999px',
+                                                border: subcategory === sub.name ? '1.5px solid var(--color-brand)' : '1px solid #E2E8F0',
+                                                backgroundColor: subcategory === sub.name ? '#EFF6FF' : '#F8FAFC',
+                                                color: subcategory === sub.name ? '#1D4ED8' : '#475569',
+                                                fontSize: '0.6875rem',
+                                                fontWeight: 600,
+                                                cursor: 'pointer',
+                                            }}
+                                        >
+                                            {sub.emoji} {sub.name}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
+
+                    {/* Academic Course Code, Level & Faculty (If digital or books) */}
+                    {(postType === 'digital' || category === 'Academic & Study Materials' || category === 'Books') && (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', padding: '0.75rem', backgroundColor: '#F0FDF4', borderRadius: '0.625rem', border: '1px solid #BBF7D0' }}>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: '#166534', marginBottom: '0.25rem' }}>
+                                    Course Code
+                                </label>
+                                <input
+                                    type="text"
+                                    placeholder="e.g. GST 112"
+                                    value={courseCode}
+                                    onChange={e => setCourseCode(e.target.value.toUpperCase())}
+                                    style={{ width: '100%', padding: '0.4375rem 0.5rem', borderRadius: '0.375rem', border: '1px solid #86EFAC', fontSize: '0.75rem', fontWeight: 700, boxSizing: 'border-box' }}
+                                />
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: '#166534', marginBottom: '0.25rem' }}>
+                                    Level
+                                </label>
+                                <select
+                                    value={academicLevel}
+                                    onChange={e => setAcademicLevel(e.target.value)}
+                                    style={{ width: '100%', padding: '0.4375rem 0.25rem', borderRadius: '0.375rem', border: '1px solid #86EFAC', fontSize: '0.75rem', backgroundColor: 'white' }}
+                                >
+                                    {ACADEMIC_LEVELS.map(lvl => <option key={lvl} value={lvl}>{lvl}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: '#166534', marginBottom: '0.25rem' }}>
+                                    Faculty
+                                </label>
+                                <select
+                                    value={faculty}
+                                    onChange={e => setFaculty(e.target.value)}
+                                    style={{ width: '100%', padding: '0.4375rem 0.25rem', borderRadius: '0.375rem', border: '1px solid #86EFAC', fontSize: '0.75rem', backgroundColor: 'white' }}
+                                >
+                                    {UNIZIK_FACULTIES.map(fac => <option key={fac} value={fac}>{fac}</option>)}
+                                </select>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Physical Meetup Spot Preference */}
+                    {postType === 'physical' && (
+                        <div>
+                            <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A', marginBottom: '0.25rem' }}>
+                                Preferred Campus Meetup / Pickup Spot
+                            </label>
+                            <select
+                                value={meetupSpot}
+                                onChange={e => setMeetupSpot(e.target.value)}
+                                style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem', backgroundColor: 'white' }}
+                            >
+                                {UNIZIK_LOCATIONS.map(loc => (
+                                    <option key={loc.id} value={loc.name}>{loc.name} ({loc.zone})</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     {/* Description */}
                     <div>
@@ -709,7 +814,7 @@ export default function PostPage() {
                             Description <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>(Optional)</span>
                         </label>
                         <textarea
-                            placeholder={postType === 'physical' ? "State condition, location (e.g. Ifite / Campus), reason for selling..." : "Include course code, department, lecturer, year..."}
+                            placeholder={postType === 'physical' ? "State condition, lodge location (e.g. Ifite / Campus), reason for selling..." : "Include course code, department, lecturer, year..."}
                             value={description}
                             onChange={e => setDescription(e.target.value)}
                             rows={3}
@@ -723,7 +828,7 @@ export default function PostPage() {
                             <>
                                 <MapPin size={18} color="#166534" style={{ flexShrink: 0 }} />
                                 <p style={{ margin: 0, fontSize: '0.6875rem', color: '#166534', lineHeight: 1.3 }}>
-                                    <strong>Safe Meetup:</strong> Always arrange physical exchanges at Garba Square, Chisco Park, or Student Center.
+                                    <strong>Safe Meetup & Escrow:</strong> Arrange physical exchanges at Garba Square, Chisco Park, or Admin Block. Buyer confirms delivery via 4-digit Handshake PIN.
                                 </p>
                             </>
                         ) : (

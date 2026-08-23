@@ -272,6 +272,17 @@ export function AuthProvider({ children }) {
         }
     }
 
+    async function bindAccountPassword(newPassword) {
+        if (!newPassword || newPassword.length < 6) {
+            throw new Error('Password must be at least 6 characters long')
+        }
+        const { data, error } = await supabase.auth.updateUser({
+            password: newPassword,
+        })
+        if (error) throw error
+        return data
+    }
+
     const isAuthenticated = !!session?.user || !!user?.uid || !!user?.id
     const isVerified = user ? (user.isVerified || isUnizikEmail(user.email)) : false
 
@@ -288,6 +299,7 @@ export function AuthProvider({ children }) {
         signOut,
         updateUser,
         refreshUser,
+        bindAccountPassword,
         isUnizikEmail,
         deriveNameFromEmail,
     }

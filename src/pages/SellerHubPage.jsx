@@ -7,7 +7,7 @@ import {
     ShieldCheck, Check
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { getSellerAnalytics, updateListing, deleteListing, upsertUser } from '../lib/database'
+import { getSellerAnalytics, updateListing, deleteListing, upsertUser, boostListing } from '../lib/database'
 import EditListingModal from '../components/EditListingModal'
 import { invalidateCacheByPrefix } from '../lib/cache'
 import { NIGERIAN_BANKS, resolveBankAccount, createPaystackSubaccount, initiateSellerPayout } from '../lib/paystack'
@@ -353,6 +353,22 @@ export default function SellerHubPage() {
         }
     }
 
+    const handleBoostListing = async (listing) => {
+        try {
+            await boostListing(listing.id, 7)
+            const boostedUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString()
+            setAnalytics(prev => ({
+                ...prev,
+                listings: (prev?.listings || []).map(l => l.id === listing.id ? { ...l, is_boosted: true, boosted_until: boostedUntil } : l)
+            }))
+            invalidateCacheByPrefix('listings')
+            invalidateCacheByPrefix('digital')
+            alert(`🚀 "${listing.title}" is now boosted for 7 days! It will appear with a PROMOTED badge at the top of feed and search.`)
+        } catch (err) {
+            alert('Failed to boost listing: ' + (err.message || 'Error occurred.'))
+        }
+    }
+
     const filteredListings = (analytics?.listings || []).filter(item => {
         const matchesCategory = 
             inventoryFilter === 'All' ? true :
@@ -664,7 +680,14 @@ export default function SellerHubPage() {
                                                         {item.sales_count ? `⚡ ${item.sales_count} sales` : `Added ${formatDate(item.createdAt || item.created_at)}`}
                                                     </span>
 
-                                                    <div style={{ display: 'flex', gap: '0.375rem' }}>
+                                                    <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap' }}>
+                                                        <button
+                                                            onClick={() => handleBoostListing(item)}
+                                                            title="Promote and pin to top of campus feed"
+                                                            style={{ padding: '0.375rem 0.625rem', borderRadius: '0.5rem', border: '1px solid #FDE047', backgroundColor: item.is_boosted ? '#FEF08A' : '#FFFBEB', color: '#854D0E', fontSize: '0.6875rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
+                                                        >
+                                                            <Sparkles size={12} /> {item.is_boosted ? 'Boosted' : 'Boost (Pin)'}
+                                                        </button>
                                                         <button
                                                             onClick={() => navigate(`/item/${item.id}`)}
                                                             title="View live listing"

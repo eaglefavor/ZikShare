@@ -218,16 +218,16 @@ export function HomeAnnouncementBanner() {
                 onClick={() => navigate('/official-channel')}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', cursor: 'pointer', flex: 1, minWidth: 0 }}
             >
-                <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', backgroundColor: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1D4ED8', flexShrink: 0 }}>
-                    <Megaphone size={16} />
+                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.625rem', backgroundColor: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1D4ED8', flexShrink: 0 }}>
+                    <Megaphone size={19} />
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                        <span style={{ fontSize: '0.625rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase' }}>
+                        <span style={{ fontSize: '0.625rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase', letterSpacing: '0.025em' }}>
                             Official Broadcast
                         </span>
                     </div>
-                    <p style={{ margin: '0.125rem 0 0', fontSize: '0.75rem', fontWeight: 700, color: '#1E293B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <p style={{ margin: '0.125rem 0 0', fontSize: '0.8125rem', fontWeight: 700, color: '#1E293B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {pinnedAnnouncement.title}
                     </p>
                 </div>

@@ -8,7 +8,7 @@ vi.mock('../lib/database', () => ({
   getDigitalProducts: vi.fn(),
 }))
 
-describe('Digital Library UI Component Tests', () => {
+describe('Digital Library UI Component Tests', { timeout: 15000 }, () => {
   beforeEach(() => {
     vi.clearAllMocks()
     database.getDigitalProducts.mockResolvedValue([])

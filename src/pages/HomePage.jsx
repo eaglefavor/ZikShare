@@ -177,8 +177,8 @@ export default function HomePage() {
                         >
                             ZikShare
                         </h1>
-                        <p style={{ margin: 0, fontSize: '0.6875rem', color: '#64748B', fontWeight: 600 }}>
-                            <MapPin size={10} style={{ display: 'inline', marginRight: '0.125rem', color: '#D97706' }} />
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.75rem', color: '#475569', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <MapPin size={12} style={{ color: '#D97706', flexShrink: 0 }} />
                             UNIZIK Student Marketplace
                         </p>
                     </div>
@@ -209,8 +209,8 @@ export default function HomePage() {
                     style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.5rem',
-                        padding: '0.625rem 0.875rem',
+                        gap: '0.75rem',
+                        padding: '0.6875rem 1rem',
                         borderRadius: '0.75rem',
                         backgroundColor: '#F8FAFC',
                         border: '1.5px solid var(--color-brand)',
@@ -218,11 +218,11 @@ export default function HomePage() {
                         transition: 'border-color 0.2s ease',
                     }}
                 >
-                    <Search size={16} color="var(--color-brand)" />
+                    <Search size={17} color="var(--color-brand)" style={{ flexShrink: 0 }} />
                     <span style={{ fontSize: '0.8125rem', color: '#64748B', fontWeight: 500 }}>
                         Search phones, laptops, generators, past questions...
                     </span>
-                    <SlidersHorizontal size={16} color="var(--color-brand)" style={{ marginLeft: 'auto' }} />
+                    <SlidersHorizontal size={16} color="var(--color-brand)" style={{ marginLeft: 'auto', flexShrink: 0 }} />
                 </div>
             </header>
 
@@ -257,10 +257,10 @@ export default function HomePage() {
 
             {/* JiJi-Style Campus Marketplace Categories */}
             <section style={{ padding: '0 1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.625rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                         <Tag size={16} color="var(--color-brand)" />
-                        <h2 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700 }}>Browse by Category</h2>
+                        <h2 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, lineHeight: 1.2 }}>Browse by Category</h2>
                     </div>
                     <button
                         onClick={() => navigate('/search')}
@@ -271,9 +271,11 @@ export default function HomePage() {
                             fontSize: '0.75rem',
                             fontWeight: 600,
                             cursor: 'pointer',
-                            display: 'flex',
+                            display: 'inline-flex',
                             alignItems: 'center',
                             gap: '0.125rem',
+                            lineHeight: 1.2,
+                            padding: 0,
                         }}
                     >
                         All Categories <ChevronRight size={14} />
@@ -295,8 +297,8 @@ export default function HomePage() {
                             key={seg.id}
                             onClick={() => navigate(`/search?segment=${seg.id}`)}
                             style={{
-                                minWidth: '5.5rem',
-                                padding: '0.5rem 0.375rem',
+                                minWidth: '6.25rem',
+                                padding: '0.75rem 0.5rem',
                                 borderRadius: '0.75rem',
                                 backgroundColor: 'white',
                                 textAlign: 'center',
@@ -305,6 +307,10 @@ export default function HomePage() {
                                 transition: 'transform 0.2s ease, border-color 0.2s ease',
                                 border: '1px solid var(--color-border)',
                                 flexShrink: 0,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
                             }}
                             onMouseEnter={e => {
                                 e.currentTarget.style.transform = 'scale(1.04)'
@@ -315,10 +321,10 @@ export default function HomePage() {
                                 e.currentTarget.style.borderColor = 'var(--color-border)'
                             }}
                         >
-                            <div style={{ width: '2rem', height: '2rem', borderRadius: '9999px', backgroundColor: seg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.25rem', fontSize: '1.1rem' }}>
+                            <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', backgroundColor: seg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 0 0.375rem', fontSize: '1.25rem' }}>
                                 {seg.emoji}
                             </div>
-                            <p style={{ margin: 0, fontSize: '0.6875rem', fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
+                            <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.25, textAlign: 'center' }}>
                                 {seg.name}
                             </p>
                         </div>
@@ -329,11 +335,11 @@ export default function HomePage() {
             </section>
 
             {/* Listings */}
-            <section style={{ padding: '1.25rem 1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+            <section style={{ padding: '1.5rem 1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.125rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                         <TrendingUp size={16} color="var(--color-brand)" />
-                        <h2 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700 }}>Trending Now</h2>
+                        <h2 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700, lineHeight: 1.2 }}>Trending Now</h2>
                     </div>
                     <button
                         onClick={() => navigate('/search')}
@@ -344,9 +350,11 @@ export default function HomePage() {
                             fontSize: '0.75rem',
                             fontWeight: 600,
                             cursor: 'pointer',
-                            display: 'flex',
+                            display: 'inline-flex',
                             alignItems: 'center',
                             gap: '0.125rem',
+                            lineHeight: 1.2,
+                            padding: 0,
                         }}
                     >
                         View all <ChevronRight size={14} />

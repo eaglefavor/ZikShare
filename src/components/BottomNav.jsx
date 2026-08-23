@@ -162,13 +162,13 @@ export default function BottomNav() {
                                                 e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)'
                                             }}
                                         >
-                                            <NavIcon size={22} strokeWidth={2.5} />
+                                            <NavIcon size={22} strokeWidth={2.4} />
                                         </span>
                                     ) : (
                                         <span style={{ position: 'relative', display: 'flex' }}>
                                             <NavIcon
                                                 size={22}
-                                                strokeWidth={isActive ? 2.5 : 1.8}
+                                                strokeWidth={isActive ? 2.3 : 1.9}
                                                 style={{ transition: 'stroke-width 0.2s ease' }}
                                             />
                                         {/* Unread badge for Messages */}
@@ -176,21 +176,22 @@ export default function BottomNav() {
                                             <span
                                                 style={{
                                                     position: 'absolute',
-                                                    top: '-0.3rem',
-                                                    right: '-0.5rem',
-                                                    minWidth: '1rem',
-                                                    height: '1rem',
+                                                    top: '-0.45rem',
+                                                    right: '-0.7rem',
+                                                    minWidth: '1.05rem',
+                                                    height: '1.05rem',
                                                     borderRadius: '9999px',
                                                     backgroundColor: '#EF4444',
                                                     color: 'white',
                                                     fontSize: '0.5625rem',
-                                                    fontWeight: 700,
+                                                    fontWeight: 800,
                                                     display: 'flex',
                                                     alignItems: 'center',
                                                     justifyContent: 'center',
-                                                    padding: '0 0.2rem',
+                                                    padding: '0 0.25rem',
                                                     border: '2px solid white',
                                                     lineHeight: 1,
+                                                    boxShadow: '0 2px 4px rgba(239, 68, 68, 0.3)',
                                                 }}
                                             >
                                                 {unreadCount > 9 ? '9+' : unreadCount}
@@ -201,9 +202,9 @@ export default function BottomNav() {
                                 {path !== '/post' && (
                                     <span
                                         style={{
-                                            fontSize: '0.625rem',
-                                            fontWeight: isActive ? 600 : 400,
-                                            letterSpacing: '0.02em',
+                                            fontSize: '0.6875rem',
+                                            fontWeight: isActive ? 700 : 500,
+                                            letterSpacing: '0.01em',
                                             transition: 'font-weight 0.2s ease',
                                         }}
                                     >

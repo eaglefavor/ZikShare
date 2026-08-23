@@ -3,6 +3,21 @@ import { invalidateCacheByPrefix } from './cache'
 import { notifyError, notifyWarn } from './notify'
 import { verifyPaystackPayment } from './paystack'
 
+export async function withRetry(asyncFn, maxRetries = 2, delayMs = 400) {
+    let lastError
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            return await asyncFn()
+        } catch (err) {
+            lastError = err
+            if (attempt < maxRetries) {
+                await new Promise(r => setTimeout(r, delayMs * Math.pow(2, attempt)))
+            }
+        }
+    }
+    throw lastError
+}
+
 function queryWithTimeout(promise, ms = 8000, fallbackVal = null) {
     let timer
     const timeoutPromise = new Promise((resolve) => {

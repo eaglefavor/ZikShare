@@ -529,7 +529,7 @@ export default function ChatPage() {
                                     maxWidth: '80%',
                                     padding: '0.625rem 0.875rem',
                                     borderRadius: isMe ? '1rem 1rem 0.2rem 1rem' : '1rem 1rem 1rem 0.2rem',
-                                    backgroundColor: isMe ? '#2563EB' : 'white',
+                                    backgroundColor: isMe ? 'var(--color-brand)' : 'white',
                                     color: isMe ? 'white' : '#0F172A',
                                     fontSize: '0.8125rem',
                                     lineHeight: 1.45,

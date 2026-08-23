@@ -13,18 +13,32 @@ export class ErrorBoundary extends React.Component {
 
   componentDidCatch(error, errorInfo) {
     console.error('[ErrorBoundary caught error]:', error, errorInfo)
+    if (this.props.onError) {
+      this.props.onError(error, errorInfo)
+    }
   }
 
   handleReset = () => {
     this.setState({ hasError: false, error: null })
-    window.location.reload()
+    if (this.props.onReset) {
+      this.props.onReset()
+    } else {
+      window.location.reload()
+    }
   }
 
   render() {
     if (this.state.hasError) {
+      if (this.props.fallback) {
+        return this.props.fallback({
+          error: this.state.error,
+          resetErrorBoundary: this.handleReset,
+        })
+      }
+
       return (
         <div style={{
-          minHeight: '80vh',
+          minHeight: '60vh',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
@@ -35,32 +49,33 @@ export class ErrorBoundary extends React.Component {
           backgroundColor: '#F8FAFC',
         }}>
           <div style={{
-            width: '4rem',
-            height: '4rem',
+            width: '3.75rem',
+            height: '3.75rem',
             borderRadius: '9999px',
-            backgroundColor: '#FEE2E2',
+            backgroundColor: '#FFFBEB',
+            border: '1px solid #FDE68A',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             marginBottom: '1rem',
           }}>
-            <AlertTriangle size={28} color="#DC2626" />
+            <AlertTriangle size={24} color="#D97706" />
           </div>
 
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.5rem' }}>
-            Something went wrong
+          <h2 style={{ fontSize: '1.1875rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.375rem' }}>
+            {this.props.title || 'Something went wrong'}
           </h2>
-          <p style={{ fontSize: '0.8125rem', color: '#64748B', maxWidth: '20rem', margin: '0 0 1.5rem', lineHeight: 1.5 }}>
-            We encountered a temporary rendering issue. Please reload the page or return home.
+          <p style={{ fontSize: '0.8125rem', color: '#64748B', maxWidth: '22rem', margin: '0 0 1.25rem', lineHeight: 1.5 }}>
+            We encountered a temporary rendering issue. Please reload or return to the main campus page.
           </p>
 
-          <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <div style={{ display: 'flex', gap: '0.625rem' }}>
             <button
               onClick={this.handleReset}
               style={{
                 padding: '0.625rem 1.25rem',
                 borderRadius: '0.625rem',
-                backgroundColor: '#2563EB',
+                backgroundColor: 'var(--color-brand)',
                 color: 'white',
                 border: 'none',
                 fontSize: '0.8125rem',
@@ -69,10 +84,11 @@ export class ErrorBoundary extends React.Component {
                 display: 'flex',
                 alignItems: 'center',
                 gap: '0.375rem',
+                boxShadow: '0 2px 8px rgba(30,64,175,0.25)'
               }}
             >
               <RefreshCw size={15} />
-              <span>Reload Page</span>
+              <span>Retry / Reload</span>
             </button>
             <a
               href="/"
@@ -81,7 +97,7 @@ export class ErrorBoundary extends React.Component {
                 borderRadius: '0.625rem',
                 backgroundColor: 'white',
                 color: '#334155',
-                border: '1px solid #CBD5E1',
+                border: '1px solid var(--color-border)',
                 fontSize: '0.8125rem',
                 fontWeight: 700,
                 textDecoration: 'none',

@@ -239,15 +239,15 @@ export default function SearchPage() {
                         onClick={() => setMainTab('marketplace')}
                         style={{
                             flex: 1,
-                            padding: '0.5rem',
-                            borderRadius: '0.625rem',
+                            padding: '0.5rem 0.25rem',
+                            borderRadius: '0.5rem',
                             border: 'none',
                             fontSize: '0.75rem',
                             fontWeight: 700,
                             cursor: 'pointer',
-                            backgroundColor: mainTab === 'marketplace' ? 'white' : 'transparent',
-                            color: mainTab === 'marketplace' ? '#2563EB' : '#64748B',
-                            boxShadow: mainTab === 'marketplace' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                            backgroundColor: mainTab === 'marketplace' ? 'var(--color-brand)' : 'transparent',
+                            color: mainTab === 'marketplace' ? '#FFFFFF' : '#64748B',
+                            boxShadow: mainTab === 'marketplace' ? '0 2px 6px rgba(30,64,175,0.3)' : 'none',
                             transition: 'all 0.15s ease'
                         }}
                     >
@@ -257,19 +257,19 @@ export default function SearchPage() {
                         onClick={() => setMainTab('requests')}
                         style={{
                             flex: 1,
-                            padding: '0.5rem',
-                            borderRadius: '0.625rem',
+                            padding: '0.5rem 0.25rem',
+                            borderRadius: '0.5rem',
                             border: 'none',
                             fontSize: '0.75rem',
                             fontWeight: 700,
                             cursor: 'pointer',
-                            backgroundColor: mainTab === 'requests' ? 'white' : 'transparent',
-                            color: mainTab === 'requests' ? '#D97706' : '#64748B',
-                            boxShadow: mainTab === 'requests' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                            backgroundColor: mainTab === 'requests' ? 'var(--color-gold)' : 'transparent',
+                            color: mainTab === 'requests' ? '#FFFFFF' : '#64748B',
+                            boxShadow: mainTab === 'requests' ? '0 2px 6px rgba(217,119,6,0.3)' : 'none',
                             transition: 'all 0.15s ease'
                         }}
                     >
-                        🙋 Student Demands (ISO)
+                        🙋 Demands (ISO)
                     </button>
                     <button
                         onClick={() => {
@@ -278,15 +278,15 @@ export default function SearchPage() {
                         }}
                         style={{
                             flex: 1,
-                            padding: '0.5rem',
-                            borderRadius: '0.625rem',
+                            padding: '0.5rem 0.25rem',
+                            borderRadius: '0.5rem',
                             border: 'none',
                             fontSize: '0.75rem',
                             fontWeight: 700,
                             cursor: 'pointer',
-                            backgroundColor: mainTab === 'academic' ? 'white' : 'transparent',
-                            color: mainTab === 'academic' ? '#059669' : '#64748B',
-                            boxShadow: mainTab === 'academic' ? '0 1px 3px rgba(0,0,0,0.08)' : 'none',
+                            backgroundColor: mainTab === 'academic' ? '#0F172A' : 'transparent',
+                            color: mainTab === 'academic' ? '#FFFFFF' : '#64748B',
+                            boxShadow: mainTab === 'academic' ? '0 2px 6px rgba(15,23,42,0.3)' : 'none',
                             transition: 'all 0.15s ease'
                         }}
                     >

@@ -138,22 +138,22 @@ export default function SellerProfilePage() {
             {/* Seller Header Banner */}
             <div style={{ padding: '1.5rem 1rem 1rem', backgroundColor: 'white', borderBottom: '1px solid var(--color-border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
-                    <div style={{ width: '4.5rem', height: '4.5rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.75rem', fontWeight: 800, flexShrink: 0, boxShadow: '0 4px 12px rgba(59,130,246,0.3)' }}>
+                    <div style={{ width: '4.5rem', height: '4.5rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #1E40AF, #0F172A)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.75rem', fontWeight: 800, flexShrink: 0, boxShadow: '0 4px 12px rgba(30,64,175,0.3)', border: '2px solid #BFDBFE' }}>
                         {(seller.displayName || 'S').charAt(0).toUpperCase()}
                     </div>
 
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap' }}>
-                            <h2 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 800 }}>{seller.displayName || 'Student Seller'}</h2>
+                            <h2 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 800, color: '#0F172A' }}>{seller.displayName || 'Student Seller'}</h2>
                             {seller.isVerified && <ShieldCheck size={18} color="var(--color-campus-green)" />}
                         </div>
                         {seller.department && (
-                            <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>
+                            <p style={{ margin: '0.25rem 0 0', fontSize: '0.75rem', color: '#475569', fontWeight: 600 }}>
                                 🎓 {seller.department}
                             </p>
                         )}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
-                            <MapPin size={12} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.6875rem', color: '#64748B' }}>
+                            <MapPin size={12} color="#D97706" />
                             <span>UNIZIK Campus</span>
                             <span>•</span>
                             <span>Joined {formatDate(seller.createdAt)}</span>
@@ -164,21 +164,21 @@ export default function SellerProfilePage() {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.375rem', padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: '#F8FAFC', border: '1px solid var(--color-border)', marginBottom: '1rem', textAlign: 'center' }}>
                     <div>
                         <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: 'var(--color-brand)' }}>{totalListings}</span>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Listings</p>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: '#64748B', textTransform: 'uppercase', fontWeight: 700 }}>Listings</p>
                     </div>
                     <div>
-                        <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#10B981' }}>{digitalCount}</span>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>PDFs</p>
+                        <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#0F172A' }}>{digitalCount}</span>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: '#64748B', textTransform: 'uppercase', fontWeight: 700 }}>PDFs</p>
                     </div>
                     <div>
-                        <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#F59E0B', display: 'inline-flex', alignItems: 'center', gap: '0.125rem' }}>
-                            <Star size={12} fill="#F59E0B" /> {ratingSummary.averageRating.toFixed(1)}
+                        <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#D97706', display: 'inline-flex', alignItems: 'center', gap: '0.125rem' }}>
+                            <Star size={12} fill="#D97706" /> {ratingSummary.averageRating.toFixed(1)}
                         </span>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Rating</p>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: '#64748B', textTransform: 'uppercase', fontWeight: 700 }}>Rating</p>
                     </div>
                     <div>
-                        <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#6366F1' }}>{ratingSummary.totalReviews}</span>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Reviews</p>
+                        <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#1E40AF' }}>{ratingSummary.totalReviews}</span>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: '#64748B', textTransform: 'uppercase', fontWeight: 700 }}>Reviews</p>
                     </div>
                 </div>
 
@@ -191,7 +191,7 @@ export default function SellerProfilePage() {
                             padding: '0.75rem',
                             borderRadius: '0.75rem',
                             border: 'none',
-                            background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
+                            background: 'linear-gradient(135deg, #1E40AF, #1E3A8A)',
                             color: 'white',
                             fontSize: '0.875rem',
                             fontWeight: 700,
@@ -201,7 +201,7 @@ export default function SellerProfilePage() {
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: '0.5rem',
-                            boxShadow: '0 4px 12px rgba(59,130,246,0.3)'
+                            boxShadow: '0 4px 12px rgba(30,64,175,0.3)'
                         }}
                     >
                         <MessageCircle size={16} />

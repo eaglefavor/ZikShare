@@ -168,18 +168,18 @@ export default function HomePage() {
                             style={{
                                 margin: 0,
                                 fontSize: '1.375rem',
-                                fontWeight: 800,
-                                background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
+                                fontWeight: 900,
+                                background: 'linear-gradient(135deg, #1E40AF, #0F172A)',
                                 WebkitBackgroundClip: 'text',
                                 WebkitTextFillColor: 'transparent',
-                                letterSpacing: '-0.02em',
+                                letterSpacing: '-0.03em',
                             }}
                         >
                             ZikShare
                         </h1>
-                        <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>
-                            <MapPin size={10} style={{ display: 'inline', marginRight: '0.125rem' }} />
-                            UNIZIK Campus
+                        <p style={{ margin: 0, fontSize: '0.6875rem', color: '#64748B', fontWeight: 600 }}>
+                            <MapPin size={10} style={{ display: 'inline', marginRight: '0.125rem', color: '#D97706' }} />
+                            UNIZIK Student Marketplace
                         </p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -190,14 +190,15 @@ export default function HomePage() {
                                 gap: '0.25rem',
                                 padding: '0.25rem 0.625rem',
                                 borderRadius: '9999px',
-                                backgroundColor: '#DCFCE7',
-                                color: 'var(--color-campus-green)',
+                                backgroundColor: '#FFFBEB',
+                                border: '1px solid #FDE68A',
+                                color: '#92400E',
                                 fontSize: '0.6875rem',
-                                fontWeight: 600,
+                                fontWeight: 700,
                             }}
                         >
-                            <ShieldCheck size={12} />
-                            Verified Zone
+                            <ShieldCheck size={12} color="#D97706" />
+                            Verified Campus
                         </div>
                     </div>
                 </div>
@@ -211,17 +212,17 @@ export default function HomePage() {
                         gap: '0.5rem',
                         padding: '0.625rem 0.875rem',
                         borderRadius: '0.75rem',
-                        backgroundColor: 'var(--color-background)',
-                        border: '1px solid var(--color-border)',
+                        backgroundColor: '#F8FAFC',
+                        border: '1.5px solid var(--color-brand)',
                         cursor: 'pointer',
                         transition: 'border-color 0.2s ease',
                     }}
                 >
-                    <Search size={16} color="var(--color-text-muted)" />
-                    <span style={{ fontSize: '0.8125rem', color: 'var(--color-text-muted)' }}>
-                        Search for items...
+                    <Search size={16} color="var(--color-brand)" />
+                    <span style={{ fontSize: '0.8125rem', color: '#64748B', fontWeight: 500 }}>
+                        Search phones, laptops, generators, past questions...
                     </span>
-                    <SlidersHorizontal size={16} color="var(--color-text-muted)" style={{ marginLeft: 'auto' }} />
+                    <SlidersHorizontal size={16} color="var(--color-brand)" style={{ marginLeft: 'auto' }} />
                 </div>
             </header>
 
@@ -235,14 +236,16 @@ export default function HomePage() {
                 onClick={() => navigate('/search')}
                 style={{
                     margin: '0.75rem 1rem',
-                    padding: '0.75rem 1rem',
-                    borderRadius: '0.75rem',
-                    background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
+                    padding: '0.875rem 1rem',
+                    borderRadius: '0.875rem',
+                    background: 'linear-gradient(135deg, #1E40AF 0%, #0F172A 100%)',
                     color: 'white',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '0.75rem',
                     cursor: 'pointer',
+                    boxShadow: '0 4px 14px rgba(30,64,175,0.25)',
+                    border: '1px solid #3B82F6'
                 }}
             >
                 <div
@@ -250,21 +253,23 @@ export default function HomePage() {
                         width: '2.5rem',
                         height: '2.5rem',
                         borderRadius: '0.625rem',
-                        backgroundColor: 'rgba(255,255,255,0.2)',
+                        backgroundColor: 'rgba(245,158,11,0.2)',
+                        border: '1px solid rgba(245,158,11,0.4)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
+                        color: '#F59E0B'
                     }}
                 >
                     <Zap size={20} />
                 </div>
                 <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 700 }}>Urgent Deals 🔥</p>
-                    <p style={{ margin: 0, fontSize: '0.6875rem', opacity: 0.85 }}>
-                        {listings?.length || 0} items available now
+                    <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 800, color: '#F1F5F9' }}>Campus Hot Deals & Exchanges 🔥</p>
+                    <p style={{ margin: 0, fontSize: '0.6875rem', color: '#93C5FD' }}>
+                        {listings?.length || 0} active listings verified on campus
                     </p>
                 </div>
-                <ChevronRight size={18} style={{ opacity: 0.7 }} />
+                <ChevronRight size={18} style={{ opacity: 0.8, color: '#F59E0B' }} />
             </div>
 
             {/* JiJi-Style Campus Marketplace Categories */}

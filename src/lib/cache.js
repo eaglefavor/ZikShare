@@ -27,28 +27,51 @@ export function getCached(key, ttlMs) {
 }
 
 /**
+ * Safe localStorage write wrapper preventing QuotaExceededError crashes
+ */
+export function safeLocalStorageSet(key, value) {
+    try {
+        localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value))
+        return true
+    } catch (_e) {
+        evictOldest()
+        try {
+            localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value))
+            return true
+        } catch (_err) {
+            console.warn('[Cache] Storage quota exceeded or disabled:', _err)
+            return false
+        }
+    }
+}
+
+/**
+ * Safe localStorage read wrapper
+ */
+export function safeLocalStorageGet(key, fallback = null) {
+    try {
+        const raw = localStorage.getItem(key)
+        if (raw === null) return fallback
+        try {
+            return JSON.parse(raw)
+        } catch {
+            return raw
+        }
+    } catch {
+        return fallback
+    }
+}
+
+/**
  * Set cache entry.
  * @param {string} key
  * @param {any} data
  */
 export function setCache(key, data) {
-    try {
-        localStorage.setItem(
-            CACHE_PREFIX + key,
-            JSON.stringify({ data, timestamp: Date.now() })
-        )
-    } catch (_e) {
-        // localStorage might be full — evict oldest entries
-        evictOldest()
-        try {
-            localStorage.setItem(
-                CACHE_PREFIX + key,
-                JSON.stringify({ data, timestamp: Date.now() })
-            )
-        } catch (_err) {
-            // Give up silently — app continues without cache
-        }
-    }
+    safeLocalStorageSet(
+        CACHE_PREFIX + key,
+        JSON.stringify({ data, timestamp: Date.now() })
+    )
 }
 
 /**

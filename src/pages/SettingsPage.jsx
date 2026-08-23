@@ -213,7 +213,7 @@ export default function SettingsPage() {
 
                 {/* Submit */}
                 <button type="submit" disabled={saving}
-                    style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', fontSize: '0.9375rem', fontWeight: 700, fontFamily: 'inherit', cursor: saving ? 'not-allowed' : 'pointer', background: saving ? '#93C5FD' : 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', boxShadow: '0 4px 14px rgba(59,130,246,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                    style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', fontSize: '0.9375rem', fontWeight: 700, fontFamily: 'inherit', cursor: saving ? 'not-allowed' : 'pointer', background: saving ? '#BFDBFE' : 'linear-gradient(135deg, #1E40AF, #1E3A8A)', color: 'white', boxShadow: '0 4px 14px rgba(30,64,175,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
                     {saving ? (
                         <>
                             <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />

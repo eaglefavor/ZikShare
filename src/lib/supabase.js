@@ -1,10 +1,12 @@
 import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || ''
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || ''
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://zikshare.supabase.co'
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || 'public-anon-key'
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    console.error('[ZikShare] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY — check .env. App will not connect to Supabase.')
+if (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY) {
+    if (typeof globalThis !== 'undefined' && globalThis.process?.env?.NODE_ENV !== 'test') {
+        console.error('[ZikShare] Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY — check .env. App will not connect to Supabase.')
+    }
 }
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {

@@ -6,8 +6,10 @@ import { useAuth } from '../contexts/AuthContext'
 
 // Global in-memory log buffer so any module can log to debug console
 const logListeners = new Set()
+// eslint-disable-next-line react-refresh/only-export-components
 export const debugLogs = []
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function logDebug(type, message, details = null) {
     const entry = {
         id: Date.now() + Math.random().toString(36).substring(2, 7),

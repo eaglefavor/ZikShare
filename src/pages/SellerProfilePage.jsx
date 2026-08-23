@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { 
     ArrowLeft, ShieldCheck, MapPin, Phone, MessageCircle, 
@@ -27,12 +27,8 @@ export default function SellerProfilePage() {
     const [filter, setFilter] = useState('All') // 'All', 'Digital', 'Physical'
     const [contacting, setContacting] = useState(false)
 
-    useEffect(() => {
+    const loadSellerProfile = useCallback(async () => {
         if (!id) return
-        loadSellerProfile()
-    }, [id])
-
-    async function loadSellerProfile() {
         setLoading(true)
         try {
             const profileData = await getSellerPublicProfile(id)
@@ -42,7 +38,12 @@ export default function SellerProfilePage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [id])
+
+    useEffect(() => {
+        if (!id) return
+        loadSellerProfile()
+    }, [id, loadSellerProfile])
 
     const handleContact = async () => {
         if (!isAuthenticated) {

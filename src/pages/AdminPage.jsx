@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
     Shield, Users, Package, ShoppingCart, Activity, Search, RefreshCw,
@@ -115,7 +115,7 @@ export default function AdminPage() {
     // System Diagnostics
     const [dbLatency, setDbLatency] = useState(null)
 
-    const loadAllData = async (isRefresh = false) => {
+    const loadAllData = useCallback(async (isRefresh = false) => {
         if (isRefresh) setRefreshing(true)
         else setLoading(true)
 
@@ -144,11 +144,11 @@ export default function AdminPage() {
             setLoading(false)
             setRefreshing(false)
         }
-    }
+    }, [toast])
 
     useEffect(() => {
         loadAllData()
-    }, [])
+    }, [loadAllData])
 
     // Filtered Users
     const filteredUsers = useMemo(() => {

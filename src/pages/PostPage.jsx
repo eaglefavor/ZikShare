@@ -294,7 +294,7 @@ export default function PostPage() {
                 )
 
                 if (uploadError) {
-                    console.warn(`Storage upload warning (${uploadError.message}), proceeding with database entry:`, fileName)
+                    throw new Error(`File upload to storage failed: ${uploadError.message || 'Please check network and try again.'}`)
                 }
 
                 setCurrentStepIndex(4)

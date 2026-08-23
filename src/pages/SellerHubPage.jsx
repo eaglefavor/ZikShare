@@ -51,29 +51,8 @@ export default function SellerHubPage() {
 
     const currentUserId = session?.user?.id || user?.uid || user?.id
 
-    useEffect(() => {
-        if (!isAuthenticated || !currentUserId) {
-            setLoading(false)
-            return
-        }
-
-        let isMounted = true
-        // Guarantee loading state terminates within 4 seconds max
-        const safetyTimer = setTimeout(() => {
-            if (isMounted) setLoading(false)
-        }, 4000)
-
-        loadDashboardData().finally(() => {
-            if (isMounted) setLoading(false)
-        })
-
-        return () => {
-            isMounted = false
-            clearTimeout(safetyTimer)
-        }
-    }, [isAuthenticated, currentUserId])
-
-    async function loadDashboardData() {
+    const loadDashboardData = useCallback(async () => {
+        if (!currentUserId) return
         try {
             const data = await getSellerAnalytics(currentUserId)
             setAnalytics(data || {
@@ -107,7 +86,28 @@ export default function SellerHubPage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [currentUserId, user])
+
+    useEffect(() => {
+        if (!isAuthenticated || !currentUserId) {
+            setLoading(false)
+            return
+        }
+
+        let isMounted = true
+        const safetyTimer = setTimeout(() => {
+            if (isMounted) setLoading(false)
+        }, 4000)
+
+        loadDashboardData().finally(() => {
+            if (isMounted) setLoading(false)
+        })
+
+        return () => {
+            isMounted = false
+            clearTimeout(safetyTimer)
+        }
+    }, [isAuthenticated, currentUserId, loadDashboardData])
 
     const handleResolve = useCallback(async (accNum, bCode) => {
         if (!accNum || accNum.length !== 10 || !bCode) return

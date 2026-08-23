@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useEffect, useRef } from 'react'
 import supabase from '../lib/supabase'
 import { getUser, upsertUser } from '../lib/database'
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function isUnizikEmail(email) {
     if (!email || typeof email !== 'string') return false
     const normalized = email.trim().toLowerCase()
@@ -10,6 +11,7 @@ export function isUnizikEmail(email) {
            /@([a-z0-9-]+\.)*unizik\.edu\.ng$/i.test(normalized)
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function deriveNameFromEmail(email) {
     if (!email) return 'UNIZIK STUDENT'
     const username = email.split('@')[0] || ''
@@ -196,6 +198,7 @@ export function AuthProvider({ children }) {
             clearTimeout(timer)
             subscription.unsubscribe()
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     async function signInWithEmail(email, password) {
@@ -292,6 +295,7 @@ export function AuthProvider({ children }) {
     return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
     const context = useContext(AuthContext)
     if (!context) {

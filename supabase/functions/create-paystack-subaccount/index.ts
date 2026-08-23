@@ -72,14 +72,24 @@ serve(async (req) => {
 
     // 2. Save subaccount_code to user profile in Supabase if user_id provided
     if (subaccountCode && user_id && SUPABASE_SERVICE_KEY) {
+      const authHeader = req.headers.get('Authorization') || '';
+      const token = authHeader.replace(/^Bearer\s+/i, '');
       const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
-      await supabase
-        .from('users')
-        .update({
-          paystack_subaccount_code: subaccountCode,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('uid', user_id);
+
+      if (token) {
+        const { data: authData } = await supabase.auth.getUser(token);
+        const caller = authData?.user;
+        const isPlatformAdmin = caller?.email === 'rc5632250@gmail.com';
+        if (caller && (caller.id === user_id || isPlatformAdmin)) {
+          await supabase
+            .from('users')
+            .update({
+              paystack_subaccount_code: subaccountCode,
+              updated_at: new Date().toISOString(),
+            })
+            .eq('uid', user_id);
+        }
+      }
     }
 
     return new Response(

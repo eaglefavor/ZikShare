@@ -2,11 +2,13 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { ArrowLeft, Loader2, Lock } from 'lucide-react'
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const ADMIN_EMAILS = ['rc5632250@gmail.com']
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function isUserAdmin(user, session) {
-    const email = (user?.email || session?.user?.email || '').toLowerCase().trim()
-    return ADMIN_EMAILS.includes(email) || user?.role === 'admin'
+    const email = (session?.user?.email || user?.email || '').toLowerCase().trim()
+    return ADMIN_EMAILS.includes(email)
 }
 
 export default function AdminRoute({ children }) {

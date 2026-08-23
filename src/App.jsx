@@ -1,3 +1,4 @@
+import { lazy, Suspense } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ToastProvider } from './components/Toast'
@@ -5,26 +6,29 @@ import ErrorBoundary from './components/ErrorBoundary'
 import BottomNav from './components/BottomNav'
 import DebugConsole from './components/DebugConsole'
 import HomePage from './pages/HomePage'
-import SearchPage from './pages/SearchPage'
-import PostPage from './pages/PostPage'
-import MessagesPage from './pages/MessagesPage'
-import ProfilePage from './pages/ProfilePage'
-import LoginPage from './pages/LoginPage'
-import ItemDetailPage from './pages/ItemDetailPage'
-import MyListingsPage from './pages/MyListingsPage'
-import SellerHubPage from './pages/SellerHubPage'
-import SellerProfilePage from './pages/SellerProfilePage'
-import SavedItemsPage from './pages/SavedItemsPage'
-import SettingsPage from './pages/SettingsPage'
-import HelpPage from './pages/HelpPage'
-import ChatPage from './pages/ChatPage'
-import PaymentSuccess from './pages/PaymentSuccess'
-import PurchasedItemsPage from './pages/PurchasedItemsPage'
-import AdminPage from './pages/AdminPage'
 import AdminRoute, { isUserAdmin } from './components/AdminRoute'
-import OfficialChannelPage from './pages/OfficialChannelPage'
 import AnnouncementModal from './components/AnnouncementModal'
-import MaintenancePage from './pages/MaintenancePage'
+import { Loader2 } from 'lucide-react'
+
+// Code-split heavy routes for optimal bundle loading
+const SearchPage = lazy(() => import('./pages/SearchPage'))
+const PostPage = lazy(() => import('./pages/PostPage'))
+const MessagesPage = lazy(() => import('./pages/MessagesPage'))
+const ProfilePage = lazy(() => import('./pages/ProfilePage'))
+const LoginPage = lazy(() => import('./pages/LoginPage'))
+const ItemDetailPage = lazy(() => import('./pages/ItemDetailPage'))
+const MyListingsPage = lazy(() => import('./pages/MyListingsPage'))
+const SellerHubPage = lazy(() => import('./pages/SellerHubPage'))
+const SellerProfilePage = lazy(() => import('./pages/SellerProfilePage'))
+const SavedItemsPage = lazy(() => import('./pages/SavedItemsPage'))
+const SettingsPage = lazy(() => import('./pages/SettingsPage'))
+const HelpPage = lazy(() => import('./pages/HelpPage'))
+const ChatPage = lazy(() => import('./pages/ChatPage'))
+const PaymentSuccess = lazy(() => import('./pages/PaymentSuccess'))
+const PurchasedItemsPage = lazy(() => import('./pages/PurchasedItemsPage'))
+const AdminPage = lazy(() => import('./pages/AdminPage'))
+const OfficialChannelPage = lazy(() => import('./pages/OfficialChannelPage'))
+const MaintenancePage = lazy(() => import('./pages/MaintenancePage'))
 
 // Maintenance Mode Flag — Set to true to show maintenance screen to all standard visitors
 export const MAINTENANCE_MODE = false
@@ -95,7 +99,13 @@ function App() {
       <AuthProvider>
         <ToastProvider>
           <div className="min-h-screen bg-background">
-            <AppRoutes />
+            <Suspense fallback={
+              <div style={{ minHeight: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Loader2 size={32} className="animate-spin" color="var(--color-brand)" />
+              </div>
+            }>
+              <AppRoutes />
+            </Suspense>
             <DebugConsole />
           </div>
         </ToastProvider>

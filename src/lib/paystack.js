@@ -186,12 +186,15 @@ export async function createPaystackSubaccount({ userId, businessName, bankCode,
   }
 
   try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token || SUPABASE_ANON_KEY;
+
     const res = await fetch(`${SUPABASE_URL}/functions/v1/create-paystack-subaccount`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         user_id: userId,
@@ -273,12 +276,15 @@ export async function initiateSellerPayout({ sellerId, amountInNaira, reason }) 
   }
 
   try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const token = sessionData?.session?.access_token || SUPABASE_ANON_KEY;
+
     const res = await fetch(`${SUPABASE_URL}/functions/v1/initiate-seller-payout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
+        Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({
         seller_id: sellerId,

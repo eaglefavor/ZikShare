@@ -7,6 +7,7 @@ function formatNaira(amount) {
   return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount || 0)
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function deriveNameFromEmail(email) {
   if (!email) return 'UNIZIK STUDENT'
   const username = email.split('@')[0] || ''
@@ -27,6 +28,7 @@ export function deriveNameFromEmail(email) {
     .join(' ')
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function getBuyerWatermarkName(user) {
   if (!user) return 'UNIZIK STUDENT'
   

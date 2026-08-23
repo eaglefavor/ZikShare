@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, FileText, Download, Loader2, Search, X, Check, Copy, HelpCircle, Sparkles, RefreshCw, AlertCircle, Key } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
@@ -31,19 +31,10 @@ export default function PurchasedItemsPage() {
     const [claimReference, setClaimReference] = useState('')
     const [claiming, setClaiming] = useState(false)
     const [claimError, setClaimError] = useState('')
-
     const currentUserId = session?.user?.id || user?.uid || user?.id
 
-    useEffect(() => {
-        if (!isAuthenticated || !currentUserId) {
-            setLoading(false)
-            return
-        }
-
-        loadPurchases()
-    }, [isAuthenticated, currentUserId])
-
-    async function loadPurchases() {
+    const loadPurchases = useCallback(async () => {
+        if (!currentUserId) return
         setLoading(true)
         try {
             const data = await getBuyerOrders(currentUserId)
@@ -53,7 +44,16 @@ export default function PurchasedItemsPage() {
         } finally {
             setLoading(false)
         }
-    }
+    }, [currentUserId])
+
+    useEffect(() => {
+        if (!isAuthenticated || !currentUserId) {
+            setLoading(false)
+            return
+        }
+
+        loadPurchases()
+    }, [isAuthenticated, currentUserId, loadPurchases])
 
     const filteredOrders = useMemo(() => {
         if (!searchQuery.trim()) return orders

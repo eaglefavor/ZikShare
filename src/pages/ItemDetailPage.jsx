@@ -2,7 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, FileText, ShieldAlert, ChevronRight as ChevronRightIcon, CheckCircle2, Lock, Download, Sparkles, Eye, CheckCircle } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useCachedQuery } from '../hooks/useCachedQuery'
-import { getListing, getUserPurchaseForProduct, fulfillDigitalOrder, createSignedDownloadUrl } from '../lib/database'
+import { getListing, getUserPurchaseForProduct, createSignedDownloadUrl } from '../lib/database'
 import { downloadWatermarkedPdf, getDrmPassword } from '../lib/pdfWatermark'
 import { renderPdfSampleCanvas } from '../lib/pdfPreview'
 import PaystackCheckout from '../components/PaystackCheckout'
@@ -226,6 +226,7 @@ export default function ItemDetailPage() {
 
     const images = item.images && item.images.length > 0 ? item.images : [null]
     const seller = item.users || {}
+    const sellerPhone = seller.phoneNumber || ''
     const sellerId = item.sellerId || item.seller_id
     const isOwnListing = currentUserId === sellerId
 
@@ -237,6 +238,25 @@ export default function ItemDetailPage() {
                         <img src={images[currentImage]} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     ) : item.isDigital ? '📄' : '📦'}
                 </div>
+
+                {images.length > 1 && (
+                    <>
+                        <button
+                            type="button"
+                            onClick={() => setCurrentImage((prev) => (prev > 0 ? prev - 1 : images.length - 1))}
+                            style={{ position: 'absolute', top: '50%', left: '0.75rem', transform: 'translateY(-50%)', width: '2rem', height: '2rem', borderRadius: '9999px', backgroundColor: 'rgba(255,255,255,0.85)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setCurrentImage((prev) => (prev < images.length - 1 ? prev + 1 : 0))}
+                            style={{ position: 'absolute', top: '50%', right: '0.75rem', transform: 'translateY(-50%)', width: '2rem', height: '2rem', borderRadius: '9999px', backgroundColor: 'rgba(255,255,255,0.85)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 2px 6px rgba(0,0,0,0.15)' }}
+                        >
+                            <ChevronRight size={18} />
+                        </button>
+                    </>
+                )}
 
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', background: 'linear-gradient(to bottom, rgba(0,0,0,0.25), transparent)' }}>
                     <button onClick={() => navigate(-1)} style={{ width: '2.25rem', height: '2.25rem', borderRadius: '9999px', backgroundColor: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)' }}>

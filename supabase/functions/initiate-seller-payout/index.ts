@@ -36,9 +36,27 @@ serve(async (req) => {
         JSON.stringify({ status: false, message: 'Server configuration error: missing payment secret' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    const authHeader = req.headers.get('Authorization') || '';
+    const token = authHeader.replace(/^Bearer\s+/i, '');
+    if (!token) {
+      return new Response(
+        JSON.stringify({ status: false, message: 'Authorization header is required' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+
+    const { data: authData, error: authErr } = await supabase.auth.getUser(token);
+    const caller = authData?.user;
+    const isPlatformAdmin = caller?.email === 'rc5632250@gmail.com';
+
+    if (authErr || !caller || (caller.id !== seller_id && !isPlatformAdmin)) {
+      return new Response(
+        JSON.stringify({ status: false, message: 'Unauthorized: You can only withdraw your own seller earnings' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // 1. Fetch seller profile and bank details
     const { data: user, error: userError } = await supabase

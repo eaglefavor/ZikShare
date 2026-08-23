@@ -147,19 +147,19 @@ export default function BottomNav() {
                                                 width: '2.75rem',
                                                 height: '2.75rem',
                                                 borderRadius: '9999px',
-                                                background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
+                                                background: 'linear-gradient(135deg, #2563EB, #1E40AF)',
                                                 color: 'white',
-                                                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)',
+                                                boxShadow: '0 4px 12px rgba(30, 64, 175, 0.35)',
                                                 marginTop: '-1rem',
                                                 transition: 'transform 0.2s ease, box-shadow 0.2s ease',
                                             }}
                                             onMouseEnter={e => {
                                                 e.currentTarget.style.transform = 'scale(1.1)'
-                                                e.currentTarget.style.boxShadow = '0 6px 16px rgba(59, 130, 246, 0.5)'
+                                                e.currentTarget.style.boxShadow = '0 6px 16px rgba(30, 64, 175, 0.45)'
                                             }}
                                             onMouseLeave={e => {
                                                 e.currentTarget.style.transform = 'scale(1)'
-                                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(59, 130, 246, 0.4)'
+                                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(30, 64, 175, 0.35)'
                                             }}
                                         >
                                             <NavIcon size={22} strokeWidth={2.4} />
@@ -177,13 +177,13 @@ export default function BottomNav() {
                                                 style={{
                                                     position: 'absolute',
                                                     top: '-0.45rem',
-                                                    right: '-0.7rem',
-                                                    minWidth: '1.05rem',
-                                                    height: '1.05rem',
+                                                    right: '-0.75rem',
+                                                    minWidth: '1.15rem',
+                                                    height: '1.15rem',
                                                     borderRadius: '9999px',
-                                                    backgroundColor: '#EF4444',
-                                                    color: 'white',
-                                                    fontSize: '0.5625rem',
+                                                    backgroundColor: '#DC2626',
+                                                    color: '#FFFFFF',
+                                                    fontSize: '0.625rem',
                                                     fontWeight: 800,
                                                     display: 'flex',
                                                     alignItems: 'center',
@@ -191,7 +191,7 @@ export default function BottomNav() {
                                                     padding: '0 0.25rem',
                                                     border: '2px solid white',
                                                     lineHeight: 1,
-                                                    boxShadow: '0 2px 4px rgba(239, 68, 68, 0.3)',
+                                                    boxShadow: '0 2px 5px rgba(220, 38, 38, 0.35)',
                                                 }}
                                             >
                                                 {unreadCount > 9 ? '9+' : unreadCount}

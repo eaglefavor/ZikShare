@@ -202,8 +202,8 @@ export function HomeAnnouncementBanner() {
     return (
         <div
             style={{
-                backgroundColor: '#EFF6FF',
-                border: '1.5px solid #BFDBFE',
+                backgroundColor: '#F4F8FD',
+                border: '1px solid #D0E1FD',
                 borderRadius: '0.875rem',
                 padding: '0.75rem 0.875rem',
                 marginBottom: '1rem',
@@ -211,19 +211,19 @@ export function HomeAnnouncementBanner() {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: '0.625rem',
-                boxShadow: '0 2px 6px rgba(37,99,235,0.06)'
+                boxShadow: '0 2px 6px rgba(30, 64, 175, 0.05)'
             }}
         >
             <div
                 onClick={() => navigate('/official-channel')}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', cursor: 'pointer', flex: 1, minWidth: 0 }}
             >
-                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.625rem', backgroundColor: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1D4ED8', flexShrink: 0 }}>
+                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.625rem', backgroundColor: '#E0EEFE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1E40AF', flexShrink: 0 }}>
                     <Megaphone size={19} />
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                        <span style={{ fontSize: '0.625rem', fontWeight: 800, color: '#1D4ED8', textTransform: 'uppercase', letterSpacing: '0.025em' }}>
+                        <span style={{ fontSize: '0.625rem', fontWeight: 800, color: '#1E40AF', textTransform: 'uppercase', letterSpacing: '0.025em' }}>
                             Official Broadcast
                         </span>
                     </div>
@@ -236,7 +236,7 @@ export function HomeAnnouncementBanner() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                 <button
                     onClick={() => navigate('/official-channel')}
-                    style={{ padding: '0.3rem 0.5rem', borderRadius: '0.375rem', border: 'none', backgroundColor: '#2563EB', color: 'white', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
+                    style={{ padding: '0.3rem 0.6rem', borderRadius: '0.375rem', border: 'none', backgroundColor: '#1E40AF', color: 'white', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}
                 >
                     Read
                 </button>

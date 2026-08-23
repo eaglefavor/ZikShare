@@ -24,7 +24,7 @@ function ConditionBadge({ condition }) {
 }
 
 function ListingCard({ listing, navigate }) {
-    const placeholderColors = ['#DBEAFE', '#E0E7FF', '#D9F99D', '#FBCFE8', '#E9D5FF', '#FDE68A']
+    const placeholderColors = ['#F8FAFC', '#F1F5F9', '#F3F4F6', '#F0F6FF', '#F8FAFC']
     const bgColor = placeholderColors[(listing.id?.charCodeAt?.(0) || 0) % placeholderColors.length]
     const imageUrl = listing.images?.[0]
     const isBoosted = listing.is_boosted && (!listing.boosted_until || new Date(listing.boosted_until) > new Date())
@@ -177,8 +177,8 @@ export default function HomePage() {
                         >
                             ZikShare
                         </h1>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.75rem', color: '#475569', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <MapPin size={12} style={{ color: '#D97706', flexShrink: 0 }} />
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.75rem', color: '#334155', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <MapPin size={12} style={{ color: '#B45309', flexShrink: 0 }} />
                             UNIZIK Student Marketplace
                         </p>
                     </div>
@@ -236,15 +236,16 @@ export default function HomePage() {
                 <div
                     onClick={() => navigate('/library')}
                     style={{
-                        padding: '0.5rem 0.75rem',
+                        padding: '0.5625rem 0.75rem',
                         borderRadius: '0.625rem',
-                        background: 'linear-gradient(135deg, #1E3A8A, #1E40AF)',
+                        background: 'linear-gradient(135deg, #1E40AF 0%, #1D4ED8 100%)',
                         color: 'white',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.5rem',
                         cursor: 'pointer',
-                        border: '1px solid rgba(245,158,11,0.35)',
+                        boxShadow: '0 2px 8px rgba(30, 64, 175, 0.18)',
+                        border: '1px solid rgba(245,158,11,0.3)',
                     }}
                 >
                     <BookOpen size={14} color="#F59E0B" />

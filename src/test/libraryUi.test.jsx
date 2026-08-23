@@ -21,7 +21,7 @@ describe('Digital Library UI Component Tests', { timeout: 15000 }, () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByText('UNIZIK Digital Library')).toBeInTheDocument()
+    expect(await screen.findByText('UNIZIK Digital Library')).toBeInTheDocument()
     expect(screen.getByPlaceholderText(/Search course code/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'All Faculties' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Faculty of Engineering' })).toBeInTheDocument()

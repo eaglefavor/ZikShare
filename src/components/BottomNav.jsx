@@ -139,31 +139,31 @@ export default function BottomNav() {
                                         />
                                     )}
                                     {path === '/post' ? (
-                                        <span
-                                            style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                width: '2.75rem',
-                                                height: '2.75rem',
-                                                borderRadius: '9999px',
-                                                background: 'linear-gradient(135deg, #2563EB, #1E40AF)',
-                                                color: 'white',
-                                                boxShadow: '0 4px 12px rgba(30, 64, 175, 0.35)',
-                                                marginTop: '-1rem',
-                                                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                                            }}
-                                            onMouseEnter={e => {
-                                                e.currentTarget.style.transform = 'scale(1.1)'
-                                                e.currentTarget.style.boxShadow = '0 6px 16px rgba(30, 64, 175, 0.45)'
-                                            }}
-                                            onMouseLeave={e => {
-                                                e.currentTarget.style.transform = 'scale(1)'
-                                                e.currentTarget.style.boxShadow = '0 4px 12px rgba(30, 64, 175, 0.35)'
-                                            }}
-                                        >
-                                            <NavIcon size={22} strokeWidth={2.4} />
-                                        </span>
+                                         <span
+                                             style={{
+                                                 display: 'flex',
+                                                 alignItems: 'center',
+                                                 justifyContent: 'center',
+                                                 width: '2.75rem',
+                                                 height: '2.75rem',
+                                                 borderRadius: '9999px',
+                                                 background: 'linear-gradient(135deg, #0066FF 0%, #0052CC 100%)',
+                                                 color: 'white',
+                                                 boxShadow: '0 4px 14px rgba(0, 102, 255, 0.4)',
+                                                 marginTop: '-1rem',
+                                                 transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                                             }}
+                                             onMouseEnter={e => {
+                                                 e.currentTarget.style.transform = 'scale(1.1)'
+                                                 e.currentTarget.style.boxShadow = '0 6px 18px rgba(0, 102, 255, 0.5)'
+                                             }}
+                                             onMouseLeave={e => {
+                                                 e.currentTarget.style.transform = 'scale(1)'
+                                                 e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 102, 255, 0.4)'
+                                             }}
+                                         >
+                                             <NavIcon size={22} strokeWidth={2.4} />
+                                         </span>
                                     ) : (
                                         <span style={{ position: 'relative', display: 'flex' }}>
                                             <NavIcon

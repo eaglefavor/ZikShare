@@ -4,6 +4,7 @@ import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListings, getDigitalProducts } from '../lib/database'
 import { HomeAnnouncementBanner } from '../components/AnnouncementModal'
 import { MARKETPLACE_SEGMENTS } from '../lib/categories'
+import ZikShareLogo from '../components/ZikShareLogo'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', {
@@ -164,21 +165,9 @@ export default function HomePage() {
             >
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                     <div>
-                        <h1
-                            style={{
-                                margin: 0,
-                                fontSize: '1.375rem',
-                                fontWeight: 900,
-                                background: 'linear-gradient(135deg, #1E40AF, #0F172A)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent',
-                                letterSpacing: '-0.03em',
-                            }}
-                        >
-                            ZikShare
-                        </h1>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.75rem', color: '#334155', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <MapPin size={12} style={{ color: '#B45309', flexShrink: 0 }} />
+                        <ZikShareLogo size="md" />
+                        <p style={{ margin: '0.2rem 0 0', fontSize: '0.6875rem', color: '#556987', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                            <MapPin size={11} style={{ color: '#FA5A00', flexShrink: 0 }} />
                             UNIZIK Student Marketplace
                         </p>
                     </div>
@@ -190,14 +179,14 @@ export default function HomePage() {
                                 gap: '0.25rem',
                                 padding: '0.25rem 0.625rem',
                                 borderRadius: '9999px',
-                                backgroundColor: '#FFFBEB',
-                                border: '1px solid #FDE68A',
-                                color: '#92400E',
+                                backgroundColor: '#FFF3EB',
+                                border: '1px solid #FFD2B8',
+                                color: '#FA5A00',
                                 fontSize: '0.6875rem',
                                 fontWeight: 700,
                             }}
                         >
-                            <ShieldCheck size={12} color="#D97706" />
+                            <ShieldCheck size={12} color="#FA5A00" />
                             Verified Campus
                         </div>
                     </div>
@@ -213,16 +202,16 @@ export default function HomePage() {
                         padding: '0.6875rem 1rem',
                         borderRadius: '0.75rem',
                         backgroundColor: '#F8FAFC',
-                        border: '1.5px solid var(--color-brand)',
+                        border: '1.5px solid #0066FF',
                         cursor: 'pointer',
-                        transition: 'border-color 0.2s ease',
+                        transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
                     }}
                 >
-                    <Search size={17} color="var(--color-brand)" style={{ flexShrink: 0 }} />
-                    <span style={{ fontSize: '0.8125rem', color: '#64748B', fontWeight: 500 }}>
+                    <Search size={17} color="#0066FF" style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: '0.8125rem', color: '#556987', fontWeight: 500 }}>
                         Search phones, laptops, generators, past questions...
                     </span>
-                    <SlidersHorizontal size={16} color="var(--color-brand)" style={{ marginLeft: 'auto', flexShrink: 0 }} />
+                    <SlidersHorizontal size={16} color="#0066FF" style={{ marginLeft: 'auto', flexShrink: 0 }} />
                 </div>
             </header>
 
@@ -236,23 +225,38 @@ export default function HomePage() {
                 <div
                     onClick={() => navigate('/library')}
                     style={{
-                        padding: '0.5625rem 0.75rem',
-                        borderRadius: '0.625rem',
-                        background: 'linear-gradient(135deg, #1E40AF 0%, #1D4ED8 100%)',
+                        padding: '0.625rem 0.875rem',
+                        borderRadius: '0.75rem',
+                        background: 'linear-gradient(135deg, #0066FF 0%, #0A2540 100%)',
                         color: 'white',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.5rem',
+                        gap: '0.625rem',
                         cursor: 'pointer',
-                        boxShadow: '0 2px 8px rgba(30, 64, 175, 0.18)',
-                        border: '1px solid rgba(245,158,11,0.3)',
+                        boxShadow: '0 4px 14px rgba(0, 102, 255, 0.2)',
+                        border: '1px solid rgba(250, 90, 0, 0.4)',
                     }}
                 >
-                    <BookOpen size={14} color="#F59E0B" />
-                    <span style={{ fontSize: '0.75rem', fontWeight: 700, flex: 1 }}>
+                    <div
+                        style={{
+                            width: '1.75rem',
+                            height: '1.75rem',
+                            borderRadius: '0.5rem',
+                            backgroundColor: 'rgba(250, 90, 0, 0.2)',
+                            border: '1px solid rgba(250, 90, 0, 0.4)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#FA5A00',
+                            flexShrink: 0,
+                        }}
+                    >
+                        <BookOpen size={14} />
+                    </div>
+                    <span style={{ fontSize: '0.78125rem', fontWeight: 700, flex: 1, color: '#FFFFFF' }}>
                         UNIZIK Digital Library — Past Questions & Study Packs
                     </span>
-                    <ChevronRight size={14} color="#F59E0B" />
+                    <ChevronRight size={15} color="#FA5A00" />
                 </div>
             </div>
 

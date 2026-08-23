@@ -3,6 +3,7 @@ import { Wrench, RefreshCw, Shield, Zap, Lock, Sparkles, CheckCircle2 } from 'lu
 import { useAuth } from '../contexts/AuthContext'
 import { isUserAdmin } from '../components/AdminRoute'
 import { useNavigate } from 'react-router-dom'
+import { ZikShareIcon } from '../components/ZikShareLogo'
 
 export default function MaintenancePage() {
     const { user, session, signInWithGoogle, loading } = useAuth()
@@ -164,23 +165,9 @@ export default function MaintenancePage() {
             }}>
                 {/* Brand Logo Header */}
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', marginBottom: '1.5rem' }}>
-                    <div style={{
-                        width: '2.5rem',
-                        height: '2.5rem',
-                        borderRadius: '0.75rem',
-                        background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: 'white',
-                        fontWeight: 900,
-                        fontSize: '1.125rem',
-                        boxShadow: '0 4px 12px rgba(59, 130, 246, 0.4)'
-                    }}>
-                        Z
-                    </div>
-                    <span style={{ fontSize: '1.25rem', fontWeight: 900, letterSpacing: '-0.03em', color: '#F8FAFC' }}>
-                        ZikShare<span style={{ color: '#60A5FA' }}>.</span>
+                    <ZikShareIcon size={34} />
+                    <span style={{ fontSize: '1.375rem', fontWeight: 900, letterSpacing: '-0.03em', color: '#FFFFFF' }}>
+                        Zik<span style={{ color: '#FA5A00' }}>Share</span>
                     </span>
                 </div>
 

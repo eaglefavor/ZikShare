@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth, isUnizikEmail } from '../contexts/AuthContext'
 import { Mail, Lock, User, Eye, EyeOff, Loader2, ArrowLeft, ShieldCheck, AlertCircle } from 'lucide-react'
+import ZikShareLogo from '../components/ZikShareLogo'
 
 export default function LoginPage() {
     const [mode, setMode] = useState('login') // 'login' or 'register'
@@ -93,22 +94,25 @@ export default function LoginPage() {
 
             <div style={{ padding: '1.5rem 1rem', maxWidth: '28rem', margin: '0 auto' }}>
                 {/* Logo */}
-                <div style={{ textAlign: 'center', marginBottom: '1.25rem' }}>
-                    <h2
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', marginBottom: '1.5rem' }}>
+                    <ZikShareLogo size="lg" withTagline={true} />
+                    <div
                         style={{
-                            margin: 0,
-                            fontSize: '1.75rem',
-                            fontWeight: 800,
-                            background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-                            WebkitBackgroundClip: 'text',
-                            WebkitTextFillColor: 'transparent',
+                            marginTop: '0.5rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.25rem',
+                            padding: '0.25rem 0.75rem',
+                            borderRadius: '9999px',
+                            backgroundColor: '#FFF3EB',
+                            border: '1px solid #FFD2B8',
+                            color: '#FA5A00',
+                            fontSize: '0.75rem',
+                            fontWeight: 700,
                         }}
                     >
-                        ZikShare
-                    </h2>
-                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.8125rem', color: 'var(--color-text-secondary)' }}>
-                        Exclusive Marketplace for Nnamdi Azikiwe University
-                    </p>
+                        <span>🎓 The UNIZIK Campus Marketplace</span>
+                    </div>
                 </div>
 
                 {/* UNIZIK Email Requirement Banner */}
@@ -116,16 +120,16 @@ export default function LoginPage() {
                     style={{
                         padding: '0.75rem 1rem',
                         borderRadius: '0.75rem',
-                        backgroundColor: '#EFF6FF',
-                        border: '1.5px solid #BFDBFE',
+                        backgroundColor: '#F0F6FF',
+                        border: '1px solid #D0E1FD',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '0.625rem',
                         marginBottom: '1.25rem',
                     }}
                 >
-                    <ShieldCheck size={20} color="#2563EB" style={{ flexShrink: 0 }} />
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#1E40AF', lineHeight: 1.4 }}>
+                    <ShieldCheck size={20} color="#0066FF" style={{ flexShrink: 0 }} />
+                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#0A2540', lineHeight: 1.4 }}>
                         <strong>UNIZIK Email Required:</strong> You must sign up with your official <strong>@unizik.edu.ng</strong> student email address.
                     </p>
                 </div>

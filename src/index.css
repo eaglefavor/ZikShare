@@ -1,17 +1,23 @@
 @import "tailwindcss";
 
-/* ── ZikShare Academic Prestige Design Tokens (Blue, Gold & White) ── */
+/* ── ZikShare Official Brand Design Tokens (Electric Blue, Vibrant Orange, Deep Navy) ── */
 @theme {
-  --color-brand: #1E40AF;
-  --color-brand-light: #3B82F6;
-  --color-brand-dark: #0F172A;
+  --color-brand: #0066FF;
+  --color-brand-light: #2575FC;
+  --color-brand-dark: #0A2540;
   --color-brand-soft: #EFF6FF;
 
-  --color-gold: #D97706;
-  --color-gold-light: #F59E0B;
-  --color-gold-dark: #92400E;
-  --color-gold-soft: #FFFBEB;
-  --color-gold-border: #FDE68A;
+  --color-orange: #FA5A00;
+  --color-orange-light: #FF7A00;
+  --color-orange-dark: #D44800;
+  --color-orange-soft: #FFF3EB;
+  --color-orange-border: #FFD2B8;
+
+  --color-gold: #FA5A00;
+  --color-gold-light: #FF7A00;
+  --color-gold-dark: #D44800;
+  --color-gold-soft: #FFF3EB;
+  --color-gold-border: #FFD2B8;
 
   --color-campus-green: #059669;
   --color-campus-green-light: #10B981;
@@ -21,9 +27,9 @@
   --color-background: #F8FAFC;
   --color-canvas: #F1F5F9;
 
-  --color-text-primary: #0F172A;
-  --color-text-secondary: #475569;
-  --color-text-muted: #94A3B8;
+  --color-text-primary: #0A2540;
+  --color-text-secondary: #556987;
+  --color-text-muted: #8898AA;
   --color-border: #E2E8F0;
   --color-border-subtle: #F1F5F9;
   --color-danger: #DC2626;
@@ -139,26 +145,26 @@ body {
 
 .condition-like-new {
   background-color: #EFF6FF;
-  color: #1E40AF;
+  color: #0066FF;
   border: 1px solid #BFDBFE;
 }
 
 .condition-used {
-  background-color: #FFFBEB;
-  color: #92400E;
-  border: 1px solid #FDE68A;
+  background-color: #FFF3EB;
+  color: #D44800;
+  border: 1px solid #FFD2B8;
 }
 
 .badge-gold {
-  background-color: #FFFBEB;
-  color: #92400E;
-  border: 1px solid #FDE68A;
+  background-color: #FFF3EB;
+  color: #D44800;
+  border: 1px solid #FFD2B8;
   font-weight: 800;
 }
 
 .badge-blue {
   background-color: #EFF6FF;
-  color: #1E40AF;
+  color: #0066FF;
   border: 1px solid #BFDBFE;
   font-weight: 800;
 }

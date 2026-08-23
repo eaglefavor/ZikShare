@@ -61,13 +61,29 @@ describe('Components & ErrorBoundary Resilience', () => {
     const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
 
     render(
-      <ErrorBoundary fallback={({ error }) => <div>Custom Isolation: {error.message}</div>}>
+      <ErrorBoundary fallback={<div>Custom Error Page</div>}>
         <FaultyComponent shouldThrow={true} />
       </ErrorBoundary>
     )
 
-    expect(screen.getByText(/Custom Isolation: Simulation of catastrophic runtime failure/i)).toBeInTheDocument()
+    expect(screen.getByText('Custom Error Page')).toBeInTheDocument()
 
     spy.mockRestore()
+  })
+
+  it('renders HomePage with search and Digital Library entry banner without throwing', async () => {
+    const { default: HomePage } = await import('../pages/HomePage')
+    const { MemoryRouter } = await import('react-router-dom')
+
+    render(
+      <MemoryRouter>
+        <ErrorBoundary>
+          <HomePage />
+        </ErrorBoundary>
+      </MemoryRouter>
+    )
+
+    expect(screen.getByText(/UNIZIK Digital Library & Past Questions/i)).toBeInTheDocument()
+    expect(screen.getByText(/Search phones, laptops, generators, past questions/i)).toBeInTheDocument()
   })
 })

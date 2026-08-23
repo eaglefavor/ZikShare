@@ -30,10 +30,13 @@ export class ErrorBoundary extends React.Component {
   render() {
     if (this.state.hasError) {
       if (this.props.fallback) {
-        return this.props.fallback({
-          error: this.state.error,
-          resetErrorBoundary: this.handleReset,
-        })
+        if (typeof this.props.fallback === 'function') {
+          return this.props.fallback({
+            error: this.state.error,
+            resetErrorBoundary: this.handleReset,
+          })
+        }
+        return this.props.fallback
       }
 
       return (

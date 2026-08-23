@@ -1,4 +1,4 @@
-import { Search, SlidersHorizontal, ChevronRight, MapPin, ShieldCheck, Zap, TrendingUp, Sparkles, Tag } from 'lucide-react'
+import { Search, SlidersHorizontal, ChevronRight, MapPin, ShieldCheck, Zap, TrendingUp, Sparkles, Tag, BookOpen } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListings, getDigitalProducts } from '../lib/database'

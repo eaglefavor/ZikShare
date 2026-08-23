@@ -1,4 +1,4 @@
-import { Search, SlidersHorizontal, ChevronRight, MapPin, ShieldCheck, Zap, TrendingUp, Sparkles, Tag, BookOpen } from 'lucide-react'
+import { Search, SlidersHorizontal, ChevronRight, MapPin, ShieldCheck, TrendingUp, Sparkles, Tag, BookOpen } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListings, getDigitalProducts } from '../lib/database'
@@ -231,87 +231,27 @@ export default function HomePage() {
                 <HomeAnnouncementBanner />
             </div>
 
-            {/* Quick Stats Banner & Digital Library Quick Entry */}
-            <div style={{ padding: '0 1rem', display: 'flex', flexDirection: 'column', gap: '0.65rem', margin: '0.75rem 0' }}>
+            {/* Digital Library — Compact Accent Bar */}
+            <div style={{ padding: '0.5rem 1rem' }}>
                 <div
                     onClick={() => navigate('/library')}
                     style={{
-                        padding: '0.875rem 1rem',
-                        borderRadius: '0.875rem',
-                        background: 'linear-gradient(135deg, #0F172A 0%, #1E3A8A 60%, #1E40AF 100%)',
+                        padding: '0.5rem 0.75rem',
+                        borderRadius: '0.625rem',
+                        background: 'linear-gradient(135deg, #1E3A8A, #1E40AF)',
                         color: 'white',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '0.75rem',
+                        gap: '0.5rem',
                         cursor: 'pointer',
-                        boxShadow: '0 4px 14px rgba(15,23,42,0.3)',
-                        border: '1px solid rgba(245,158,11,0.5)'
+                        border: '1px solid rgba(245,158,11,0.35)',
                     }}
                 >
-                    <div
-                        style={{
-                            width: '2.5rem',
-                            height: '2.5rem',
-                            borderRadius: '0.625rem',
-                            backgroundColor: 'rgba(217,119,6,0.25)',
-                            border: '1px solid rgba(245,158,11,0.5)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#F59E0B'
-                        }}
-                    >
-                        <BookOpen size={20} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                            <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 800, color: '#FFFFFF' }}>UNIZIK Digital Library & Past Questions</p>
-                            <span style={{ fontSize: '0.625rem', backgroundColor: '#D97706', color: '#FFF', padding: '0.1rem 0.35rem', borderRadius: '0.25rem', fontWeight: 700 }}>OFFICIAL</span>
-                        </div>
-                        <p style={{ margin: 0, fontSize: '0.6875rem', color: '#93C5FD' }}>
-                            Verified GST, Engineering, Law & Sciences study packs
-                        </p>
-                    </div>
-                    <ChevronRight size={18} style={{ opacity: 0.9, color: '#F59E0B' }} />
-                </div>
-
-                <div
-                    onClick={() => navigate('/search')}
-                    style={{
-                        padding: '0.75rem 1rem',
-                        borderRadius: '0.875rem',
-                        background: 'linear-gradient(135deg, #1E40AF 0%, #0F172A 100%)',
-                        color: 'white',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem',
-                        cursor: 'pointer',
-                        boxShadow: '0 2px 8px rgba(30,64,175,0.2)',
-                        border: '1px solid #3B82F6'
-                    }}
-                >
-                    <div
-                        style={{
-                            width: '2.25rem',
-                            height: '2.25rem',
-                            borderRadius: '0.5rem',
-                            backgroundColor: 'rgba(245,158,11,0.2)',
-                            border: '1px solid rgba(245,158,11,0.4)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            color: '#F59E0B'
-                        }}
-                    >
-                        <Zap size={18} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                        <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: 700, color: '#F1F5F9' }}>Campus Hot Deals & Exchanges 🔥</p>
-                        <p style={{ margin: 0, fontSize: '0.65rem', color: '#93C5FD' }}>
-                            {listings?.length || 0} active listings verified on campus
-                        </p>
-                    </div>
-                    <ChevronRight size={16} style={{ opacity: 0.8, color: '#F59E0B' }} />
+                    <BookOpen size={14} color="#F59E0B" />
+                    <span style={{ fontSize: '0.75rem', fontWeight: 700, flex: 1 }}>
+                        UNIZIK Digital Library — Past Questions & Study Packs
+                    </span>
+                    <ChevronRight size={14} color="#F59E0B" />
                 </div>
             </div>
 
@@ -355,9 +295,9 @@ export default function HomePage() {
                             key={seg.id}
                             onClick={() => navigate(`/search?segment=${seg.id}`)}
                             style={{
-                                minWidth: '6.5rem',
-                                padding: '0.75rem 0.5rem',
-                                borderRadius: '0.875rem',
+                                minWidth: '5.5rem',
+                                padding: '0.5rem 0.375rem',
+                                borderRadius: '0.75rem',
                                 backgroundColor: 'white',
                                 textAlign: 'center',
                                 cursor: 'pointer',
@@ -375,7 +315,7 @@ export default function HomePage() {
                                 e.currentTarget.style.borderColor = 'var(--color-border)'
                             }}
                         >
-                            <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', backgroundColor: seg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.375rem', fontSize: '1.25rem' }}>
+                            <div style={{ width: '2rem', height: '2rem', borderRadius: '9999px', backgroundColor: seg.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.25rem', fontSize: '1.1rem' }}>
                                 {seg.emoji}
                             </div>
                             <p style={{ margin: 0, fontSize: '0.6875rem', fontWeight: 700, color: 'var(--color-text-primary)', lineHeight: 1.2 }}>
@@ -385,40 +325,7 @@ export default function HomePage() {
                     ))}
                 </div>
 
-                {/* Popular Campus Subcategories Quick-Bar */}
-                <div style={{ display: 'flex', gap: '0.375rem', overflowX: 'auto', paddingBottom: '0.25rem', marginTop: '0.375rem' }} className="hide-scrollbar">
-                    {[
-                        { label: '📱 Phones', sub: 'phones' },
-                        { label: '💻 Laptops', sub: 'laptops' },
-                        { label: '⚡ Generators', sub: 'generators' },
-                        { label: '🌀 Fans', sub: 'fans' },
-                        { label: '🛏️ Beds/Mattress', sub: 'beds' },
-                        { label: '📝 Past Questions', sub: 'past-questions' },
-                        { label: '👔 Irons', sub: 'iron' },
-                        { label: '☁️ Pillows', sub: 'pillows' },
-                        { label: '🪟 Curtains', sub: 'curtains' },
-                        { label: '📺 TVs', sub: 'tvs' },
-                    ].map(item => (
-                        <button
-                            key={item.sub}
-                            onClick={() => navigate(`/search?subcategory=${item.sub}`)}
-                            style={{
-                                padding: '0.375rem 0.625rem',
-                                borderRadius: '9999px',
-                                border: '1px solid var(--color-border)',
-                                backgroundColor: '#F8FAFC',
-                                color: '#334155',
-                                fontSize: '0.6875rem',
-                                fontWeight: 600,
-                                whiteSpace: 'nowrap',
-                                cursor: 'pointer',
-                                flexShrink: 0,
-                            }}
-                        >
-                            {item.label}
-                        </button>
-                    ))}
-                </div>
+
             </section>
 
             {/* Listings */}

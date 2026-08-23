@@ -83,7 +83,7 @@ describe('Components & ErrorBoundary Resilience', () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByText(/UNIZIK Digital Library & Past Questions/i)).toBeInTheDocument()
+    expect(screen.getByText(/UNIZIK Digital Library/i)).toBeInTheDocument()
     expect(screen.getByText(/Search phones, laptops, generators, past questions/i)).toBeInTheDocument()
   })
 })

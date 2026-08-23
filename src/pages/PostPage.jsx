@@ -71,7 +71,7 @@ export default function PostPage() {
     // Academic Specific fields
     const [courseCode, setCourseCode] = useState('')
     const [academicLevel, setAcademicLevel] = useState('100L')
-    const [faculty, setFaculty] = useState(UNIZIK_FACULTIES[0] || 'Physical Sciences')
+    const [faculty, setFaculty] = useState(UNIZIK_FACULTIES[0]?.name || 'Faculty of Physical Sciences')
 
     // Physical fields
     const [condition, setCondition] = useState('Fairly Used')
@@ -784,7 +784,7 @@ export default function PostPage() {
                                     onChange={e => setFaculty(e.target.value)}
                                     style={{ width: '100%', padding: '0.4375rem 0.25rem', borderRadius: '0.375rem', border: '1px solid #86EFAC', fontSize: '0.75rem', backgroundColor: 'white' }}
                                 >
-                                    {UNIZIK_FACULTIES.map(fac => <option key={fac} value={fac}>{fac}</option>)}
+                                    {UNIZIK_FACULTIES.map(fac => <option key={fac.name} value={fac.name}>{fac.name}</option>)}
                                 </select>
                             </div>
                         </div>

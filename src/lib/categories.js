@@ -134,39 +134,208 @@ export const UNIZIK_LOCATIONS = [
   { id: 'amansea', name: 'Amansea Express Junction', zone: 'Amansea Off-Campus', badge: '🏘️ Lodge Area' },
 ]
 
-// UNIZIK Faculties & Academic Hierarchy
+// UNIZIK Faculties & Academic Hierarchy (17 Official Faculties + General Studies)
 export const UNIZIK_FACULTIES = [
   {
+    name: 'Faculty of Agriculture',
+    departments: [
+      'Agricultural Economics & Extension',
+      'Animal Science & Technology',
+      'Crop Science & Horticulture',
+      'Fisheries & Aquaculture',
+      'Food Science & Technology',
+      'Forestry & Wildlife Management',
+      'Soil Science & Land Resources Management'
+    ],
+  },
+  {
+    name: 'Faculty of Arts',
+    departments: [
+      'English Language & Literary Studies',
+      'History & International Studies',
+      'Igbo, African & Asian Studies',
+      'Modern European Languages (French, German, Chinese)',
+      'Linguistics',
+      'Music',
+      'Philosophy',
+      'Religion & Human Relations',
+      'Theatre & Film Studies'
+    ],
+  },
+  {
+    name: 'Faculty of Basic Medical Sciences',
+    departments: [
+      'Human Anatomy',
+      'Human Physiology',
+      'Medical Biochemistry'
+    ],
+  },
+  {
+    name: 'Faculty of Basic Clinical Sciences',
+    departments: [
+      'Chemical Pathology',
+      'Hematology & Blood Transfusion',
+      'Medical Microbiology & Parasitology',
+      'Pharmacology & Therapeutics'
+    ],
+  },
+  {
+    name: 'Faculty of Bio-Sciences',
+    departments: [
+      'Applied Biochemistry',
+      'Applied Microbiology & Brewing',
+      'Botany',
+      'Parasitology & Entomology',
+      'Zoology'
+    ],
+  },
+  {
+    name: 'Faculty of Education',
+    departments: [
+      'Adult Education',
+      'Educational Foundations',
+      'Educational Management & Policy',
+      'Guidance & Counselling',
+      'Library & Information Science',
+      'Science Education (Biology, Chemistry, Computer, Integrated Science, Mathematics, Physics)',
+      'Special Needs Education'
+    ],
+  },
+  {
     name: 'Faculty of Engineering',
-    departments: ['Mechanical Engineering', 'Electrical Engineering', 'Civil Engineering', 'Chemical Engineering', 'Computer Engineering', 'Electronic & Telecom', 'Agricultural & Bioresources', 'Industrial & Production', 'Metallurgical & Materials Engineering'],
+    departments: [
+      'Agricultural & Bio-Resources Engineering',
+      'Chemical Engineering',
+      'Civil Engineering',
+      'Electrical Engineering',
+      'Electronics & Computer Engineering',
+      'Industrial & Production Engineering',
+      'Mechanical Engineering',
+      'Metallurgical & Materials Engineering',
+      'Petroleum Engineering',
+      'Polymer & Textile Engineering'
+    ],
   },
   {
-    name: 'Faculty of Physical Sciences',
-    departments: ['Computer Science', 'Mathematics', 'Physics & Industrial Physics', 'Chemistry', 'Statistics', 'Geological Sciences', 'Geophysics'],
+    name: 'Faculty of Environmental Sciences',
+    departments: [
+      'Architecture',
+      'Building',
+      'Environmental Management',
+      'Estate Management',
+      'Fine & Applied Arts',
+      'Geography & Meteorology',
+      'Quantity Surveying',
+      'Surveying & Geoinformatics'
+    ],
   },
   {
-    name: 'Faculty of Biosciences',
-    departments: ['Applied Biochemistry', 'Microbiology', 'Parasitology & Entomology', 'Botany', 'Zoology'],
-  },
-  {
-    name: 'Faculty of Management Sciences',
-    departments: ['Accountancy', 'Banking & Finance', 'Business Administration', 'Marketing', 'Public Administration', 'Cooperative Economics'],
-  },
-  {
-    name: 'Faculty of Social Sciences',
-    departments: ['Economics', 'Mass Communication', 'Political Science', 'Psychology', 'Sociology/Anthropology'],
+    name: 'Faculty of Health Sciences & Technology',
+    departments: [
+      'Medical Laboratory Science',
+      'Medical Rehabilitation / Physiotherapy',
+      'Nursing Sciences',
+      'Radiography & Radiological Sciences'
+    ],
   },
   {
     name: 'Faculty of Law',
-    departments: ['Commercial & Property Law', 'International Law', 'Public & Private Law'],
+    departments: [
+      'Commercial & Property Law',
+      'International Law & Jurisprudence',
+      'Private & Property Law',
+      'Public Law'
+    ],
   },
   {
-    name: 'Faculty of Arts & Humanities',
-    departments: ['English Language & Literature', 'History & International Studies', 'Philosophy', 'Music', 'Theatre Arts', 'Linguistics'],
+    name: 'Faculty of Management Sciences',
+    departments: [
+      'Accountancy',
+      'Banking & Finance',
+      'Business Administration',
+      'Cooperative Economics & Management',
+      'Entrepreneurship',
+      'Marketing',
+      'Public Administration'
+    ],
+  },
+  {
+    name: 'Faculty of Medicine',
+    departments: [
+      'Anaesthesiology',
+      'Community Medicine & Primary Health Care',
+      'Dermatology',
+      'Internal Medicine',
+      'Obstetrics & Gynaecology',
+      'Ophthalmology',
+      'Orthopedics & Traumatology',
+      'Otorhinolaryngology (ENT)',
+      'Paediatrics',
+      'Psychiatry / Mental Health',
+      'Radiology',
+      'Surgery'
+    ],
+  },
+  {
+    name: 'Faculty of Pharmaceutical Sciences',
+    departments: [
+      'Clinical Pharmacy & Pharmacy Management',
+      'Pharmaceutical & Medicinal Chemistry',
+      'Pharmaceutical Microbiology & Biotechnology',
+      'Pharmaceutics & Pharmaceutical Technology',
+      'Pharmacognosy & Traditional Medicine',
+      'Pharmacology & Toxicology'
+    ],
+  },
+  {
+    name: 'Faculty of Physical Sciences',
+    departments: [
+      'Computer Science',
+      'Geological Sciences',
+      'Geophysics',
+      'Industrial Chemistry',
+      'Mathematics',
+      'Physics & Industrial Physics',
+      'Pure Chemistry',
+      'Statistics'
+    ],
+  },
+  {
+    name: 'Faculty of Social Sciences',
+    departments: [
+      'Economics',
+      'Mass Communication',
+      'Political Science',
+      'Psychology',
+      'Sociology & Anthropology'
+    ],
+  },
+  {
+    name: 'Faculty of Medical Laboratory Science',
+    departments: [
+      'Clinical Chemistry',
+      'Hematology & Blood Transfusion',
+      'Histopathology / Cytopathology',
+      'Medical Microbiology'
+    ],
+  },
+  {
+    name: 'Faculty of Technology & Vocational Education',
+    departments: [
+      'Agricultural Education',
+      'Auto & Mechanical Technology Education',
+      'Building & Woodwork Technology Education',
+      'Business Education',
+      'Electrical & Electronics Technology Education',
+      'Home Economics Education'
+    ],
   },
   {
     name: 'General Studies (GST / CED)',
-    departments: ['GST Directorate', 'Centre for Entrepreneurship Development (CED)'],
+    departments: [
+      'GST Directorate',
+      'Centre for Entrepreneurship Development (CED)'
+    ],
   },
 ]
 

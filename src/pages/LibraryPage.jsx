@@ -18,10 +18,24 @@ export default function LibraryPage() {
     const navigate = useNavigate()
     const [searchQuery, setSearchQuery] = useState('')
     const [selectedFaculty, setSelectedFaculty] = useState('All')
+    const [selectedDepartment, setSelectedDepartment] = useState('All')
     const [selectedLevel, setSelectedLevel] = useState('All')
     const [selectedMaterialType, setSelectedMaterialType] = useState('All')
     const [dbMaterials, setDbMaterials] = useState([])
     const [isLoading, setIsLoading] = useState(true)
+
+    // Compute departments available for currently selected faculty
+    const availableDepartments = useMemo(() => {
+        if (selectedFaculty === 'All') return []
+        const facObj = UNIZIK_FACULTIES.find(f => f.name === selectedFaculty)
+        return facObj?.departments || []
+    }, [selectedFaculty])
+
+    // Reset department filter when faculty changes
+    const handleFacultyChange = (facName) => {
+        setSelectedFaculty(facName)
+        setSelectedDepartment('All')
+    }
 
     useEffect(() => {
         let isMounted = true
@@ -30,7 +44,7 @@ export default function LibraryPage() {
             try {
                 const items = await getDigitalProducts({
                     category: 'Academic & Study Materials',
-                    limit: 100,
+                    limit: 150,
                 })
                 if (isMounted) {
                     setDbMaterials(items || [])
@@ -80,12 +94,13 @@ export default function LibraryPage() {
                 (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()))
 
             const matchesFaculty = selectedFaculty === 'All' || item.faculty === selectedFaculty
+            const matchesDepartment = selectedDepartment === 'All' || item.department === selectedDepartment || (item.title && item.title.toLowerCase().includes(selectedDepartment.toLowerCase()))
             const matchesLevel = selectedLevel === 'All' || item.level === selectedLevel
             const matchesType = selectedMaterialType === 'All' || item.material_type === selectedMaterialType
 
-            return matchesQuery && matchesFaculty && matchesLevel && matchesType
+            return matchesQuery && matchesFaculty && matchesDepartment && matchesLevel && matchesType
         })
-    }, [allMaterials, searchQuery, selectedFaculty, selectedLevel, selectedMaterialType])
+    }, [allMaterials, searchQuery, selectedFaculty, selectedDepartment, selectedLevel, selectedMaterialType])
 
     return (
         <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', paddingBottom: '5rem' }}>
@@ -199,13 +214,23 @@ export default function LibraryPage() {
                 {/* ── FILTER CONTROLS ── */}
                 <div style={{ backgroundColor: '#FFFFFF', borderRadius: '0.875rem', padding: '1.25rem', border: '1px solid #E2E8F0', marginBottom: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
                     {/* Faculty Selector Pills */}
-                    <div style={{ marginBottom: '1rem' }}>
-                        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                            Select Faculty
+                    <div style={{ marginBottom: availableDepartments.length > 0 ? '0.75rem' : '1rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                                Select Faculty ({UNIZIK_FACULTIES.length})
+                            </div>
+                            {selectedFaculty !== 'All' && (
+                                <button
+                                    onClick={() => handleFacultyChange('All')}
+                                    style={{ background: 'none', border: 'none', color: '#2563EB', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer', padding: 0 }}
+                                >
+                                    Show All Faculties
+                                </button>
+                            )}
                         </div>
                         <div style={{ display: 'flex', gap: '0.5rem', overflowX: 'auto', paddingBottom: '0.25rem', scrollbarWidth: 'none' }}>
                             <button
-                                onClick={() => setSelectedFaculty('All')}
+                                onClick={() => handleFacultyChange('All')}
                                 style={{
                                     whiteSpace: 'nowrap',
                                     padding: '0.4rem 0.85rem',
@@ -224,7 +249,7 @@ export default function LibraryPage() {
                             {UNIZIK_FACULTIES.map(fac => (
                                 <button
                                     key={fac.name}
-                                    onClick={() => setSelectedFaculty(fac.name)}
+                                    onClick={() => handleFacultyChange(fac.name)}
                                     style={{
                                         whiteSpace: 'nowrap',
                                         padding: '0.4rem 0.85rem',
@@ -243,6 +268,52 @@ export default function LibraryPage() {
                             ))}
                         </div>
                     </div>
+
+                    {/* Department Selector Pills (Shown when specific faculty is active) */}
+                    {availableDepartments.length > 0 && (
+                        <div style={{ marginBottom: '1rem', padding: '0.75rem', backgroundColor: '#F8FAFC', borderRadius: '0.625rem', border: '1px solid #E2E8F0' }}>
+                            <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1E40AF', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                                Departments in {selectedFaculty} ({availableDepartments.length})
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto', paddingBottom: '0.25rem', scrollbarWidth: 'none' }}>
+                                <button
+                                    onClick={() => setSelectedDepartment('All')}
+                                    style={{
+                                        whiteSpace: 'nowrap',
+                                        padding: '0.3rem 0.7rem',
+                                        borderRadius: '9999px',
+                                        fontSize: '0.75rem',
+                                        fontWeight: selectedDepartment === 'All' ? 700 : 500,
+                                        backgroundColor: selectedDepartment === 'All' ? '#2563EB' : '#FFFFFF',
+                                        color: selectedDepartment === 'All' ? '#FFFFFF' : '#475569',
+                                        border: '1px solid #CBD5E1',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    All Departments
+                                </button>
+                                {availableDepartments.map(dept => (
+                                    <button
+                                        key={dept}
+                                        onClick={() => setSelectedDepartment(dept)}
+                                        style={{
+                                            whiteSpace: 'nowrap',
+                                            padding: '0.3rem 0.7rem',
+                                            borderRadius: '9999px',
+                                            fontSize: '0.75rem',
+                                            fontWeight: selectedDepartment === dept ? 700 : 500,
+                                            backgroundColor: selectedDepartment === dept ? '#2563EB' : '#FFFFFF',
+                                            color: selectedDepartment === dept ? '#FFFFFF' : '#475569',
+                                            border: '1px solid #CBD5E1',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        {dept}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Level & Material Type Row */}
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.25rem', paddingTop: '0.5rem', borderTop: '1px solid #F1F5F9' }}>
@@ -353,7 +424,7 @@ export default function LibraryPage() {
                             Try searching for another course code or clearing some filters to explore other departments.
                         </p>
                         <button
-                            onClick={() => { setSelectedFaculty('All'); setSelectedLevel('All'); setSelectedMaterialType('All'); setSearchQuery('') }}
+                            onClick={() => { handleFacultyChange('All'); setSelectedLevel('All'); setSelectedMaterialType('All'); setSearchQuery('') }}
                             style={{ backgroundColor: '#1E40AF', color: 'white', border: 'none', padding: '0.5rem 1.25rem', borderRadius: '0.5rem', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}
                         >
                             Reset All Filters
@@ -424,11 +495,17 @@ export default function LibraryPage() {
                                         {item.title}
                                     </h4>
 
-                                    {/* Faculty & Level Pill */}
+                                    {/* Faculty, Department & Level Pill */}
                                     <div style={{ fontSize: '0.75rem', color: '#64748B', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
-                                        <span style={{ fontWeight: 600, color: '#334155' }}>{item.level}</span>
+                                        <span style={{ fontWeight: 700, color: '#1E40AF' }}>{item.level}</span>
                                         <span>•</span>
-                                        <span>{item.faculty}</span>
+                                        <span style={{ color: '#334155', fontWeight: 600 }}>{item.faculty}</span>
+                                        {item.department && (
+                                            <>
+                                                <span>•</span>
+                                                <span style={{ color: '#64748B' }}>{item.department}</span>
+                                            </>
+                                        )}
                                     </div>
 
                                     {/* Description Snippet */}

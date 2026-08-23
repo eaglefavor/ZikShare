@@ -78,14 +78,20 @@ describe('UNIZIK Digital Library & Academic Repository Suite', () => {
             expect(codes).toContain('CED 341')
         })
 
-        it('covers engineering, physical sciences, management, law, and biosciences', () => {
+        it('covers key foundational courses across medical, engineering, science, law, and arts faculties', () => {
             const facultiesRepresented = new Set(UNIZIK_OFFICIAL_STUDY_PACKS.map(p => p.faculty))
             expect(facultiesRepresented.has('Faculty of Engineering')).toBe(true)
             expect(facultiesRepresented.has('Faculty of Physical Sciences')).toBe(true)
             expect(facultiesRepresented.has('Faculty of Management Sciences')).toBe(true)
             expect(facultiesRepresented.has('Faculty of Law')).toBe(true)
-            expect(facultiesRepresented.has('Faculty of Biosciences')).toBe(true)
+            expect(facultiesRepresented.has('Faculty of Bio-Sciences')).toBe(true)
             expect(facultiesRepresented.has('Faculty of Social Sciences')).toBe(true)
+            expect(facultiesRepresented.has('Faculty of Agriculture')).toBe(true)
+            expect(facultiesRepresented.has('Faculty of Basic Medical Sciences')).toBe(true)
+            expect(facultiesRepresented.has('Faculty of Medicine')).toBe(true)
+            expect(facultiesRepresented.has('Faculty of Pharmaceutical Sciences')).toBe(true)
+            expect(facultiesRepresented.has('Faculty of Education')).toBe(true)
+            expect(facultiesRepresented.has('Faculty of Environmental Sciences')).toBe(true)
         })
     })
 

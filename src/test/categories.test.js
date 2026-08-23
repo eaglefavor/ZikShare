@@ -60,17 +60,42 @@ describe('Categories & Taxonomy Verification', () => {
     expect(findParentSegment(null)).toBeNull()
   })
 
-  it('UNIZIK_FACULTIES entries are valid objects with string name and non-empty departments', () => {
-    expect(UNIZIK_FACULTIES.length).toBeGreaterThan(5)
+  it('UNIZIK_FACULTIES contains all 17 official faculties with over 70 academic departments', () => {
+    expect(UNIZIK_FACULTIES.length).toBeGreaterThanOrEqual(17)
+    
+    const facultyNames = UNIZIK_FACULTIES.map(f => f.name)
+    expect(facultyNames).toContain('Faculty of Agriculture')
+    expect(facultyNames).toContain('Faculty of Arts')
+    expect(facultyNames).toContain('Faculty of Basic Medical Sciences')
+    expect(facultyNames).toContain('Faculty of Basic Clinical Sciences')
+    expect(facultyNames).toContain('Faculty of Bio-Sciences')
+    expect(facultyNames).toContain('Faculty of Education')
+    expect(facultyNames).toContain('Faculty of Engineering')
+    expect(facultyNames).toContain('Faculty of Environmental Sciences')
+    expect(facultyNames).toContain('Faculty of Health Sciences & Technology')
+    expect(facultyNames).toContain('Faculty of Law')
+    expect(facultyNames).toContain('Faculty of Management Sciences')
+    expect(facultyNames).toContain('Faculty of Medicine')
+    expect(facultyNames).toContain('Faculty of Pharmaceutical Sciences')
+    expect(facultyNames).toContain('Faculty of Physical Sciences')
+    expect(facultyNames).toContain('Faculty of Social Sciences')
+    expect(facultyNames).toContain('Faculty of Medical Laboratory Science')
+    expect(facultyNames).toContain('Faculty of Technology & Vocational Education')
+
+    let totalDepartments = 0
     UNIZIK_FACULTIES.forEach(fac => {
       expect(typeof fac.name).toBe('string')
       expect(fac.name.length).toBeGreaterThan(0)
       expect(Array.isArray(fac.departments)).toBe(true)
       expect(fac.departments.length).toBeGreaterThan(0)
+      totalDepartments += fac.departments.length
       fac.departments.forEach(dept => {
         expect(typeof dept).toBe('string')
+        expect(dept.length).toBeGreaterThan(0)
       })
     })
+
+    expect(totalDepartments).toBeGreaterThanOrEqual(70)
   })
 
   it('UNIZIK_LOCATIONS includes Perm Site, Ifite, and safe exchange hubs', () => {

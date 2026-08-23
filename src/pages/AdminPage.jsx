@@ -5,14 +5,17 @@ import {
     CheckCircle2, XCircle, AlertTriangle, Trash2, Eye, ExternalLink,
     Lock, Unlock, Download, ArrowLeft, TrendingUp, DollarSign, Database,
     FileText, UserCheck, UserX, ShieldAlert, Sparkles, Filter, Check, Copy,
-    ChevronRight, Server, Zap, Megaphone, Pin, Send, Plus, Wrench, Info
+    ChevronRight, Server, Zap, Megaphone, Pin, Send, Plus, Wrench, Info,
+    BookOpen, GraduationCap, Award
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import {
     getAdminStats, getAdminUsers, toggleUserBan, toggleUserVerification,
     getAdminListings, adminDeleteListing, adminUpdateListingStatus, getAdminOrders,
-    getAnnouncements, createAnnouncement, deleteAnnouncement, togglePinAnnouncement, toggleAnnouncementStatus
+    getAnnouncements, createAnnouncement, deleteAnnouncement, togglePinAnnouncement, toggleAnnouncementStatus,
+    seedDigitalLibraryPacks
 } from '../lib/database'
+import { UNIZIK_OFFICIAL_STUDY_PACKS } from '../lib/academicCatalogData'
 import { useToast } from '../components/Toast'
 import { invalidateCacheByPrefix } from '../lib/cache'
 import { verifyPaystackPayment } from '../lib/paystack'
@@ -71,12 +74,15 @@ const templates = [
 
 export default function AdminPage() {
     const navigate = useNavigate()
-    useAuth()
+    const { user, session } = useAuth()
     const toast = useToast()
 
-    const [activeTab, setActiveTab] = useState('overview') // 'overview' | 'users' | 'listings' | 'orders' | 'broadcasts' | 'system'
+    const [activeTab, setActiveTab] = useState('overview') // 'overview' | 'library' | 'users' | 'listings' | 'orders' | 'broadcasts' | 'system'
     const [loading, setLoading] = useState(true)
     const [refreshing, setRefreshing] = useState(false)
+    const [seedingLibrary, setSeedingLibrary] = useState(false)
+    const [seedResult, setSeedResult] = useState(null)
+    const [libraryFacultyFilter, setLibraryFacultyFilter] = useState('All')
 
     // Data States
     const [stats, setStats] = useState(null)
@@ -406,6 +412,26 @@ export default function AdminPage() {
         setTimeout(() => setCopiedRef(null), 2000)
     }
 
+    const handleSeedLibrary = async () => {
+        const adminId = user?.uid || session?.user?.id || user?.id
+        if (!adminId) {
+            toast.error('Admin session not detected')
+            return
+        }
+        setSeedingLibrary(true)
+        try {
+            const result = await seedDigitalLibraryPacks(adminId)
+            setSeedResult(result)
+            toast.success(`Digital Library synced! ${result.insertedCount} new packs registered (${result.alreadyExistingCount} already active).`)
+            await loadAllData(true)
+        } catch (err) {
+            console.error('Library seed error:', err)
+            toast.error('Failed to sync library: ' + err.message)
+        } finally {
+            setSeedingLibrary(false)
+        }
+    }
+
     const handlePurgePlatformCache = () => {
         invalidateCacheByPrefix('listings')
         invalidateCacheByPrefix('digital')
@@ -504,6 +530,7 @@ export default function AdminPage() {
                 <div style={{ display: 'flex', gap: '0.375rem', width: 'max-content' }}>
                     {[
                         { id: 'overview', label: 'Overview', icon: Activity, count: null },
+                        { id: 'library', label: 'Digital Library', icon: BookOpen, count: UNIZIK_OFFICIAL_STUDY_PACKS.length },
                         { id: 'broadcasts', label: 'Broadcasts', icon: Megaphone, count: announcementsList.length },
                         { id: 'users', label: 'Users', icon: Users, count: usersList.length },
                         { id: 'listings', label: 'Marketplace', icon: Package, count: listingsList.length },
@@ -1464,6 +1491,123 @@ export default function AdminPage() {
                                             </div>
                                         )
                                     })}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* ── TAB: DIGITAL LIBRARY & CATALOG SEEDER ── */}
+                        {activeTab === 'library' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                {/* Seeder Action Card */}
+                                <div style={{ backgroundColor: '#1E293B', borderRadius: '0.75rem', border: '1px solid #334155', padding: '1.25rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem', marginBottom: '1rem' }}>
+                                        <div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.35rem' }}>
+                                                <div style={{ width: '2rem', height: '2rem', borderRadius: '0.5rem', backgroundColor: '#1E40AF', color: '#93C5FD', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                    <BookOpen size={16} />
+                                                </div>
+                                                <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: 'white' }}>
+                                                    UNIZIK Official Digital Library Vault
+                                                </h3>
+                                            </div>
+                                            <p style={{ margin: 0, fontSize: '0.75rem', color: '#94A3B8', maxWidth: '500px', lineHeight: 1.45 }}>
+                                                Synchronize and publish verified course packs, past questions, and lecture summaries under the official ZikShare institutional account (<code style={{ color: '#60A5FA' }}>rc5632250@gmail.com</code>).
+                                            </p>
+                                        </div>
+
+                                        <button
+                                            onClick={handleSeedLibrary}
+                                            disabled={seedingLibrary}
+                                            style={{
+                                                padding: '0.6rem 1.1rem',
+                                                borderRadius: '0.5rem',
+                                                border: 'none',
+                                                background: 'linear-gradient(135deg, #D97706 0%, #B45309 100%)',
+                                                color: 'white',
+                                                fontWeight: 800,
+                                                fontSize: '0.8rem',
+                                                cursor: seedingLibrary ? 'not-allowed' : 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '0.45rem',
+                                                boxShadow: '0 4px 12px rgba(217, 119, 6, 0.3)',
+                                                whiteSpace: 'nowrap'
+                                            }}
+                                        >
+                                            {seedingLibrary ? <RefreshCw size={15} className="animate-spin" /> : <Sparkles size={15} />}
+                                            <span>{seedingLibrary ? 'Syncing Catalog...' : 'Seed / Sync Official Library'}</span>
+                                        </button>
+                                    </div>
+
+                                    {/* Seed Result Feedback Banner */}
+                                    {seedResult && (
+                                        <div style={{ padding: '0.75rem 1rem', borderRadius: '0.5rem', backgroundColor: '#064E3B', border: '1px solid #059669', color: '#A7F3D0', fontSize: '0.78rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <CheckCircle2 size={16} color="#34D399" />
+                                                <span>
+                                                    <strong>Sync Complete:</strong> {seedResult.insertedCount} new packs published • {seedResult.alreadyExistingCount} existing up to date.
+                                                </span>
+                                            </div>
+                                            <button onClick={() => navigate('/library')} style={{ background: 'none', border: 'none', color: '#6EE7B7', fontWeight: 700, fontSize: '0.75rem', cursor: 'pointer', textDecoration: 'underline' }}>
+                                                View Live Library →
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* Catalog Statistics Breakdown */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', backgroundColor: '#0F172A', padding: '0.75rem', borderRadius: '0.5rem', border: '1px solid #334155' }}>
+                                        <div style={{ textAlign: 'center' }}>
+                                            <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#FBBF24' }}>{UNIZIK_OFFICIAL_STUDY_PACKS.length}</div>
+                                            <div style={{ fontSize: '0.65rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>Configured Packs</div>
+                                        </div>
+                                        <div style={{ textAlign: 'center', borderLeft: '1px solid #1E293B', borderRight: '1px solid #1E293B' }}>
+                                            <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#34D399' }}>8</div>
+                                            <div style={{ fontSize: '0.65rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>Faculties Covered</div>
+                                        </div>
+                                        <div style={{ textAlign: 'center' }}>
+                                            <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#60A5FA' }}>100%</div>
+                                            <div style={{ fontSize: '0.65rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>DRM Protected</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Curated Study Packs Inspection List */}
+                                <div style={{ backgroundColor: '#1E293B', borderRadius: '0.75rem', border: '1px solid #334155', padding: '1rem' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                                        <h4 style={{ margin: 0, fontSize: '0.85rem', fontWeight: 800, color: 'white' }}>
+                                            Core Ingestion Curriculum ({UNIZIK_OFFICIAL_STUDY_PACKS.length})
+                                        </h4>
+                                        <button
+                                            onClick={() => navigate('/library')}
+                                            style={{ background: 'none', border: 'none', color: '#60A5FA', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.2rem' }}
+                                        >
+                                            Open Public Library <ExternalLink size={12} />
+                                        </button>
+                                    </div>
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem', maxHeight: '420px', overflowY: 'auto' }}>
+                                        {UNIZIK_OFFICIAL_STUDY_PACKS.map(pack => (
+                                            <div key={pack.code} style={{ padding: '0.65rem 0.75rem', backgroundColor: '#0F172A', borderRadius: '0.5rem', border: '1px solid #334155', display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
+                                                <div style={{ minWidth: 0, flex: 1 }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', marginBottom: '0.2rem' }}>
+                                                        <span style={{ backgroundColor: '#1E40AF', color: 'white', fontSize: '0.6875rem', fontWeight: 800, padding: '0.1rem 0.4rem', borderRadius: '0.25rem' }}>
+                                                            {pack.code}
+                                                        </span>
+                                                        <span style={{ fontSize: '0.6875rem', color: '#94A3B8' }}>{pack.level} • {pack.faculty}</span>
+                                                    </div>
+                                                    <div style={{ fontSize: '0.78rem', fontWeight: 700, color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                        {pack.title}
+                                                    </div>
+                                                </div>
+                                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#F59E0B' }}>
+                                                        {formatNaira(pack.priceKobo / 100)}
+                                                    </div>
+                                                    <div style={{ fontSize: '0.625rem', color: '#34D399' }}>Verified DRM</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             </div>
                         )}

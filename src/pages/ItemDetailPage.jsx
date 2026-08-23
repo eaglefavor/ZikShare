@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, FileText, ShieldAlert, ChevronRight as ChevronRightIcon, CheckCircle2, Lock, Download, Sparkles, Eye, CheckCircle, Star, Tag, BookOpen, GraduationCap } from 'lucide-react'
+import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, FileText, ShieldAlert, ChevronRight as ChevronRightIcon, CheckCircle2, Lock, Download, Sparkles, Eye, CheckCircle, Star, Tag, BookOpen, GraduationCap, Library } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListing, getUserPurchaseForProduct, createSignedDownloadUrl, getSellerReviews, getSellerRatingSummary } from '../lib/database'
@@ -8,6 +8,7 @@ import { renderPdfSampleCanvas } from '../lib/pdfPreview'
 import PaystackCheckout from '../components/PaystackCheckout'
 import { isSaved as checkSaved, toggleSaved } from '../lib/savedItems'
 import { getOrCreateConversation } from '../lib/messaging'
+import { isOfficialZikShareAccount } from '../lib/categories'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 
@@ -507,69 +508,87 @@ export default function ItemDetailPage() {
             </div>
 
             {/* Clickable Seller Card & Rating Score (routes to /seller/:id) */}
-            <div 
-                onClick={() => sellerId && navigate(`/seller/${sellerId}`)}
-                style={{ 
-                    margin: '0.5rem 0', 
-                    padding: '1rem', 
-                    backgroundColor: 'white', 
-                    cursor: sellerId ? 'pointer' : 'default',
-                    transition: 'background-color 0.15s ease'
-                }}
-            >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                    <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700 }}>Seller & Reputation</h3>
-                    {sellerId && (
-                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-brand)', display: 'flex', alignItems: 'center', gap: '0.125rem' }}>
-                            View Store <ChevronRightIcon size={14} />
-                        </span>
-                    )}
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ width: '3rem', height: '3rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.125rem', fontWeight: 700, flexShrink: 0 }}>
-                        {(seller.displayName || 'S').charAt(0).toUpperCase()}
-                    </div>
-                    <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                            <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700 }}>{seller.displayName || 'Seller'}</p>
-                            {seller.isVerified && <ShieldCheck size={14} color="var(--color-campus-green)" />}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.125rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', color: '#F59E0B' }}>
-                                <Star size={12} fill="#F59E0B" />
-                                <span style={{ fontSize: '0.75rem', fontWeight: 800, marginLeft: '0.25rem', color: '#0F172A' }}>
-                                    {sellerRatingSummary.averageRating.toFixed(1)}
-                                </span>
+            {(() => {
+                const isOfficial = isOfficialZikShareAccount(seller?.email) || isOfficialZikShareAccount(item?.seller_id) || item?.is_official || seller?.email === 'rc5632250@gmail.com' || (seller?.displayName || '').includes('ZikShare')
+                return (
+                    <div 
+                        onClick={() => sellerId && navigate(`/seller/${sellerId}`)}
+                        style={{ 
+                            margin: '0.5rem 0', 
+                            padding: '1rem', 
+                            backgroundColor: isOfficial ? '#F0FDF4' : 'white', 
+                            border: isOfficial ? '1.5px solid #86EFAC' : 'none',
+                            borderRadius: isOfficial ? '0.75rem' : '0',
+                            cursor: sellerId ? 'pointer' : 'default',
+                            transition: 'background-color 0.15s ease'
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                                <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700, color: isOfficial ? '#166534' : '#0F172A' }}>
+                                    {isOfficial ? '🏛️ Official Academic Repository' : 'Seller & Reputation'}
+                                </h3>
+                                {isOfficial && (
+                                    <span style={{ fontSize: '0.65rem', backgroundColor: '#DCFCE7', color: '#15803D', fontWeight: 800, padding: '0.1rem 0.4rem', borderRadius: '9999px' }}>
+                                        PLATFORM VERIFIED
+                                    </span>
+                                )}
                             </div>
-                            <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
-                                ({sellerRatingSummary.totalReviews} verified {sellerRatingSummary.totalReviews === 1 ? 'review' : 'reviews'})
-                            </span>
+                            {sellerId && (
+                                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: isOfficial ? '#15803D' : 'var(--color-brand)', display: 'flex', alignItems: 'center', gap: '0.125rem' }}>
+                                    View Store <ChevronRightIcon size={14} />
+                                </span>
+                            )}
                         </div>
-                    </div>
-                </div>
-
-                {/* Seller Reviews Preview */}
-                {sellerReviews.length > 0 && (
-                    <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #F1F5F9' }}>
-                        <p style={{ margin: '0 0 0.5rem', fontSize: '0.6875rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Recent Buyer Feedback</p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                            {sellerReviews.slice(0, 2).map(rev => (
-                                <div key={rev.id} style={{ padding: '0.5rem', backgroundColor: '#F8FAFC', borderRadius: '0.5rem', border: '1px solid #E2E8F0' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.125rem' }}>
-                                        <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#1E293B' }}>{rev.users?.displayName || 'Campus Buyer'}</span>
-                                        <div style={{ display: 'flex', color: '#F59E0B' }}>
-                                            {[...Array(rev.rating || 5)].map((_, i) => (
-                                                <Star key={i} size={10} fill="#F59E0B" />
-                                            ))}
-                                        </div>
-                                    </div>
-                                    <p style={{ margin: 0, fontSize: '0.6875rem', color: '#475569' }}>{rev.comment}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                            <div style={{ width: '3rem', height: '3rem', borderRadius: '9999px', background: isOfficial ? 'linear-gradient(135deg, #15803D, #166534)' : 'linear-gradient(135deg, #3B82F6, #2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.125rem', fontWeight: 700, flexShrink: 0 }}>
+                                {isOfficial ? '🏛️' : (seller.displayName || 'S').charAt(0).toUpperCase()}
+                            </div>
+                            <div style={{ flex: 1 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                    <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700 }}>
+                                        {isOfficial ? 'ZikShare Official Academic Library' : (seller.displayName || 'Seller')}
+                                    </p>
+                                    <ShieldCheck size={14} color={isOfficial ? '#16A34A' : 'var(--color-campus-green)'} />
                                 </div>
-                            ))}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.125rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', color: '#F59E0B' }}>
+                                        <Star size={12} fill="#F59E0B" />
+                                        <span style={{ fontSize: '0.75rem', fontWeight: 800, marginLeft: '0.25rem', color: '#0F172A' }}>
+                                            {isOfficial ? '5.0' : sellerRatingSummary.averageRating.toFixed(1)}
+                                        </span>
+                                    </div>
+                                    <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
+                                        {isOfficial ? '(100% UNIZIK Syllabus Accuracy Guarantee)' : `(${sellerRatingSummary.totalReviews} verified ${sellerRatingSummary.totalReviews === 1 ? 'review' : 'reviews'})`}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
+
+                        {/* Seller Reviews Preview */}
+                        {sellerReviews.length > 0 && (
+                            <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #F1F5F9' }}>
+                                <p style={{ margin: '0 0 0.5rem', fontSize: '0.6875rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Recent Buyer Feedback</p>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                    {sellerReviews.slice(0, 2).map(rev => (
+                                        <div key={rev.id} style={{ padding: '0.5rem', backgroundColor: '#F8FAFC', borderRadius: '0.5rem', border: '1px solid #E2E8F0' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.125rem' }}>
+                                                <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#1E293B' }}>{rev.users?.displayName || 'Campus Buyer'}</span>
+                                                <div style={{ display: 'flex', color: '#F59E0B' }}>
+                                                    {[...Array(rev.rating || 5)].map((_, i) => (
+                                                        <Star key={i} size={10} fill="#F59E0B" />
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            <p style={{ margin: 0, fontSize: '0.6875rem', color: '#475569' }}>{rev.comment}</p>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
-                )}
-            </div>
+                )
+            })()}
 
             {/* Safe Meetup (Physical Items) or Anti-Piracy Notice (Digital Items) */}
             <div style={{ margin: '0.5rem 0 1rem', padding: '1rem', backgroundColor: 'white' }}>

@@ -29,6 +29,7 @@ const PurchasedItemsPage = lazy(() => import('./pages/PurchasedItemsPage'))
 const AdminPage = lazy(() => import('./pages/AdminPage'))
 const OfficialChannelPage = lazy(() => import('./pages/OfficialChannelPage'))
 const MaintenancePage = lazy(() => import('./pages/MaintenancePage'))
+const LibraryPage = lazy(() => import('./pages/LibraryPage'))
 
 // Maintenance Mode Flag — Set to true to show maintenance screen to all standard visitors
 export const MAINTENANCE_MODE = false
@@ -78,6 +79,7 @@ function AppRoutes() {
               <main className="pb-safe">
                 <Routes>
                   <Route path="/" element={<HomePage />} />
+                  <Route path="/library" element={<LibraryPage />} />
                   <Route path="/search" element={<SearchPage />} />
                   <Route path="/post" element={<PostPage />} />
                   <Route path="/messages" element={<MessagesPage />} />

@@ -231,45 +231,88 @@ export default function HomePage() {
                 <HomeAnnouncementBanner />
             </div>
 
-            {/* Quick Stats Banner */}
-            <div
-                onClick={() => navigate('/search')}
-                style={{
-                    margin: '0.75rem 1rem',
-                    padding: '0.875rem 1rem',
-                    borderRadius: '0.875rem',
-                    background: 'linear-gradient(135deg, #1E40AF 0%, #0F172A 100%)',
-                    color: 'white',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                    cursor: 'pointer',
-                    boxShadow: '0 4px 14px rgba(30,64,175,0.25)',
-                    border: '1px solid #3B82F6'
-                }}
-            >
+            {/* Quick Stats Banner & Digital Library Quick Entry */}
+            <div style={{ padding: '0 1rem', display: 'flex', flexDirection: 'column', gap: '0.65rem', margin: '0.75rem 0' }}>
                 <div
+                    onClick={() => navigate('/library')}
                     style={{
-                        width: '2.5rem',
-                        height: '2.5rem',
-                        borderRadius: '0.625rem',
-                        backgroundColor: 'rgba(245,158,11,0.2)',
-                        border: '1px solid rgba(245,158,11,0.4)',
+                        padding: '0.875rem 1rem',
+                        borderRadius: '0.875rem',
+                        background: 'linear-gradient(135deg, #0F172A 0%, #1E3A8A 60%, #1E40AF 100%)',
+                        color: 'white',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#F59E0B'
+                        gap: '0.75rem',
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 14px rgba(15,23,42,0.3)',
+                        border: '1px solid rgba(245,158,11,0.5)'
                     }}
                 >
-                    <Zap size={20} />
+                    <div
+                        style={{
+                            width: '2.5rem',
+                            height: '2.5rem',
+                            borderRadius: '0.625rem',
+                            backgroundColor: 'rgba(217,119,6,0.25)',
+                            border: '1px solid rgba(245,158,11,0.5)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#F59E0B'
+                        }}
+                    >
+                        <BookOpen size={20} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                            <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 800, color: '#FFFFFF' }}>UNIZIK Digital Library & Past Questions</p>
+                            <span style={{ fontSize: '0.625rem', backgroundColor: '#D97706', color: '#FFF', padding: '0.1rem 0.35rem', borderRadius: '0.25rem', fontWeight: 700 }}>OFFICIAL</span>
+                        </div>
+                        <p style={{ margin: 0, fontSize: '0.6875rem', color: '#93C5FD' }}>
+                            Verified GST, Engineering, Law & Sciences study packs
+                        </p>
+                    </div>
+                    <ChevronRight size={18} style={{ opacity: 0.9, color: '#F59E0B' }} />
                 </div>
-                <div style={{ flex: 1 }}>
-                    <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 800, color: '#F1F5F9' }}>Campus Hot Deals & Exchanges 🔥</p>
-                    <p style={{ margin: 0, fontSize: '0.6875rem', color: '#93C5FD' }}>
-                        {listings?.length || 0} active listings verified on campus
-                    </p>
+
+                <div
+                    onClick={() => navigate('/search')}
+                    style={{
+                        padding: '0.75rem 1rem',
+                        borderRadius: '0.875rem',
+                        background: 'linear-gradient(135deg, #1E40AF 0%, #0F172A 100%)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.75rem',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 8px rgba(30,64,175,0.2)',
+                        border: '1px solid #3B82F6'
+                    }}
+                >
+                    <div
+                        style={{
+                            width: '2.25rem',
+                            height: '2.25rem',
+                            borderRadius: '0.5rem',
+                            backgroundColor: 'rgba(245,158,11,0.2)',
+                            border: '1px solid rgba(245,158,11,0.4)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#F59E0B'
+                        }}
+                    >
+                        <Zap size={18} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                        <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: 700, color: '#F1F5F9' }}>Campus Hot Deals & Exchanges 🔥</p>
+                        <p style={{ margin: 0, fontSize: '0.65rem', color: '#93C5FD' }}>
+                            {listings?.length || 0} active listings verified on campus
+                        </p>
+                    </div>
+                    <ChevronRight size={16} style={{ opacity: 0.8, color: '#F59E0B' }} />
                 </div>
-                <ChevronRight size={18} style={{ opacity: 0.8, color: '#F59E0B' }} />
             </div>
 
             {/* JiJi-Style Campus Marketplace Categories */}

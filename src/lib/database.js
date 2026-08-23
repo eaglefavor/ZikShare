@@ -347,11 +347,22 @@ export async function createDigitalProduct(product) {
     return res.data
 }
 
-export async function getDigitalProducts({ category, search, limit = 20, offset = 0 } = {}) {
+export async function getDigitalProducts({ 
+    category, 
+    subcategory, 
+    faculty, 
+    department, 
+    level, 
+    courseCode, 
+    search, 
+    isOfficial, 
+    limit = 40, 
+    offset = 0 
+} = {}) {
     try {
         let query = supabase
             .from('digital_products')
-            .select('*, users!seller_id(displayName, isVerified, phoneNumber)')
+            .select('*, users!seller_id(displayName, isVerified, phoneNumber, email)')
             .eq('status', 'active')
             .order('created_at', { ascending: false })
             .range(offset, offset + limit - 1)
@@ -359,13 +370,33 @@ export async function getDigitalProducts({ category, search, limit = 20, offset 
         if (category && category !== 'All') {
             query = query.eq('category', category)
         }
-
+        if (subcategory && subcategory !== 'All') {
+            query = query.eq('subcategory', subcategory)
+        }
+        if (faculty && faculty !== 'All') {
+            query = query.eq('faculty', faculty)
+        }
+        if (department && department !== 'All') {
+            query = query.eq('department', department)
+        }
+        if (level && level !== 'All') {
+            query = query.eq('level', level)
+        }
+        if (courseCode) {
+            query = query.ilike('course_code', `%${courseCode.trim()}%`)
+        }
         if (search) {
-            query = query.ilike('title', `%${search}%`)
+            query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,course_code.ilike.%${search}%`)
         }
 
         const res = await queryWithTimeout(query, 6000, { data: null })
-        if (res?.data && !res?.error) return res.data
+        if (res?.data && !res?.error) {
+            let data = res.data
+            if (isOfficial) {
+                data = data.filter(d => d.users?.email === 'rc5632250@gmail.com' || d.users?.displayName?.includes('ZikShare') || d.is_official)
+            }
+            return data
+        }
     } catch (e) {
         console.warn('getDigitalProducts with join error, falling back to simple:', e?.message)
     }
@@ -381,9 +412,23 @@ export async function getDigitalProducts({ category, search, limit = 20, offset 
         if (category && category !== 'All') {
             query = query.eq('category', category)
         }
-
+        if (subcategory && subcategory !== 'All') {
+            query = query.eq('subcategory', subcategory)
+        }
+        if (faculty && faculty !== 'All') {
+            query = query.eq('faculty', faculty)
+        }
+        if (department && department !== 'All') {
+            query = query.eq('department', department)
+        }
+        if (level && level !== 'All') {
+            query = query.eq('level', level)
+        }
+        if (courseCode) {
+            query = query.ilike('course_code', `%${courseCode.trim()}%`)
+        }
         if (search) {
-            query = query.ilike('title', `%${search}%`)
+            query = query.or(`title.ilike.%${search}%,description.ilike.%${search}%,course_code.ilike.%${search}%`)
         }
 
         const res = await queryWithTimeout(query, 6000, { data: [] })
@@ -392,6 +437,92 @@ export async function getDigitalProducts({ category, search, limit = 20, offset 
         console.error('[DB] getDigitalProducts fallback failed:', err?.message)
         notifyError('Failed to load study materials')
         return []
+    }
+}
+
+/**
+ * Fetches all verified study packs published by official ZikShare repository
+ */
+export async function getOfficialLibraryItems({ faculty, level, subcategory, search, limit = 50 } = {}) {
+    return getDigitalProducts({
+        category: 'Academic & Study Materials',
+        subcategory,
+        faculty,
+        level,
+        search,
+        limit,
+    })
+}
+
+/**
+ * Seeds and synchronizes official UNIZIK academic study packs into the database
+ */
+export async function seedDigitalLibraryPacks(adminUserId) {
+    if (!adminUserId) throw new Error('Valid Admin user ID is required to seed official library.')
+
+    const { UNIZIK_OFFICIAL_STUDY_PACKS } = await import('./academicCatalogData')
+
+    // 1. Fetch existing products for this seller to avoid duplicates
+    const { data: existing, error: fetchErr } = await supabase
+        .from('digital_products')
+        .select('id, title, course_code')
+        .eq('seller_id', adminUserId)
+
+    if (fetchErr) {
+        console.warn('Could not fetch existing official items, proceeding carefully:', fetchErr)
+    }
+
+    const existingCodes = new Set((existing || []).map(e => (e.course_code || '').toUpperCase()))
+    const existingTitles = new Set((existing || []).map(e => (e.title || '').toLowerCase()))
+
+    const toInsert = []
+    for (const item of UNIZIK_OFFICIAL_STUDY_PACKS) {
+        const isCodePresent = item.code && existingCodes.has(item.code.toUpperCase())
+        const isTitlePresent = existingTitles.has(item.title.toLowerCase())
+
+        if (!isCodePresent && !isTitlePresent) {
+            toInsert.push({
+                seller_id: adminUserId,
+                title: item.title,
+                description: item.description,
+                price: item.priceKobo,
+                category: item.category,
+                subcategory: item.subcategory,
+                course_code: item.code,
+                level: item.level,
+                faculty: item.faculty,
+                department: item.department,
+                original_storage_path: `official-library/${item.code.replace(/\s+/g, '_')}_Study_Pack.pdf`,
+                file_size_bytes: item.file_size_bytes || 4000000,
+                status: 'active',
+                drm_enabled: true,
+                cover_image_url: null,
+            })
+        }
+    }
+
+    let insertedCount = 0
+    if (toInsert.length > 0) {
+        const { data: inserted, error: insertErr } = await supabase
+            .from('digital_products')
+            .insert(toInsert)
+            .select()
+
+        if (insertErr) {
+            throw new Error(`Failed to seed study packs: ${insertErr.message}`)
+        }
+        insertedCount = inserted?.length || toInsert.length
+    }
+
+    invalidateCacheByPrefix('digital')
+    invalidateCacheByPrefix('listings')
+    invalidateCacheByPrefix('feed')
+    invalidateCacheByPrefix('catalog')
+
+    return {
+        totalConfigured: UNIZIK_OFFICIAL_STUDY_PACKS.length,
+        insertedCount,
+        alreadyExistingCount: UNIZIK_OFFICIAL_STUDY_PACKS.length - insertedCount,
     }
 }
 

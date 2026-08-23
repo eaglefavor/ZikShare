@@ -172,6 +172,41 @@ export const UNIZIK_FACULTIES = [
 
 export const ACADEMIC_LEVELS = ['100L', '200L', '300L', '400L', '500L', 'Postgraduate']
 
+export const ACADEMIC_MATERIAL_TYPES = [
+  { id: 'past-questions', name: 'Past Questions & Solutions', emoji: '📝', badge: 'Verified PQ', desc: 'Real exam papers with step-by-step marking schemes' },
+  { id: 'lecture-notes', name: 'Lecture Notes & Summaries', emoji: '📖', badge: 'Course Handout', desc: 'Concise lecture summaries and departmental handouts' },
+  { id: 'textbooks', name: 'Textbooks & Readers', emoji: '📚', badge: 'Core Reference', desc: 'Recommended course textbooks and academic readers' },
+  { id: 'lab-manuals', name: 'Practical & Lab Manuals', emoji: '🔬', badge: 'Lab Guide', desc: 'Practical manuals, calculations, and experiment guides' },
+  { id: 'project-materials', name: 'Project & Research Materials', emoji: '📊', badge: 'Thesis / Case Study', desc: 'Research guides, thesis frameworks, and case studies' },
+]
+
+export const OFFICIAL_ZIKSHARE_EMAILS = [
+  'rc5632250@gmail.com',
+  'admin@zikshare.com',
+]
+
+/**
+ * Checks if a user email or ID belongs to the official ZikShare institutional account
+ */
+export function isOfficialZikShareAccount(emailOrId) {
+  if (!emailOrId) return false
+  const clean = String(emailOrId).toLowerCase().trim()
+  return OFFICIAL_ZIKSHARE_EMAILS.includes(clean)
+}
+
+/**
+ * Formats and normalizes a course code e.g. "gst112" -> "GST 112"
+ */
+export function formatCourseCode(code) {
+  if (!code) return ''
+  const clean = String(code).toUpperCase().trim().replace(/\s+/g, '')
+  const match = clean.match(/^([A-Z]{2,4})([0-9]{3}[A-Z]?)$/)
+  if (match) {
+    return `${match[1]} ${match[2]}`
+  }
+  return String(code).toUpperCase().trim()
+}
+
 /**
  * Finds a subcategory by ID or search text
  */
@@ -193,7 +228,7 @@ export function findParentSegment(categoryOrSubId) {
   const clean = String(categoryOrSubId).toLowerCase().trim()
   return MARKETPLACE_SEGMENTS.find(seg => 
     seg.id === clean || 
-    seg.name.toLowerCase() === clean ||
+    seg.name.toLowerCase() === clean || 
     seg.subcategories.some(sub => sub.id === clean || sub.name.toLowerCase() === clean)
   ) || null
 }

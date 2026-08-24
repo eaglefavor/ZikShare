@@ -119,6 +119,30 @@ body {
   scrollbar-width: none;
 }
 
+/* ── Floating Animation ── */
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+  100% { transform: translateY(0px); }
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float 4s ease-in-out 2s infinite;
+}
+
+/* ── Custom Gradients ── */
+.hero-gradient {
+  background: radial-gradient(circle at 100% 0%, #EFF6FF 0%, #F8FAFC 50%, #FFFFFF 100%);
+}
+
+.trust-banner-gradient {
+  background: linear-gradient(90deg, #EFF6FF 0%, #F8FAFC 50%, #EFF6FF 100%);
+}
+
 /* ── Price Tag ── */
 .price-tag {
   font-weight: 800;

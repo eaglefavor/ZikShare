@@ -84,12 +84,13 @@ export default function BottomNav() {
                 left: 0,
                 right: 0,
                 zIndex: 50,
-                backgroundColor: 'white',
-                borderTop: '1px solid var(--color-border)',
+                background: 'linear-gradient(180deg, rgba(248,250,252,0) 0%, rgba(248,250,252,0.92) 34%, rgba(248,250,252,0.98) 100%)',
+                borderTop: '1px solid rgba(226, 232, 240, 0.35)',
                 transition: 'transform 0.3s ease, opacity 0.3s ease',
                 transform: isVisible ? 'translateY(0)' : 'translateY(100%)',
                 opacity: isVisible ? 1 : 0,
-                paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+                padding: '0.55rem 0.85rem env(safe-area-inset-bottom, 0px)',
+                backdropFilter: 'blur(16px)',
             }}
         >
             <div
@@ -97,9 +98,14 @@ export default function BottomNav() {
                     display: 'flex',
                     justifyContent: 'space-around',
                     alignItems: 'center',
-                    height: '4rem',
-                    maxWidth: '32rem',
+                    minHeight: '4rem',
+                    maxWidth: '34rem',
                     margin: '0 auto',
+                    padding: '0.35rem 0.45rem',
+                    borderRadius: '1.4rem',
+                    backgroundColor: 'rgba(255,255,255,0.96)',
+                    border: '1px solid rgba(226, 232, 240, 0.95)',
+                    boxShadow: '0 18px 42px rgba(10, 37, 64, 0.12)',
                 }}
             >
                 {navItems.map((item) => {
@@ -119,9 +125,12 @@ export default function BottomNav() {
                                 padding: '0.5rem',
                                 textDecoration: 'none',
                                 color: isActive ? 'var(--color-brand)' : 'var(--color-text-muted)',
-                                transition: 'color 0.2s ease',
+                                transition: 'color 0.2s ease, background 0.2s ease',
                                 WebkitTapHighlightColor: 'transparent',
                                 position: 'relative',
+                                borderRadius: '1rem',
+                                minWidth: path === '/post' ? '3.25rem' : '3.75rem',
+                                background: isActive && path !== '/post' ? 'var(--color-brand-soft)' : 'transparent',
                             })}
                         >
                             {({ isActive }) => (

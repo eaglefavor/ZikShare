@@ -1,9 +1,8 @@
-import { Search, SlidersHorizontal, ChevronRight, MapPin, ShieldCheck, TrendingUp, Sparkles, BookOpen, MessageCircle, Smartphone, Armchair, Package, Users, Zap, GraduationCap } from 'lucide-react'
+import { Search, SlidersHorizontal, ChevronRight, ShieldCheck, TrendingUp, BookOpen, MessageCircle, Smartphone, Armchair, Package, Users, Zap, GraduationCap, Landmark, Library, BadgeCheck, ClipboardList } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListings, getDigitalProducts } from '../lib/database'
 import { HomeAnnouncementBanner } from '../components/AnnouncementModal'
-import { MARKETPLACE_SEGMENTS } from '../lib/categories'
 import ZikShareLogo from '../components/ZikShareLogo'
 
 function formatNaira(amount) {
@@ -25,106 +24,69 @@ function ConditionBadge({ condition }) {
 }
 
 function ListingCard({ listing, navigate }) {
-    const placeholderColors = ['#F8FAFC', '#F1F5F9', '#F3F4F6', '#F0F6FF', '#F8FAFC']
+    const placeholderColors = ['#F8FAFC', '#F1F5F9', '#EFF6FF', '#FFF3EB', '#F8FAFC']
     const bgColor = placeholderColors[(listing.id?.charCodeAt?.(0) || 0) % placeholderColors.length]
     const imageUrl = listing.images?.[0]
     const isBoosted = listing.is_boosted && (!listing.boosted_until || new Date(listing.boosted_until) > new Date())
 
     return (
-        <div
+        <article
+            className={`academic-listing-card ${isBoosted ? 'academic-listing-card--boosted' : ''}`}
             onClick={() => navigate(`/item/${listing.id}`)}
-            style={{
-                borderRadius: '1rem',
-                overflow: 'hidden',
-                backgroundColor: 'white',
-                boxShadow: isBoosted ? '0 8px 24px rgba(234, 179, 8, 0.2)' : '0 4px 12px rgba(0,0,0,0.04)',
-                border: isBoosted ? '1.5px solid #FACC15' : '1px solid var(--color-border-subtle)',
-                transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                cursor: 'pointer',
-                display: 'flex',
-                flexDirection: 'column',
-                height: '100%',
-            }}
-            onMouseEnter={e => {
-                e.currentTarget.style.transform = 'translateY(-4px)'
-                e.currentTarget.style.boxShadow = isBoosted ? '0 12px 32px rgba(234, 179, 8, 0.25)' : '0 12px 24px rgba(0,0,0,0.08)'
-            }}
-            onMouseLeave={e => {
-                e.currentTarget.style.transform = 'translateY(0)'
-                e.currentTarget.style.boxShadow = isBoosted ? '0 8px 24px rgba(234, 179, 8, 0.2)' : '0 4px 12px rgba(0,0,0,0.04)'
-            }}
         >
-            <div
-                style={{
-                    width: '100%',
-                    height: '150px',
-                    backgroundColor: bgColor,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: '2.5rem',
-                    position: 'relative',
-                    overflow: 'hidden',
-                }}
-            >
+            <div className="academic-listing-card__media" style={{ backgroundColor: bgColor }}>
                 {imageUrl ? (
-                    <img src={imageUrl} alt={listing.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={imageUrl} alt={listing.title} />
                 ) : (
-                    listing.isDigital ? '📄' : '📦'
+                    <div className="academic-listing-card__placeholder">
+                        {listing.isDigital ? <BookOpen size={34} /> : <Package size={34} />}
+                    </div>
                 )}
-                <div style={{ position: 'absolute', top: '0.625rem', left: '0.625rem', display: 'flex', gap: '0.375rem', flexDirection: 'column' }}>
+                <div className="academic-listing-card__badges">
                     <ConditionBadge condition={listing.condition} />
-                    {isBoosted && (
-                        <span style={{ fontSize: '0.625rem', fontWeight: 800, padding: '0.1875rem 0.5rem', borderRadius: '0.375rem', backgroundColor: '#FEF08A', color: '#854D0E', display: 'flex', alignItems: 'center', gap: '0.25rem', boxShadow: '0 2px 4px rgba(0,0,0,0.1)' }}>
-                            <Sparkles size={12} /> PROMOTED
-                        </span>
-                    )}
+                    {isBoosted && <span className="academic-promoted-badge">Featured</span>}
                 </div>
             </div>
-            <div style={{ padding: '0.875rem', display: 'flex', flexDirection: 'column', flexGrow: 1 }}>
-                <h3
-                    style={{
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        color: 'var(--color-text-primary)',
-                        margin: '0 0 0.5rem 0',
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        display: '-webkit-box',
-                        WebkitLineClamp: 2,
-                        WebkitBoxOrient: 'vertical',
-                        lineHeight: 1.4,
-                    }}
-                >
-                    {listing.title}
-                </h3>
-                <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <p className="price-tag" style={{ margin: 0, fontSize: '1.0625rem' }}>
-                        {formatNaira(listing.price)}
-                    </p>
-                    {listing.subcategory && (
-                        <span style={{ fontSize: '0.6875rem', color: '#64748B', backgroundColor: '#F1F5F9', padding: '0.1875rem 0.5rem', borderRadius: '0.375rem', fontWeight: 500 }}>
-                            {listing.subcategory}
-                        </span>
-                    )}
+            <div className="academic-listing-card__body">
+                <h3>{listing.title}</h3>
+                <div className="academic-listing-card__meta">
+                    {listing.subcategory && <span>{listing.subcategory}</span>}
+                    <span>{listing.isDigital ? 'Digital resource' : 'Campus item'}</span>
+                </div>
+                <div className="academic-listing-card__footer">
+                    <p className="price-tag">{formatNaira(listing.price)}</p>
+                    <ChevronRight size={16} />
                 </div>
             </div>
-        </div>
+        </article>
     )
 }
 
 function SkeletonCard() {
     return (
-        <div style={{ borderRadius: '1rem', overflow: 'hidden', backgroundColor: 'white', boxShadow: '0 4px 12px rgba(0,0,0,0.04)', border: '1px solid var(--color-border-subtle)' }}>
-            <div className="skeleton" style={{ width: '100%', height: '150px' }} />
-            <div style={{ padding: '0.875rem' }}>
-                <div className="skeleton" style={{ width: '85%', height: '1rem', borderRadius: '0.25rem', marginBottom: '0.5rem' }} />
-                <div className="skeleton" style={{ width: '60%', height: '1rem', borderRadius: '0.25rem', marginBottom: '0.75rem' }} />
-                <div className="skeleton" style={{ width: '40%', height: '1.25rem', borderRadius: '0.25rem' }} />
+        <div className="academic-listing-card academic-listing-card--skeleton">
+            <div className="skeleton academic-listing-card__media" />
+            <div className="academic-listing-card__body">
+                <div className="skeleton" style={{ width: '86%', height: '1rem' }} />
+                <div className="skeleton" style={{ width: '62%', height: '0.875rem', marginTop: '0.65rem' }} />
+                <div className="skeleton" style={{ width: '44%', height: '1.125rem', marginTop: '1rem' }} />
             </div>
         </div>
     )
 }
+
+const categoryCards = [
+    { id: 'library', title: 'UNIZIK Digital Library', description: 'Past questions, course packs and academic PDFs', icon: Library, tone: 'blue' },
+    { id: 'electronics', title: 'Electronics', description: 'Phones, laptops, accessories and gadgets', icon: Smartphone, tone: 'orange' },
+    { id: 'materials', title: 'Study Materials', description: 'Textbooks, handouts and printed resources', icon: BookOpen, tone: 'green' },
+    { id: 'furniture', title: 'Hostel Essentials', description: 'Furniture, appliances and room supplies', icon: Armchair, tone: 'slate' },
+]
+
+const campusStats = [
+    { label: 'Campus-first listings', value: '20+', icon: ClipboardList },
+    { label: 'Academic resources', value: '150+', icon: BookOpen },
+    { label: 'Student-focused support', value: '24/7', icon: ShieldCheck },
+]
 
 export default function HomePage() {
     const navigate = useNavigate()
@@ -152,263 +114,172 @@ export default function HomePage() {
         { ttl: 5 * 60 * 1000 }
     )
 
-    const listings = data;
+    const listings = data
+
+    const handleCategoryClick = (categoryId) => {
+        if (categoryId === 'library') {
+            navigate('/library')
+            return
+        }
+        navigate(`/search?segment=${categoryId}`)
+    }
 
     return (
-        <div style={{ maxWidth: '42rem', margin: '0 auto', paddingBottom: '2rem' }}>
-            {/* Minimal Header */}
-            <header
-                style={{
-                    position: 'sticky',
-                    top: 0,
-                    zIndex: 40,
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                    backdropFilter: 'blur(8px)',
-                    padding: '0.75rem 1rem',
-                }}
-            >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <ZikShareLogo size="md" />
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.375rem',
-                            padding: '0.375rem 0.75rem',
-                            borderRadius: '9999px',
-                            backgroundColor: '#FFFBEB',
-                            color: '#D97706',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                        }}
-                    >
-                        <GraduationCap size={14} />
-                        UNIZIK
-                    </div>
+        <div className="academic-home-shell">
+            <header className="academic-site-header">
+                <div className="academic-container academic-site-header__inner">
+                    <ZikShareLogo size="md" withTagline />
+                    <button className="academic-campus-pill" onClick={() => navigate('/library')}>
+                        <GraduationCap size={15} />
+                        UNIZIK Campus
+                    </button>
                 </div>
             </header>
 
-            {/* Official Campus Announcement Banner */}
-            <div style={{ padding: '0.25rem 1rem 0' }}>
+            <main className="academic-container academic-home-main">
                 <HomeAnnouncementBanner />
-            </div>
 
-            {/* Redesigned Hero Section */}
-            <section className="hero-gradient" style={{ margin: '1rem', borderRadius: '1.25rem', padding: '1.75rem 1.25rem', position: 'relative', overflow: 'hidden' }}>
-                {/* Background decorative elements */}
-                <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '150px', height: '150px', background: 'radial-gradient(circle, rgba(250,90,0,0.1) 0%, rgba(255,255,255,0) 70%)', borderRadius: '50%' }} />
-                <div style={{ position: 'absolute', bottom: '-20%', left: '-10%', width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(0,102,255,0.08) 0%, rgba(255,255,255,0) 70%)', borderRadius: '50%' }} />
-                
-                <div style={{ position: 'relative', zIndex: 10 }}>
-                    <h1 style={{ margin: 0, fontSize: '2.25rem', fontWeight: 800, lineHeight: 1.1, color: 'var(--color-brand-dark)', letterSpacing: '-0.02em' }}>
-                        Students.<br />
-                        <span style={{ color: 'var(--color-brand)' }}>Connecting.</span><br />
-                        <span style={{ color: 'var(--color-orange)' }}>Deals That Make Sense.</span>
-                    </h1>
-                    <p style={{ margin: '1rem 0 1.25rem', fontSize: '0.9375rem', color: 'var(--color-text-secondary)', lineHeight: 1.5, maxWidth: '280px' }}>
-                        Buy and sell eBooks, gadgets, books, furniture and more — all <span style={{ fontWeight: 600, color: 'var(--color-brand)' }}>within the UNIZIK community.</span>
-                    </p>
+                <section className="academic-hero" aria-labelledby="home-hero-title">
+                    <div className="academic-hero__content">
+                        <div className="academic-eyebrow">
+                            <Landmark size={16} />
+                            Academic marketplace for Nnamdi Azikiwe University students
+                        </div>
+                        <h1 id="home-hero-title">
+                            A more trusted way to exchange campus resources.
+                        </h1>
+                        <p>
+                            Buy, sell and discover verified academic materials, electronics, hostel essentials and student services within the UNIZIK community.
+                        </p>
 
-                    {/* Trust Badges */}
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '1.5rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.625rem', backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', fontSize: '0.6875rem', fontWeight: 700, color: 'var(--color-brand)' }}>
-                            <ShieldCheck size={14} /> Trusted Students
+                        <div className="academic-hero__actions">
+                            <button className="academic-primary-action" onClick={() => navigate('/search')}>
+                                Explore marketplace <ChevronRight size={18} />
+                            </button>
+                            <button className="academic-secondary-action" onClick={() => navigate('/library')}>
+                                <BookOpen size={18} /> Open Digital Library
+                            </button>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.625rem', backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', fontSize: '0.6875rem', fontWeight: 700, color: 'var(--color-orange)' }}>
-                            <TrendingUp size={14} /> Great Deals Everyday
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', padding: '0.375rem 0.625rem', backgroundColor: 'white', borderRadius: '0.5rem', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', fontSize: '0.6875rem', fontWeight: 700, color: 'var(--color-brand)' }}>
-                            <MessageCircle size={14} /> Safe & Easy Transactions
-                        </div>
+
+                        <button className="academic-search-panel" onClick={() => navigate('/search')}>
+                            <Search size={20} />
+                            <span>Search phones, laptops, generators, past questions...</span>
+                            <span className="academic-search-panel__filter"><SlidersHorizontal size={15} /></span>
+                        </button>
                     </div>
 
-                    {/* Search Bar - Moved into Hero for better prominence */}
-                    <div
-                        onClick={() => navigate('/search')}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.75rem',
-                            padding: '0.875rem 1rem',
-                            borderRadius: '1rem',
-                            backgroundColor: 'white',
-                            boxShadow: '0 8px 24px rgba(0, 102, 255, 0.12)',
-                            cursor: 'pointer',
-                        }}
-                    >
-                        <Search size={18} color="var(--color-brand)" style={{ flexShrink: 0 }} />
-                        <span style={{ fontSize: '0.875rem', color: '#8898AA', fontWeight: 500 }}>
-                            Search for anything on campus...
-                        </span>
-                        <div style={{ marginLeft: 'auto', backgroundColor: 'var(--color-brand)', padding: '0.375rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <SlidersHorizontal size={14} color="white" />
-                        </div>
-                    </div>
-                </div>
-
-                {/* Floating Elements representing Categories (Visible on larger screens or positioned absolutely) */}
-                <div className="animate-float" style={{ position: 'absolute', top: '1rem', right: '1rem', backgroundColor: 'white', padding: '0.5rem', borderRadius: '1rem', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem', zIndex: 5 }}>
-                    <div style={{ backgroundColor: '#FEE2E2', padding: '0.5rem', borderRadius: '0.75rem' }}>
-                        <Smartphone size={24} color="#EF4444" />
-                    </div>
-                    <span style={{ fontSize: '0.5rem', fontWeight: 800, color: 'var(--color-text-secondary)' }}>Electronics</span>
-                </div>
-                <div className="animate-float-delayed" style={{ position: 'absolute', bottom: '6rem', right: '-0.5rem', backgroundColor: 'white', padding: '0.5rem', borderRadius: '1rem', boxShadow: '0 8px 24px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.25rem', zIndex: 5 }}>
-                    <div style={{ backgroundColor: '#E0E7FF', padding: '0.5rem', borderRadius: '0.75rem' }}>
-                        <BookOpen size={24} color="#4F46E5" />
-                    </div>
-                    <span style={{ fontSize: '0.5rem', fontWeight: 800, color: 'var(--color-text-secondary)' }}>eBooks & PDFs</span>
-                </div>
-            </section>
-
-            {/* Top Categories Scrollbar Redesign */}
-            <section style={{ padding: '0.5rem 0' }}>
-                <div className="hide-scrollbar" style={{ display: 'flex', alignItems: 'center', overflowX: 'auto', padding: '0.5rem 1rem', gap: '0.75rem' }}>
-                    <div style={{ flexShrink: 0, paddingRight: '0.75rem', borderRight: '2px solid var(--color-border-subtle)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', backgroundColor: 'var(--color-brand)', color: 'white', padding: '0.5rem 0.75rem', borderRadius: '0.75rem' }}>
-                            <Search size={16} />
-                            <span style={{ fontSize: '0.75rem', fontWeight: 700 }}>Shop from<br/>Top Categories</span>
-                        </div>
-                    </div>
-                    
-                    {/* Category Icons mapped similar to design */}
-                    {[
-                        { id: 'library', name: 'eBooks & PDFs', icon: BookOpen, color: '#4F46E5', bg: '#E0E7FF' },
-                        { id: 'electronics', name: 'Electronics', icon: Smartphone, color: '#0EA5E9', bg: '#E0F2FE' },
-                        { id: 'furniture', name: 'Furniture', icon: Armchair, color: '#F59E0B', bg: '#FEF3C7' },
-                        { id: 'materials', name: 'Physical Materials', icon: Package, color: '#10B981', bg: '#D1FAE5' },
-                    ].map(cat => (
-                        <div 
-                            key={cat.id}
-                            onClick={() => cat.id === 'library' ? navigate('/library') : navigate(`/search?segment=${cat.id}`)}
-                            style={{ 
-                                flexShrink: 0, 
-                                display: 'flex', 
-                                flexDirection: 'column', 
-                                alignItems: 'center', 
-                                gap: '0.375rem',
-                                cursor: 'pointer',
-                                width: '4.5rem'
-                            }}
-                        >
-                            <div style={{ backgroundColor: cat.bg, width: '3rem', height: '3rem', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <cat.icon size={20} color={cat.color} />
-                            </div>
-                            <span style={{ fontSize: '0.625rem', fontWeight: 600, color: 'var(--color-text-secondary)', textAlign: 'center', lineHeight: 1.2 }}>{cat.name}</span>
-                        </div>
-                    ))}
-                    
-                    <div onClick={() => navigate('/search')} style={{ flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.375rem', cursor: 'pointer', width: '4.5rem' }}>
-                        <div style={{ backgroundColor: '#F1F5F9', width: '3rem', height: '3rem', borderRadius: '0.75rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <div style={{ display: 'flex', gap: '2px' }}>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#64748B' }}/>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#64748B' }}/>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', backgroundColor: '#64748B' }}/>
-                            </div>
-                        </div>
-                        <span style={{ fontSize: '0.625rem', fontWeight: 600, color: 'var(--color-text-secondary)', textAlign: 'center', lineHeight: 1.2 }}>... and more</span>
-                    </div>
-                </div>
-            </section>
-
-            {/* Listings Section */}
-            <section style={{ padding: '1.5rem 1rem' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <div style={{ backgroundColor: 'var(--color-brand-soft)', padding: '0.375rem', borderRadius: '0.5rem' }}>
-                            <TrendingUp size={16} color="var(--color-brand)" />
-                        </div>
-                        <h2 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 800, color: 'var(--color-brand-dark)', letterSpacing: '-0.01em' }}>Trending Now</h2>
-                    </div>
-                    <button
-                        onClick={() => navigate('/search')}
-                        style={{
-                            background: 'none',
-                            border: 'none',
-                            color: 'var(--color-brand)',
-                            fontSize: '0.8125rem',
-                            fontWeight: 600,
-                            cursor: 'pointer',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.25rem',
-                            padding: '0.375rem 0.75rem',
-                            borderRadius: '9999px',
-                            backgroundColor: 'var(--color-brand-soft)',
-                            transition: 'background-color 0.2s',
-                        }}
-                    >
-                        View all <ChevronRight size={14} />
-                    </button>
-                </div>
-
-                {isLoading ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
-                        {[1, 2, 3, 4].map(i => <SkeletonCard key={i} />)}
-                    </div>
-                ) : error ? (
-                    <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--color-text-muted)', backgroundColor: 'white', borderRadius: '1rem', border: '1px solid var(--color-border-subtle)' }}>
-                        <p style={{ fontWeight: 600, color: 'var(--color-text-primary)' }}>Unable to load listings</p>
-                        <p style={{ fontSize: '0.8125rem', marginTop: '0.5rem' }}>Please check your connection and try again.</p>
-                    </div>
-                ) : listings?.length > 0 ? (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '1rem' }}>
-                        {listings.map(listing => (
-                            <ListingCard key={listing.id} listing={listing} navigate={navigate} />
-                        ))}
-                    </div>
-                ) : (
-                    <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--color-text-muted)', backgroundColor: 'white', borderRadius: '1rem', border: '1px solid var(--color-border-subtle)' }}>
-                        <div style={{ fontSize: '2.5rem', marginBottom: '1rem', opacity: 0.5 }}>🛒</div>
-                        <p style={{ fontWeight: 700, color: 'var(--color-text-primary)', fontSize: '1.125rem' }}>No listings yet</p>
-                        <p style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>Be the first to post something to the campus!</p>
-                    </div>
-                )}
-            </section>
-
-            {/* Bottom Trust/Info Banner */}
-            <section style={{ padding: '0 1rem 1.5rem' }}>
-                <div className="trust-banner-gradient" style={{ borderRadius: '1.25rem', padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '1rem', border: '1px solid rgba(0, 102, 255, 0.1)' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <div style={{ backgroundColor: 'var(--color-brand)', padding: '0.5rem', borderRadius: '50%', color: 'white' }}>
-                                <Users size={16} />
-                            </div>
+                    <aside className="academic-hero__panel" aria-label="Campus trust summary">
+                        <div className="academic-panel-card academic-panel-card--featured">
+                            <div className="academic-panel-card__icon"><BadgeCheck size={22} /></div>
                             <div>
-                                <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-brand-dark)' }}>By Students</p>
-                                <p style={{ margin: 0, fontSize: '0.625rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>For Students</p>
+                                <span>Campus verified</span>
+                                <strong>Student-first transactions</strong>
+                                <p>Built for academic exchange, peer-to-peer trade and safer communication.</p>
                             </div>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <div style={{ backgroundColor: 'var(--color-brand)', padding: '0.5rem', borderRadius: '50%', color: 'white' }}>
-                                <ShieldCheck size={16} />
-                            </div>
-                            <div>
-                                <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-brand-dark)' }}>Safe & Secure</p>
-                                <p style={{ margin: 0, fontSize: '0.625rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>Transactions</p>
-                            </div>
+                        <div className="academic-stat-grid">
+                            {campusStats.map((stat) => {
+                                const Icon = stat.icon
+                                return (
+                                    <div className="academic-stat-card" key={stat.label}>
+                                        <Icon size={18} />
+                                        <strong>{stat.value}</strong>
+                                        <span>{stat.label}</span>
+                                    </div>
+                                )
+                            })}
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <div style={{ backgroundColor: 'var(--color-brand)', padding: '0.5rem', borderRadius: '50%', color: 'white' }}>
-                                <Zap size={16} />
-                            </div>
-                            <div>
-                                <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-brand-dark)' }}>Quick & Easy</p>
-                                <p style={{ margin: 0, fontSize: '0.625rem', color: 'var(--color-text-secondary)', fontWeight: 500 }}>To Use</p>
-                            </div>
+                    </aside>
+                </section>
+
+                <section className="academic-section" aria-labelledby="category-title">
+                    <div className="academic-section-heading">
+                        <div>
+                            <span className="academic-section-kicker">Browse by need</span>
+                            <h2 id="category-title">Academic and campus essentials</h2>
                         </div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <div style={{ backgroundColor: 'var(--color-orange)', padding: '0.5rem', borderRadius: '50%', color: 'white' }}>
-                                <GraduationCap size={16} />
-                            </div>
-                            <div>
-                                <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 800, color: 'var(--color-brand-dark)' }}>Proudly</p>
-                                <p style={{ margin: 0, fontSize: '0.625rem', color: 'var(--color-orange)', fontWeight: 700 }}>UNIZIK</p>
-                            </div>
-                        </div>
+                        <button className="academic-text-button" onClick={() => navigate('/search')}>
+                            View all <ChevronRight size={15} />
+                        </button>
                     </div>
-                </div>
-            </section>
+
+                    <div className="academic-category-grid">
+                        {categoryCards.map((category) => {
+                            const Icon = category.icon
+                            return (
+                                <button
+                                    key={category.id}
+                                    className={`academic-category-card academic-category-card--${category.tone}`}
+                                    onClick={() => handleCategoryClick(category.id)}
+                                >
+                                    <span className="academic-category-card__icon"><Icon size={23} /></span>
+                                    <strong>{category.title}</strong>
+                                    <span>{category.description}</span>
+                                </button>
+                            )
+                        })}
+                    </div>
+                </section>
+
+                <section className="academic-section academic-section--market" aria-labelledby="market-title">
+                    <div className="academic-section-heading">
+                        <div>
+                            <span className="academic-section-kicker">Current marketplace</span>
+                            <h2 id="market-title">Featured campus listings</h2>
+                        </div>
+                        <button className="academic-text-button academic-text-button--filled" onClick={() => navigate('/search')}>
+                            View all <ChevronRight size={15} />
+                        </button>
+                    </div>
+
+                    {isLoading ? (
+                        <div className="academic-listing-grid">
+                            {[1, 2, 3, 4].map(i => <SkeletonCard key={i} />)}
+                        </div>
+                    ) : error ? (
+                        <div className="academic-empty-state">
+                            <ShieldCheck size={32} />
+                            <p>Unable to load listings</p>
+                            <span>Please check your connection and try again.</span>
+                        </div>
+                    ) : listings?.length > 0 ? (
+                        <div className="academic-listing-grid">
+                            {listings.map(listing => (
+                                <ListingCard key={listing.id} listing={listing} navigate={navigate} />
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="academic-empty-state">
+                            <Package size={34} />
+                            <p>No listings yet</p>
+                            <span>Be the first to post an item or academic resource.</span>
+                        </div>
+                    )}
+                </section>
+
+                <section className="academic-trust-strip" aria-label="Why students use ZikShare">
+                    <div>
+                        <Users size={18} />
+                        <strong>Student community</strong>
+                        <span>Purpose-built for campus exchange.</span>
+                    </div>
+                    <div>
+                        <MessageCircle size={18} />
+                        <strong>Direct communication</strong>
+                        <span>Discuss details before meeting or delivery.</span>
+                    </div>
+                    <div>
+                        <Zap size={18} />
+                        <strong>Fast discovery</strong>
+                        <span>Find resources by category and need.</span>
+                    </div>
+                    <div>
+                        <TrendingUp size={18} />
+                        <strong>Professional presentation</strong>
+                        <span>Clean listing flows for sellers and buyers.</span>
+                    </div>
+                </section>
+            </main>
         </div>
     )
 }

@@ -82,7 +82,6 @@ export default function AdminPage() {
     const [refreshing, setRefreshing] = useState(false)
     const [seedingLibrary, setSeedingLibrary] = useState(false)
     const [seedResult, setSeedResult] = useState(null)
-    const [libraryFacultyFilter, setLibraryFacultyFilter] = useState('All')
 
     // Data States
     const [stats, setStats] = useState(null)

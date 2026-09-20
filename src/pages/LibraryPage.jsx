@@ -22,7 +22,7 @@ export default function LibraryPage() {
     const [selectedLevel, setSelectedLevel] = useState('All')
     const [selectedMaterialType, setSelectedMaterialType] = useState('All')
     const [dbMaterials, setDbMaterials] = useState([])
-    const [isLoading, setIsLoading] = useState(true)
+    const [, setIsLoading] = useState(true)
 
     // Compute departments available for currently selected faculty
     const availableDepartments = useMemo(() => {

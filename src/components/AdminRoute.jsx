@@ -1,14 +1,15 @@
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { ArrowLeft, Loader2, Lock } from 'lucide-react'
+import { PLATFORM_ADMIN_EMAILS, PRIMARY_PLATFORM_ADMIN_EMAIL, isAdminEmail } from '../lib/platformConfig'
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const ADMIN_EMAILS = ['rc5632250@gmail.com']
+export const ADMIN_EMAILS = PLATFORM_ADMIN_EMAILS
 
 // eslint-disable-next-line react-refresh/only-export-components
 export function isUserAdmin(user, session) {
     const email = (session?.user?.email || user?.email || '').toLowerCase().trim()
-    return ADMIN_EMAILS.includes(email)
+    return isAdminEmail(email)
 }
 
 export default function AdminRoute({ children }) {
@@ -36,7 +37,8 @@ export default function AdminRoute({ children }) {
                         403 • Administrator Access Only
                     </h2>
                     <p style={{ fontSize: '0.8125rem', color: '#94A3B8', margin: '0 0 1.75rem', lineHeight: 1.5 }}>
-                        This control portal is restricted to authorized platform administrators (<strong>rc5632250@gmail.com</strong>).
+                        This control portal is restricted to authorized platform administrators (
+                        <strong>{PRIMARY_PLATFORM_ADMIN_EMAIL || 'configured admin account'}</strong>).
                     </p>
                     <button
                         onClick={() => navigate('/')}

@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { 
     formatCourseCode, 
     isOfficialZikShareAccount, 
+    OFFICIAL_ZIKSHARE_EMAILS,
     ACADEMIC_MATERIAL_TYPES, 
     UNIZIK_FACULTIES, 
     ACADEMIC_LEVELS 
@@ -31,10 +32,11 @@ describe('UNIZIK Digital Library & Academic Repository Suite', () => {
     })
 
     describe('Official Account Verification', () => {
-        it('identifies official ZikShare institutional emails', () => {
-            expect(isOfficialZikShareAccount('rc5632250@gmail.com')).toBe(true)
-            expect(isOfficialZikShareAccount('RC5632250@GMAIL.COM')).toBe(true)
-            expect(isOfficialZikShareAccount('admin@zikshare.com')).toBe(true)
+        it('identifies configured official institutional emails', () => {
+            for (const email of OFFICIAL_ZIKSHARE_EMAILS) {
+                expect(isOfficialZikShareAccount(email)).toBe(true)
+                expect(isOfficialZikShareAccount(String(email).toUpperCase())).toBe(true)
+            }
         })
 
         it('rejects regular student emails from official account privileges', () => {

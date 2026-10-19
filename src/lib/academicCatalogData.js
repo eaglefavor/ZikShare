@@ -1,6 +1,6 @@
 // ========================================================
 // UNIZIK Official Digital Library Catalog & Study Materials
-// Curated for official ZikShare institutional account (rc5632250@gmail.com)
+// Curated for official ZikShare institutional account
 // Across all 17 UNIZIK Faculties & General Studies (GST/CED)
 // ========================================================
 

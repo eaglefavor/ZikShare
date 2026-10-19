@@ -2,6 +2,7 @@ import supabase from './supabase'
 import { invalidateCacheByPrefix } from './cache'
 import { notifyError, notifyWarn } from './notify'
 import { verifyPaystackPayment } from './paystack'
+import { PRIMARY_PLATFORM_ADMIN_EMAIL, isOfficialAccountEmail } from './platformConfig'
 
 export async function withRetry(asyncFn, maxRetries = 2, delayMs = 400) {
     let lastError
@@ -393,7 +394,7 @@ export async function getDigitalProducts({
         if (res?.data && !res?.error) {
             let data = res.data
             if (isOfficial) {
-                data = data.filter(d => d.users?.email === 'rc5632250@gmail.com' || d.users?.displayName?.includes('ZikShare') || d.is_official)
+                data = data.filter(d => isOfficialAccountEmail(d.users?.email) || d.users?.displayName?.includes('ZikShare') || d.is_official)
             }
             return data
         }
@@ -845,7 +846,7 @@ export async function fulfillDigitalOrder(order) {
     }
 }
 
-// ── Admin Suite Operations (Exclusive to rc5632250@gmail.com) ──
+// ── Admin Suite Operations (Exclusive to configured platform admins) ──
 
 export async function getAdminStats() {
     try {
@@ -1096,7 +1097,7 @@ export async function createAnnouncement({
     content,
     category = 'feature_update',
     priority = 'normal',
-    sender_email = 'rc5632250@gmail.com',
+    sender_email = PRIMARY_PLATFORM_ADMIN_EMAIL || 'admin@platform.local',
     action_url = '',
     action_label = '',
     is_pinned = false
@@ -1482,6 +1483,3 @@ export async function boostListing(listingId, durationDays = 3) {
     invalidateCacheByPrefix('listings')
     return { success: true, boostedUntil: until }
 }
-
-
-

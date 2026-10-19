@@ -3,10 +3,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-const _skA = 'sk_live_d109c412cc';
-const _skB = '41ebb19f2b004bb';
-const _skC = 'cea33894f3aceed';
-const PAYSTACK_SECRET = Deno.env.get('PAYSTACK_SECRET_KEY') || (_skA + _skB + _skC);
+const PAYSTACK_SECRET = Deno.env.get('PAYSTACK_SECRET_KEY') || '';
+const PLATFORM_ADMIN_EMAILS = String(Deno.env.get('PLATFORM_ADMIN_EMAILS') || '')
+  .split(',')
+  .map((item) => item.trim().toLowerCase())
+  .filter(Boolean);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -21,7 +22,7 @@ serve(async (req) => {
   }
 
   try {
-    const { seller_id, amount_in_naira, reason } = await req.json();
+    const { seller_id, amount_in_naira, reason, idempotency_key } = await req.json();
 
     const numericAmount = Number(amount_in_naira);
     if (!seller_id || !numericAmount || numericAmount <= 0) {
@@ -36,6 +37,15 @@ serve(async (req) => {
         JSON.stringify({ status: false, message: 'Server configuration error: missing payment secret' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_KEY) {
+      return new Response(
+        JSON.stringify({ status: false, message: 'Server configuration error: missing Supabase service credentials' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const authHeader = req.headers.get('Authorization') || '';
     const token = authHeader.replace(/^Bearer\s+/i, '');
     if (!token) {
@@ -49,12 +59,39 @@ serve(async (req) => {
 
     const { data: authData, error: authErr } = await supabase.auth.getUser(token);
     const caller = authData?.user;
-    const isPlatformAdmin = caller?.email === 'rc5632250@gmail.com';
+    const isPlatformAdmin = PLATFORM_ADMIN_EMAILS.includes(String(caller?.email || '').toLowerCase());
 
     if (authErr || !caller || (caller.id !== seller_id && !isPlatformAdmin)) {
       return new Response(
         JSON.stringify({ status: false, message: 'Unauthorized: You can only withdraw your own seller earnings' }),
         { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const normalizedIdempotencyKey = String(idempotency_key || '').trim();
+    if (!normalizedIdempotencyKey) {
+      return new Response(
+        JSON.stringify({ status: false, message: 'idempotency_key is required to prevent duplicate payouts' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    const { data: existingPayout } = await supabase
+      .from('payouts')
+      .select('*')
+      .eq('seller_id', seller_id)
+      .eq('idempotency_key', normalizedIdempotencyKey)
+      .maybeSingle();
+
+    if (existingPayout) {
+      return new Response(
+        JSON.stringify({
+          status: true,
+          replayed: true,
+          message: 'Payout request already processed for this idempotency key',
+          data: existingPayout,
+        }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -109,8 +146,9 @@ serve(async (req) => {
     const recipientRes = await fetch('https://api.paystack.co/transferrecipient', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${PAYSTACK_SECRET}`,
+        Authorization: 'Bearer ' + PAYSTACK_SECRET,
         'Content-Type': 'application/json',
+        'Idempotency-Key': `${normalizedIdempotencyKey}:recipient`,
       },
       body: JSON.stringify({
         type: 'nuban',
@@ -149,20 +187,26 @@ serve(async (req) => {
         recipient_code: recipientCode,
         paystack_reference: payoutRef,
         status: 'pending',
+        idempotency_key: normalizedIdempotencyKey,
       })
       .select()
       .single();
 
     if (insertError) {
       console.error('[initiate-seller-payout] Error creating payout record:', insertError);
+      return new Response(
+        JSON.stringify({ status: false, message: insertError.message || 'Failed to create payout ledger entry' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     // 5. Initiate Transfer via Paystack
     const transferRes = await fetch('https://api.paystack.co/transfer', {
       method: 'POST',
       headers: {
-        Authorization: `Bearer ${PAYSTACK_SECRET}`,
+        Authorization: 'Bearer ' + PAYSTACK_SECRET,
         'Content-Type': 'application/json',
+        'Idempotency-Key': normalizedIdempotencyKey,
       },
       body: JSON.stringify({
         source: 'balance',
@@ -176,17 +220,14 @@ serve(async (req) => {
     const transferResult = await transferRes.json();
 
     if (!transferResult?.status) {
-      // Mark payout entry as failed
-      if (payoutEntry?.id) {
-        await supabase
-          .from('payouts')
-          .update({
-            status: 'failed',
-            failure_reason: transferResult?.message || 'Transfer initiation failed',
-            updated_at: new Date().toISOString(),
-          })
-          .eq('id', payoutEntry.id);
-      }
+      await supabase
+        .from('payouts')
+        .update({
+          status: 'failed',
+          failure_reason: transferResult?.message || 'Transfer initiation failed',
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', payoutEntry.id);
 
       return new Response(
         JSON.stringify({
@@ -198,17 +239,14 @@ serve(async (req) => {
       );
     }
 
-    // Update payout entry with transfer code
-    if (payoutEntry?.id) {
-      await supabase
-        .from('payouts')
-        .update({
-          transfer_code: transferResult.data?.transfer_code,
-          status: transferResult.data?.status === 'success' ? 'success' : 'pending',
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', payoutEntry.id);
-    }
+    await supabase
+      .from('payouts')
+      .update({
+        transfer_code: transferResult.data?.transfer_code,
+        status: transferResult.data?.status === 'success' ? 'success' : 'pending',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', payoutEntry.id);
 
     return new Response(
       JSON.stringify({

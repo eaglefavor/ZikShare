@@ -19,6 +19,7 @@ import { UNIZIK_OFFICIAL_STUDY_PACKS } from '../lib/academicCatalogData'
 import { useToast } from '../components/Toast'
 import { invalidateCacheByPrefix } from '../lib/cache'
 import { verifyPaystackPayment } from '../lib/paystack'
+import { PRIMARY_PLATFORM_ADMIN_EMAIL } from '../lib/platformConfig'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount || 0)
@@ -354,7 +355,7 @@ export default function AdminPage() {
                 action_url: broadcastActionUrl,
                 action_label: broadcastActionLabel,
                 is_pinned: broadcastPinned,
-                sender_email: 'rc5632250@gmail.com'
+                sender_email: PRIMARY_PLATFORM_ADMIN_EMAIL || 'admin@platform.local'
             })
 
             setAnnouncementsList(prev => [created, ...prev])
@@ -516,7 +517,7 @@ export default function AdminPage() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.375rem 0.625rem', backgroundColor: '#0B0F19', borderRadius: '0.5rem', border: '1px solid #1E293B', fontSize: '0.6875rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: '#94A3B8', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         <span style={{ width: '6px', height: '6px', borderRadius: '9999px', backgroundColor: '#10B981', flexShrink: 0 }} />
-                        <span style={{ color: '#60A5FA', fontWeight: 600 }}>rc5632250@gmail.com</span>
+                        <span style={{ color: '#60A5FA', fontWeight: 600 }}>{PRIMARY_PLATFORM_ADMIN_EMAIL || 'configured admin account'}</span>
                     </div>
                     <span style={{ color: '#64748B', fontWeight: 700, flexShrink: 0 }}>
                         {dbLatency ? `${dbLatency}ms` : 'Connected'}
@@ -1510,7 +1511,7 @@ export default function AdminPage() {
                                                 </h3>
                                             </div>
                                             <p style={{ margin: 0, fontSize: '0.75rem', color: '#94A3B8', maxWidth: '500px', lineHeight: 1.45 }}>
-                                                Synchronize and publish verified course packs, past questions, and lecture summaries under the official ZikShare institutional account (<code style={{ color: '#60A5FA' }}>rc5632250@gmail.com</code>).
+                                                Synchronize and publish verified course packs, past questions, and lecture summaries under the official ZikShare institutional account (<code style={{ color: '#60A5FA' }}>{PRIMARY_PLATFORM_ADMIN_EMAIL || 'configured admin account'}</code>).
                                             </p>
                                         </div>
 
@@ -1619,7 +1620,7 @@ export default function AdminPage() {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '0.375rem', fontSize: '0.6875rem' }}>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0.5rem', backgroundColor: '#0F172A', borderRadius: '0.375rem' }}>
                                             <span style={{ color: '#94A3B8' }}>Sole Admin Email</span>
-                                            <code style={{ color: '#60A5FA', fontWeight: 700 }}>rc5632250@gmail.com</code>
+                                            <code style={{ color: '#60A5FA', fontWeight: 700 }}>{PRIMARY_PLATFORM_ADMIN_EMAIL || 'configured admin account'}</code>
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0.45rem 0.5rem', backgroundColor: '#0F172A', borderRadius: '0.375rem' }}>
                                             <span style={{ color: '#94A3B8' }}>Database Engine</span>

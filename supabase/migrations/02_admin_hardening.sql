@@ -1,7 +1,7 @@
 -- ============================================
 -- 02_admin_hardening.sql
 -- P0 fix: enforce server-side admin authorization via RLS
--- Single admin: rc5632250@gmail.com
+-- Single admin: configured via app.settings.admin_email
 -- Implements AGENTS.md §2 & §3 — real enforcement, not client-only checks
 -- ============================================
 
@@ -32,8 +32,8 @@ DROP POLICY IF EXISTS "Admin can manage all users" ON public.users;
 CREATE POLICY "Admin can manage all users"
     ON public.users FOR ALL
     TO authenticated
-    USING (auth.jwt() ->> 'email' = 'rc5632250@gmail.com')
-    WITH CHECK (auth.jwt() ->> 'email' = 'rc5632250@gmail.com');
+    USING (lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')))
+    WITH CHECK (lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')));
 
 -- ============================================
 -- 2. LISTINGS table — sellers own their rows, admin can moderate any
@@ -62,8 +62,8 @@ DROP POLICY IF EXISTS "Admin can manage all listings" ON public.listings;
 CREATE POLICY "Admin can manage all listings"
     ON public.listings FOR ALL
     TO authenticated
-    USING (auth.jwt() ->> 'email' = 'rc5632250@gmail.com')
-    WITH CHECK (auth.jwt() ->> 'email' = 'rc5632250@gmail.com');
+    USING (lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')))
+    WITH CHECK (lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')));
 
 -- ============================================
 -- 3. DIGITAL_PRODUCTS — tighten existing policy + add admin
@@ -74,8 +74,8 @@ DROP POLICY IF EXISTS "Admin can manage all digital products" ON public.digital_
 CREATE POLICY "Admin can manage all digital products"
     ON public.digital_products FOR ALL
     TO authenticated
-    USING (auth.jwt() ->> 'email' = 'rc5632250@gmail.com')
-    WITH CHECK (auth.jwt() ->> 'email' = 'rc5632250@gmail.com');
+    USING (lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')))
+    WITH CHECK (lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')));
 
 -- ============================================
 -- 4. ORDERS — keep buyer/seller visibility, add admin
@@ -86,14 +86,14 @@ DROP POLICY IF EXISTS "Admin can view all orders" ON public.orders;
 CREATE POLICY "Admin can view all orders"
     ON public.orders FOR SELECT
     TO authenticated
-    USING (auth.jwt() ->> 'email' = 'rc5632250@gmail.com');
+    USING (lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')));
 
 DROP POLICY IF EXISTS "Admin can manage all orders" ON public.orders;
 CREATE POLICY "Admin can manage all orders"
     ON public.orders FOR ALL
     TO authenticated
-    USING (auth.jwt() ->> 'email' = 'rc5632250@gmail.com')
-    WITH CHECK (auth.jwt() ->> 'email' = 'rc5632250@gmail.com');
+    USING (lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')))
+    WITH CHECK (lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')));
 
 -- ============================================
 -- 5. CONVERSATIONS & MESSAGES — private to participants, admin read-only
@@ -104,14 +104,14 @@ DO $$ BEGIN
         EXECUTE 'DROP POLICY IF EXISTS "Participants can manage conversations" ON public.conversations';
         EXECUTE $pol$CREATE POLICY "Participants can manage conversations" ON public.conversations FOR ALL TO authenticated USING ("buyerId" = auth.uid()::text OR "sellerId" = auth.uid()::text) WITH CHECK ("buyerId" = auth.uid()::text OR "sellerId" = auth.uid()::text)$pol$;
         EXECUTE 'DROP POLICY IF EXISTS "Admin can view all conversations" ON public.conversations';
-        EXECUTE $pol$CREATE POLICY "Admin can view all conversations" ON public.conversations FOR SELECT TO authenticated USING (auth.jwt() ->> 'email' = 'rc5632250@gmail.com')$pol$;
+        EXECUTE $pol$CREATE POLICY "Admin can view all conversations" ON public.conversations FOR SELECT TO authenticated USING (lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')))$pol$;
     END IF;
     IF EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema='public' AND table_name='messages') THEN
         EXECUTE 'ALTER TABLE public.messages ENABLE ROW LEVEL SECURITY';
         EXECUTE 'DROP POLICY IF EXISTS "Participants can manage messages" ON public.messages';
         EXECUTE $pol$CREATE POLICY "Participants can manage messages" ON public.messages FOR ALL TO authenticated USING ("senderId" = auth.uid()::text OR "conversationId" IN (SELECT id FROM public.conversations WHERE "buyerId" = auth.uid()::text OR "sellerId" = auth.uid()::text)) WITH CHECK ("senderId" = auth.uid()::text)$pol$;
         EXECUTE 'DROP POLICY IF EXISTS "Admin can view all messages" ON public.messages';
-        EXECUTE $pol$CREATE POLICY "Admin can view all messages" ON public.messages FOR SELECT TO authenticated USING (auth.jwt() ->> 'email' = 'rc5632250@gmail.com')$pol$;
+        EXECUTE $pol$CREATE POLICY "Admin can view all messages" ON public.messages FOR SELECT TO authenticated USING (lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')))$pol$;
     END IF;
 END $$;
 
@@ -126,7 +126,7 @@ DO $$ BEGIN
         EXECUTE 'DROP POLICY IF EXISTS "Authenticated can view all announcements" ON public.announcements';
         EXECUTE $pol$CREATE POLICY "Authenticated can view all announcements" ON public.announcements FOR SELECT TO authenticated USING (true)$pol$;
         EXECUTE 'DROP POLICY IF EXISTS "Admin can manage announcements" ON public.announcements';
-        EXECUTE $pol$CREATE POLICY "Admin can manage announcements" ON public.announcements FOR ALL TO authenticated USING (auth.jwt() ->> 'email' = 'rc5632250@gmail.com') WITH CHECK (auth.jwt() ->> 'email' = 'rc5632250@gmail.com')$pol$;
+        EXECUTE $pol$CREATE POLICY "Admin can manage announcements" ON public.announcements FOR ALL TO authenticated USING (lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), ''))) WITH CHECK (lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')))$pol$;
     END IF;
 END $$;
 

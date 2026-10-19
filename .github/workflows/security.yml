@@ -1,0 +1,46 @@
+name: Security Gates
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  secret-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  hardcoded-sensitive-patterns:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Fail on hardcoded live key patterns
+        run: |
+          if grep -RInE "pk_live_|sk_live_" src supabase; then
+            echo "Hardcoded live keys detected"
+            exit 1
+          fi
+
+      - name: Fail on hardcoded admin identity literals
+        run: |
+          if grep -RIn "rc5632250@gmail.com" src supabase; then
+            echo "Hardcoded admin email detected"
+            exit 1
+          fi

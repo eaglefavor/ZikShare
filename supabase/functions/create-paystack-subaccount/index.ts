@@ -3,10 +3,11 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
 const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
-const _skA = 'sk_live_d109c412cc';
-const _skB = '41ebb19f2b004bb';
-const _skC = 'cea33894f3aceed';
-const PAYSTACK_SECRET = Deno.env.get('PAYSTACK_SECRET_KEY') || (_skA + _skB + _skC);
+const PAYSTACK_SECRET = Deno.env.get('PAYSTACK_SECRET_KEY') || '';
+const PLATFORM_ADMIN_EMAILS = String(Deno.env.get('PLATFORM_ADMIN_EMAILS') || '')
+  .split(',')
+  .map((item) => item.trim().toLowerCase())
+  .filter(Boolean);
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,6 +28,13 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ status: false, message: 'settlement_bank and account_number are required' }),
         { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    if (!PAYSTACK_SECRET) {
+      return new Response(
+        JSON.stringify({ status: false, message: 'Server configuration error: missing payment secret' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -79,7 +87,7 @@ serve(async (req) => {
       if (token) {
         const { data: authData } = await supabase.auth.getUser(token);
         const caller = authData?.user;
-        const isPlatformAdmin = caller?.email === 'rc5632250@gmail.com';
+        const isPlatformAdmin = PLATFORM_ADMIN_EMAILS.includes(String(caller?.email || '').toLowerCase());
         if (caller && (caller.id === user_id || isPlatformAdmin)) {
           await supabase
             .from('users')

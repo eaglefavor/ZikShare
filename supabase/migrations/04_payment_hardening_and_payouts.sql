@@ -30,13 +30,13 @@ ALTER TABLE public.payouts ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "payouts_select" ON public.payouts;
 CREATE POLICY "payouts_select"
     ON public.payouts FOR SELECT TO authenticated
-    USING (seller_id = auth.uid() OR auth.jwt() ->> 'email' = 'rc5632250@gmail.com');
+    USING (seller_id = auth.uid() OR lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')));
 
 DROP POLICY IF EXISTS "payouts_admin_all" ON public.payouts;
 CREATE POLICY "payouts_admin_all"
     ON public.payouts FOR ALL TO authenticated
-    USING (auth.jwt() ->> 'email' = 'rc5632250@gmail.com')
-    WITH CHECK (auth.jwt() ->> 'email' = 'rc5632250@gmail.com');
+    USING (lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')))
+    WITH CHECK (lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')));
 
 -- 2. Harden orders RLS: Prevent authenticated clients from changing status to delivered
 -- Drop existing permissive orders_update policy
@@ -46,8 +46,8 @@ DROP POLICY IF EXISTS "orders_update" ON public.orders;
 -- Authenticated regular users CANNOT update orders
 CREATE POLICY "orders_admin_update"
     ON public.orders FOR UPDATE TO authenticated
-    USING (auth.jwt() ->> 'email' = 'rc5632250@gmail.com')
-    WITH CHECK (auth.jwt() ->> 'email' = 'rc5632250@gmail.com');
+    USING (lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')))
+    WITH CHECK (lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')));
 
 -- 3. Indexes for fast payment reference lookups & dispute resolution
 CREATE INDEX IF NOT EXISTS idx_orders_paystack_ref ON public.orders (paystack_reference);

@@ -1,9 +1,9 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
-const _skA = 'sk_live_d109c412cc';
-const _skB = '41ebb19f2b004bb';
-const _skC = 'cea33894f3aceed';
-const PAYSTACK_SECRET = Deno.env.get('PAYSTACK_SECRET_KEY') || (_skA + _skB + _skC);
+const PAYSTACK_SECRET = Deno.env.get('PAYSTACK_SECRET_KEY') || '';
+const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || '';
+const SUPABASE_SERVICE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || '';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -18,7 +18,7 @@ serve(async (req) => {
   }
 
   try {
-    const { email, amount, reference, callback_url, metadata, subaccount } = await req.json();
+    const { email, amount, reference, callback_url, metadata, subaccount, idempotency_key } = await req.json();
 
     if (!email || !amount || !reference) {
       return new Response(
@@ -35,10 +35,29 @@ serve(async (req) => {
       );
     }
 
+    const cleanReference = String(reference).trim();
+    const normalizedIdempotencyKey = String(idempotency_key || cleanReference).trim();
+
+    if (SUPABASE_URL && SUPABASE_SERVICE_KEY) {
+      const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
+      const { data: existingOrder } = await supabase
+        .from('orders')
+        .select('id, paystack_reference')
+        .eq('paystack_reference', cleanReference)
+        .maybeSingle();
+
+      if (!existingOrder) {
+        return new Response(
+          JSON.stringify({ status: false, message: 'Order reference not found. Create order before initializing payment.' }),
+          { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+    }
+
     const payload: Record<string, unknown> = {
       email,
       amount: Math.round(amount),
-      reference: String(reference).trim(),
+      reference: cleanReference,
       currency: 'NGN',
       callback_url: callback_url || undefined,
       metadata: metadata || {},
@@ -54,6 +73,7 @@ serve(async (req) => {
       headers: {
         Authorization: `Bearer ${PAYSTACK_SECRET}`,
         'Content-Type': 'application/json',
+        'Idempotency-Key': normalizedIdempotencyKey,
       },
       body: JSON.stringify(payload),
     });

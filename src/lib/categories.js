@@ -350,17 +350,14 @@ export const ACADEMIC_MATERIAL_TYPES = [
 ]
 
 export const OFFICIAL_ZIKSHARE_EMAILS = [
-  'rc5632250@gmail.com',
-  'admin@zikshare.com',
+  ...OFFICIAL_ACCOUNT_EMAILS,
 ]
 
 /**
  * Checks if a user email or ID belongs to the official ZikShare institutional account
  */
 export function isOfficialZikShareAccount(emailOrId) {
-  if (!emailOrId) return false
-  const clean = String(emailOrId).toLowerCase().trim()
-  return OFFICIAL_ZIKSHARE_EMAILS.includes(clean)
+  return isOfficialAccountEmail(emailOrId)
 }
 
 /**
@@ -401,3 +398,4 @@ export function findParentSegment(categoryOrSubId) {
     seg.subcategories.some(sub => sub.id === clean || sub.name.toLowerCase() === clean)
   ) || null
 }
+import { OFFICIAL_ACCOUNT_EMAILS, isOfficialAccountEmail } from './platformConfig'

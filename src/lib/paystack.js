@@ -1,9 +1,6 @@
 import supabase from './supabase';
 
-const _pkA = 'pk_live_3eda0ad1995';
-const _pkB = 'bbe9c8f0767f24ab6f';
-const _pkC = '10b7d86a0f4';
-export const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || (_pkA + _pkB + _pkC);
+export const PAYSTACK_PUBLIC_KEY = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || '';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || '';
 const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
@@ -21,6 +18,12 @@ export function loadPaystackInlineScript() {
       existing.addEventListener('load', () => resolve(window.PaystackPop));
       existing.addEventListener('error', () => reject(new Error('Paystack SDK failed to load')));
       return;
+    }
+
+    export function assertPaystackPublicKeyConfigured() {
+      if (!PAYSTACK_PUBLIC_KEY) {
+        throw new Error('Missing VITE_PAYSTACK_PUBLIC_KEY configuration. Payments are disabled until this is set.');
+      }
     }
 
     const script = document.createElement('script');

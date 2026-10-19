@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { isUserAdmin } from '../components/AdminRoute'
 import { useNavigate } from 'react-router-dom'
 import { ZikShareIcon } from '../components/ZikShareLogo'
+import { PRIMARY_PLATFORM_ADMIN_EMAIL } from '../lib/platformConfig'
 
 export default function MaintenancePage() {
     const { user, session, signInWithGoogle, loading } = useAuth()
@@ -302,7 +303,7 @@ export default function MaintenancePage() {
                             border: '1px solid #334155'
                         }}>
                             <p style={{ margin: '0 0 0.75rem', fontSize: '0.75rem', color: '#94A3B8' }}>
-                                Sign in with authorized admin account (<strong>rc5632250@gmail.com</strong>) to manage and preview changes:
+                                Sign in with authorized admin account (<strong>{PRIMARY_PLATFORM_ADMIN_EMAIL || 'configured admin account'}</strong>) to manage and preview changes:
                             </p>
                             <button
                                 onClick={handleAdminGoogleLogin}

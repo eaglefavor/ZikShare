@@ -509,7 +509,7 @@ export default function ItemDetailPage() {
 
             {/* Clickable Seller Card & Rating Score (routes to /seller/:id) */}
             {(() => {
-                const isOfficial = isOfficialZikShareAccount(seller?.email) || isOfficialZikShareAccount(item?.seller_id) || item?.is_official || seller?.email === 'rc5632250@gmail.com' || (seller?.displayName || '').includes('ZikShare')
+                const isOfficial = isOfficialZikShareAccount(seller?.email) || isOfficialZikShareAccount(item?.seller_id) || item?.is_official || (seller?.displayName || '').includes('ZikShare')
                 return (
                     <div 
                         onClick={() => sellerId && navigate(`/seller/${sellerId}`)}

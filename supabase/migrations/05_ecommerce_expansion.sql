@@ -53,7 +53,7 @@ ALTER TABLE public.offers ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "offers_select" ON public.offers;
 CREATE POLICY "offers_select"
     ON public.offers FOR SELECT TO authenticated
-    USING (buyer_id = auth.uid() OR seller_id = auth.uid() OR auth.jwt() ->> 'email' = 'rc5632250@gmail.com');
+    USING (buyer_id = auth.uid() OR seller_id = auth.uid() OR lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')));
 
 DROP POLICY IF EXISTS "offers_insert" ON public.offers;
 CREATE POLICY "offers_insert"
@@ -63,8 +63,8 @@ CREATE POLICY "offers_insert"
 DROP POLICY IF EXISTS "offers_update" ON public.offers;
 CREATE POLICY "offers_update"
     ON public.offers FOR UPDATE TO authenticated
-    USING (buyer_id = auth.uid() OR seller_id = auth.uid() OR auth.jwt() ->> 'email' = 'rc5632250@gmail.com')
-    WITH CHECK (buyer_id = auth.uid() OR seller_id = auth.uid() OR auth.jwt() ->> 'email' = 'rc5632250@gmail.com');
+    USING (buyer_id = auth.uid() OR seller_id = auth.uid() OR lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')))
+    WITH CHECK (buyer_id = auth.uid() OR seller_id = auth.uid() OR lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')));
 
 -- 3. Verified Student Ratings & Reviews Table
 CREATE TABLE IF NOT EXISTS public.reviews (
@@ -95,7 +95,7 @@ CREATE POLICY "reviews_insert"
 DROP POLICY IF EXISTS "reviews_delete" ON public.reviews;
 CREATE POLICY "reviews_delete"
     ON public.reviews FOR DELETE TO authenticated
-    USING (reviewer_id = auth.uid() OR auth.jwt() ->> 'email' = 'rc5632250@gmail.com');
+    USING (reviewer_id = auth.uid() OR lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')));
 
 -- 4. "Looking For / ISO (In Search Of)" Student Demand Board
 CREATE TABLE IF NOT EXISTS public.requests (
@@ -128,13 +128,13 @@ CREATE POLICY "requests_insert"
 DROP POLICY IF EXISTS "requests_update" ON public.requests;
 CREATE POLICY "requests_update"
     ON public.requests FOR UPDATE TO authenticated
-    USING (user_id = auth.uid() OR auth.jwt() ->> 'email' = 'rc5632250@gmail.com')
-    WITH CHECK (user_id = auth.uid() OR auth.jwt() ->> 'email' = 'rc5632250@gmail.com');
+    USING (user_id = auth.uid() OR lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')))
+    WITH CHECK (user_id = auth.uid() OR lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')));
 
 DROP POLICY IF EXISTS "requests_delete" ON public.requests;
 CREATE POLICY "requests_delete"
     ON public.requests FOR DELETE TO authenticated
-    USING (user_id = auth.uid() OR auth.jwt() ->> 'email' = 'rc5632250@gmail.com');
+    USING (user_id = auth.uid() OR lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')));
 
 -- 5. Physical Escrow & Handshake PIN Exchange Table
 CREATE TABLE IF NOT EXISTS public.escrow_trades (
@@ -158,18 +158,18 @@ ALTER TABLE public.escrow_trades ENABLE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "escrow_select" ON public.escrow_trades;
 CREATE POLICY "escrow_select"
     ON public.escrow_trades FOR SELECT TO authenticated
-    USING (buyer_id = auth.uid() OR seller_id = auth.uid() OR auth.jwt() ->> 'email' = 'rc5632250@gmail.com');
+    USING (buyer_id = auth.uid() OR seller_id = auth.uid() OR lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')));
 
 DROP POLICY IF EXISTS "escrow_insert" ON public.escrow_trades;
 CREATE POLICY "escrow_insert"
     ON public.escrow_trades FOR INSERT TO authenticated
-    WITH CHECK (buyer_id = auth.uid() OR auth.jwt() ->> 'email' = 'rc5632250@gmail.com');
+    WITH CHECK (buyer_id = auth.uid() OR lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')));
 
 DROP POLICY IF EXISTS "escrow_update" ON public.escrow_trades;
 CREATE POLICY "escrow_update"
     ON public.escrow_trades FOR UPDATE TO authenticated
-    USING (buyer_id = auth.uid() OR seller_id = auth.uid() OR auth.jwt() ->> 'email' = 'rc5632250@gmail.com')
-    WITH CHECK (buyer_id = auth.uid() OR seller_id = auth.uid() OR auth.jwt() ->> 'email' = 'rc5632250@gmail.com');
+    USING (buyer_id = auth.uid() OR seller_id = auth.uid() OR lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')))
+    WITH CHECK (buyer_id = auth.uid() OR seller_id = auth.uid() OR lower(coalesce(auth.jwt() ->> 'email', '')) = lower(coalesce(current_setting('app.settings.admin_email', true), '')));
 
 -- 6. High Performance Search & Lookup Indexes
 CREATE INDEX IF NOT EXISTS idx_listings_subcategory ON public.listings(subcategory);

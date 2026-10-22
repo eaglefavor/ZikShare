@@ -200,7 +200,7 @@ export default function LoginPage() {
             </div>
 
             <p className="zs-auth__note">
-                The study library never asks you to sign in. All 88 documents are free to open and
+                The study library never asks you to sign in. Every document is free to open and
                 download — <Link to="/library">go straight to the library</Link>.
             </p>
         </div>

@@ -284,11 +284,34 @@ Test coverage: `appShell.test.jsx` (nav, header search, promise),
 `libraryView.test.js` (grouping, filtering, sorting, counts), rewritten
 `libraryUi.test.jsx` for the new filter-sheet flow.
 
+**Phase 6 — the rest of the signed-out path.** Sign-in, the account page, the
+posting gate and the book page were the remaining places where the old inline
+system was visible on arrival.
+
+- `/login`: one card in the shared container and type scale; Google button,
+  labelled fields, one error style. It states that the library never asks you to
+  sign in, and links there.
+- `/profile` signed out: no longer a six-item account menu that all bounces to a
+  login screen. It says reading needs no account, lists the three things an
+  account does unlock, and offers sign in / open the library.
+- `/post` signed out: same panel, plus a way back to the library. The upload
+  confirmation stopped claiming material is "available for purchase".
+- `/library/books/:slug`: rebuilt on tokens — cover and details in one panel,
+  reading and download side by side, page count / size / Free as tags.
+- Search empty states distinguish "nothing is listed" from "nothing matches",
+  and report how many items exist.
+- `/messages`: rebuilt on tokens, and made reachable at all — it had no link
+  anywhere in the app. The shell now carries a Messages icon with an unread
+  badge, and the phone bar is Home · Library · Search · Sell · You.
+  `BottomNav.jsx` is deleted; the shell owns its own navigation.
+
 ### Still open (next pass)
 
 | Item | Why it matters |
 | --- | --- |
-| `PostPage`, `SellerHubPage`, `ChatPage`, `ProfilePage` restyle | still on the old inline-style system; 600–1000 lines each |
+| `SellerHubPage`, `ChatPage`, `OfficialChannelPage` restyle | still on the old inline-style system; the longest files left |
+| `PostPage` inner form | the gate is fixed, the 500-line form behind it is not |
+| `/seller-hub`, `/profile/*` inside the shell | they sit outside it, so they have no navigation; move once their inner markup is converted |
 | Item detail two-column layout | content left, sticky action card right on ≥980px |
 | Visual regression check | no browser in the sandbox; the first real look is the preview deploy |
 | Replace remaining hex literals in the restyled pages | tokens exist, adoption is partial |

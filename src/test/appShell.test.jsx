@@ -55,6 +55,23 @@ describe('App shell', { timeout: 20000 }, () => {
     expect(screen.getByText('SEARCH RESULTS PAGE')).toBeInTheDocument()
   })
 
+  it('puts the library and messages where a phone user can reach them', () => {
+    renderShell()
+
+    expect(screen.getAllByRole('link', { name: 'Library' }).length).toBeGreaterThan(0)
+    const messageLinks = screen.getAllByRole('link', { name: 'Messages' })
+    expect(messageLinks.length).toBeGreaterThan(0)
+    expect(messageLinks[0]).toHaveAttribute('href', '/messages')
+    for (const link of screen.getAllByRole('link', { name: 'Search' })) {
+      expect(link).toHaveAttribute('href', '/search')
+    }
+  })
+
+  it('never shows an empty notification badge', () => {
+    renderShell()
+    expect(screen.queryByText('0')).not.toBeInTheDocument()
+  })
+
   it('states the free promise in the footer', () => {
     renderShell()
     expect(screen.getByText(/no fee, no sign-in, no payment step/i)).toBeInTheDocument()

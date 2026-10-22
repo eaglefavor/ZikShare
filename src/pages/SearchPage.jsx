@@ -267,14 +267,20 @@ export default function SearchPage() {
                 ) : (
                     <EmptyState
                         icon={Package}
-                        title={searching ? 'No items match that search' : 'The marketplace is empty'}
+                        title={
+                            listings.length === 0
+                                ? 'The marketplace is empty'
+                                : 'No items match that search'
+                        }
                         action={
                             <Button size="sm" onClick={() => navigate('/post')}>
-                                <Plus size={14} /> Post the first item
+                                <Plus size={14} /> {listings.length === 0 ? 'Post the first item' : 'Sell something'}
                             </Button>
                         }
                     >
-                        Listings appear here as students post them. Nothing is listed yet.
+                        {listings.length === 0
+                            ? 'Listings appear here as students post them. Nothing is listed yet.'
+                            : `There are ${listings.length} item${listings.length === 1 ? '' : 's'} on the marketplace, but none match “${query.trim()}”. Try a shorter word.`}
                     </EmptyState>
                 )}
             </section>
@@ -320,7 +326,11 @@ export default function SearchPage() {
                 ) : (
                     <EmptyState
                         icon={MessageCircle}
-                        title="Nobody has posted a request here"
+                        title={
+                            requests.length === 0
+                                ? 'Nobody has posted a request here'
+                                : 'No requests match that search'
+                        }
                         action={
                             <Button size="sm" variant="outline" onClick={() => setShowRequestModal(true)}>
                                 Post what you need

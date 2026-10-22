@@ -355,35 +355,34 @@ export default function PostPage() {
 
     if (!isAuthenticated) {
         return (
-            <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem', backgroundColor: '#F8FAFC' }}>
-                <div style={{ backgroundColor: 'white', padding: '2rem 1.5rem', borderRadius: '1.25rem', border: '1px solid var(--color-border)', maxWidth: '24rem', width: '100%', textAlign: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                    <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '9999px', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: '#2563EB', fontSize: '1.5rem' }}>
-                        🔒
-                    </div>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.5rem', color: '#0F172A' }}>Sign in to Post on ZikShare</h2>
-                    <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', margin: '0 0 1.5rem' }}>You need an active UNIZIK student account to list campus items or study materials.</p>
-                    <button
-                        onClick={() => navigate('/login')}
-                        style={{
-                            width: '100%',
-                            padding: '0.875rem',
-                            borderRadius: '0.75rem',
-                            border: 'none',
-                            background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-                            color: '#FFFFFF',
-                            fontSize: '0.9375rem',
-                            fontWeight: 800,
-                            fontFamily: 'inherit',
-                            cursor: 'pointer',
-                            boxShadow: '0 4px 14px rgba(59,130,246,0.35)'
-                        }}
+            <div className="zs-container">
+                <div className="zs-panel" style={{ maxWidth: '28rem', margin: '0 auto', textAlign: 'center' }}>
+                    <div
+                        className="zs-icon-btn"
+                        style={{ margin: '0 auto 0.75rem', width: '2.75rem', height: '2.75rem', background: 'var(--color-brand-soft)', color: 'var(--color-brand)', cursor: 'default' }}
                     >
-                        Sign In / Register
-                    </button>
+                        <Lock size={19} aria-hidden="true" />
+                    </div>
+                    <h1 style={{ margin: '0 0 0.5rem', fontSize: 'var(--zs-fs-h2)', letterSpacing: '-0.015em' }}>
+                        Sign in to post
+                    </h1>
+                    <p style={{ margin: '0 0 1.25rem', fontSize: 'var(--zs-fs-body)', lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
+                        Posting needs a UNIZIK student account, which is what keeps listings tied to real
+                        students. Reading and downloading from the library never needs one.
+                    </p>
+                    <div style={{ display: 'grid', gap: '0.5rem' }}>
+                        <button type="button" className="zs-btn zs-btn--primary zs-btn--block" onClick={() => navigate('/login')}>
+                            Sign in or register
+                        </button>
+                        <button type="button" className="zs-btn zs-btn--outline zs-btn--block" onClick={() => navigate('/library')}>
+                            Keep browsing the library
+                        </button>
+                    </div>
                 </div>
             </div>
         )
     }
+
 
     if (success) {
         return (
@@ -393,10 +392,10 @@ export default function PostPage() {
                         <CheckCircle size={32} />
                     </div>
                     <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.5rem', color: '#0F172A' }}>
-                        {postType === 'physical' ? 'Listing Published!' : 'Material Uploaded!'}
+                        {postType === 'physical' ? 'Listing published' : 'Material uploaded'}
                     </h2>
                     <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', margin: '0 0 1.5rem' }}>
-                        {postType === 'physical' ? 'Your item is now live in the UNIZIK marketplace.' : 'Your study material is now available for purchase and instant delivery.'}
+                        {postType === 'physical' ? 'Your item is now live in the UNIZIK marketplace.' : 'Your study material is now listed. Students can preview the sample pages before they buy.'}
                     </p>
                     <button
                         onClick={() => navigate('/seller-hub')}

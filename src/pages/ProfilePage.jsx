@@ -1,21 +1,39 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
+import {
+    User,
+    Settings,
+    LogIn,
+    LogOut,
+    ShieldCheck,
+    Package,
+    Heart,
+    HelpCircle,
+    ChevronRight,
+    TrendingUp,
+    FileText,
+    Shield,
+} from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { User, Settings, LogIn, LogOut, ShieldCheck, Package, Heart, HelpCircle, ChevronRight, Loader2, TrendingUp, Sparkles, FileText, Shield } from 'lucide-react'
 import { getSellerAnalytics } from '../lib/database'
 import { isUserAdmin } from '../components/AdminRoute'
+import { PageHeader } from '../components/ui'
+import { formatNaira } from '../lib/utils'
 
-function formatNaira(amount) {
-    return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount || 0)
-}
+const accountMenu = [
+    { icon: TrendingUp, label: 'Seller hub', hint: 'Sales and listing performance', path: '/seller-hub', badgeKey: 'seller' },
+    { icon: Package, label: 'My listings', path: '/profile/listings', badgeKey: 'listings' },
+    { icon: FileText, label: 'Purchased material', path: '/profile/purchases' },
+    { icon: Heart, label: 'Saved items', path: '/profile/saved' },
+    { icon: Settings, label: 'Settings', path: '/profile/settings' },
+    { icon: HelpCircle, label: 'Help and support', path: '/profile/help' },
+]
 
-const menuItems = [
-    { icon: TrendingUp, label: 'Seller Hub & Analytics', path: '/seller-hub', badgeKey: 'seller' },
-    { icon: Package, label: 'My Listings', path: '/profile/listings', badgeKey: 'listings' },
-    { icon: FileText, label: 'Purchased Study Materials', path: '/profile/purchases', badgeKey: null },
-    { icon: Heart, label: 'Saved Items', path: '/profile/saved', badge: null },
-    { icon: Settings, label: 'Settings', path: '/profile/settings', badge: null },
-    { icon: HelpCircle, label: 'Help & Support', path: '/profile/help', badge: null },
+/** What an account actually unlocks. Kept honest: reading is never on the list. */
+const accountBenefits = [
+    'Post an item you no longer need',
+    'Message a student selling something',
+    'Keep track of what you saved or bought',
 ]
 
 export default function ProfilePage() {
@@ -27,7 +45,7 @@ export default function ProfilePage() {
         const uid = session?.user?.id || user?.uid || user?.id
         if (isAuthenticated && uid) {
             getSellerAnalytics(uid)
-                .then(data => setSellerStats(data))
+                .then((data) => setSellerStats(data))
                 .catch(() => setSellerStats(null))
         }
     }, [isAuthenticated, session, user])
@@ -40,294 +58,186 @@ export default function ProfilePage() {
         }
     }
 
-    return (
-        <div>
-            <header
-                style={{
-                    position: 'sticky',
-                    top: 0,
-                    zIndex: 40,
-                    backgroundColor: 'white',
-                    borderBottom: '1px solid var(--color-border)',
-                    padding: '1rem',
-                }}
-            >
-                <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 700 }}>Profile</h1>
-            </header>
+    if (!isAuthenticated || !user) {
+        return (
+            <div className="zs-container">
+                <PageHeader
+                    eyebrow="Account"
+                    title="You do not need an account to read"
+                    lead="Every document in the library is free and open. An account is only for buying, selling and messaging other students."
+                />
 
-            <div style={{ padding: '1rem' }}>
-                {isAuthenticated && user ? (
-                    /* Logged-in user card */
-                    <div
-                        style={{
-                            padding: '1.5rem',
-                            borderRadius: '1rem',
-                            background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)',
-                            border: '1px solid #93C5FD',
-                            textAlign: 'center',
-                        }}
-                    >
-                        <div
-                            style={{
-                                width: '4rem',
-                                height: '4rem',
-                                borderRadius: '9999px',
-                                background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                margin: '0 auto 0.75rem',
-                                color: 'white',
-                                fontSize: '1.375rem',
-                                fontWeight: 700,
-                            }}
-                        >
-                            {user.displayName?.charAt(0)?.toUpperCase() || 'S'}
-                        </div>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem', marginBottom: '0.125rem' }}>
-                            <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700 }}>{user.displayName}</h2>
-                            {isVerified && <ShieldCheck size={16} color="var(--color-campus-green)" />}
-                        </div>
-                        <p style={{ margin: '0 0 0.75rem', fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
-                            {user.email}
-                        </p>
-                        <button
-                            onClick={handleSignOut}
-                            style={{
-                                padding: '0.5rem 1.5rem',
-                                borderRadius: '0.625rem',
-                                border: '1px solid var(--color-border)',
-                                backgroundColor: 'white',
-                                fontSize: '0.75rem',
-                                fontWeight: 600,
-                                fontFamily: 'inherit',
-                                cursor: 'pointer',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '0.375rem',
-                                color: 'var(--color-text-secondary)',
-                            }}
-                        >
-                            <LogOut size={14} />
-                            Sign Out
-                        </button>
-                    </div>
-                ) : (
-                    /* Guest card */
-                    <div
-                        style={{
-                            padding: '1.5rem',
-                            borderRadius: '1rem',
-                            background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)',
-                            border: '1px solid #93C5FD',
-                            textAlign: 'center',
-                        }}
-                    >
-                        <div
-                            style={{
-                                width: '4rem',
-                                height: '4rem',
-                                borderRadius: '9999px',
-                                background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                margin: '0 auto 0.75rem',
-                            }}
-                        >
-                            <User size={28} color="white" />
-                        </div>
-                        <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
-                            Welcome to ZikShare!
-                        </h2>
-                        <p style={{ margin: '0.25rem 0 1rem', fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
-                            Sign in to buy, sell, and connect with fellow students
-                        </p>
-                        <button
-                            onClick={() => navigate('/login')}
-                            style={{
-                                padding: '0.75rem 2rem',
-                                borderRadius: '0.75rem',
-                                border: 'none',
-                                background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-                                color: 'white',
-                                fontSize: '0.875rem',
-                                fontWeight: 700,
-                                fontFamily: 'inherit',
-                                cursor: 'pointer',
-                                boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '0.5rem',
-                                transition: 'transform 0.2s ease',
-                            }}
-                            onMouseEnter={e => (e.currentTarget.style.transform = 'scale(1.03)')}
-                            onMouseLeave={e => (e.currentTarget.style.transform = 'scale(1)')}
-                        >
-                            <LogIn size={16} />
-                            Sign In
-                        </button>
-                    </div>
-                )}
-
-                {/* Seller Hub Quick Card (for authenticated users) */}
-                {isAuthenticated && (
-                    <div
-                        onClick={() => navigate('/seller-hub')}
-                        style={{
-                            marginTop: '1rem',
-                            padding: '1rem',
-                            borderRadius: '0.875rem',
-                            background: 'linear-gradient(135deg, #0F172A, #1E293B)',
-                            color: 'white',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            boxShadow: '0 4px 14px rgba(15, 23, 42, 0.25)',
-                        }}
-                    >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.625rem', backgroundColor: '#2563EB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <TrendingUp size={20} color="white" />
-                            </div>
-                            <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                    <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700 }}>Seller Hub & Earnings</h3>
-                                    <Sparkles size={14} color="#FBBF24" />
-                                </div>
-                                <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: '#94A3B8' }}>
-                                    {sellerStats ? `${formatNaira(sellerStats.totalEarningsNaira)} earned • ${sellerStats.totalListings} listings` : 'Manage your sales & analytics'}
-                                </p>
-                            </div>
-                        </div>
-                        <ChevronRight size={18} color="#94A3B8" />
-                    </div>
-                )}
-
-                {/* SuperAdmin Access Card */}
-                {isAuthenticated && isUserAdmin(user, session) && (
-                    <div
-                        onClick={() => navigate('/admin')}
-                        style={{
-                            marginTop: '0.875rem',
-                            padding: '1rem',
-                            borderRadius: '0.875rem',
-                            background: 'linear-gradient(135deg, #1E1B4B, #312E81)',
-                            border: '1.5px solid #6366F1',
-                            color: 'white',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            boxShadow: '0 4px 14px rgba(99, 102, 241, 0.3)',
-                        }}
-                    >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                            <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.625rem', backgroundColor: '#4F46E5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Shield size={20} color="white" />
-                            </div>
-                            <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                    <h3 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 700 }}>ZikShare Admin Suite</h3>
-                                    <span style={{ fontSize: '0.5625rem', fontWeight: 800, backgroundColor: '#EF4444', color: 'white', padding: '0.05rem 0.3rem', borderRadius: '0.25rem', textTransform: 'uppercase' }}>SuperAdmin</span>
-                                </div>
-                                <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: '#C7D2FE' }}>
-                                    User moderation, inventory & system pulse
-                                </p>
-                            </div>
-                        </div>
-                        <ChevronRight size={18} color="#C7D2FE" />
-                    </div>
-                )}
-
-                {/* Verification Prompt (guests & unverified) */}
-                {(!isAuthenticated || !isVerified) && (
-                    <div
-                        onClick={() => navigate(isAuthenticated ? '/profile/settings' : '/login')}
-                        style={{
-                            marginTop: '1rem',
-                            padding: '0.875rem 1rem',
-                            borderRadius: '0.75rem',
-                            backgroundColor: '#F0FDF4',
-                            border: '1px solid #BBF7D0',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.75rem',
-                            cursor: 'pointer',
-                            transition: 'background-color 0.15s ease',
-                        }}
-                    >
-                        <ShieldCheck size={20} color="var(--color-campus-green)" />
-                        <div style={{ flex: 1 }}>
-                            <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-campus-green)' }}>
-                                Get Verified
-                            </p>
-                            <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: 'var(--color-text-secondary)' }}>
-                                Use your @unizik.edu.ng email for a trust badge
-                            </p>
-                        </div>
-                        <ChevronRight size={16} color="var(--color-text-muted)" />
-                    </div>
-                )}
-
-                {/* Menu Items */}
-                <div style={{ marginTop: '1.25rem' }}>
-                    {menuItems.map((item) => {
-                        const ItemIcon = item.icon
-                        const { label, path, badgeKey } = item
-                        let badgeValue = null
-                        if (badgeKey === 'listings' && sellerStats?.totalListings !== undefined) {
-                            badgeValue = String(sellerStats.totalListings)
-                        } else if (badgeKey === 'seller' && sellerStats?.totalSalesCount) {
-                            badgeValue = `${sellerStats.totalSalesCount} sales`
-                        }
-
-                        return (
-                            <button
-                                key={label}
-                                onClick={() => navigate(path)}
-                                style={{
-                                    width: '100%',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.75rem',
-                                    padding: '0.875rem 0.5rem',
-                                    borderRadius: '0.625rem',
-                                    border: 'none',
-                                    backgroundColor: 'transparent',
-                                    cursor: 'pointer',
-                                    fontFamily: 'inherit',
-                                    transition: 'background-color 0.15s ease',
-                                    borderBottom: '1px solid var(--color-border)',
-                                }}
-                                onMouseEnter={e => (e.currentTarget.style.backgroundColor = 'var(--color-background)')}
-                                onMouseLeave={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                <div className="zs-panel" style={{ maxWidth: '32rem' }}>
+                    <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: '0.55rem' }}>
+                        {accountBenefits.map((benefit) => (
+                            <li
+                                key={benefit}
+                                style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem', fontSize: 'var(--zs-fs-body)', color: 'var(--color-text-secondary)' }}
                             >
-                                <ItemIcon size={18} color="var(--color-text-secondary)" />
-                                <span style={{ flex: 1, textAlign: 'left', fontSize: '0.8125rem', fontWeight: 500, color: 'var(--color-text-primary)' }}>
-                                    {label}
-                                </span>
-                                {badgeValue && (
-                                    <span
-                                        style={{
-                                            padding: '0.125rem 0.5rem',
-                                            borderRadius: '9999px',
-                                            backgroundColor: '#DBEAFE',
-                                            color: '#1E40AF',
-                                            fontSize: '0.6875rem',
-                                            fontWeight: 600,
-                                        }}
-                                    >
-                                        {badgeValue}
-                                    </span>
-                                )}
-                                <ChevronRight size={16} color="var(--color-text-muted)" />
-                            </button>
-                        )
-                    })}
+                                <User size={15} style={{ marginTop: '0.15rem', color: 'var(--color-brand)', flexShrink: 0 }} aria-hidden="true" />
+                                {benefit}
+                            </li>
+                        ))}
+                    </ul>
+
+                    <div style={{ display: 'grid', gap: '0.5rem', marginTop: '1.25rem' }}>
+                        <button type="button" className="zs-btn zs-btn--primary zs-btn--block" onClick={() => navigate('/login')}>
+                            <LogIn size={15} /> Sign in with your UNIZIK email
+                        </button>
+                        <button type="button" className="zs-btn zs-btn--outline zs-btn--block" onClick={() => navigate('/library')}>
+                            Open the library instead
+                        </button>
+                    </div>
                 </div>
+
+                <p style={{ marginTop: '1.25rem', fontSize: 'var(--zs-fs-meta)', color: 'var(--color-text-muted)' }}>
+                    Need help? <button type="button" className="zs-link" onClick={() => navigate('/profile/help')}>Read the help page</button>
+                </p>
             </div>
+        )
+    }
+
+    const listings = sellerStats?.totalListings
+    const sales = sellerStats?.totalSalesCount
+    const earnings = sellerStats?.totalEarningsNaira
+
+    return (
+        <div className="zs-container">
+            <PageHeader eyebrow="Account" title="Your account" />
+
+            <div className="zs-panel" style={{ display: 'flex', alignItems: 'center', gap: '0.9rem', maxWidth: '32rem' }}>
+                <div
+                    aria-hidden="true"
+                    style={{
+                        width: '3rem',
+                        height: '3rem',
+                        borderRadius: '9999px',
+                        background: 'var(--color-brand)',
+                        color: 'white',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.15rem',
+                        fontWeight: 700,
+                        flexShrink: 0,
+                    }}
+                >
+                    {user.displayName?.charAt(0)?.toUpperCase() || 'S'}
+                </div>
+                <div style={{ minWidth: 0, flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                        <h2 style={{ margin: 0, fontSize: 'var(--zs-fs-card)', fontWeight: 700 }}>
+                            {user.displayName || 'Student'}
+                        </h2>
+                        {isVerified && <ShieldCheck size={15} color="var(--color-campus-green)" aria-label="Verified UNIZIK email" />}
+                    </div>
+                    <p style={{ margin: '0.1rem 0 0', fontSize: 'var(--zs-fs-meta)', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        {user.email}
+                    </p>
+                </div>
+                <button type="button" className="zs-btn zs-btn--outline zs-btn--sm" onClick={handleSignOut}>
+                    <LogOut size={14} /> Sign out
+                </button>
+            </div>
+
+            {isVerified === false && (
+                <button
+                    type="button"
+                    onClick={() => navigate('/profile/settings')}
+                    className="zs-panel"
+                    style={{ marginTop: '0.75rem', maxWidth: '32rem', width: '100%', display: 'flex', alignItems: 'center', gap: '0.75rem', textAlign: 'left', cursor: 'pointer', font: 'inherit' }}
+                >
+                    <ShieldCheck size={18} color="var(--color-campus-green)" aria-hidden="true" />
+                    <span style={{ flex: 1 }}>
+                        <span style={{ display: 'block', fontSize: 'var(--zs-fs-small)', fontWeight: 600 }}>Verify your UNIZIK email</span>
+                        <span style={{ display: 'block', fontSize: 'var(--zs-fs-meta)', color: 'var(--color-text-muted)' }}>
+                            A verified student account carries a trust badge on its listings.
+                        </span>
+                    </span>
+                    <ChevronRight size={16} color="var(--color-text-muted)" aria-hidden="true" />
+                </button>
+            )}
+
+            {(listings || sales || earnings) ? (
+                <div className="zs-grid" style={{ marginTop: '1rem' }}>
+                    {listings ? (
+                        <div className="zs-card" style={{ padding: '0.9rem' }}>
+                            <p style={{ margin: 0, fontSize: 'var(--zs-fs-meta)', color: 'var(--color-text-muted)' }}>Live listings</p>
+                            <p style={{ margin: '0.15rem 0 0', fontSize: '1.25rem', fontWeight: 700 }}>{listings}</p>
+                        </div>
+                    ) : null}
+                    {sales ? (
+                        <div className="zs-card" style={{ padding: '0.9rem' }}>
+                            <p style={{ margin: 0, fontSize: 'var(--zs-fs-meta)', color: 'var(--color-text-muted)' }}>Sales</p>
+                            <p style={{ margin: '0.15rem 0 0', fontSize: '1.25rem', fontWeight: 700 }}>{sales}</p>
+                        </div>
+                    ) : null}
+                    {earnings ? (
+                        <div className="zs-card" style={{ padding: '0.9rem' }}>
+                            <p style={{ margin: 0, fontSize: 'var(--zs-fs-meta)', color: 'var(--color-text-muted)' }}>Earned</p>
+                            <p style={{ margin: '0.15rem 0 0', fontSize: '1.25rem', fontWeight: 700 }}>{formatNaira(earnings)}</p>
+                        </div>
+                    ) : null}
+                </div>
+            ) : null}
+
+            <nav aria-label="Account" className="zs-panel" style={{ marginTop: '1rem', padding: 0, maxWidth: '32rem', overflow: 'hidden' }}>
+                {accountMenu.map((entry, index) => {
+                    const Icon = entry.icon
+                    const badge =
+                        entry.badgeKey === 'listings' && listings !== undefined
+                            ? String(listings)
+                            : entry.badgeKey === 'seller' && sales
+                                ? `${sales} sales`
+                                : null
+                    return (
+                        <button
+                            key={entry.label}
+                            type="button"
+                            onClick={() => navigate(entry.path)}
+                            style={{
+                                width: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.7rem',
+                                padding: '0.8rem 0.9rem',
+                                background: 'none',
+                                border: 'none',
+                                borderTop: index === 0 ? 'none' : '1px solid var(--color-border-subtle)',
+                                font: 'inherit',
+                                textAlign: 'left',
+                                cursor: 'pointer',
+                            }}
+                        >
+                            <Icon size={17} color="var(--color-text-secondary)" aria-hidden="true" />
+                            <span style={{ flex: 1, minWidth: 0 }}>
+                                <span style={{ display: 'block', fontSize: 'var(--zs-fs-body)', fontWeight: 600 }}>{entry.label}</span>
+                                {entry.hint && (
+                                    <span style={{ display: 'block', fontSize: 'var(--zs-fs-meta)', color: 'var(--color-text-muted)' }}>{entry.hint}</span>
+                                )}
+                            </span>
+                            {badge && <span className="zs-tag zs-tag--muted">{badge}</span>}
+                            <ChevronRight size={15} color="var(--color-text-muted)" aria-hidden="true" />
+                        </button>
+                    )
+                })}
+            </nav>
+
+            {isUserAdmin(user, session) && (
+                <button
+                    type="button"
+                    onClick={() => navigate('/admin')}
+                    className="zs-panel"
+                    style={{ marginTop: '0.75rem', maxWidth: '32rem', width: '100%', display: 'flex', alignItems: 'center', gap: '0.7rem', textAlign: 'left', font: 'inherit', cursor: 'pointer' }}
+                >
+                    <Shield size={17} color="var(--color-brand)" aria-hidden="true" />
+                    <span style={{ flex: 1 }}>
+                        <span style={{ display: 'block', fontSize: 'var(--zs-fs-body)', fontWeight: 600 }}>Admin suite</span>
+                        <span style={{ display: 'block', fontSize: 'var(--zs-fs-meta)', color: 'var(--color-text-muted)' }}>Moderation and inventory</span>
+                    </span>
+                    <ChevronRight size={15} color="var(--color-text-muted)" aria-hidden="true" />
+                </button>
+            )}
         </div>
     )
 }

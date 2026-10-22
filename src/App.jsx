@@ -31,6 +31,7 @@ const OfficialChannelPage = lazy(() => import('./pages/OfficialChannelPage'))
 const MaintenancePage = lazy(() => import('./pages/MaintenancePage'))
 const LibraryPage = lazy(() => import('./pages/LibraryPage'))
 const BookDetailPage = lazy(() => import('./pages/BookDetailPage'))
+const BookReaderPage = lazy(() => import('./pages/BookReaderPage'))
 
 // Maintenance Mode Flag — Set to true to show maintenance screen to all standard visitors
 export const MAINTENANCE_MODE = false
@@ -61,6 +62,8 @@ function AppRoutes() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/payment/success" element={<PaymentSuccess />} />
         <Route path="/item/:id" element={<ItemDetailPage />} />
+        {/* The reader is full-screen: no bottom navigation under the page controls */}
+        <Route path="/library/books/:slug/read" element={<BookReaderPage />} />
         <Route path="/seller/:id" element={<SellerProfilePage />} />
         <Route path="/user/:id" element={<SellerProfilePage />} />
         <Route path="/seller-hub" element={<SellerHubPage />} />

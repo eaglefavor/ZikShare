@@ -39,10 +39,34 @@ const META_FIELDS = [
     'material_type', 'subcategory', 'priceKobo', 'tags', 'description', 'archive',
 ]
 
+/**
+ * Authored word count, used as a quality signal: a pack that reads as a
+ * skeleton is caught here rather than by a reader.
+ */
+export function countContentWords(pack) {
+    const text = [
+        pack.title, pack.subtitle, pack.description,
+        ...(pack.outcomes || []),
+        ...(pack.sections || []).flatMap((s) => [
+            s.heading, s.intro, ...(s.paragraphs || []), ...(s.bullets || []), ...(s.numbered || []),
+            s.callout?.title, s.callout?.body,
+        ]),
+        ...(pack.workedExamples || []).flatMap((w) => [w.title, w.brief, ...(w.steps || []), w.takeaway]),
+        ...(pack.examBank || []).flatMap((e) => [e.question, e.marks, ...(e.outline || []), e.trap]),
+        ...(pack.glossary || []).flatMap((g) => [g.term, g.definition]),
+        ...(pack.practice || []).flatMap((q) => [q.q, q.a]),
+        ...(pack.checklist || []),
+        ...(pack.weeklyPlan || []).flatMap((w) => [w.week, w.focus, ...(w.tasks || [])]),
+        ...(pack.readingList || []),
+    ].filter(Boolean).join(' ')
+    return text.split(/\s+/).filter(Boolean).length
+}
+
 function toMeta(pack, stats) {
     const meta = {}
     for (const key of META_FIELDS) meta[key] = pack[key] ?? null
     meta.is_free = true
+    meta.content_words = countContentWords(pack)
     meta.archive_years = pack.archive?.sessions?.map((s) => s.year) || []
     return Object.assign(meta, stats)
 }

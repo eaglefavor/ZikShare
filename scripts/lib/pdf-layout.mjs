@@ -328,6 +328,72 @@ export async function buildPackPdf(pack) {
         drawArchivePage(doc, fonts, style, pack)
     }
 
+    // ── Worked examples ──
+    if (pack.workedExamples?.length) {
+        writer.newPage()
+        writer.eyebrow('Worked examples')
+        writer.heading('Do it once, slowly', { spaceBefore: 0 })
+        writer.paragraph(
+            'These are not model answers to copy. They show the reasoning a strong student would use, step by step, so you can repeat the process on a question you have not seen.',
+            { size: 9.4, spaceAfter: 10 }
+        )
+        pack.workedExamples.forEach((example, i) => {
+            writer.ensureSpace(120)
+            writer.heading(`${i + 1}. ${example.title}`, { spaceBefore: i === 0 ? 2 : 10 })
+            if (example.brief) writer.paragraph(example.brief, { size: 9.6 })
+            if (example.steps?.length) writer.numbered(example.steps)
+            if (example.takeaway) writer.callout('What to carry forward', example.takeaway)
+        })
+    }
+
+    // ── Exam-style questions with model answers ──
+    if (pack.examBank?.length) {
+        writer.newPage()
+        writer.eyebrow('Exam technique')
+        writer.heading('Questions with model answers', { spaceBefore: 0 })
+        writer.paragraph(
+            'Written in the shape your course is usually examined, with the marking logic spelled out. Attempt each one under time before you read the outline.',
+            { size: 9.4, spaceAfter: 10 }
+        )
+        pack.examBank.forEach((item, i) => {
+            writer.ensureSpace(110)
+            writer.heading(`Q${i + 1}. ${item.question}`, { spaceBefore: i === 0 ? 2 : 12 })
+            if (item.marks) writer.paragraph(item.marks, { size: 8.8, color: rgb(0.36, 0.4, 0.46), spaceAfter: 4, font: fonts.oblique })
+            if (item.outline?.length) writer.numbered(item.outline)
+            if (item.trap) writer.callout('Where marks are lost', item.trap)
+        })
+    }
+
+    // ── Glossary ──
+    if (pack.glossary?.length) {
+        writer.newPage()
+        writer.eyebrow('Reference')
+        writer.heading('Glossary', { spaceBefore: 0 })
+        writer.paragraph('Use these definitions in your own sentences; a copied definition rarely earns full marks.', { size: 9.4, spaceAfter: 8 })
+        pack.glossary.forEach((entry) => {
+            writer.ensureSpace(46)
+            writer.paragraph(`${entry.term}. ${entry.definition}`, { size: 9.4, spaceAfter: 7 })
+        })
+    }
+
+    // ── Four-week plan ──
+    if (pack.weeklyPlan?.length) {
+        writer.heading('Your four-week plan')
+        pack.weeklyPlan.forEach((week) => {
+            writer.ensureSpace(70)
+            writer.paragraph(week.week, { size: 10, spaceAfter: 3 })
+            if (week.focus) writer.paragraph(week.focus, { size: 9.3, spaceAfter: 3, color: rgb(0.34, 0.38, 0.44) })
+            if (week.tasks?.length) writer.bullets(week.tasks)
+        })
+    }
+
+    // ── Reading list ──
+    if (pack.readingList?.length) {
+        writer.heading('Where to read more')
+        writer.paragraph('Entry-level texts you can find in the university library or a departmental reading list. Confirm editions with your lecturer.', { size: 9.2, spaceAfter: 6 })
+        writer.bullets(pack.readingList)
+    }
+
     // ── Practice ──
     if (pack.practice?.length) {
         writer.newPage()

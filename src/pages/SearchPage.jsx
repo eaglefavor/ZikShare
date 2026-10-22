@@ -211,7 +211,7 @@ export default function SearchPage() {
                 <SectionHeading
                     id="search-library"
                     title={`Free study library (${libraryResults.length})`}
-                    description="Course packs and books — open or download, no sign-in."
+                    description="Books — open in the browser or download the PDF, no sign-in."
                     action={
                         <button type="button" className="zs-link" onClick={() => navigate('/library')}>
                             Browse all <ChevronRight size={14} />
@@ -234,8 +234,8 @@ export default function SearchPage() {
                             </Button>
                         }
                     >
-                        Try a course code such as <strong>GST 112</strong> or an author such as{' '}
-                        <strong>Watchman Nee</strong>.
+                        Try an author such as <strong>Watchman Nee</strong> or a title such as{' '}
+                        <strong>Let Us Pray</strong>.
                     </EmptyState>
                 )}
             </section>

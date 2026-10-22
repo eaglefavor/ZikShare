@@ -7,6 +7,7 @@ import {
     ACADEMIC_LEVELS 
 } from '../lib/categories'
 import { FRESHER_LIBRARY_PACKS } from '../lib/fresherLibrary'
+import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
 
 describe('UNIZIK Digital Library & Academic Repository Suite', () => {
     describe('Course Code Formatting & Normalization', () => {
@@ -45,12 +46,14 @@ describe('UNIZIK Digital Library & Academic Repository Suite', () => {
         })
     })
 
-    describe('Curated Ingestion Catalog Dataset Integrity', () => {
-        it('contains a full fresher PDF catalog rather than a placeholder set', () => {
-            expect(FRESHER_LIBRARY_PACKS.length).toBeGreaterThanOrEqual(50)
+    describe('Library contents after the shelves were cleared', () => {
+        it('holds no authored packs until new material is added', () => {
+            expect(FRESHER_LIBRARY_PACKS).toEqual([])
         })
 
-        it('ensures every study pack is free and has valid course metadata with measured page counts', () => {
+        it('validates every pack that is present, whenever one is added', () => {
+            // Guard rails for the incoming GST / Theatre material: whatever is
+            // in the catalog must be free, measurable and correctly classified.
             const facultyNames = new Set(UNIZIK_FACULTIES.map(f => f.name))
 
             for (const pack of FRESHER_LIBRARY_PACKS) {
@@ -68,30 +71,12 @@ describe('UNIZIK Digital Library & Academic Repository Suite', () => {
             }
         })
 
-        it('covers key GST foundational courses (GST 101, 102, 103, 104, 105, 107)', () => {
-            const codes = FRESHER_LIBRARY_PACKS.map(p => p.code)
-            expect(codes).toContain('GST 101')
-            expect(codes).toContain('GST 102')
-            expect(codes).toContain('GST 103')
-            expect(codes).toContain('GST 104')
-            expect(codes).toContain('GST 105')
-            expect(codes).toContain('GST 107')
-        })
-
-        it('covers key foundational courses across medical, engineering, science, law and arts faculties', () => {
-            const facultiesRepresented = new Set(FRESHER_LIBRARY_PACKS.map(p => p.faculty))
-            expect(facultiesRepresented.has('Faculty of Engineering')).toBe(true)
-            expect(facultiesRepresented.has('Faculty of Physical Sciences')).toBe(true)
-            expect(facultiesRepresented.has('Faculty of Management Sciences')).toBe(true)
-            expect(facultiesRepresented.has('Faculty of Law')).toBe(true)
-            expect(facultiesRepresented.has('Faculty of Bio-Sciences')).toBe(true)
-            expect(facultiesRepresented.has('Faculty of Social Sciences')).toBe(true)
-            expect(facultiesRepresented.has('Faculty of Agriculture')).toBe(true)
-            expect(facultiesRepresented.has('Faculty of Basic Medical Sciences')).toBe(true)
-            expect(facultiesRepresented.has('Faculty of Medicine')).toBe(true)
-            expect(facultiesRepresented.has('Faculty of Pharmaceutical Sciences')).toBe(true)
-            expect(facultiesRepresented.has('Faculty of Education')).toBe(true)
-            expect(facultiesRepresented.has('Faculty of Environmental Sciences')).toBe(true)
+        it('keeps the Christian Books shelf as the one shelf with documents', () => {
+            expect(CHRISTIAN_BOOKS.length).toBeGreaterThan(0)
+            for (const book of CHRISTIAN_BOOKS) {
+                expect(book.domain).toBe('Christian Books')
+                expect(book.page_count).toBeGreaterThan(1)
+            }
         })
     })
 

@@ -13,7 +13,7 @@ import {
 } from 'lucide-react'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListings } from '../lib/database'
-import { FRESHER_LIBRARY_PACKS } from '../lib/fresherLibrary'
+import { FRESHER_LIBRARY_PACKS, libraryCounts, libraryCountLabel } from '../lib/fresherLibrary'
 import { CHRISTIAN_BOOKS, toBookCard } from '../lib/christianBooks'
 import { domainSummary } from '../lib/libraryView'
 import { Button, SectionHeading, Tag } from '../components/ui'
@@ -21,7 +21,9 @@ import BookCover from '../components/BookCover'
 import LibraryCard from '../components/LibraryCard'
 import { HomeAnnouncementBanner } from '../components/AnnouncementModal'
 
-const LIBRARY_TOTAL = FRESHER_LIBRARY_PACKS.length + CHRISTIAN_BOOKS.length
+const LIBRARY_COUNTS = libraryCounts()
+const LIBRARY_TOTAL = LIBRARY_COUNTS.total
+const LIBRARY_LABEL = libraryCountLabel(LIBRARY_COUNTS)
 
 function formatNaira(amount) {
     const n = Number(amount) || 0
@@ -99,8 +101,8 @@ export default function HomePage() {
                 </div>
                 <h1 id="home-title">Free study material, on your phone, right now.</h1>
                 <p className="zs-lead">
-                    {LIBRARY_TOTAL} study packs and full-length books, free to open and download.
-                    No fee, no sign-in, no payment step — find your course code and start reading.
+                    {LIBRARY_LABEL}, free to open and download. No fee, no sign-in, no payment
+                    step — open a book and start reading.
                 </p>
 
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '1rem' }}>
@@ -121,8 +123,7 @@ export default function HomePage() {
                     </div>
                     <p className="zs-item-card__title">Study library</p>
                     <p className="zs-item-card__desc">
-                        {FRESHER_LIBRARY_PACKS.length} course packs and {CHRISTIAN_BOOKS.length} full books,
-                        organised by faculty and shelf.
+                        {LIBRARY_LABEL}, free to read in the browser or download as PDF.
                     </p>
                     <div className="zs-item-card__foot">
                         <span className="zs-item-card__sub">Open instantly</span>
@@ -194,6 +195,9 @@ export default function HomePage() {
             </section>
 
             {/* ── Newest in the library ─────────────────────────────────── */}
+            {/* Only when there are packs to show: with an empty pack shelf this
+                block would repeat the book shelf that follows it. */}
+            {newest.length > 0 && (
             <section className="zs-section" aria-labelledby="new-title">
                 <SectionHeading
                     id="new-title"
@@ -211,13 +215,14 @@ export default function HomePage() {
                     ))}
                 </div>
             </section>
+            )}
 
             {/* ── Book spotlight ────────────────────────────────────────── */}
             <section className="zs-section" aria-labelledby="books-title">
                 <SectionHeading
                     id="books-title"
                     title="Christian Books shelf"
-                    description="Eight full-length books, read in the browser or downloaded as PDF."
+                    description={`${CHRISTIAN_BOOKS.length} full-length books, read in the browser or downloaded as PDF.`}
                     action={
                         <button
                             type="button"
@@ -306,9 +311,9 @@ export default function HomePage() {
                     <ShieldCheck size={20} color="var(--color-campus-green)" style={{ flexShrink: 0, marginTop: 2 }} />
                     <p style={{ margin: 0, fontSize: '0.85rem', lineHeight: 1.6, color: 'var(--color-text-secondary)', flex: '1 1 18rem' }}>
                         <strong style={{ color: 'var(--color-brand-dark)' }}>Everything in the library is free.</strong>{' '}
-                        There is no fee, no account and no payment step before a download. Packs are
-                        student-written and map to the syllabus — always confirm the outline with your
-                        department.
+                        There is no fee, no account and no payment step before a download. Books are
+                        third-party works hosted for free reading; nothing here replaces your course
+                        outline, so confirm what you are examined on with your department.
                     </p>
                     <button type="button" className="zs-link" onClick={() => navigate('/library')}>
                         <BookOpen size={15} /> Open the library

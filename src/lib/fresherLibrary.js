@@ -1,6 +1,14 @@
 import { FRESHER_LIBRARY_PACKS } from './fresherLibraryData'
 import { CHRISTIAN_BOOKS, CHRISTIAN_BOOKS_DOMAIN, toBookCard, findBookByStoragePath } from './christianBooks'
 
+/**
+ * Display order of the shelves a study pack can sit on.
+ *
+ * This is the taxonomy, not the contents: after the old shelves were cleared no
+ * shelf is displayed until a document exists for it (`FRESHER_LIBRARY_DOMAINS`
+ * below filters empty shelves out), so the order can stay complete while the
+ * library itself holds only the Christian Books shelf.
+ */
 export const FRESHER_LIBRARY_DOMAIN_ORDER = [
     'GST & Compulsory Courses',
     'Faculty Primer',
@@ -28,6 +36,31 @@ export const FRESHER_DOMAIN_EMOJI = {
 }
 
 export { FRESHER_LIBRARY_PACKS }
+
+/**
+ * What the library actually contains, right now.
+ *
+ * Every count shown to a reader is derived here, never typed into a page, so a
+ * shelf that has been cleared says it is empty instead of advertising documents
+ * that are no longer there.
+ */
+export function libraryCounts() {
+    const packs = FRESHER_LIBRARY_PACKS.length
+    const books = CHRISTIAN_BOOKS.length
+    return { packs, books, total: packs + books }
+}
+
+function countOf(n, one, many) {
+    return `${n} ${n === 1 ? one : many}`
+}
+
+/** e.g. "8 full-length books" or "12 study packs and 8 full-length books". */
+export function libraryCountLabel({ packs, books } = libraryCounts()) {
+    if (packs === 0 && books === 0) return 'No documents yet'
+    if (packs === 0) return countOf(books, 'full-length book', 'full-length books')
+    if (books === 0) return countOf(packs, 'study pack', 'study packs')
+    return `${countOf(packs, 'study pack', 'study packs')} and ${countOf(books, 'full-length book', 'full-length books')}`
+}
 
 /**
  * Domain summary with counts, ordered for display.

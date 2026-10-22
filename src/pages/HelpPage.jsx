@@ -7,12 +7,12 @@ const faqs = [
     {
         question: 'Do I need an account to read or download the library?',
         answer:
-            'No. Every study pack and book in the library opens and downloads without signing in, paying or checking out. An account is only needed to post a listing, message another student, or track what you saved.',
+            'No. Every book in the library opens and downloads without signing in, paying or checking out. An account is only needed to post a listing, message another student, or track what you saved.',
     },
     {
         question: 'How do I find material for my course?',
         answer:
-            'Search by course code (for example THA 151), by title, by author, or by department. The library is organised into shelves — GST and compulsory courses, faculty primers, Theatre and Film Studies, study skills and more — and every document shows its page count and faculty before you open it.',
+            'Search by title or by author (for example Watchman Nee). The library is organised into shelves, and only shelves that hold documents are shown — right now that is the Christian Books shelf. Every card shows the page count before you open it, and the count on the library page is taken from the shelf itself, so it is never out of date.',
     },
     {
         question: 'How do I post an item or study material?',

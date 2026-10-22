@@ -16,24 +16,28 @@ describe('library view', () => {
     expect(all).toHaveLength(FRESHER_LIBRARY_PACKS.length + CHRISTIAN_BOOKS.length)
   })
 
-  it('groups results into shelves in display order', () => {
+  it('groups results into shelves, one shelf now that the packs are cleared', () => {
     const shelves = groupByShelf(all)
-    expect(shelves.length).toBeGreaterThan(3)
+    expect(shelves).toHaveLength(1)
+    expect(shelves[0].name).toBe('Christian Books')
     expect(shelves.reduce((total, shelf) => total + shelf.items.length, 0)).toBe(all.length)
-    expect(shelves[0].name).toBe('GST & Compulsory Courses')
   })
 
-  it('filters by faculty, level and shelf together', () => {
-    const arts = filterLibrary(all, { faculty: 'Faculty of Arts' })
-    expect(arts.length).toBeGreaterThan(0)
-    expect(arts.every((item) => item.faculty === 'Faculty of Arts')).toBe(true)
+  it('still shows a shelf for a domain that is not in the display order', () => {
+    // New GST and Theatre material arrives on its own shelf; it must not vanish
+    // just because the shelf is not listed in FRESHER_LIBRARY_DOMAIN_ORDER.
+    const stray = [{ ...all[0], id: 'stray', domain: 'GST & Compulsory Courses' }]
+    const shelves = groupByShelf(stray)
+    expect(shelves.map((shelf) => shelf.name)).toContain('GST & Compulsory Courses')
+  })
 
+  it('filters by shelf, and returns nothing for a shelf that no longer exists', () => {
     const books = filterLibrary(all, { domain: 'Christian Books' })
+    expect(books).toHaveLength(CHRISTIAN_BOOKS.length)
     expect(books.every((item) => item.isBook)).toBe(true)
 
-    const hundred = filterLibrary(all, { level: '100L' })
-    expect(hundred.length).toBeGreaterThan(0)
-    expect(hundred.every((item) => item.level === '100L')).toBe(true)
+    expect(filterLibrary(all, { domain: 'Study Skills' })).toEqual([])
+    expect(filterLibrary(all, { faculty: 'Faculty of Arts' })).toEqual([])
   })
 
   it('counts only the filters that are actually set', () => {

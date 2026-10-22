@@ -86,6 +86,9 @@ describe('Components & ErrorBoundary Resilience', () => {
     // The promise comes first, then the way in.
     expect(screen.getByText(/Free study material, on your phone, right now/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Browse the library/i })).toBeInTheDocument()
-    expect(screen.getByText(/Course packs and|student-written course packs/i)).toBeInTheDocument()
+    // The opening line counts what is really on the shelf, and never claims
+    // course packs that were cleared.
+    expect(screen.getByText(/full-length books, free to open and download/i)).toBeInTheDocument()
+    expect(screen.queryByText(/student-written course packs/i)).not.toBeInTheDocument()
   })
 })

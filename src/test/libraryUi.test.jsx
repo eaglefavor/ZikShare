@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
+import fs from 'node:fs'
+import path from 'node:path'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Routes, Route, useParams } from 'react-router-dom'
 import { FRESHER_LIBRARY_PACKS } from '../lib/fresherLibrary'
@@ -26,26 +28,42 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
 
   const openFilters = () => fireEvent.click(screen.getByRole('button', { name: /^Filters/ }))
 
+  const SEARCH = /Search by title, author or course code/i
+
   it('opens with a title, one search field, and results already visible', async () => {
     renderLibrary()
 
     expect(await screen.findByText('UNIZIK Digital Library')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText(/Search a course code/i)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(SEARCH)).toBeInTheDocument()
 
-    // The first document is on the first screen: no wall of filters above it.
-    expect(screen.getAllByRole('link', { name: /Download Free PDF/i }).length).toBeGreaterThan(0)
+    // The shelf is on the first screen: no wall of filters above it.
+    expect(await screen.findByText('The Spiritual Man')).toBeInTheDocument()
     // Filters are behind one control until the reader asks for them.
     expect(screen.queryByRole('button', { name: 'Faculty of Engineering' })).not.toBeInTheDocument()
   })
 
-  it('filters study packs in real-time when searching by course code', async () => {
+  it('advertises only the documents that are actually on the shelf', async () => {
     renderLibrary()
 
-    const searchInput = screen.getByPlaceholderText(/Search a course code/i)
-    fireEvent.change(searchInput, { target: { value: 'LAW 101' } })
+    expect(
+      await screen.findByText(new RegExp(`^${CHRISTIAN_BOOKS.length} full-length books\\. Everything opens`))
+    ).toBeInTheDocument()
+    // No claim about course packs, because there are none to download.
+    expect(screen.queryByText(/student-written course packs/i)).not.toBeInTheDocument()
+  })
 
-    expect(screen.getByText(/LAW 101: The Nigerian Legal System/i)).toBeInTheDocument()
-    expect(screen.queryByText(/FEG 101: Engineering Mathematics I/i)).not.toBeInTheDocument()
+  it('narrows the shelf as the reader types, and says when nothing matches', async () => {
+    renderLibrary()
+
+    const searchInput = await screen.findByPlaceholderText(SEARCH)
+    fireEvent.change(searchInput, { target: { value: 'Watchman Nee' } })
+    expect(await screen.findByText('The Spiritual Man')).toBeInTheDocument()
+
+    fireEvent.change(searchInput, { target: { value: 'GST 101' } })
+    expect(await screen.findByText(/Nothing matches that search/i)).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Clear filters/i }))
+    expect(await screen.findByText('The Spiritual Man')).toBeInTheDocument()
   })
 
   it('reveals departments only after a faculty is chosen in the filter sheet', async () => {
@@ -62,17 +80,15 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
     expect(screen.getByRole('button', { name: 'Civil Engineering' })).toBeInTheDocument()
   })
 
-  it('filters packs by department and reports how many results remain', async () => {
+  it('reports an empty shelf honestly when a department has no documents', async () => {
     renderLibrary()
     openFilters()
 
     fireEvent.click(screen.getByRole('button', { name: 'Faculty of Law' }))
     fireEvent.click(screen.getByRole('button', { name: 'Public Law' }))
-    openFilters.call ? null : null
     fireEvent.click(screen.getByRole('button', { name: /^Show \d+ results?$/ }))
 
-    expect(screen.getByText(/LAW 101: The Nigerian Legal System/i)).toBeInTheDocument()
-    expect(screen.queryByText(/FEG 101: Engineering Mathematics I/i)).not.toBeInTheDocument()
+    expect(await screen.findByText(/Nothing matches that search/i)).toBeInTheDocument()
   })
 
   it('clears every filter in one action', async () => {
@@ -84,31 +100,27 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
     fireEvent.click(screen.getByRole('button', { name: /^Show \d+ results?$/ }))
 
     expect(screen.queryByText(/Departments in Faculty of Law/i)).not.toBeInTheDocument()
-    expect(screen.getAllByText(/GST 101/i).length).toBeGreaterThan(0)
+    expect(await screen.findByText('The Spiritual Man')).toBeInTheDocument()
   })
 
-  it('filters by shelf and keeps a free preview for each pack', async () => {
+  it('filters by shelf and never offers a shelf that holds nothing', async () => {
     renderLibrary()
     openFilters()
 
-    fireEvent.click(screen.getByRole('button', { name: /Study Skills \(\d+\)/ }))
+    expect(screen.getByRole('button', { name: /Christian Books \(\d+\)/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Study Skills \(\d+\)/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /GST & Compulsory Courses \(\d+\)/ })).not.toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /Christian Books \(\d+\)/ }))
     fireEvent.click(screen.getByRole('button', { name: /^Show \d+ results?$/ }))
 
-    expect(screen.getByText(/How to Study at University/i)).toBeInTheDocument()
-    expect(screen.queryByText(/GST 101: Use of English I/i)).not.toBeInTheDocument()
-
-    const previewLinks = screen.getAllByText(/^Preview$/)
-    expect(previewLinks.length).toBeGreaterThan(0)
-    expect(previewLinks[0].getAttribute('href')).toMatch(/^\/library\/previews\/[a-z0-9-]+\.pdf$/)
+    expect(await screen.findByText('The Spiritual Man')).toBeInTheDocument()
   })
 
-  it('counts every authored document, with or without database rows', async () => {
+  it('counts every document on the shelf, with or without database rows', async () => {
     renderLibrary()
     const total = FRESHER_LIBRARY_PACKS.length + CHRISTIAN_BOOKS.length
-
-    expect(
-      await screen.findByText(new RegExp(`${FRESHER_LIBRARY_PACKS.length} student-written course packs`))
-    ).toBeInTheDocument()
+    expect(total).toBe(CHRISTIAN_BOOKS.length)
 
     openFilters()
     expect(screen.getByRole('button', { name: `All Domains (${total})` })).toBeInTheDocument()
@@ -252,7 +264,7 @@ describe('Christian Books shelf UI', { timeout: 15000 }, () => {
       </MemoryRouter>
     )
 
-    const search = await screen.findByPlaceholderText(/Search a course code/i)
+    const search = await screen.findByPlaceholderText(/Search by title, author or course code/i)
     fireEvent.change(search, { target: { value: 'Watchman Nee' } })
 
     expect(await screen.findByText('The Spiritual Man')).toBeInTheDocument()
@@ -265,19 +277,24 @@ describe('Christian Books shelf UI', { timeout: 15000 }, () => {
     expect(await screen.findByText('Let Us Pray')).toBeInTheDocument()
   })
 
-  it('puts a real download link on every card', async () => {
+  it('puts a real link on every card, and every book PDF is on disk', async () => {
     render(
       <MemoryRouter>
         <LibraryPage />
       </MemoryRouter>
     )
 
-    const links = await screen.findAllByRole('link', { name: /Download Free PDF/i })
-    expect(links.length).toBeGreaterThanOrEqual(FRESHER_LIBRARY_PACKS.length)
+    const links = await screen.findAllByRole('link', { name: /Read book/i })
+    expect(links).toHaveLength(CHRISTIAN_BOOKS.length)
 
-    // Downloads are anchors with an href, not a span that only looks like a button.
-    for (const link of links.slice(0, 5)) {
-      expect(link.getAttribute('href')).toMatch(/^\/library\/(packs|books)\/.+\.pdf$/)
+    // Links are anchors with an href, not spans that only look like buttons.
+    for (const link of links) {
+      expect(link.getAttribute('href')).toMatch(/^\/library\/books\/[a-z0-9-]+$/)
+    }
+
+    // The full text itself is a file, not a promise.
+    for (const book of CHRISTIAN_BOOKS) {
+      expect(fs.existsSync(path.join(process.cwd(), 'public', 'library', 'books', `${book.slug}.pdf`))).toBe(true)
     }
   })
 

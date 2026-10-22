@@ -342,3 +342,33 @@ student lives in, and they were the last ones outside the design system.
 | Item detail two-column layout | content left, sticky action card right on ≥980px |
 | Visual regression check | no browser in the sandbox; the first real look is the preview deploy |
 | Replace remaining hex literals in the restyled pages | tokens exist, adoption is partial |
+
+## Phase 8 — Clearing the shelves (library reset)
+
+The library is the product, so it must never describe documents it does not
+have. Every authored course pack and study pack was removed; the Christian Books
+shelf is untouched.
+
+What changed:
+
+- `library/content/` now holds `books.mjs`, `domains.mjs` and an empty `index.mjs`.
+  The 240 generated PDFs (packs, previews, source copies) and the generated
+  catalog were deleted with them.
+- **Counts are derived, not typed.** `libraryCounts()` / `libraryCountLabel()`
+  in `src/lib/fresherLibrary.js` read the shelf, and Home, Library, Search and the
+  empty states use them. A cleared shelf cannot keep advertising "80 course
+  packs", and no page has to be remembered when the shelf changes again.
+- **Empty shelves do not render.** `FRESHER_LIBRARY_DOMAINS` and
+  `groupByShelf()` drop any shelf with no documents, so the library now shows one
+  shelf — Christian Books — with no leftover chips, shelf headings or filter
+  options pointing at material that is gone.
+- **Empty states say what is true**: "Nothing matches that search" offers a book
+  author or title, not a course code that has no document.
+- **The build tolerates an empty shelf** (`validatePacks` no longer demands 50
+  packs globally) but still rejects a thin pack, so the shelf can be refilled
+  without weakening the quality gate.
+- Help copy no longer describes shelves that do not exist.
+
+Tests updated to match (`115` across 17 files), including a guard that no
+`/library/packs/*.pdf` link is ever rendered for a document that is no longer on
+the shelf.

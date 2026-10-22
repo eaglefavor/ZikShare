@@ -1,0 +1,108 @@
+import { FRESHER_LIBRARY_PACKS } from './fresherLibraryData'
+
+export const FRESHER_LIBRARY_DOMAIN_ORDER = [
+    'GST & Compulsory Courses',
+    'Faculty Primer',
+    'Study Skills',
+    'Campus Life',
+    'Money & Career',
+    'Digital Skills',
+    'Health & Wellbeing',
+]
+
+export const FRESHER_DOMAIN_EMOJI = {
+    'GST & Compulsory Courses': '🏛️',
+    'Faculty Primer': '🎓',
+    'Study Skills': '📖',
+    'Campus Life': '🏫',
+    'Money & Career': '💼',
+    'Digital Skills': '💻',
+    'Health & Wellbeing': '💚',
+}
+
+export { FRESHER_LIBRARY_PACKS }
+
+/**
+ * Domain summary with counts, ordered for display.
+ */
+export const FRESHER_LIBRARY_DOMAINS = FRESHER_LIBRARY_DOMAIN_ORDER
+    .map((name) => ({
+        name,
+        emoji: FRESHER_DOMAIN_EMOJI[name],
+        count: FRESHER_LIBRARY_PACKS.filter((p) => p.domain === name).length,
+    }))
+    .filter((d) => d.count > 0)
+
+/**
+ * Maps an authored pack (built by scripts/build-library-pdfs.mjs) into the shape
+ * LibraryPage renders. Kept separate from database rows so the UI can show real
+ * PDF packs even before an admin seeds them into Supabase.
+ */
+export function toLibraryCard(pack) {
+    return {
+        id: `pdf-${pack.slug}`,
+        slug: pack.slug,
+        code: pack.code || '',
+        title: pack.title,
+        faculty: pack.faculty,
+        department: pack.department,
+        level: pack.level,
+        material_type: pack.material_type,
+        domain: pack.domain,
+        priceKobo: pack.priceKobo,
+        page_count: pack.page_count,
+        file_size_bytes: pack.file_size_bytes,
+        description: pack.description,
+        preview_path: pack.preview_path,
+        preview_page_count: pack.preview_page_count,
+        storage_path: pack.storage_path,
+        is_official: true,
+        isFresherPdf: true,
+    }
+}
+
+export function findFresherPackBySlug(slug) {
+    return FRESHER_LIBRARY_PACKS.find((p) => p.slug === slug) || null
+}
+
+export function findFresherPackByStoragePath(storagePath) {
+    if (!storagePath) return null
+    return FRESHER_LIBRARY_PACKS.find((p) => p.storage_path === storagePath) || null
+}
+
+/**
+ * Merges database rows with the authored PDF catalog.
+ * Database rows win (they are the purchasable record); packs that have not yet
+ * been seeded are still listed so the library is never empty.
+ */
+export function mergeLibraryMaterials(dbMaterials = []) {
+    const seededPaths = new Set(
+        dbMaterials.map((d) => d.original_storage_path || d.storage_path).filter(Boolean)
+    )
+
+    const fromDb = dbMaterials.map((d) => ({
+        id: d.id,
+        slug: findFresherPackByStoragePath(d.original_storage_path)?.slug || null,
+        code: d.course_code || '',
+        title: d.title,
+        faculty: d.faculty || 'General Studies (GST / CED)',
+        department: d.department || '',
+        level: d.level || '100L',
+        material_type: d.subcategory || 'lecture-notes',
+        domain: d.domain || findFresherPackByStoragePath(d.original_storage_path)?.domain || null,
+        priceKobo: d.price || 50000,
+        page_count: d.page_count || 0,
+        file_size_bytes: d.file_size_bytes || 0,
+        description: d.description || '',
+        preview_path: d.preview_path || findFresherPackByStoragePath(d.original_storage_path)?.preview_path || null,
+        preview_page_count: d.preview_page_count || 3,
+        is_official: true,
+        isFresherPdf: Boolean(d.original_storage_path),
+    }))
+
+    const notYetSeeded = FRESHER_LIBRARY_PACKS
+        .filter((p) => !seededPaths.has(p.storage_path))
+        .map(toLibraryCard)
+
+    return [...fromDb, ...notYetSeeded]
+}

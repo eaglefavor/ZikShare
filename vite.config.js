@@ -91,6 +91,22 @@ export default defineConfig({
             }
           },
           {
+            // Public 3-page previews of library PDFs — served from this origin,
+            // small and immutable, so cache them after the first read.
+            urlPattern: /\/library\/previews\/[a-z0-9-]+\.pdf$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'library-previews',
+              expiration: {
+                maxEntries: 60,
+                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
             // Google Fonts stylesheets
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
             handler: 'StaleWhileRevalidate',

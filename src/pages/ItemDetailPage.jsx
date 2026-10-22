@@ -146,11 +146,18 @@ export default function ItemDetailPage() {
         setPreviewLoading(true)
         setPreviewError('')
         try {
+            // The free 3-page preview is a public asset, so it works before
+            // purchase and without storage credentials. Only fall back to a
+            // signed URL when the product has no public preview file.
+            const previewUrl = item?.preview_path || null
             const storagePath = item?.original_storage_path
-            if (!storagePath) {
-                throw new Error('Preview document path not found.')
+            let signedUrl = previewUrl
+            if (!signedUrl) {
+                if (!storagePath) {
+                    throw new Error('Preview document path not found.')
+                }
+                signedUrl = await createSignedDownloadUrl(storagePath, 300)
             }
-            const signedUrl = await createSignedDownloadUrl(storagePath, 300)
             if (!signedUrl) throw new Error('Could not generate sample preview link.')
 
             setTimeout(async () => {
@@ -394,7 +401,7 @@ export default function ItemDetailPage() {
                                             <span style={{ fontSize: '1.25rem' }}>📄</span>
                                             <div>
                                                 <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, color: '#0F172A' }}>Want to check the questions?</p>
-                                                <p style={{ margin: 0, fontSize: '0.625rem', color: '#64748B' }}>Preview Page 1 sample before purchasing</p>
+                                                <p style={{ margin: 0, fontSize: '0.625rem', color: '#64748B' }}>Free {item.preview_page_count || 3}-page preview before purchasing</p>
                                             </div>
                                         </div>
                                         <button
@@ -467,6 +474,13 @@ export default function ItemDetailPage() {
                         <div style={{ padding: '1rem' }}>
                             <canvas ref={previewCanvasRef} style={{ width: '100%', height: 'auto', boxShadow: '0 0 10px rgba(0,0,0,0.1)' }} />
                             <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.875rem' }}>Page 1 of {previewPageCount || '?'}</p>
+                            {item?.preview_path && (
+                                <p style={{ textAlign: 'center', marginTop: '0.5rem', fontSize: '0.75rem' }}>
+                                    <a href={item.preview_path} target="_blank" rel="noopener noreferrer" style={{ color: '#2563EB', fontWeight: 700 }}>
+                                        Open the full free preview in a new tab
+                                    </a>
+                                </p>
+                            )}
                         </div>
                     )}
                 </div>

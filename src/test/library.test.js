@@ -6,7 +6,7 @@ import {
     UNIZIK_FACULTIES, 
     ACADEMIC_LEVELS 
 } from '../lib/categories'
-import { UNIZIK_OFFICIAL_STUDY_PACKS } from '../lib/academicCatalogData'
+import { FRESHER_LIBRARY_PACKS } from '../lib/fresherLibrary'
 
 describe('UNIZIK Digital Library & Academic Repository Suite', () => {
     describe('Course Code Formatting & Normalization', () => {
@@ -46,40 +46,38 @@ describe('UNIZIK Digital Library & Academic Repository Suite', () => {
     })
 
     describe('Curated Ingestion Catalog Dataset Integrity', () => {
-        it('contains high-yield study packs across core courses', () => {
-            expect(UNIZIK_OFFICIAL_STUDY_PACKS.length).toBeGreaterThanOrEqual(15)
+        it('contains a full fresher PDF catalog rather than a placeholder set', () => {
+            expect(FRESHER_LIBRARY_PACKS.length).toBeGreaterThanOrEqual(50)
         })
 
-        it('ensures every study pack has valid course metadata and kobo pricing', () => {
+        it('ensures every study pack has valid course metadata, measured page counts and kobo pricing', () => {
             const facultyNames = new Set(UNIZIK_FACULTIES.map(f => f.name))
 
-            for (const pack of UNIZIK_OFFICIAL_STUDY_PACKS) {
-                expect(pack.code).toBeDefined()
-                expect(pack.code.length).toBeGreaterThan(3)
-                expect(pack.title).toBeDefined()
+            for (const pack of FRESHER_LIBRARY_PACKS) {
+                expect(pack.slug).toBeDefined()
                 expect(pack.title.length).toBeGreaterThan(10)
-                expect(pack.priceKobo).toBeGreaterThan(0)
                 expect(Number.isInteger(pack.priceKobo)).toBe(true)
-                expect(pack.level).toBeDefined()
+                expect(pack.priceKobo).toBeGreaterThan(0)
                 expect(ACADEMIC_LEVELS).toContain(pack.level)
                 expect(facultyNames.has(pack.faculty)).toBe(true)
-                expect(pack.category).toBe('Academic & Study Materials')
-                expect(pack.is_official).toBe(true)
+                expect(pack.page_count).toBeGreaterThanOrEqual(5)
+                expect(pack.file_size_bytes).toBeGreaterThan(0)
+                expect(pack.preview_path).toMatch(/^\/library\/previews\/.+\.pdf$/)
             }
         })
 
-        it('covers key GST foundational courses (GST 101, 102, 103, 110, 112, CED 341)', () => {
-            const codes = UNIZIK_OFFICIAL_STUDY_PACKS.map(p => p.code)
+        it('covers key GST foundational courses (GST 101, 102, 103, 104, 105, 107)', () => {
+            const codes = FRESHER_LIBRARY_PACKS.map(p => p.code)
             expect(codes).toContain('GST 101')
             expect(codes).toContain('GST 102')
             expect(codes).toContain('GST 103')
-            expect(codes).toContain('GST 110')
-            expect(codes).toContain('GST 112')
-            expect(codes).toContain('CED 341')
+            expect(codes).toContain('GST 104')
+            expect(codes).toContain('GST 105')
+            expect(codes).toContain('GST 107')
         })
 
-        it('covers key foundational courses across medical, engineering, science, law, and arts faculties', () => {
-            const facultiesRepresented = new Set(UNIZIK_OFFICIAL_STUDY_PACKS.map(p => p.faculty))
+        it('covers key foundational courses across medical, engineering, science, law and arts faculties', () => {
+            const facultiesRepresented = new Set(FRESHER_LIBRARY_PACKS.map(p => p.faculty))
             expect(facultiesRepresented.has('Faculty of Engineering')).toBe(true)
             expect(facultiesRepresented.has('Faculty of Physical Sciences')).toBe(true)
             expect(facultiesRepresented.has('Faculty of Management Sciences')).toBe(true)

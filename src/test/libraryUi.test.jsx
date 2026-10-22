@@ -37,10 +37,10 @@ describe('Digital Library UI Component Tests', { timeout: 15000 }, () => {
     )
 
     const searchInput = screen.getByPlaceholderText(/Search course code/i)
-    fireEvent.change(searchInput, { target: { value: 'GST 112' } })
+    fireEvent.change(searchInput, { target: { value: 'LAW 101' } })
 
-    expect(screen.getByText(/GST 112: Peace & Conflict Resolution/i)).toBeInTheDocument()
-    expect(screen.queryByText(/FEG 280: Engineering Mathematics/i)).not.toBeInTheDocument()
+    expect(screen.getByText(/LAW 101: The Nigerian Legal System/i)).toBeInTheDocument()
+    expect(screen.queryByText(/FEG 101: Engineering Mathematics I/i)).not.toBeInTheDocument()
   })
 
   it('dynamically reveals department selector pills when a faculty is selected', async () => {
@@ -71,16 +71,15 @@ describe('Digital Library UI Component Tests', { timeout: 15000 }, () => {
       </MemoryRouter>
     )
 
-    // Select Faculty of Engineering
-    fireEvent.click(screen.getByRole('button', { name: 'Faculty of Engineering' }))
+    // Select Faculty of Law
+    fireEvent.click(screen.getByRole('button', { name: 'Faculty of Law' }))
 
-    // Select Mechanical Engineering department pill
-    const mechButton = screen.getByRole('button', { name: 'Mechanical Engineering' })
-    fireEvent.click(mechButton)
+    // Select Public Law department pill
+    fireEvent.click(screen.getByRole('button', { name: 'Public Law' }))
 
-    // FEG 280 (Mechanical) should be visible, ECE 311 (Electrical) should not
-    expect(screen.getByText(/FEG 280: Engineering Mathematics/i)).toBeInTheDocument()
-    expect(screen.queryByText(/ECE 311: Circuit Theory/i)).not.toBeInTheDocument()
+    // The LAW 101 pack belongs to Public Law; the engineering pack must disappear
+    expect(screen.getByText(/LAW 101: The Nigerian Legal System/i)).toBeInTheDocument()
+    expect(screen.queryByText(/FEG 101: Engineering Mathematics I/i)).not.toBeInTheDocument()
   })
 
   it('resets filters cleanly when clicking Show All Faculties', async () => {
@@ -98,5 +97,36 @@ describe('Digital Library UI Component Tests', { timeout: 15000 }, () => {
     fireEvent.click(screen.getByText('Show All Faculties'))
     expect(screen.queryByText(/Departments in Faculty of Law/i)).not.toBeInTheDocument()
     expect(screen.getAllByText(/GST 101/i).length).toBeGreaterThan(0)
+  })
+
+  it('filters by material domain and exposes a free preview link for each PDF pack', async () => {
+    render(
+      <MemoryRouter>
+        <LibraryPage />
+      </MemoryRouter>
+    )
+
+    // Domain chips are rendered with pack counts
+    const studySkillsChip = screen.getByRole('button', { name: /Study Skills \(\d+\)/ })
+    fireEvent.click(studySkillsChip)
+
+    expect(screen.getByText(/How to Study at University/i)).toBeInTheDocument()
+    expect(screen.queryByText(/GST 101: Use of English I/i)).not.toBeInTheDocument()
+
+    // Preview links point at real generated files
+    const previewLinks = screen.getAllByText(/Free 3-page preview/i)
+    expect(previewLinks.length).toBeGreaterThan(0)
+    expect(previewLinks[0].getAttribute('href')).toMatch(/^\/library\/previews\/[a-z0-9-]+\.pdf$/)
+  })
+
+  it('shows the full authored catalog count when no database rows exist', async () => {
+    render(
+      <MemoryRouter>
+        <LibraryPage />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByText(/All Domains \(53\)/)).toBeInTheDocument()
+    expect(screen.getByText(/Available Study Packs \(53\)/)).toBeInTheDocument()
   })
 })

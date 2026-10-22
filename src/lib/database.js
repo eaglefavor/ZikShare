@@ -455,63 +455,72 @@ export async function getOfficialLibraryItems({ faculty, level, subcategory, sea
 }
 
 /**
- * Seeds and synchronizes official UNIZIK academic study packs into the database
+ * Publishes the authored fresher PDF catalog as purchasable digital products.
+ *
+ * The PDFs themselves live in the private `digital-originals` bucket. This
+ * function only writes the catalog rows; uploading the binaries is done by
+ * `node scripts/seed-library.mjs --apply` (service role), because uploads need
+ * storage permissions an admin browser session should not hold forever.
+ *
+ * Returns counts of what is already published and what is still missing its
+ * uploaded PDF, so the admin UI can tell the truth instead of claiming success.
  */
 export async function seedDigitalLibraryPacks(adminUserId) {
     if (!adminUserId) throw new Error('Valid Admin user ID is required to seed official library.')
 
-    const { UNIZIK_OFFICIAL_STUDY_PACKS } = await import('./academicCatalogData')
+    const { FRESHER_LIBRARY_PACKS } = await import('./fresherLibrary')
 
-    // 1. Fetch existing products for this seller to avoid duplicates
     const { data: existing, error: fetchErr } = await supabase
         .from('digital_products')
-        .select('id, title, course_code')
+        .select('id, title, course_code, original_storage_path, preview_path')
         .eq('seller_id', adminUserId)
 
     if (fetchErr) {
-        console.warn('Could not fetch existing official items, proceeding carefully:', fetchErr)
+        throw new Error(`Could not read existing official products: ${fetchErr.message}`)
     }
 
-    const existingCodes = new Set((existing || []).map(e => (e.course_code || '').toUpperCase()))
-    const existingTitles = new Set((existing || []).map(e => (e.title || '').toLowerCase()))
+    const existingPaths = new Set((existing || []).map(e => e.original_storage_path).filter(Boolean))
+    const existingCodes = new Set((existing || []).map(e => (e.course_code || '').toUpperCase()).filter(Boolean))
+    const existingTitles = new Set((existing || []).map(e => (e.title || '').toLowerCase()).filter(Boolean))
 
-    const toInsert = []
-    for (const item of UNIZIK_OFFICIAL_STUDY_PACKS) {
-        const isCodePresent = item.code && existingCodes.has(item.code.toUpperCase())
-        const isTitlePresent = existingTitles.has(item.title.toLowerCase())
-
-        if (!isCodePresent && !isTitlePresent) {
-            toInsert.push({
-                seller_id: adminUserId,
-                title: item.title,
-                description: item.description,
-                price: item.priceKobo,
-                category: item.category,
-                subcategory: item.subcategory,
-                course_code: item.code,
-                level: item.level,
-                faculty: item.faculty,
-                department: item.department,
-                original_storage_path: `official-library/${item.code.replace(/\s+/g, '_')}_Study_Pack.pdf`,
-                file_size_bytes: item.file_size_bytes || 4000000,
-                status: 'active',
-                drm_enabled: true,
-                cover_image_url: null,
-            })
-        }
-    }
+    const toInsert = FRESHER_LIBRARY_PACKS
+        .filter((item) => {
+            if (existingPaths.has(item.storage_path)) return false
+            if (item.code && existingCodes.has(item.code.toUpperCase())) return false
+            return !existingTitles.has(item.title.toLowerCase())
+        })
+        .map((item) => ({
+            seller_id: adminUserId,
+            title: item.title,
+            description: item.description,
+            price: item.priceKobo,
+            category: 'Academic & Study Materials',
+            subcategory: item.subcategory,
+            course_code: item.code,
+            level: item.level,
+            faculty: item.faculty,
+            department: item.department,
+            domain: item.domain,
+            original_storage_path: item.storage_path,
+            preview_path: item.preview_path,
+            page_count: item.page_count,
+            file_size_bytes: item.file_size_bytes,
+            status: 'active',
+            drm_enabled: true,
+            cover_image_url: null,
+        }))
 
     let insertedCount = 0
     if (toInsert.length > 0) {
         const { data: inserted, error: insertErr } = await supabase
             .from('digital_products')
             .insert(toInsert)
-            .select()
+            .select('id')
 
         if (insertErr) {
-            throw new Error(`Failed to seed study packs: ${insertErr.message}`)
+            throw new Error(`Failed to publish study packs: ${insertErr.message}`)
         }
-        insertedCount = inserted?.length || toInsert.length
+        insertedCount = inserted?.length || 0
     }
 
     invalidateCacheByPrefix('digital')
@@ -520,9 +529,12 @@ export async function seedDigitalLibraryPacks(adminUserId) {
     invalidateCacheByPrefix('catalog')
 
     return {
-        totalConfigured: UNIZIK_OFFICIAL_STUDY_PACKS.length,
+        totalConfigured: FRESHER_LIBRARY_PACKS.length,
         insertedCount,
-        alreadyExistingCount: UNIZIK_OFFICIAL_STUDY_PACKS.length - insertedCount,
+        alreadyExistingCount: FRESHER_LIBRARY_PACKS.length - insertedCount,
+        // Rows are only downloadable once scripts/seed-library.mjs has uploaded
+        // the matching PDF into the private bucket.
+        uploadRequired: toInsert.length,
     }
 }
 

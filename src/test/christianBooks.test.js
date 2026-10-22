@@ -54,6 +54,16 @@ describe('Christian Books shelf', () => {
         }
     })
 
+    it('has a rendered cover for every book, next to its PDF', () => {
+        for (const book of CHRISTIAN_BOOKS) {
+            const cover = path.join(BOOKS_DIR, 'covers', `${book.slug}.jpg`)
+            expect(fs.existsSync(cover), `${book.slug} has no cover`).toBe(true)
+            const size = fs.statSync(cover).size
+            expect(size).toBeGreaterThan(8000)
+            expect(size).toBeLessThan(400000)
+        }
+    })
+
     it('matches a database row back to the public book PDF', () => {
         const book = CHRISTIAN_BOOKS[0]
         const found = findBookByStoragePath(`christian-books/${book.slug}.pdf`)

@@ -479,12 +479,11 @@ export default function LibraryPage() {
                                 key={item.id}
                                 onClick={() => {
                                     const id = String(item.id || '')
-                                    // Books are served as complete PDFs whether or
-                                    // not they have a database row: a seeded book
-                                    // must not fall through to an item page that
-                                    // has no download for it.
-                                    if (item.isBook && item.download_path) {
-                                        window.open(item.download_path, '_blank', 'noopener,noreferrer')
+                                    // A book always opens its own page, whether or
+                                    // not it has a database row: the row id leads
+                                    // to a listing that has no files of its own.
+                                    if (item.isBook) {
+                                        navigate(`/library/books/${item.slug}`)
                                         return
                                     }
                                     const isPublished = id
@@ -532,6 +531,26 @@ export default function LibraryPage() {
                                 }}
                             >
                                 <div>
+                                    {/* Books show their own title page as a cover */}
+                                    {item.isBook && item.cover_path && (
+                                        <img
+                                            src={item.cover_path}
+                                            alt={`Cover of ${item.title}`}
+                                            loading="lazy"
+                                            style={{
+                                                width: '100%',
+                                                aspectRatio: '3 / 4',
+                                                objectFit: 'cover',
+                                                objectPosition: 'top center',
+                                                borderRadius: '0.625rem',
+                                                border: '1px solid #E2E8F0',
+                                                backgroundColor: '#F8FAFC',
+                                                display: 'block',
+                                                marginBottom: '0.75rem'
+                                            }}
+                                        />
+                                    )}
+
                                     {/* Card Top Badges */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.65rem' }}>
                                         <span style={{
@@ -638,8 +657,8 @@ export default function LibraryPage() {
                                             fontSize: '0.8rem',
                                             fontWeight: 700
                                         }}>
-                                            <Download size={14} />
-                                            Download Free PDF
+                                            {item.isBook ? <BookOpen size={14} /> : <Download size={14} />}
+                                            {item.isBook ? 'Open book — free' : 'Download Free PDF'}
                                         </div>
                                         {item.preview_path && (
                                             <a

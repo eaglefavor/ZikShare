@@ -1,14 +1,26 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Home, Library, Store, Search, Plus, User } from 'lucide-react'
+import { Home, Library, Store, Search, Plus, User, MessageCircle } from 'lucide-react'
 import ZikShareLogo from './ZikShareLogo'
-import BottomNav from './BottomNav'
 import { useAuth } from '../contexts/AuthContext'
+import { getConversations } from '../lib/messaging'
+import { countUnread } from '../lib/readStatus'
+import { getAnnouncements } from '../lib/database'
+import { getUnreadAnnouncementsCount } from '../lib/announcements'
 
 const primaryNav = [
     { path: '/', label: 'Home', icon: Home, end: true },
     { path: '/library', label: 'Library', icon: Library },
     { path: '/search', label: 'Marketplace', icon: Store },
+]
+
+/** The five places a phone user actually needs. */
+const phoneNav = [
+    { path: '/', label: 'Home', icon: Home, end: true },
+    { path: '/library', label: 'Library', icon: Library },
+    { path: '/search', label: 'Search', icon: Search },
+    { path: '/post', label: 'Sell', icon: Plus, sell: true },
+    { path: '/profile', label: 'You', icon: User },
 ]
 
 /**
@@ -18,14 +30,43 @@ const primaryNav = [
  */
 export default function AppShell({ children }) {
     const navigate = useNavigate()
-    const { isAuthenticated } = useAuth()
+    const { isAuthenticated, session } = useAuth()
     const [query, setQuery] = useState('')
+    const [unread, setUnread] = useState(0)
 
     const submit = (event) => {
         event.preventDefault()
         const term = query.trim()
         navigate(term ? `/search?q=${encodeURIComponent(term)}` : '/search')
     }
+
+    // Unread peer replies plus official announcements. Signed-out visitors see
+    // no badge at all rather than a zero.
+    useEffect(() => {
+        let mounted = true
+
+        async function checkUnread() {
+            try {
+                let peers = 0
+                const uid = session?.user?.id
+                if (isAuthenticated && uid) {
+                    const convs = await getConversations(uid).catch(() => [])
+                    peers = countUnread(convs)
+                }
+                const announcements = await getAnnouncements({ limit: 10 }).catch(() => [])
+                if (mounted) setUnread(peers + getUnreadAnnouncementsCount(announcements))
+            } catch {
+                /* a badge is not worth an error state */
+            }
+        }
+
+        checkUnread()
+        const timer = setInterval(checkUnread, 30000)
+        return () => {
+            mounted = false
+            clearInterval(timer)
+        }
+    }, [isAuthenticated, session])
 
     return (
         <div className="zs-shell">
@@ -51,7 +92,7 @@ export default function AppShell({ children }) {
                     <div className="zs-header__spacer" />
 
                     <form onSubmit={submit} className="zs-field zs-desktop-only" style={{ flex: '0 1 20rem', padding: '0.4rem 0.7rem' }}>
-                        <Search size={16} color="#64748B" aria-hidden="true" />
+                        <Search size={16} color="var(--color-text-muted)" aria-hidden="true" />
                         <input
                             type="search"
                             value={query}
@@ -64,6 +105,11 @@ export default function AppShell({ children }) {
                     <div className="zs-header__actions">
                         <NavLink to="/search" className="zs-icon-btn zs-mobile-only" aria-label="Search">
                             <Search size={18} />
+                        </NavLink>
+
+                        <NavLink to="/messages" className="zs-icon-btn" aria-label="Messages" style={{ position: 'relative' }}>
+                            <MessageCircle size={18} />
+                            {unread > 0 && <span className="zs-badge">{unread > 9 ? '9+' : unread}</span>}
                         </NavLink>
 
                         <NavLink to="/post" className="zs-btn zs-btn--primary zs-btn--sm zs-desktop-only">
@@ -93,13 +139,39 @@ export default function AppShell({ children }) {
                     <span style={{ display: 'flex', gap: '1rem' }}>
                         <NavLink to="/library">Library</NavLink>
                         <NavLink to="/search">Marketplace</NavLink>
+                        <NavLink to="/messages">Messages</NavLink>
                         <NavLink to="/profile/help">Help</NavLink>
                     </span>
                 </div>
             </footer>
 
             <div className="zs-mobile-only">
-                <BottomNav />
+                <nav className="zs-bottomnav" aria-label="Primary">
+                    <div className="zs-bottomnav__inner">
+                        {phoneNav.map((item) => {
+                            const Icon = item.icon
+                            return (
+                                <NavLink
+                                    key={item.path}
+                                    to={item.path}
+                                    end={item.end}
+                                    className={({ isActive }) =>
+                                        `zs-bottomnav__link${isActive ? ' is-active' : ''}${item.sell ? ' zs-bottomnav__link--sell' : ''}`
+                                    }
+                                >
+                                    {item.sell ? (
+                                        <span className="zs-bottomnav__sell" aria-hidden="true">
+                                            <Icon size={20} strokeWidth={2.6} />
+                                        </span>
+                                    ) : (
+                                        <Icon size={20} strokeWidth={2} aria-hidden="true" />
+                                    )}
+                                    {item.label}
+                                </NavLink>
+                            )
+                        })}
+                    </div>
+                </nav>
             </div>
         </div>
     )

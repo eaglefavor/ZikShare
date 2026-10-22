@@ -236,7 +236,7 @@ export default function PurchasedItemsPage() {
                                 ⚡ Claim with Paystack Ref
                             </button>
                             <button
-                                onClick={() => navigate('/search?category=Past%20Questions')}
+                                onClick={() => navigate('/library?q=Past%20Questions')}
                                 style={{ padding: '0.625rem 1.25rem', borderRadius: '0.625rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontWeight: 700, fontSize: '0.8125rem', cursor: 'pointer' }}
                             >
                                 Browse Catalog

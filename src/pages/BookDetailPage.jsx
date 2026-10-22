@@ -45,7 +45,7 @@ export default function BookDetailPage() {
     const related = findRelatedBooks(book.slug)
 
     return (
-        <div style={{ maxWidth: '860px', margin: '0 auto', padding: '1.5rem 1rem 4rem' }}>
+        <div className="zs-container" style={{ paddingBottom: '3rem' }}>
             <button
                 onClick={() => navigate('/library')}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', background: 'none', border: 'none', color: '#1E40AF', fontWeight: 700, fontSize: '0.85rem', cursor: 'pointer', padding: 0, marginBottom: '1.25rem' }}

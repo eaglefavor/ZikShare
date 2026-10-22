@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Loader2, Heart, X } from 'lucide-react'
+import { Loader2, Heart, Package, FileText } from 'lucide-react'
 import { getSavedIds, removeSaved } from '../lib/savedItems'
 import { getListing } from '../lib/database'
+import { Button, EmptyState, PageHeader } from '../components/ui'
 
 function formatNaira(amount) {
-    return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
+    return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(Number(amount) || 0)
 }
 
 export default function SavedItemsPage() {
@@ -32,7 +33,7 @@ export default function SavedItemsPage() {
                     const item = await getListing(id)
                     if (item) fetched.push(item)
                 } catch {
-                    // Item may have been deleted
+                    // The listing may have been removed since it was saved.
                 }
             }
             if (isMounted) {
@@ -42,58 +43,93 @@ export default function SavedItemsPage() {
         }
 
         loadSavedItems()
-        return () => { isMounted = false }
+        return () => {
+            isMounted = false
+        }
     }, [])
 
     function handleRemove(id) {
         removeSaved(id)
-        setItems(prev => prev.filter(item => item.id !== id))
+        setItems((prev) => prev.filter((item) => item.id !== id))
     }
 
     return (
-        <div>
-            <header style={{ position: 'sticky', top: 0, zIndex: 40, backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}><ArrowLeft size={20} /></button>
-                <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 700 }}>Saved Items</h1>
-                <span style={{ marginLeft: 'auto', fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>{items.length} item{items.length !== 1 ? 's' : ''}</span>
-            </header>
+        <div className="zs-container">
+            <PageHeader
+                eyebrow="Account"
+                title="Saved items"
+                lead={
+                    items.length > 0
+                        ? `${items.length} listing${items.length === 1 ? '' : 's'} kept for later. Saving is local to this browser.`
+                        : 'Listings you keep for later show up here. Saving is local to this browser.'
+                }
+            />
 
-            <div style={{ padding: '1rem' }}>
-                {loading ? (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '3rem 0' }}>
-                        <Loader2 size={28} color="var(--color-brand)" style={{ animation: 'spin 1s linear infinite' }} />
-                        <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
-                    </div>
-                ) : items.length === 0 ? (
-                    <div style={{ padding: '3rem 1rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                        <p style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>💛</p>
-                        <p style={{ fontSize: '0.875rem', fontWeight: 600 }}>No saved items yet</p>
-                        <p style={{ fontSize: '0.75rem', marginBottom: '1rem' }}>Tap the heart on any listing to save it here</p>
-                        <button onClick={() => navigate('/')} style={{ padding: '0.75rem 2rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontSize: '0.875rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', boxShadow: '0 4px 12px rgba(59,130,246,0.3)' }}>Browse Listings</button>
-                    </div>
-                ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        {items.map(item => {
-                            const imageUrl = item.images?.[0]
-                            return (
-                                <div key={item.id} style={{ display: 'flex', gap: '0.75rem', padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: 'white', border: '1px solid var(--color-border)', cursor: 'pointer' }} onClick={() => navigate(`/item/${item.id}`)}>
-                                    <div style={{ width: '5rem', height: '5rem', borderRadius: '0.625rem', overflow: 'hidden', flexShrink: 0, backgroundColor: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem' }}>
-                                        {imageUrl ? <img src={imageUrl} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : '📦'}
-                                    </div>
-                                    <div style={{ flex: 1, minWidth: 0 }}>
-                                        <h3 style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.title}</h3>
-                                        <p className="price-tag" style={{ margin: '0.25rem 0', fontSize: '0.875rem' }}>{formatNaira(item.price)}</p>
-                                        <span style={{ fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>{item.category}</span>
-                                    </div>
-                                    <button onClick={(e) => { e.stopPropagation(); handleRemove(item.id) }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', display: 'flex', alignSelf: 'center' }}>
-                                        <Heart size={18} fill="#EF4444" color="#EF4444" />
-                                    </button>
-                                </div>
-                            )
-                        })}
-                    </div>
-                )}
-            </div>
+            {loading ? (
+                <div className="zs-panel" style={{ display: 'flex', justifyContent: 'center', padding: '2.5rem 0' }}>
+                    <Loader2 size={24} className="animate-spin" color="var(--color-brand)" aria-label="Loading saved items" />
+                </div>
+            ) : items.length === 0 ? (
+                <EmptyState
+                    icon={Heart}
+                    title="Nothing saved yet"
+                    action={
+                        <Button size="sm" variant="outline" onClick={() => navigate('/search')}>
+                            Browse the marketplace
+                        </Button>
+                    }
+                >
+                    Tap the heart on any listing and it will be waiting here.
+                </EmptyState>
+            ) : (
+                <div className="zs-panel" style={{ padding: 0, overflow: 'hidden' }}>
+                    {items.map((item, index) => {
+                        const imageUrl = item.images?.[0]
+                        const isDigital = item.isDigital || Boolean(item.original_storage_path)
+
+                        return (
+                            <div
+                                key={item.id}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '0.7rem',
+                                    padding: '0.7rem 0.85rem',
+                                    borderTop: index === 0 ? 'none' : '1px solid var(--color-border-subtle)',
+                                }}
+                            >
+                                <button
+                                    type="button"
+                                    onClick={() => navigate(`/item/${item.id}`)}
+                                    style={{ display: 'flex', alignItems: 'center', gap: '0.7rem', flex: 1, minWidth: 0, background: 'none', border: 'none', padding: 0, font: 'inherit', textAlign: 'left', cursor: 'pointer' }}
+                                >
+                                    <span className="zs-thread__thumb">
+                                        {imageUrl ? <img src={imageUrl} alt="" loading="lazy" /> : isDigital ? <FileText size={17} aria-hidden="true" /> : <Package size={17} aria-hidden="true" />}
+                                    </span>
+                                    <span style={{ flex: 1, minWidth: 0 }}>
+                                        <span style={{ display: 'block', fontSize: 'var(--zs-fs-small)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {item.title}
+                                        </span>
+                                        <span style={{ display: 'block', marginTop: '0.1rem', fontSize: 'var(--zs-fs-meta)', color: 'var(--color-text-muted)' }}>
+                                            {formatNaira(item.price)} · {item.category || (isDigital ? 'Study material' : 'Campus item')}
+                                        </span>
+                                    </span>
+                                </button>
+
+                                <button
+                                    type="button"
+                                    className="zs-icon-btn"
+                                    onClick={() => handleRemove(item.id)}
+                                    aria-label={`Remove ${item.title} from saved`}
+                                    style={{ color: 'var(--color-danger)' }}
+                                >
+                                    <Heart size={16} fill="currentColor" />
+                                </button>
+                            </div>
+                        )
+                    })}
+                </div>
+            )}
         </div>
     )
 }

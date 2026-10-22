@@ -100,14 +100,15 @@ export default function SellerProfilePage() {
 
     if (!data || !data.seller) {
         return (
-            <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-background)' }}>
-                <header style={{ padding: '1rem', backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}><ArrowLeft size={20} /></button>
-                    <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 700 }}>Seller Not Found</h1>
-                </header>
-                <div style={{ padding: '4rem 1rem', textAlign: 'center', color: 'var(--color-text-muted)' }}>
-                    <p style={{ fontSize: '2rem' }}>🔍</p>
-                    <p style={{ fontSize: '0.9375rem', fontWeight: 600 }}>This seller profile does not exist.</p>
+            <div className="zs-container">
+                <button type="button" className="zs-link" onClick={() => navigate('/search')}>
+                    <ArrowLeft size={15} /> Back to the marketplace
+                </button>
+                <div className="zs-panel" style={{ marginTop: '1rem', maxWidth: '32rem' }}>
+                    <h1 style={{ margin: '0 0 0.35rem', fontSize: 'var(--zs-fs-section)' }}>Seller not found</h1>
+                    <p style={{ margin: 0, fontSize: 'var(--zs-fs-body)', color: 'var(--color-text-secondary)' }}>
+                        This profile does not exist, or the student has removed their account.
+                    </p>
                 </div>
             </div>
         )
@@ -121,19 +122,15 @@ export default function SellerProfilePage() {
     })
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', paddingBottom: '5rem' }}>
-            {/* Top Navigation */}
-            <header style={{ position: 'sticky', top: 0, zIndex: 40, backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', padding: '0.875rem 1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
-                        <ArrowLeft size={20} />
-                    </button>
-                    <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 800 }}>Seller Profile</h1>
-                </div>
-                <button onClick={handleShare} style={{ width: '2.25rem', height: '2.25rem', borderRadius: '9999px', border: '1px solid var(--color-border)', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                    <Share2 size={16} />
+        <div className="zs-container">
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                <button type="button" className="zs-link" onClick={() => navigate(-1)}>
+                    <ArrowLeft size={15} /> Back
                 </button>
-            </header>
+                <button type="button" className="zs-btn zs-btn--outline zs-btn--sm" onClick={handleShare}>
+                    <Share2 size={14} /> Share
+                </button>
+            </div>
 
             {/* Seller Header Banner */}
             <div style={{ padding: '1.5rem 1rem 1rem', backgroundColor: 'white', borderBottom: '1px solid var(--color-border)' }}>
@@ -172,9 +169,17 @@ export default function SellerProfilePage() {
                     </div>
                     <div>
                         <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#D97706', display: 'inline-flex', alignItems: 'center', gap: '0.125rem' }}>
-                            <Star size={12} fill="#D97706" /> {ratingSummary.averageRating.toFixed(1)}
+                            {ratingSummary.totalReviews > 0 ? (
+                                <>
+                                    <Star size={12} fill="#D97706" /> {ratingSummary.averageRating.toFixed(1)}
+                                </>
+                            ) : (
+                                <span style={{ color: 'var(--color-text-muted)' }}>—</span>
+                            )}
                         </span>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: '#64748B', textTransform: 'uppercase', fontWeight: 700 }}>Rating</p>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: '#64748B', textTransform: 'uppercase', fontWeight: 700 }}>
+                            {ratingSummary.totalReviews > 0 ? 'Rating' : 'No ratings'}
+                        </p>
                     </div>
                     <div>
                         <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#1E40AF' }}>{ratingSummary.totalReviews}</span>
@@ -234,11 +239,11 @@ export default function SellerProfilePage() {
                 </div>
             </div>
 
-            <div style={{ padding: '1rem', maxWidth: '48rem', margin: '0 auto' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                    <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 800 }}>Store Items ({filteredListings.length})</h3>
+            <div style={{ marginTop: '1.5rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
+                    <h2 style={{ margin: 0, fontSize: 'var(--zs-fs-section)' }}>Listings ({filteredListings.length})</h2>
 
-                    <div style={{ display: 'flex', gap: '0.25rem' }}>
+                    <div className="zs-chip-row" role="group" aria-label="Filter listings">
                         {[
                             { id: 'All', label: 'All' },
                             { id: 'Digital', label: `PDFs (${digitalCount})` },
@@ -246,18 +251,10 @@ export default function SellerProfilePage() {
                         ].map(t => (
                             <button
                                 key={t.id}
+                                type="button"
+                                aria-pressed={filter === t.id}
+                                className={`zs-chip${filter === t.id ? ' zs-chip--active' : ''}`}
                                 onClick={() => setFilter(t.id)}
-                                style={{
-                                    padding: '0.25rem 0.625rem',
-                                    borderRadius: '9999px',
-                                    border: 'none',
-                                    backgroundColor: filter === t.id ? 'var(--color-brand)' : 'white',
-                                    color: filter === t.id ? 'white' : 'var(--color-text-secondary)',
-                                    fontSize: '0.6875rem',
-                                    fontWeight: 700,
-                                    cursor: 'pointer',
-                                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                                }}
                             >
                                 {t.label}
                             </button>
@@ -266,12 +263,12 @@ export default function SellerProfilePage() {
                 </div>
 
                 {filteredListings.length === 0 ? (
-                    <div style={{ padding: '2.5rem 1rem', textAlign: 'center', backgroundColor: 'white', borderRadius: '0.75rem', border: '1px solid var(--color-border)' }}>
-                        <p style={{ fontSize: '1.75rem', margin: '0 0 0.5rem' }}>📦</p>
-                        <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-text-muted)' }}>No items listed under this category yet.</p>
+                    <div className="zs-empty">
+                        <strong>Nothing listed here yet</strong>
+                        <p>This student has no {filter === 'Digital' ? 'documents' : filter === 'Physical' ? 'physical items' : 'listings'} on the marketplace.</p>
                     </div>
                 ) : (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem' }}>
+                    <div className="zs-grid">
                         {filteredListings.map(item => {
                             const placeholderColors = ['#DBEAFE', '#E0E7FF', '#D9F99D', '#FBCFE8', '#E9D5FF', '#FDE68A']
                             const bgColor = placeholderColors[(item.id?.charCodeAt?.(0) || 0) % placeholderColors.length]

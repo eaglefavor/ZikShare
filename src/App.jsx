@@ -61,15 +61,9 @@ function AppRoutes() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/payment/success" element={<PaymentSuccess />} />
 
-        {/* The reader is full-screen: no bottom navigation under the page controls */}
+        {/* Two focused surfaces keep the whole screen, because their own controls sit
+            exactly where the shell's bars would: the reader and a conversation. */}
         <Route path="/library/books/:slug/read" element={<BookReaderPage />} />
-        <Route path="/seller-hub" element={<SellerHubPage />} />
-        <Route path="/profile/listings" element={<MyListingsPage />} />
-        <Route path="/profile/saved" element={<SavedItemsPage />} />
-        <Route path="/profile/purchases" element={<PurchasedItemsPage />} />
-        <Route path="/purchases" element={<PurchasedItemsPage />} />
-        <Route path="/profile/settings" element={<SettingsPage />} />
-        <Route path="/profile/help" element={<HelpPage />} />
         <Route path="/chat/:conversationId" element={<ChatPage />} />
 
         {/* Pages with bottom nav */}
@@ -87,6 +81,13 @@ function AppRoutes() {
                   <Route path="/messages" element={<MessagesPage />} />
                   <Route path="/official-channel" element={<OfficialChannelPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/profile/listings" element={<MyListingsPage />} />
+                  <Route path="/profile/saved" element={<SavedItemsPage />} />
+                  <Route path="/profile/purchases" element={<PurchasedItemsPage />} />
+                  <Route path="/purchases" element={<PurchasedItemsPage />} />
+                  <Route path="/profile/settings" element={<SettingsPage />} />
+                  <Route path="/profile/help" element={<HelpPage />} />
+                  <Route path="/seller-hub" element={<SellerHubPage />} />
                   <Route path="/item/:id" element={<ItemDetailPage />} />
                   <Route path="/seller/:id" element={<SellerProfilePage />} />
                   <Route path="/user/:id" element={<SellerProfilePage />} />

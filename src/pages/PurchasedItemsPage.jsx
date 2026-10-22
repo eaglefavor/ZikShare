@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, FileText, Download, Loader2, Search, X, Check, Copy, HelpCircle, Sparkles, RefreshCw, AlertCircle, Key } from 'lucide-react'
+import { FileText, Download, Loader2, Search, X, Check, Copy, Sparkles, AlertCircle, Key } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getBuyerOrders, createSignedDownloadUrl } from '../lib/database'
 import { claimPurchaseByReference } from '../lib/paystack'
 import { downloadWatermarkedPdf, getDrmPassword } from '../lib/pdfWatermark'
 import { useToast } from '../components/Toast'
+import { Button, EmptyState } from '../components/ui'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount || 0)
@@ -134,321 +135,206 @@ export default function PurchasedItemsPage() {
         toast.success('Copied to clipboard!')
         setTimeout(() => setCopiedId(null), 2500)
     }
-
     if (!isAuthenticated) {
         return (
-            <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', maxWidth: '42rem', margin: '0 auto' }}>
-                <header style={{ padding: '0.875rem 1rem', backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex' }}><ArrowLeft size={20} /></button>
-                    <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 800 }}>Purchased Study Materials</h1>
-                </header>
-                <div style={{ padding: '3rem 1rem', textAlign: 'center' }}>
-                    <p style={{ fontSize: '2.5rem', margin: '0 0 0.5rem' }}>🔒</p>
-                    <h2 style={{ fontSize: '1.125rem', fontWeight: 800 }}>Sign in to view your library</h2>
-                    <button onClick={() => navigate('/login')} style={{ marginTop: '1rem', padding: '0.75rem 2rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontWeight: 700, cursor: 'pointer' }}>
-                        Sign In
-                    </button>
+            <div className="zs-container">
+                <div className="zs-panel" style={{ maxWidth: '28rem', margin: '0 auto', textAlign: 'center' }}>
+                    <h1 style={{ margin: '0 0 0.5rem', fontSize: 'var(--zs-fs-h2)' }}>Purchased material</h1>
+                    <p style={{ margin: '0 0 1.25rem', fontSize: 'var(--zs-fs-body)', lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
+                        Sign in to see the documents you have bought. Everything in the free library stays open
+                        without an account.
+                    </p>
+                    <div style={{ display: 'grid', gap: '0.5rem' }}>
+                        <button type="button" className="zs-btn zs-btn--primary zs-btn--block" onClick={() => navigate('/login')}>
+                            Sign in
+                        </button>
+                        <button type="button" className="zs-btn zs-btn--outline zs-btn--block" onClick={() => navigate('/library')}>
+                            Open the free library
+                        </button>
+                    </div>
                 </div>
             </div>
         )
     }
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', paddingBottom: '3rem', maxWidth: '42rem', margin: '0 auto' }}>
-            <header style={{ padding: '0.875rem 1rem', backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', position: 'sticky', top: 0, zIndex: 40 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                        <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
-                            <ArrowLeft size={20} />
-                        </button>
-                        <div>
-                            <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 800, color: '#0F172A' }}>Purchased Study Materials</h1>
-                            <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
-                                {orders.length} digital document{orders.length !== 1 ? 's' : ''} in library
-                            </p>
-                        </div>
-                    </div>
-
-                    <button
-                        onClick={() => setShowClaimModal(true)}
-                        style={{
-                            padding: '0.375rem 0.625rem',
-                            borderRadius: '0.5rem',
-                            border: '1px solid #BFDBFE',
-                            backgroundColor: '#EFF6FF',
-                            color: '#2563EB',
-                            fontSize: '0.6875rem',
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '0.25rem'
-                        }}
-                    >
-                        <Sparkles size={13} />
-                        <span>Claim Reference</span>
-                    </button>
+        <div className="zs-container">
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
+                <div>
+                    <p className="zs-eyebrow">Account</p>
+                    <h1 style={{ margin: '0.2rem 0 0.35rem', fontSize: 'var(--zs-fs-title)', letterSpacing: '-0.02em' }}>Purchased material</h1>
+                    <p className="zs-lead" style={{ margin: 0 }}>
+                        {orders.length === 0
+                            ? 'Documents you buy appear here with their download and unlocking password.'
+                            : `${orders.length} document${orders.length === 1 ? '' : 's'} you have bought.`}
+                    </p>
                 </div>
-
-                {/* In-Library Search Bar */}
-                {orders.length > 0 && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0.75rem', backgroundColor: 'var(--color-background)', borderRadius: '0.625rem', border: '1px solid var(--color-border)' }}>
-                        <Search size={15} color="var(--color-text-muted)" style={{ flexShrink: 0 }} />
-                        <input
-                            type="text"
-                            placeholder="Search by title, course, or reference..."
-                            value={searchQuery}
-                            onChange={e => setSearchQuery(e.target.value)}
-                            style={{ flex: 1, border: 'none', outline: 'none', backgroundColor: 'transparent', fontSize: '0.8125rem', fontFamily: 'inherit' }}
-                        />
-                        {searchQuery && (
-                            <button onClick={() => setSearchQuery('')} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: '#94A3B8' }}>
-                                <X size={14} />
-                            </button>
-                        )}
-                    </div>
-                )}
-            </header>
-
-            <div style={{ padding: '1rem' }}>
-                {loading ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="skeleton" style={{ height: '140px', borderRadius: '1rem' }} />
-                        ))}
-                    </div>
-                ) : filteredOrders.length === 0 ? (
-                    <div style={{ padding: '3.5rem 1.5rem', textAlign: 'center', backgroundColor: 'white', borderRadius: '1rem', border: '1px solid var(--color-border)' }}>
-                        <div style={{ width: '4rem', height: '4rem', borderRadius: '9999px', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: '#2563EB' }}>
-                            <FileText size={28} />
-                        </div>
-                        <h2 style={{ fontSize: '1.125rem', fontWeight: 800, margin: '0 0 0.375rem', color: '#0F172A' }}>
-                            {searchQuery ? 'No matching materials found' : 'No Study Materials in Library'}
-                        </h2>
-                        <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', margin: '0 0 1.5rem', lineHeight: 1.4 }}>
-                            {searchQuery ? `No files match "${searchQuery}".` : 'Paid for a material but not seeing it? You can claim it instantly with your Paystack transaction reference.'}
-                        </p>
-                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'center', flexWrap: 'wrap' }}>
-                            <button
-                                onClick={() => setShowClaimModal(true)}
-                                style={{ padding: '0.625rem 1.25rem', borderRadius: '0.625rem', border: '1px solid #3B82F6', backgroundColor: '#EFF6FF', color: '#2563EB', fontWeight: 700, fontSize: '0.8125rem', cursor: 'pointer' }}
-                            >
-                                ⚡ Claim with Paystack Ref
-                            </button>
-                            <button
-                                onClick={() => navigate('/library?q=Past%20Questions')}
-                                style={{ padding: '0.625rem 1.25rem', borderRadius: '0.625rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontWeight: 700, fontSize: '0.8125rem', cursor: 'pointer' }}
-                            >
-                                Browse Catalog
-                            </button>
-                        </div>
-                    </div>
-                ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem' }}>
-                        {filteredOrders.map(order => {
-                            const product = order.product || {}
-                            const isDrm = product.drm_enabled !== false
-                            const orderPassword = getDrmPassword(order, user)
-                            return (
-                                <div
-                                    key={order.id}
-                                    style={{
-                                        backgroundColor: 'white',
-                                        borderRadius: '1rem',
-                                        padding: '1.125rem',
-                                        border: '1px solid var(--color-border)',
-                                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '0.875rem',
-                                    }}
-                                >
-                                    <div style={{ display: 'flex', gap: '0.875rem', alignItems: 'flex-start' }}>
-                                        <div
-                                            style={{
-                                                width: '3.25rem',
-                                                height: '3.25rem',
-                                                borderRadius: '0.75rem',
-                                                backgroundColor: isDrm ? '#FEF3C7' : '#EFF6FF',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                color: isDrm ? '#B45309' : '#2563EB',
-                                                flexShrink: 0,
-                                            }}
-                                        >
-                                            <FileText size={24} />
-                                        </div>
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.25rem' }}>
-                                                <span style={{ fontSize: '0.625rem', fontWeight: 800, padding: '0.125rem 0.375rem', borderRadius: '0.25rem', backgroundColor: '#DBEAFE', color: '#1E40AF', textTransform: 'uppercase' }}>
-                                                    {product.category || 'PDF Material'}
-                                                </span>
-                                                <span style={{ fontSize: '0.625rem', fontWeight: 800, padding: '0.125rem 0.375rem', borderRadius: '0.25rem', backgroundColor: isDrm ? '#FEF3C7' : '#ECFDF5', color: isDrm ? '#B45309' : '#059669' }}>
-                                                    {isDrm ? '🛡️ DRM Locked' : '✓ Verified'}
-                                                </span>
-                                            </div>
-                                            <h3 style={{ margin: '0 0 0.125rem', fontSize: '0.9375rem', fontWeight: 800, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                {product.title || 'Digital Study Material'}
-                                            </h3>
-                                            <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
-                                                Purchased {formatDate(order.created_at)} • {formatNaira(order.amount / 100)}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {/* DRM Password Box */}
-                                    {isDrm && (
-                                        <div style={{ backgroundColor: '#FEF3C7', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px dashed #F59E0B', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.6875rem' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', color: '#92400E' }}>
-                                                <Key size={13} color="#B45309" />
-                                                <span>Open Password: <strong style={{ fontFamily: 'monospace', fontSize: '0.75rem', color: '#B45309' }}>{orderPassword}</strong></span>
-                                            </div>
-                                            <button
-                                                onClick={() => handleCopyText(`pwd-${order.id}`, orderPassword)}
-                                                style={{ background: 'none', border: 'none', color: '#B45309', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.6875rem', fontWeight: 700 }}
-                                            >
-                                                {copiedId === `pwd-${order.id}` ? <Check size={12} /> : <Copy size={12} />}
-                                                <span>{copiedId === `pwd-${order.id}` ? 'Copied' : 'Copy'}</span>
-                                            </button>
-                                        </div>
-                                    )}
-
-                                    {/* Reference metadata strip */}
-                                    <div style={{ backgroundColor: '#F8FAFC', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid #E2E8F0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.6875rem' }}>
-                                        <span style={{ color: 'var(--color-text-muted)' }}>Ref: <code style={{ color: '#0F172A', fontFamily: 'monospace', fontWeight: 600 }}>{order.paystack_reference}</code></span>
-                                        <button
-                                            onClick={() => handleCopyText(order.id, order.paystack_reference)}
-                                            style={{ background: 'none', border: 'none', color: '#2563EB', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: '0.6875rem', fontWeight: 700 }}
-                                        >
-                                            {copiedId === order.id ? <Check size={12} /> : <Copy size={12} />}
-                                            <span>{copiedId === order.id ? 'Copied' : 'Copy Ref'}</span>
-                                        </button>
-                                    </div>
-
-                                    {/* Download Button */}
-                                    <button
-                                        onClick={() => handleDownload(order)}
-                                        disabled={downloadingId === order.id}
-                                        style={{
-                                            width: '100%',
-                                            padding: '0.75rem',
-                                            borderRadius: '0.75rem',
-                                            border: 'none',
-                                            background: 'linear-gradient(135deg, #10B981, #059669)',
-                                            color: 'white',
-                                            fontSize: '0.875rem',
-                                            fontWeight: 700,
-                                            cursor: downloadingId === order.id ? 'not-allowed' : 'pointer',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '0.5rem',
-                                            boxShadow: '0 4px 12px rgba(16,185,129,0.3)'
-                                        }}
-                                    >
-                                        {downloadingId === order.id ? (
-                                            <>
-                                                <Loader2 size={16} className="animate-spin" />
-                                                <span>Encrypting & Personalizing PDF...</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Download size={16} />
-                                                <span>{isDrm ? 'Download DRM-Locked PDF' : 'Download Licensed PDF'}</span>
-                                            </>
-                                        )}
-                                    </button>
-                                </div>
-                            )
-                        })}
-                    </div>
-                )}
+                <button type="button" className="zs-btn zs-btn--outline" onClick={() => setShowClaimModal(true)}>
+                    <Sparkles size={15} /> Claim a purchase
+                </button>
             </div>
 
-            {/* Self-Service Dispute / Claim Modal */}
+            {orders.length > 0 && (
+                <div className="zs-field" style={{ marginTop: '1rem', marginBottom: '1rem', maxWidth: '30rem' }}>
+                    <Search size={15} color="var(--color-text-muted)" aria-hidden="true" />
+                    <input
+                        type="search"
+                        placeholder="Search by title, course or reference"
+                        aria-label="Search purchased material"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    {searchQuery && (
+                        <button type="button" onClick={() => setSearchQuery('')} aria-label="Clear search" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex' }}>
+                            <X size={14} />
+                        </button>
+                    )}
+                </div>
+            )}
+
+            {loading ? (
+                <div style={{ display: 'grid', gap: '0.75rem' }}>
+                    {[0, 1, 2].map((i) => (
+                        <div key={i} className="skeleton" style={{ height: '8rem', borderRadius: 'var(--zs-radius-lg)' }} />
+                    ))}
+                </div>
+            ) : filteredOrders.length === 0 ? (
+                <EmptyState
+                    icon={FileText}
+                    title={searchQuery ? 'No purchases match that search' : 'Nothing bought yet'}
+                    action={
+                        <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                            <Button size="sm" onClick={() => setShowClaimModal(true)}>Claim with a Paystack reference</Button>
+                            <Button size="sm" variant="outline" onClick={() => navigate('/library')}>Browse the free library</Button>
+                        </div>
+                    }
+                >
+                    {searchQuery
+                        ? `Nothing matches “${searchQuery}”.`
+                        : 'Paid for something and cannot see it? Paste the Paystack reference and it will be unlocked.'}
+                </EmptyState>
+            ) : (
+                <div style={{ display: 'grid', gap: '0.75rem', maxWidth: '42rem' }}>
+                    {filteredOrders.map((order) => {
+                        const product = order.product || {}
+                        const isDrm = product.drm_enabled !== false
+                        const orderPassword = getDrmPassword(order, user)
+
+                        return (
+                            <article key={order.id} className="zs-panel" style={{ display: 'grid', gap: '0.7rem' }}>
+                                <div style={{ display: 'flex', gap: '0.7rem', alignItems: 'flex-start' }}>
+                                    <span className="zs-thread__thumb" style={{ width: '2.9rem', height: '2.9rem' }}>
+                                        <FileText size={18} aria-hidden="true" />
+                                    </span>
+                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                        <div style={{ display: 'flex', gap: '0.3rem', marginBottom: '0.2rem', flexWrap: 'wrap' }}>
+                                            <span className="zs-tag zs-tag--muted">{product.category || 'Document'}</span>
+                                            <span className={`zs-tag ${isDrm ? 'zs-tag--book' : 'zs-tag--free'}`}>
+                                                {isDrm ? 'Password protected' : 'Open file'}
+                                            </span>
+                                        </div>
+                                        <h2 style={{ margin: 0, fontSize: 'var(--zs-fs-card)', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {product.title || 'Study material'}
+                                        </h2>
+                                        <p style={{ margin: '0.15rem 0 0', fontSize: 'var(--zs-fs-meta)', color: 'var(--color-text-muted)' }}>
+                                            Bought {formatDate(order.created_at)} · {formatNaira(order.amount / 100)}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                {isDrm && (
+                                    <div className="zs-chat__pending" style={{ border: '1px dashed #F59E0B', borderRadius: 'var(--zs-radius-sm)', borderTop: '1px dashed #F59E0B' }}>
+                                        <Key size={13} color="#B45309" aria-hidden="true" />
+                                        <span style={{ flex: 1 }}>
+                                            Open password: <strong style={{ fontFamily: 'ui-monospace, monospace' }}>{orderPassword}</strong>
+                                        </span>
+                                        <button
+                                            type="button"
+                                            onClick={() => handleCopyText(`pwd-${order.id}`, orderPassword)}
+                                            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', font: 'inherit', fontSize: 'var(--zs-fs-meta)', fontWeight: 700, color: '#B45309' }}
+                                        >
+                                            {copiedId === `pwd-${order.id}` ? <Check size={12} /> : <Copy size={12} />}
+                                            {copiedId === `pwd-${order.id}` ? 'Copied' : 'Copy'}
+                                        </button>
+                                    </div>
+                                )}
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem', fontSize: 'var(--zs-fs-meta)', color: 'var(--color-text-muted)' }}>
+                                    <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        Ref <code style={{ fontFamily: 'ui-monospace, monospace' }}>{order.paystack_reference}</code>
+                                    </span>
+                                    <button
+                                        type="button"
+                                        onClick={() => handleCopyText(order.id, order.paystack_reference)}
+                                        style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', font: 'inherit', fontSize: 'var(--zs-fs-meta)', fontWeight: 700, color: 'var(--color-brand)' }}
+                                    >
+                                        {copiedId === order.id ? <Check size={12} /> : <Copy size={12} />}
+                                        {copiedId === order.id ? 'Copied' : 'Copy ref'}
+                                    </button>
+                                </div>
+
+                                <button
+                                    type="button"
+                                    className="zs-btn zs-btn--green zs-btn--block"
+                                    onClick={() => handleDownload(order)}
+                                    disabled={downloadingId === order.id}
+                                >
+                                    {downloadingId === order.id ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+                                    {downloadingId === order.id ? 'Preparing your watermarked PDF…' : 'Download PDF'}
+                                </button>
+                            </article>
+                        )
+                    })}
+                </div>
+            )}
+
             {showClaimModal && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(5px)', padding: '1rem' }}>
-                    <div style={{ backgroundColor: 'white', borderRadius: '1.25rem', width: '100%', maxWidth: '28rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)', border: '1px solid var(--color-border)', overflow: 'hidden' }}>
-                        <div style={{ padding: '1rem 1.25rem', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#F8FAFC' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                <Sparkles size={18} color="#2563EB" />
-                                <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 800 }}>Claim Missing Purchase</h3>
-                            </div>
-                            <button onClick={() => setShowClaimModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', display: 'flex', color: 'var(--color-text-muted)' }}>
-                                <X size={18} />
+                <div className="zs-sheet-backdrop" role="dialog" aria-modal="true" aria-label="Claim a purchase" onClick={() => setShowClaimModal(false)}>
+                    <form className="zs-sheet" onSubmit={handleClaimSubmit} onClick={(e) => e.stopPropagation()}>
+                        <div className="zs-sheet__head">
+                            <strong style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: 'var(--zs-fs-card)' }}>
+                                <Sparkles size={15} color="var(--color-brand)" aria-hidden="true" /> Claim a purchase
+                            </strong>
+                            <button type="button" className="zs-icon-btn" onClick={() => setShowClaimModal(false)} aria-label="Close">
+                                <X size={16} />
                             </button>
                         </div>
-
-                        <form onSubmit={handleClaimSubmit} style={{ padding: '1.25rem' }}>
-                            <p style={{ margin: '0 0 1rem', fontSize: '0.75rem', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
-                                If you were debited by your bank or received a Paystack email confirmation but your document isn't appearing, paste the transaction reference below to verify and unlock it.
+                        <div className="zs-sheet__body">
+                            <p style={{ margin: 0, fontSize: 'var(--zs-fs-small)', lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
+                                If you were debited or got a Paystack email but the document is not in your list,
+                                paste the transaction reference to verify and unlock it.
                             </p>
-
-                            <div style={{ marginBottom: '1rem' }}>
-                                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.375rem', color: '#0F172A' }}>
-                                    Paystack Reference or Transaction ID *
-                                </label>
+                            <div>
+                                <label className="zs-label" htmlFor="claim-reference">Paystack reference</label>
                                 <input
+                                    id="claim-reference"
+                                    className="zs-input"
                                     type="text"
                                     value={claimReference}
-                                    onChange={e => setClaimReference(e.target.value)}
+                                    onChange={(e) => setClaimReference(e.target.value)}
                                     placeholder="e.g. ZKS-1787258553381-P1A807T"
                                     required
                                     autoFocus
-                                    style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.5rem', border: '1.5px solid #3B82F6', fontSize: '0.8125rem', fontFamily: 'monospace', outline: 'none', boxSizing: 'border-box' }}
+                                    style={{ fontFamily: 'ui-monospace, monospace' }}
                                 />
                             </div>
-
                             {claimError && (
-                                <div style={{ padding: '0.625rem 0.75rem', borderRadius: '0.5rem', backgroundColor: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontSize: '0.75rem', fontWeight: 600, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                <p className="zs-auth__error" role="alert">
                                     <AlertCircle size={15} style={{ flexShrink: 0 }} />
                                     <span>{claimError}</span>
-                                </div>
+                                </p>
                             )}
-
-                            <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                <button
-                                    type="button"
-                                    onClick={() => setShowClaimModal(false)}
-                                    style={{ flex: 1, padding: '0.625rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', backgroundColor: 'white', fontWeight: 600, fontSize: '0.8125rem', cursor: 'pointer' }}
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={claiming || !claimReference.trim()}
-                                    style={{
-                                        flex: 2,
-                                        padding: '0.625rem',
-                                        borderRadius: '0.625rem',
-                                        border: 'none',
-                                        background: claiming ? '#94A3B8' : 'linear-gradient(135deg, #3B82F6, #2563EB)',
-                                        color: 'white',
-                                        fontWeight: 800,
-                                        fontSize: '0.8125rem',
-                                        cursor: claiming ? 'not-allowed' : 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '0.375rem'
-                                    }}
-                                >
-                                    {claiming ? (
-                                        <>
-                                            <Loader2 size={15} className="animate-spin" />
-                                            <span>Verifying with Paystack...</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Sparkles size={15} />
-                                            <span>Verify & Unlock Material</span>
-                                        </>
-                                    )}
-                                </button>
-                            </div>
-                        </form>
-                    </div>
+                        </div>
+                        <div className="zs-sheet__foot">
+                            <button type="button" className="zs-btn zs-btn--outline" onClick={() => setShowClaimModal(false)}>
+                                Cancel
+                            </button>
+                            <button type="submit" className="zs-btn zs-btn--primary zs-btn--block" disabled={claiming || !claimReference.trim()}>
+                                {claiming ? <Loader2 size={15} className="animate-spin" /> : <Sparkles size={15} />}
+                                {claiming ? 'Verifying with Paystack…' : 'Verify and unlock'}
+                            </button>
+                        </div>
+                    </form>
                 </div>
             )}
         </div>

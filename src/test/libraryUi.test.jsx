@@ -207,7 +207,8 @@ describe('Christian Books shelf UI', { timeout: 15000 }, () => {
       'src',
       '/library/books/covers/let-us-pray-watchman-nee.jpg'
     )
-    expect(screen.getByText(/Free — no fee, no checkout/)).toBeInTheDocument()
+    expect(screen.getByText('Free')).toBeInTheDocument()
+    expect(screen.getByText(/No account, no checkout, no payment/)).toBeInTheDocument()
     expect(screen.getByText(`${book.page_count} pages`)).toBeInTheDocument()
     for (const topic of book.topics) {
       expect(screen.getByText(topic)).toBeInTheDocument()
@@ -218,7 +219,7 @@ describe('Christian Books shelf UI', { timeout: 15000 }, () => {
       'href',
       '/library/books/let-us-pray-watchman-nee.pdf'
     )
-    expect(screen.getByRole('link', { name: /Open the PDF in a new tab/ })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /open the PDF in a new tab/i })).toHaveAttribute(
       'href',
       '/library/books/let-us-pray-watchman-nee.pdf'
     )

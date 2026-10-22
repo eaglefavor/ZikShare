@@ -1,8 +1,19 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
+import { Mail, Lock, User, Eye, EyeOff, Loader2, AlertCircle, ArrowLeft } from 'lucide-react'
 import { useAuth, isUnizikEmail } from '../contexts/AuthContext'
-import { Mail, Lock, User, Eye, EyeOff, Loader2, ArrowLeft, ShieldCheck, AlertCircle } from 'lucide-react'
 import ZikShareLogo from '../components/ZikShareLogo'
+
+function GoogleMark() {
+    return (
+        <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
+            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+        </svg>
+    )
+}
 
 export default function LoginPage() {
     const [mode, setMode] = useState('login') // 'login' or 'register'
@@ -16,36 +27,35 @@ export default function LoginPage() {
     const { signInWithEmail, signUpWithEmail, signInWithGoogle, authError } = useAuth()
 
     useEffect(() => {
-        if (authError) {
-            setError(authError)
-        }
+        if (authError) setError(authError)
     }, [authError])
+
+    const isRegister = mode === 'register'
 
     const handleSubmit = async (e) => {
         e.preventDefault()
         setError('')
 
         const cleanEmail = email.trim().toLowerCase()
-        if (mode === 'register' && !isUnizikEmail(cleanEmail)) {
+        if (isRegister && !isUnizikEmail(cleanEmail)) {
             setError('Please register with an official UNIZIK student email (e.g. yourname@unizik.edu.ng or regNumber@students.unizik.edu.ng).')
             return
         }
 
         setLoading(true)
-
         try {
-            if (mode === 'login') {
-                await signInWithEmail(cleanEmail, password)
-            } else {
+            if (isRegister) {
                 await signUpWithEmail(cleanEmail, password, displayName.trim())
+            } else {
+                await signInWithEmail(cleanEmail, password)
             }
             navigate('/')
         } catch (err) {
             const msg = (err.message || '').toLowerCase()
             if (msg.includes('rate limit') || msg.includes('over_email_send_rate_limit') || msg.includes('too many requests')) {
-                setError('Email verification is temporarily rate-limited. Please sign in instantly using the "Continue with UNIZIK Google Account" button above.')
+                setError('Email verification is temporarily rate-limited. Sign in instantly with “Continue with UNIZIK Google account” above.')
             } else {
-                setError(err.message || 'Authentication failed. Please check your credentials.')
+                setError(err.message || 'Sign in failed. Check your email and password.')
             }
         } finally {
             setLoading(false)
@@ -57,329 +67,142 @@ export default function LoginPage() {
         try {
             await signInWithGoogle()
         } catch (err) {
-            setError(err.message || 'Google sign-in failed. Please use your UNIZIK Google account.')
+            setError(err.message || 'Google sign-in failed. Use your UNIZIK Google account.')
         }
     }
 
+    const switchMode = () => {
+        setMode(isRegister ? 'login' : 'register')
+        setError('')
+    }
+
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-background)' }}>
-            {/* Header */}
-            <header
-                style={{
-                    padding: '0.75rem 1rem',
-                    backgroundColor: 'white',
-                    borderBottom: '1px solid var(--color-border)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '0.75rem',
-                }}
-            >
-                <button
-                    onClick={() => navigate(-1)}
-                    style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        padding: '0.25rem',
-                        color: 'var(--color-text-primary)',
-                    }}
-                >
-                    <ArrowLeft size={20} />
+        <div className="zs-auth">
+            <div style={{ width: '100%', maxWidth: '26rem' }}>
+                <button type="button" className="zs-link" onClick={() => navigate(-1)}>
+                    <ArrowLeft size={15} /> Back
                 </button>
-                <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 700 }}>
-                    {mode === 'login' ? 'Student Sign In' : 'Create Student Account'}
-                </h1>
-            </header>
+            </div>
 
-            <div style={{ padding: '1.5rem 1rem', maxWidth: '28rem', margin: '0 auto' }}>
-                {/* Logo */}
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', marginBottom: '1.5rem' }}>
-                    <ZikShareLogo size="lg" withTagline={true} />
-                    <div
-                        style={{
-                            marginTop: '0.5rem',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.25rem',
-                            padding: '0.25rem 0.75rem',
-                            borderRadius: '9999px',
-                            backgroundColor: '#FFF3EB',
-                            border: '1px solid #FFD2B8',
-                            color: '#FA5A00',
-                            fontSize: '0.75rem',
-                            fontWeight: 700,
-                        }}
-                    >
-                        <span>🎓 The UNIZIK Campus Marketplace</span>
-                    </div>
-                </div>
-
-                {/* UNIZIK Email Requirement Banner */}
-                <div
-                    style={{
-                        padding: '0.75rem 1rem',
-                        borderRadius: '0.75rem',
-                        backgroundColor: '#F0F6FF',
-                        border: '1px solid #D0E1FD',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.625rem',
-                        marginBottom: '1.25rem',
-                    }}
-                >
-                    <ShieldCheck size={20} color="#0066FF" style={{ flexShrink: 0 }} />
-                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#0A2540', lineHeight: 1.4 }}>
-                        <strong>UNIZIK Email Required:</strong> You must sign up with your official <strong>@unizik.edu.ng</strong> student email address.
+            <div className="zs-auth__card">
+                <div className="zs-auth__brand">
+                    <ZikShareLogo size="lg" />
+                    <h1>{isRegister ? 'Create your student account' : 'Sign in to ZikShare'}</h1>
+                    <p>
+                        {isRegister
+                            ? 'Register with your UNIZIK email to post items and message students.'
+                            : 'Post items, message students and find what you listed.'}
                     </p>
                 </div>
 
-                {/* Google Sign-In */}
-                <button
-                    onClick={handleGoogleSignIn}
-                    style={{
-                        width: '100%',
-                        padding: '0.75rem',
-                        borderRadius: '0.75rem',
-                        border: '1px solid var(--color-border)',
-                        backgroundColor: 'white',
-                        fontSize: '0.875rem',
-                        fontWeight: 600,
-                        fontFamily: 'inherit',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '0.5rem',
-                        transition: 'all 0.2s ease',
-                        boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-                    }}
-                >
-                    <svg width="18" height="18" viewBox="0 0 24 24">
-                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z" fill="#4285F4" />
-                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-                    </svg>
-                    Continue with UNIZIK Google Account
+                <button type="button" className="zs-btn zs-btn--outline zs-btn--block" onClick={handleGoogleSignIn}>
+                    <GoogleMark /> Continue with UNIZIK Google account
                 </button>
 
-                {/* Divider */}
-                <div
-                    style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '0.75rem',
-                        margin: '1.25rem 0',
-                    }}
-                >
-                    <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border)' }} />
-                    <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>or email</span>
-                    <div style={{ flex: 1, height: '1px', backgroundColor: 'var(--color-border)' }} />
-                </div>
+                <div className="zs-auth__or">or use your email</div>
 
-                {/* Error */}
                 {error && (
-                    <div
-                        style={{
-                            padding: '0.75rem 0.875rem',
-                            borderRadius: '0.625rem',
-                            backgroundColor: '#FEF2F2',
-                            border: '1px solid #FECACA',
-                            color: '#DC2626',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            marginBottom: '1rem',
-                            display: 'flex',
-                            alignItems: 'flex-start',
-                            gap: '0.375rem',
-                        }}
-                    >
-                        <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '0.125rem' }} />
+                    <div className="zs-auth__error" role="alert">
+                        <AlertCircle size={15} style={{ flexShrink: 0, marginTop: '0.1rem' }} />
                         <span>{error}</span>
                     </div>
                 )}
 
-                {/* Form */}
-                <form onSubmit={handleSubmit}>
-                    {mode === 'register' && (
-                        <div style={{ marginBottom: '0.875rem' }}>
-                            <label style={{ fontSize: '0.8125rem', fontWeight: 600, display: 'block', marginBottom: '0.375rem' }}>
-                                Full Name *
-                            </label>
-                            <div style={{ position: 'relative' }}>
-                                <User size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                    {isRegister && (
+                        <div className="zs-auth__field">
+                            <label className="zs-auth__label" htmlFor="auth-name">Full name</label>
+                            <div className="zs-auth__control">
+                                <User size={15} aria-hidden="true" />
                                 <input
+                                    id="auth-name"
                                     type="text"
                                     placeholder="e.g. Chike Obi"
                                     value={displayName}
-                                    onChange={e => setDisplayName(e.target.value)}
+                                    onChange={(e) => setDisplayName(e.target.value)}
                                     required
-                                    style={{
-                                        width: '100%',
-                                        padding: '0.625rem 0.875rem 0.625rem 2.25rem',
-                                        borderRadius: '0.625rem',
-                                        border: '1px solid var(--color-border)',
-                                        fontSize: '0.8125rem',
-                                        fontFamily: 'inherit',
-                                        outline: 'none',
-                                        boxSizing: 'border-box',
-                                        transition: 'border-color 0.2s ease',
-                                    }}
-                                    onFocus={e => (e.target.style.borderColor = 'var(--color-brand)')}
-                                    onBlur={e => (e.target.style.borderColor = 'var(--color-border)')}
+                                    autoComplete="name"
                                 />
                             </div>
                         </div>
                     )}
 
-                    <div style={{ marginBottom: '0.875rem' }}>
-                        <label style={{ fontSize: '0.8125rem', fontWeight: 600, display: 'block', marginBottom: '0.375rem' }}>
-                            UNIZIK Student Email *
-                        </label>
-                        <div style={{ position: 'relative' }}>
-                            <Mail size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+                    <div className="zs-auth__field">
+                        <label className="zs-auth__label" htmlFor="auth-email">UNIZIK student email</label>
+                        <div className="zs-auth__control">
+                            <Mail size={15} aria-hidden="true" />
                             <input
+                                id="auth-email"
                                 type="email"
                                 placeholder="name@unizik.edu.ng"
                                 value={email}
-                                onChange={e => setEmail(e.target.value)}
+                                onChange={(e) => setEmail(e.target.value)}
                                 required
-                                style={{
-                                    width: '100%',
-                                    padding: '0.625rem 0.875rem 0.625rem 2.25rem',
-                                    borderRadius: '0.625rem',
-                                    border: '1px solid var(--color-border)',
-                                    fontSize: '0.8125rem',
-                                    fontFamily: 'inherit',
-                                    outline: 'none',
-                                    boxSizing: 'border-box',
-                                    transition: 'border-color 0.2s ease',
-                                }}
-                                onFocus={e => (e.target.style.borderColor = 'var(--color-brand)')}
-                                onBlur={e => (e.target.style.borderColor = 'var(--color-border)')}
+                                autoComplete="email"
                             />
                         </div>
-                        <p style={{ margin: '0.25rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>
-                            Must end with <strong>@unizik.edu.ng</strong> or <strong>@students.unizik.edu.ng</strong>
-                        </p>
+                        <p className="zs-auth__hint">Must end with @unizik.edu.ng or @students.unizik.edu.ng</p>
                     </div>
 
-                    <div style={{ marginBottom: '1.25rem' }}>
-                        <label style={{ fontSize: '0.8125rem', fontWeight: 600, display: 'block', marginBottom: '0.375rem' }}>
-                            Password *
-                        </label>
-                        <div style={{ position: 'relative' }}>
-                            <Lock size={16} style={{ position: 'absolute', left: '0.75rem', top: '50%', transform: 'translateY(-50%)', color: 'var(--color-text-muted)' }} />
+                    <div className="zs-auth__field">
+                        <label className="zs-auth__label" htmlFor="auth-password">Password</label>
+                        <div className="zs-auth__control">
+                            <Lock size={15} aria-hidden="true" />
                             <input
+                                id="auth-password"
                                 type={showPassword ? 'text' : 'password'}
-                                placeholder="••••••••"
+                                placeholder="At least 6 characters"
                                 value={password}
-                                onChange={e => setPassword(e.target.value)}
+                                onChange={(e) => setPassword(e.target.value)}
                                 required
                                 minLength={6}
-                                style={{
-                                    width: '100%',
-                                    padding: '0.625rem 2.5rem 0.625rem 2.25rem',
-                                    borderRadius: '0.625rem',
-                                    border: '1px solid var(--color-border)',
-                                    fontSize: '0.8125rem',
-                                    fontFamily: 'inherit',
-                                    outline: 'none',
-                                    boxSizing: 'border-box',
-                                    transition: 'border-color 0.2s ease',
-                                }}
-                                onFocus={e => (e.target.style.borderColor = 'var(--color-brand)')}
-                                onBlur={e => (e.target.style.borderColor = 'var(--color-border)')}
+                                autoComplete={isRegister ? 'new-password' : 'current-password'}
+                                style={{ paddingRight: '2.4rem' }}
                             />
                             <button
                                 type="button"
-                                onClick={() => setShowPassword(!showPassword)}
+                                onClick={() => setShowPassword((v) => !v)}
+                                aria-label={showPassword ? 'Hide password' : 'Show password'}
                                 style={{
                                     position: 'absolute',
-                                    right: '0.625rem',
-                                    top: '50%',
-                                    transform: 'translateY(-50%)',
+                                    right: '0.55rem',
+                                    display: 'flex',
+                                    padding: '0.15rem',
                                     background: 'none',
                                     border: 'none',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    padding: '0.125rem',
                                     color: 'var(--color-text-muted)',
+                                    cursor: 'pointer',
                                 }}
                             >
-                                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                                {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                             </button>
                         </div>
                     </div>
 
-                    {/* Submit */}
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        style={{
-                            width: '100%',
-                            padding: '0.75rem',
-                            borderRadius: '0.75rem',
-                            border: 'none',
-                            fontSize: '0.9375rem',
-                            fontWeight: 700,
-                            fontFamily: 'inherit',
-                            cursor: loading ? 'not-allowed' : 'pointer',
-                            background: loading ? '#93C5FD' : 'linear-gradient(135deg, #3B82F6, #2563EB)',
-                            color: 'white',
-                            boxShadow: loading ? 'none' : '0 4px 14px rgba(59, 130, 246, 0.4)',
-                            transition: 'all 0.2s ease',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '0.5rem',
-                        }}
-                    >
+                    <button type="submit" className="zs-btn zs-btn--primary zs-btn--block" disabled={loading}>
                         {loading ? (
                             <>
-                                <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
-                                {mode === 'login' ? 'Signing in...' : 'Creating UNIZIK account...'}
+                                <Loader2 size={16} className="animate-spin" />
+                                {isRegister ? 'Creating account…' : 'Signing in…'}
                             </>
                         ) : (
-                            mode === 'login' ? 'Sign In' : 'Create Account'
+                            isRegister ? 'Create account' : 'Sign in'
                         )}
                     </button>
                 </form>
 
-                {/* Toggle mode */}
-                <p
-                    style={{
-                        textAlign: 'center',
-                        marginTop: '1.25rem',
-                        fontSize: '0.8125rem',
-                        color: 'var(--color-text-secondary)',
-                    }}
-                >
-                    {mode === 'login' ? "Don't have an account? " : 'Already have an account? '}
-                    <button
-                        onClick={() => { setMode(mode === 'login' ? 'register' : 'login'); setError('') }}
-                        style={{
-                            background: 'none',
-                            border: 'none',
-                            color: 'var(--color-brand)',
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            fontFamily: 'inherit',
-                            fontSize: 'inherit',
-                        }}
-                    >
-                        {mode === 'login' ? 'Sign Up' : 'Sign In'}
+                <p className="zs-auth__swap">
+                    {isRegister ? 'Already have an account? ' : 'New here? '}
+                    <button type="button" onClick={switchMode}>
+                        {isRegister ? 'Sign in' : 'Create an account'}
                     </button>
                 </p>
             </div>
 
-            <style>{`
-        @keyframes spin {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-      `}</style>
+            <p className="zs-auth__note">
+                The study library never asks you to sign in. All 88 documents are free to open and
+                download — <Link to="/library">go straight to the library</Link>.
+            </p>
         </div>
     )
 }

@@ -153,3 +153,43 @@ Rules the validator enforces:
   them; practice questions are written for the pack and labelled as such.
 - Packs must be genuinely useful on their own: specific examples, worked
   reasoning, and an action plan the reader can actually follow.
+
+## Christian Books shelf
+
+`library/content/books.mjs` catalogues full-length third-party books. They are
+**not** authored packs: the PDF is the document, served as-is from
+`public/library/books/<slug>.pdf`.
+
+```bash
+node scripts/import-books.mjs --from ~/books   # copy + measure + write catalogue
+node scripts/import-books.mjs --check          # verify files match metadata
+```
+
+The importer measures the page count, file size and SHA-256 of each file and
+writes them to `library/books.generated.json` and `src/lib/christianBooksData.js`.
+Nothing is estimated by hand, so a card cannot claim a page count the PDF does
+not have.
+
+### Rights
+
+Each entry carries `rights`, recorded from what the document itself says:
+
+| value | meaning |
+| --- | --- |
+| `publisher-copyright` | the PDF carries a publisher copyright notice |
+| `edition-claims-public-domain` | the edition asserts public domain |
+| `unverified` | no notice found; status not established |
+
+This field is a description of the file, **not** a licence. Several titles on
+the shelf are in copyright (Watchman Nee died in 1972 and Derek Prince in 2003,
+so their works are protected in Nigeria for 70 years after death; the editions
+here are published by Christian Fellowship Publishers and Derek Prince
+Ministries). Distributing those files publicly needs the publisher's permission.
+The Library page states on the shelf that these are third-party works and that
+rights remain with the publishers.
+
+Adding a book:
+
+1. add an entry to `library/content/books.mjs` with an accurate `rights` value;
+2. run `node scripts/import-books.mjs --from <folder>`;
+3. run `npx vitest run src/test/christianBooks.test.js` and `npm run build`.

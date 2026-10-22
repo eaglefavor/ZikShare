@@ -13,7 +13,9 @@
     "library:build": "node scripts/build-library-pdfs.mjs",
     "library:check": "node scripts/build-library-pdfs.mjs --check",
     "library:seed": "node scripts/seed-library.mjs",
-    "library:verify": "node scripts/seed-library.mjs --verify"
+    "library:verify": "node scripts/seed-library.mjs --verify",
+    "books:import": "node scripts/import-books.mjs",
+    "books:check": "node scripts/import-books.mjs --check"
   },
   "dependencies": {
     "@pdfsmaller/pdf-encrypt": "^1.2.0",

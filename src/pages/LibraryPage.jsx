@@ -8,6 +8,7 @@ import {
 import { getDigitalProducts } from '../lib/database'
 import { UNIZIK_FACULTIES, ACADEMIC_LEVELS, ACADEMIC_MATERIAL_TYPES, formatCourseCode } from '../lib/categories'
 import { FRESHER_LIBRARY_PACKS, FRESHER_LIBRARY_DOMAINS, mergeLibraryMaterials } from '../lib/fresherLibrary'
+import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
 
 export default function LibraryPage() {
     const navigate = useNavigate()
@@ -112,7 +113,7 @@ export default function LibraryPage() {
                         UNIZIK Digital Library
                     </h1>
                     <p style={{ fontSize: '0.92rem', color: '#E2E8F0', maxWidth: '640px', lineHeight: 1.5, marginBottom: '1.5rem' }}>
-                        {FRESHER_LIBRARY_PACKS.length} student-written study packs across every faculty — including the Faculty of Arts and a year-by-year Theatre &amp; Film Studies outline archive. Everything is free: no fee, no sign-in, no payment step before download.
+                        {FRESHER_LIBRARY_PACKS.length} student-written study packs across every faculty — including the Faculty of Arts and a year-by-year Theatre &amp; Film Studies outline archive — plus a shelf of {CHRISTIAN_BOOKS.length} full-length Christian books. Everything is free: no fee, no sign-in, no payment step before download.
                     </p>
 
                     {/* Search Input Bar */}
@@ -311,7 +312,7 @@ export default function LibraryPage() {
                                     cursor: 'pointer'
                                 }}
                             >
-                                All Domains ({FRESHER_LIBRARY_PACKS.length})
+                                All Domains ({FRESHER_LIBRARY_PACKS.length + CHRISTIAN_BOOKS.length})
                             </button>
                             {FRESHER_LIBRARY_DOMAINS.map(domain => (
                                 <button
@@ -423,10 +424,31 @@ export default function LibraryPage() {
                     </div>
                 </div>
 
+                {selectedDomain === 'Christian Books' && (
+                    <div style={{
+                        backgroundColor: '#FFFBEB',
+                        border: '1px solid #FDE68A',
+                        borderRadius: '0.75rem',
+                        padding: '0.9rem 1rem',
+                        marginBottom: '1rem',
+                        fontSize: '0.8rem',
+                        color: '#78350F',
+                        lineHeight: 1.5
+                    }}>
+                        <strong>Full-length books, not study packs.</strong> These are third-party works supplied to the
+                        library and served as complete PDFs, free to read. Copyright remains with the authors and
+                        publishers — check their terms before redistributing a file outside ZikShare.
+                    </div>
+                )}
+
                 {/* ── RESULTS HEADER & COUNT ── */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                     <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A' }}>
-                        Available Study Packs ({filteredMaterials.length})
+                        {selectedDomain === 'Christian Books'
+                            ? 'Christian Books'
+                            : selectedDomain === 'All'
+                                ? 'Library Materials'
+                                : selectedDomain} ({filteredMaterials.length})
                     </div>
                     {filteredMaterials.length > 0 && (
                         <div style={{ fontSize: '0.78rem', color: '#64748B' }}>
@@ -457,7 +479,10 @@ export default function LibraryPage() {
                                 key={item.id}
                                 onClick={() => {
                                     const id = String(item.id || '')
-                                    const isPublished = id && !id.startsWith('pdf-') && !id.startsWith('catalog-')
+                                    const isPublished = id
+                                        && !id.startsWith('pdf-')
+                                        && !id.startsWith('catalog-')
+                                        && !id.startsWith('book-')
                                     if (isPublished) {
                                         navigate(`/item/${item.id}`)
                                         return
@@ -510,7 +535,7 @@ export default function LibraryPage() {
                                             borderRadius: '0.375rem',
                                             letterSpacing: '0.02em'
                                         }}>
-                                            {formatCourseCode(item.code) || 'CORE'}
+                                            {formatCourseCode(item.code) || (item.isBook ? 'BOOK' : 'CORE')}
                                         </span>
 
                                         <span style={{
@@ -533,6 +558,14 @@ export default function LibraryPage() {
                                     <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0F172A', lineHeight: 1.35, marginBottom: '0.5rem' }}>
                                         {item.title}
                                     </h4>
+
+                                    {/* Books carry an author and publisher instead of a course code */}
+                                    {item.isBook && (
+                                        <div style={{ fontSize: '0.78rem', color: '#475569', fontWeight: 600, marginBottom: '0.5rem' }}>
+                                            {item.author}
+                                            {item.publisher ? <span style={{ color: '#94A3B8', fontWeight: 500 }}> · {item.publisher}</span> : null}
+                                        </div>
+                                    )}
 
                                     {/* Outline archive years (only on year-demarcated packs) */}
                                     {item.archive_years?.length > 0 && (
@@ -568,6 +601,12 @@ export default function LibraryPage() {
                                     <p style={{ fontSize: '0.8rem', color: '#64748B', lineHeight: 1.45, marginBottom: '1rem', display: '-webkit-box', WebkitLineClamp: 3, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
                                         {item.description}
                                     </p>
+
+                                    {item.isBook && (
+                                        <div style={{ fontSize: '0.68rem', color: '#94A3B8', marginBottom: '0.75rem', lineHeight: 1.4 }}>
+                                            Third-party book. Rights remain with the publisher.
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Card Bottom Action / Price */}

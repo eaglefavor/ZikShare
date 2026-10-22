@@ -5,6 +5,7 @@ import { PDFDocument } from 'pdf-lib'
 import { FRESHER_PACKS } from '../../library/content/index.mjs'
 import { validatePacks } from '../../scripts/lib/validate-packs.mjs'
 import { UNIZIK_FACULTIES, ACADEMIC_LEVELS, ACADEMIC_MATERIAL_TYPES } from '../lib/categories'
+import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
 import {
     FRESHER_LIBRARY_PACKS,
     FRESHER_LIBRARY_DOMAINS,
@@ -245,7 +246,9 @@ describe('Fresher library - store merge behaviour', () => {
         }]
 
         const merged = mergeLibraryMaterials(dbRows)
-        expect(merged).toHaveLength(FRESHER_LIBRARY_PACKS.length)
+        // The authored packs plus the Christian Books shelf, with the seeded
+        // pack represented once by its database row.
+        expect(merged).toHaveLength(FRESHER_LIBRARY_PACKS.length + CHRISTIAN_BOOKS.length)
         expect(merged.filter((m) => m.title === seeded.title)).toHaveLength(1)
 
         const fromDb = merged.find((m) => m.id === dbRows[0].id)

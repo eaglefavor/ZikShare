@@ -17,7 +17,8 @@
     "books:import": "node scripts/import-books.mjs",
     "books:check": "node scripts/import-books.mjs --check",
     "books:covers": "python3 scripts/render-book-covers.py",
-    "books:covers:check": "python3 scripts/render-book-covers.py --check"
+    "books:covers:check": "python3 scripts/render-book-covers.py --check",
+    "books:audit": "python3 scripts/audit-book-content.py"
   },
   "dependencies": {
     "@pdfsmaller/pdf-encrypt": "^1.2.0",

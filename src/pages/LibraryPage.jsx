@@ -646,20 +646,28 @@ export default function LibraryPage() {
                                     </div>
 
                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
-                                        <div style={{
-                                            display: 'inline-flex',
-                                            alignItems: 'center',
-                                            gap: '0.35rem',
-                                            backgroundColor: '#1E40AF',
-                                            color: '#FFFFFF',
-                                            padding: '0.45rem 0.85rem',
-                                            borderRadius: '0.5rem',
-                                            fontSize: '0.8rem',
-                                            fontWeight: 700
-                                        }}>
-                                            {item.isBook ? <BookOpen size={14} /> : <Download size={14} />}
-                                            {item.isBook ? 'Open book — free' : 'Download Free PDF'}
-                                        </div>
+                                        {/* A real link, so the download works by keyboard,
+                                            long-press and middle-click too. */}
+                                        <a
+                                            href={item.download_path}
+                                            download
+                                            onClick={(e) => e.stopPropagation()}
+                                            style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '0.35rem',
+                                                backgroundColor: '#1E40AF',
+                                                color: '#FFFFFF',
+                                                padding: '0.45rem 0.85rem',
+                                                borderRadius: '0.5rem',
+                                                fontSize: '0.8rem',
+                                                fontWeight: 700,
+                                                textDecoration: 'none'
+                                            }}
+                                        >
+                                            <Download size={14} />
+                                            Download Free PDF
+                                        </a>
                                         {item.preview_path && (
                                             <a
                                                 href={item.preview_path}

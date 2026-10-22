@@ -188,6 +188,51 @@ Ministries). Distributing those files publicly needs the publisher's permission.
 The Library page states on the shelf that these are third-party works and that
 rights remain with the publishers.
 
+### Content check
+
+A file can exist and still be useless. `books:audit` reads the text layer of
+every book and fails if one is thin:
+
+```bash
+pip install pymupdf
+npm run books:audit
+```
+
+A book must have at least 20,000 characters of extractable text and at least 80%
+of its pages must carry more than 20 characters. That catches a blank scan or a
+cover-only teaser, which a file-size check cannot.
+
+### Storage originals
+
+Every library PDF is served from `public/`, which is why downloads work without
+any credentials. Each `digital_products` row also records
+`original_storage_path`, and that key now exists in the public
+`digital-originals` bucket — 88 objects, byte-for-byte the same size as the row
+says.
+
+They are mirrored, not uploaded by hand, because the PDFs are generated. The
+`mirror-library-originals` edge function fetches a page of rows, downloads each
+file from the live site, checks the `%PDF` header and the byte length, and
+uploads it to that exact key. Call it in pages:
+
+```sql
+select public.mirror_library_originals(0, 20);   -- then (20, 20), (40, 20) ...
+select status_code, content from net._http_response order by id desc limit 1;
+```
+
+The token stays in `MIRROR_TOKEN` (edge function secret) and in the private
+`library_mirror_config` table; it is not in the repo. Verify coverage with:
+
+```sql
+select count(*) filter (where name like 'official-library/%') as packs,
+       count(*) filter (where name like 'christian-books/%') as books
+from storage.objects where bucket_id = 'digital-originals';
+```
+
+Downloaded copies are public, like the site files they came from:
+
+`https://jiateaqbyaalwrkbtvjf.supabase.co/storage/v1/object/public/digital-originals/christian-books/let-us-pray-watchman-nee.pdf`
+
 ### Covers and book pages
 
 Each book has a cover at `public/library/books/covers/<slug>.jpg` — the first

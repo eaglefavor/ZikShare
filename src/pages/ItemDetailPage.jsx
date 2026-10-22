@@ -18,6 +18,12 @@ function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
 }
 
+function formatFileSize(bytes) {
+    if (!bytes) return null
+    if (bytes < 1024 * 1024) return `${Math.max(1, Math.round(bytes / 1024))} KB`
+    return `${(bytes / 1024 / 1024).toFixed(1)} MB`
+}
+
 function formatDate(iso) {
     if (!iso) return 'Recent'
     return new Intl.DateTimeFormat('en-NG', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(iso))
@@ -121,6 +127,9 @@ export default function ItemDetailPage() {
             ? (freeBook.download_path || `/library/books/${freeBook.slug}.pdf`)
             : null
     const freePageCount = freePack?.page_count || freeBook?.page_count || item?.page_count || 0
+    const freeFileSize = formatFileSize(
+        item?.file_size_bytes || freePack?.file_size_bytes || freeBook?.file_size_bytes
+    )
     const freeArchiveYears = freePack?.archive_years || []
 
     useEffect(() => {
@@ -364,8 +373,24 @@ export default function ItemDetailPage() {
                     <span className={`condition-badge ${condClass[item.condition] || 'condition-like-new'}`}>{item.condition || 'Available'}</span>
                 </div>
 
+                {/* Free library items: the download is the point of the page, so it
+                    sits directly under the price rather than below the fold. */}
+                {!isOwnListing && isFreePdf && (
+                    <a
+                        href={freeDownloadHref}
+                        download
+                        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', width: '100%', boxSizing: 'border-box', marginBottom: '0.75rem', padding: '0.875rem 1rem', borderRadius: '0.75rem', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.9375rem', fontWeight: 800, textDecoration: 'none', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}
+                    >
+                        <Download size={17} />
+                        <span>
+                            Download {freeBook ? 'the full book' : 'the free PDF'}
+                            {freePageCount ? ` (${freePageCount} pages${freeFileSize ? `, ${freeFileSize}` : ''})` : ''}
+                        </span>
+                    </a>
+                )}
+
                 {!isOwnListing && (
-                    item.isDigital ? (
+                    (isFreePdf || item.isDigital) ? (
                         <div style={{ marginBottom: '0.5rem' }}>
                             {isFreePdf ? (
                                 <div style={{ backgroundColor: '#F0FDF4', border: '1.5px solid #10B981', borderRadius: '0.875rem', padding: '1.125rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -586,10 +611,10 @@ export default function ItemDetailPage() {
                     </div>
                     <div>
                         <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600 }}>
-                            {item.file_size_bytes ? `${(item.file_size_bytes / 1024 / 1024).toFixed(1)} MB` : (item.status || 'Active')}
+                            {freeFileSize || item.status || 'Active'}
                         </p>
                         <p style={{ margin: '0.125rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                            {item.file_size_bytes ? 'File Size' : 'Status'}
+                            {freeFileSize ? 'File Size' : 'Status'}
                         </p>
                     </div>
                 </div>

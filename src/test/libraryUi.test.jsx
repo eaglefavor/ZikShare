@@ -235,6 +235,22 @@ describe('Christian Books shelf UI', { timeout: 15000 }, () => {
     )
   })
 
+  it('puts a real download link on every card', async () => {
+    render(
+      <MemoryRouter>
+        <LibraryPage />
+      </MemoryRouter>
+    )
+
+    const links = await screen.findAllByRole('link', { name: /Download Free PDF/i })
+    expect(links.length).toBeGreaterThanOrEqual(FRESHER_LIBRARY_PACKS.length)
+
+    // Downloads are anchors with an href, not a span that only looks like a button.
+    for (const link of links.slice(0, 5)) {
+      expect(link.getAttribute('href')).toMatch(/^\/library\/(packs|books)\/.+\.pdf$/)
+    }
+  })
+
   it('says plainly when a book is not on the shelf', async () => {
     render(
       <MemoryRouter initialEntries={['/library/books/not-a-real-book']}>

@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
+import { MemoryRouter, Routes, Route, useParams } from 'react-router-dom'
 import { FRESHER_LIBRARY_PACKS } from '../lib/fresherLibrary'
 import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
 import LibraryPage from '../pages/LibraryPage'
+import BookDetailPage from '../pages/BookDetailPage'
 import * as database from '../lib/database'
 
 vi.mock('../lib/database', () => ({
@@ -134,6 +135,22 @@ describe('Digital Library UI Component Tests', { timeout: 15000 }, () => {
   })
 })
 
+function BookRouteProbe() {
+  const { slug } = useParams()
+  return <div>BOOK PAGE {slug}</div>
+}
+
+function renderLibraryWithBookRoute() {
+  return render(
+    <MemoryRouter initialEntries={['/library']}>
+      <Routes>
+        <Route path="/library" element={<LibraryPage />} />
+        <Route path="/library/books/:slug" element={<BookRouteProbe />} />
+      </Routes>
+    </MemoryRouter>
+  )
+}
+
 describe('Christian Books shelf UI', { timeout: 15000 }, () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -150,13 +167,8 @@ describe('Christian Books shelf UI', { timeout: 15000 }, () => {
     expect(await screen.findByRole('button', { name: /Christian Books \(\d+\)/ })).toBeInTheDocument()
   })
 
-  it('lists a book and opens its PDF rather than an item page', async () => {
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
-    render(
-      <MemoryRouter>
-        <LibraryPage />
-      </MemoryRouter>
-    )
+  it('lists a book and opens its own page rather than an item page', async () => {
+    renderLibraryWithBookRoute()
 
     fireEvent.click(await screen.findByRole('button', { name: /Christian Books \(\d+\)/ }))
 
@@ -164,15 +176,10 @@ describe('Christian Books shelf UI', { timeout: 15000 }, () => {
     expect(screen.getAllByText(/Watchman Nee/).length).toBeGreaterThan(0)
 
     fireEvent.click(screen.getByText('The Spiritual Man'))
-    expect(openSpy).toHaveBeenCalledWith(
-      '/library/books/the-spiritual-man-watchman-nee.pdf',
-      '_blank',
-      'noopener,noreferrer'
-    )
-    openSpy.mockRestore()
+    expect(await screen.findByText('BOOK PAGE the-spiritual-man-watchman-nee')).toBeInTheDocument()
   })
 
-  it('still opens the PDF for a book that has a database row', async () => {
+  it('still opens the book page for a book that has a database row', async () => {
     const seeded = CHRISTIAN_BOOKS.find((b) => b.slug === 'the-spiritual-man-watchman-nee')
     database.getDigitalProducts.mockResolvedValue([
       {
@@ -188,12 +195,7 @@ describe('Christian Books shelf UI', { timeout: 15000 }, () => {
       },
     ])
 
-    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
-    render(
-      <MemoryRouter>
-        <LibraryPage />
-      </MemoryRouter>
-    )
+    renderLibraryWithBookRoute()
 
     fireEvent.click(await screen.findByRole('button', { name: /Christian Books \(\d+\)/ }))
 
@@ -201,11 +203,47 @@ describe('Christian Books shelf UI', { timeout: 15000 }, () => {
     expect(titles).toHaveLength(1)
 
     fireEvent.click(titles[0])
-    expect(openSpy).toHaveBeenCalledWith(
-      '/library/books/the-spiritual-man-watchman-nee.pdf',
-      '_blank',
-      'noopener,noreferrer'
+    expect(await screen.findByText('BOOK PAGE the-spiritual-man-watchman-nee')).toBeInTheDocument()
+  })
+
+  it('gives every book a page with its cover, topics and a free full-text link', async () => {
+    const book = CHRISTIAN_BOOKS.find((b) => b.slug === 'let-us-pray-watchman-nee')
+    render(
+      <MemoryRouter initialEntries={['/library/books/let-us-pray-watchman-nee']}>
+        <Routes>
+          <Route path="/library/books/:slug" element={<BookDetailPage />} />
+        </Routes>
+      </MemoryRouter>
     )
-    openSpy.mockRestore()
+
+    expect(await screen.findByRole('heading', { name: 'Let Us Pray' })).toBeInTheDocument()
+    expect(screen.getByAltText('Cover of Let Us Pray')).toHaveAttribute(
+      'src',
+      '/library/books/covers/let-us-pray-watchman-nee.jpg'
+    )
+    expect(screen.getByText(/Free — no fee, no checkout/)).toBeInTheDocument()
+    expect(screen.getByText(`${book.page_count} pages`)).toBeInTheDocument()
+    for (const topic of book.topics) {
+      expect(screen.getByText(topic)).toBeInTheDocument()
+    }
+
+    const fullText = screen.getByRole('link', { name: /Start reading/ })
+    expect(fullText).toHaveAttribute('href', '/library/books/let-us-pray-watchman-nee.pdf')
+    expect(screen.getByRole('link', { name: /Download the PDF/ })).toHaveAttribute(
+      'href',
+      '/library/books/let-us-pray-watchman-nee.pdf'
+    )
+  })
+
+  it('says plainly when a book is not on the shelf', async () => {
+    render(
+      <MemoryRouter initialEntries={['/library/books/not-a-real-book']}>
+        <Routes>
+          <Route path="/library/books/:slug" element={<BookDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByText('Book not found')).toBeInTheDocument()
   })
 })

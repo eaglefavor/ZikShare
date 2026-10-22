@@ -188,6 +188,23 @@ Ministries). Distributing those files publicly needs the publisher's permission.
 The Library page states on the shelf that these are third-party works and that
 rights remain with the publishers.
 
+### Covers and book pages
+
+Each book has a cover at `public/library/books/covers/<slug>.jpg` — the first
+page of that same PDF, rendered at 600px wide. Nothing is drawn or invented, so
+a cover cannot show a title the file does not contain. Regenerate them after
+replacing a PDF:
+
+```bash
+pip install pymupdf
+npm run books:covers        # render every cover
+npm run books:covers:check  # verify every cover exists
+```
+
+A book card opens `/library/books/<slug>`, a page with the cover, author,
+publisher, page count, file size, description, topics, rights note, and links
+to read or download the complete PDF. Books never link to `/item/<id>`.
+
 ### Catalogue rows
 
 The books are also published into `digital_products` so they come from the

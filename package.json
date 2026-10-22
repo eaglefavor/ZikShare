@@ -15,7 +15,9 @@
     "library:seed": "node scripts/seed-library.mjs",
     "library:verify": "node scripts/seed-library.mjs --verify",
     "books:import": "node scripts/import-books.mjs",
-    "books:check": "node scripts/import-books.mjs --check"
+    "books:check": "node scripts/import-books.mjs --check",
+    "books:covers": "python3 scripts/render-book-covers.py",
+    "books:covers:check": "python3 scripts/render-book-covers.py --check"
   },
   "dependencies": {
     "@pdfsmaller/pdf-encrypt": "^1.2.0",

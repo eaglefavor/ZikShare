@@ -31,6 +31,8 @@ export function toBookCard(book) {
         priceKobo: 0,
         is_free: true,
         download_path: book.download_path || `/library/books/${book.slug}.pdf`,
+        // The first page of the PDF, rendered by scripts/render-book-covers.py.
+        cover_path: book.cover_path || `/library/books/covers/${book.slug}.jpg`,
         page_count: book.page_count,
         file_size_bytes: book.file_size_bytes,
         description: book.description,

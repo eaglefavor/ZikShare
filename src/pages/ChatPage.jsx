@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams, Link } from 'react-router-dom'
-import { ArrowLeft, Send, Phone, Loader2, AlertTriangle, X, Image as ImageIcon, Check, CheckCheck, ExternalLink, ShieldCheck, MapPin, Sparkles, Tag, Key, DollarSign, CheckCircle2, ShieldAlert } from 'lucide-react'
+import { ArrowLeft, Send, Phone, Loader2, AlertTriangle, X, Image as ImageIcon, CheckCheck, ExternalLink, ShieldCheck, Tag, Key, DollarSign, FileText, Package } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getConversation, getMessages, sendMessage, subscribeToMessages, uploadChatAttachment } from '../lib/messaging'
 import { getUser, createOffer, getOffersForConversation, respondToOffer, verifyHandshakePin, getEscrowTradesForUser } from '../lib/database'
@@ -146,7 +146,8 @@ export default function ChatPage() {
 
     // Auto-scroll to bottom
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+        // Guarded: not every environment implements scrollIntoView (jsdom, old TVs).
+        messagesEndRef.current?.scrollIntoView?.({ behavior: 'smooth' })
     }, [messages, imagePreview])
 
     const handleSelectImage = (e) => {
@@ -294,15 +295,20 @@ export default function ChatPage() {
 
     if (!isAuthenticated) {
         return (
-            <div>
-                <header style={{ position: 'sticky', top: 0, zIndex: 40, backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}><ArrowLeft size={20} /></button>
-                    <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 700 }}>Chat</h1>
-                </header>
-                <div style={{ padding: '3rem 1rem', textAlign: 'center' }}>
-                    <p style={{ fontSize: '2rem' }}>🔒</p>
-                    <p style={{ fontSize: '0.875rem', fontWeight: 600 }}>Sign in to chat</p>
-                    <button onClick={() => navigate('/login')} style={{ marginTop: '1rem', padding: '0.75rem 2rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontSize: '0.875rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' }}>Sign In</button>
+            <div className="zs-container">
+                <div className="zs-panel" style={{ maxWidth: '28rem', margin: '0 auto', textAlign: 'center' }}>
+                    <h1 style={{ margin: '0 0 0.5rem', fontSize: 'var(--zs-fs-h2)' }}>Sign in to chat</h1>
+                    <p style={{ margin: '0 0 1.25rem', fontSize: 'var(--zs-fs-body)', lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
+                        Conversations connect a buyer and a seller. Reading from the library never needs an account.
+                    </p>
+                    <div style={{ display: 'grid', gap: '0.5rem' }}>
+                        <button type="button" className="zs-btn zs-btn--primary zs-btn--block" onClick={() => navigate('/login')}>
+                            Sign in or register
+                        </button>
+                        <button type="button" className="zs-btn zs-btn--outline zs-btn--block" onClick={() => navigate('/library')}>
+                            Open the library instead
+                        </button>
+                    </div>
                 </div>
             </div>
         )
@@ -310,199 +316,162 @@ export default function ChatPage() {
 
     if (loading) {
         return (
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh' }}>
-                <Loader2 size={28} color="var(--color-brand)" className="animate-spin" />
+            <div className="zs-container" style={{ display: 'flex', justifyContent: 'center', paddingTop: '30vh' }}>
+                <Loader2 size={26} color="var(--color-brand)" className="animate-spin" aria-label="Loading conversation" />
             </div>
         )
     }
 
     const item = conversation?.item || conversation?.listings || {}
-    const otherName = otherUser?.displayName || 'Campus User'
+    const otherName = otherUser?.displayName || 'Campus user'
     const otherPhone = otherUser?.phoneNumber || ''
     const itemImage = item?.images?.[0] || null
     const isBuyer = conversation?.buyerId === myId
     const activeOffer = offers[0] || null
+    const offerTone = activeOffer?.status === 'accepted' ? 'is-accepted' : activeOffer?.status === 'declined' ? 'is-declined' : ''
 
     let lastDate = ''
 
     return (
-        <div style={{ display: 'flex', flexDirection: 'column', height: '100dvh', backgroundColor: '#F8FAFC', maxWidth: '42rem', margin: '0 auto', width: '100%' }}>
-            {/* Header */}
-            <header style={{ flexShrink: 0, backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', padding: '0.625rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem', zIndex: 40 }}>
-                <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
-                    <ArrowLeft size={20} />
+        <div className="zs-chat">
+            {/* Who you are talking to */}
+            <header className="zs-chat__head">
+                <button type="button" className="zs-icon-btn" onClick={() => navigate('/messages')} aria-label="Back to messages">
+                    <ArrowLeft size={18} />
                 </button>
-                <div style={{ position: 'relative', width: '2.5rem', height: '2.5rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: 800, flexShrink: 0 }}>
+
+                <div className="zs-chat__avatar" aria-hidden="true">
                     {otherName.charAt(0).toUpperCase()}
-                    {otherUser?.isVerified && (
-                        <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', backgroundColor: '#10B981', borderRadius: '9999px', border: '2px solid white', width: '0.875rem', height: '0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Check size={8} strokeWidth={4} color="white" />
-                        </div>
-                    )}
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                        <p style={{ margin: 0, fontSize: '0.875rem', fontWeight: 800, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', color: '#0F172A' }}>{otherName}</p>
-                        {otherUser?.isVerified && (
-                            <span style={{ fontSize: '0.5625rem', fontWeight: 800, backgroundColor: '#ECFDF5', color: '#059669', padding: '0.05rem 0.3rem', borderRadius: '0.25rem' }}>Verified</span>
-                        )}
-                    </div>
+
+                <div className="zs-chat__identity">
+                    <p className="zs-chat__name">
+                        {otherName}
+                        {otherUser?.isVerified && <span className="zs-tag zs-tag--free">Verified</span>}
+                    </p>
                     {otherUser?.department && (
-                        <p style={{ margin: 0, fontSize: '0.625rem', color: 'var(--color-text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                            {otherUser.department} {otherUser?.level ? `• ${otherUser.level}` : ''}
+                        <p className="zs-chat__sub">
+                            {otherUser.department}{otherUser?.level ? ` · ${otherUser.level}` : ''}
                         </p>
                     )}
                 </div>
-                
-                {/* Header Actions */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+
+                <div className="zs-chat__actions">
                     {isBuyer && item?.id && (
-                        <button
-                            onClick={() => setShowOfferModal(true)}
-                            title="Make an offer"
-                            style={{ padding: '0.375rem 0.625rem', borderRadius: '0.5rem', border: '1px solid #BFDBFE', backgroundColor: '#EFF6FF', color: '#1D4ED8', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem' }}
-                        >
-                            <Tag size={12} /> Make Offer
+                        <button type="button" className="zs-btn zs-btn--outline zs-btn--sm" onClick={() => setShowOfferModal(true)}>
+                            <Tag size={13} /> Offer
                         </button>
                     )}
                     <button
+                        type="button"
+                        className="zs-icon-btn"
                         onClick={() => setShowHandshakeModal(true)}
-                        title="Campus Handshake PIN Escrow"
-                        style={{ width: '2.25rem', height: '2.25rem', borderRadius: '9999px', border: '1px solid #BBF7D0', backgroundColor: '#F0FDF4', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#166534' }}
+                        aria-label="Campus handshake PIN"
                     >
-                        <Key size={14} />
+                        <Key size={16} />
                     </button>
                     <button
+                        type="button"
+                        className="zs-icon-btn"
                         onClick={() => setShowCallSheet(true)}
-                        title="Call seller"
-                        style={{ width: '2.25rem', height: '2.25rem', borderRadius: '9999px', border: '1px solid var(--color-border)', backgroundColor: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#059669' }}
+                        aria-label="Call"
                     >
                         <Phone size={16} />
                     </button>
                 </div>
             </header>
 
-            {/* Contextual Top Item Action Card & Active Offer Banner */}
+            {/* What the thread is about */}
             {item?.title && showItemCard && (
-                <div style={{ flexShrink: 0, backgroundColor: '#EFF6FF', borderBottom: '1px solid #BFDBFE', padding: '0.5rem 0.875rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.75rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', minWidth: 0 }}>
-                        <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.5rem', overflow: 'hidden', backgroundColor: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                            {itemImage ? (
-                                <img src={itemImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                            ) : (
-                                <span style={{ fontSize: '1.125rem' }}>{item.isDigital ? '📄' : '📦'}</span>
-                            )}
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                <span style={{ fontSize: '0.5625rem', fontWeight: 800, padding: '0.05rem 0.3rem', borderRadius: '0.2rem', backgroundColor: item.isDigital ? '#DBEAFE' : '#DCFCE7', color: item.isDigital ? '#1E40AF' : '#166534', textTransform: 'uppercase' }}>
-                                    {item.category || (item.isDigital ? 'Study Material' : 'Physical')}
-                                </span>
-                                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#2563EB' }}>
-                                    {formatNaira(item.price)}
-                                </span>
-                            </div>
-                            <p style={{ margin: '0.125rem 0 0', fontSize: '0.75rem', fontWeight: 700, color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                {item.title}
-                            </p>
-                        </div>
+                <div className="zs-chat__item">
+                    <span className="zs-chat__item-thumb">
+                        {itemImage ? <img src={itemImage} alt="" /> : item.isDigital ? <FileText size={16} /> : <Package size={16} />}
+                    </span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ margin: 0, fontSize: 'var(--zs-fs-meta)', fontWeight: 700, color: 'var(--color-brand)' }}>
+                            {formatNaira(item.price)} · {item.category || (item.isDigital ? 'Study material' : 'Physical item')}
+                        </p>
+                        <p className="zs-chat__item-title">{item.title}</p>
                     </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexShrink: 0 }}>
-                        {item.id && (
-                            <Link
-                                to={`/item/${item.id}`}
-                                style={{
-                                    padding: '0.3rem 0.625rem',
-                                    borderRadius: '0.5rem',
-                                    backgroundColor: '#2563EB',
-                                    color: 'white',
-                                    fontSize: '0.6875rem',
-                                    fontWeight: 700,
-                                    textDecoration: 'none',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.25rem'
-                                }}
-                            >
-                                <span>{item.isDigital ? 'Buy / View' : 'View Item'}</span>
-                                <ExternalLink size={11} />
-                            </Link>
-                        )}
-                        <button onClick={() => setShowItemCard(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', color: '#64748B' }}>
-                            <X size={14} />
-                        </button>
-                    </div>
+                    {item.id && (
+                        <Link to={`/item/${item.id}`} className="zs-btn zs-btn--soft zs-btn--sm">
+                            View <ExternalLink size={11} />
+                        </Link>
+                    )}
+                    <button
+                        type="button"
+                        className="zs-icon-btn"
+                        onClick={() => setShowItemCard(false)}
+                        aria-label="Hide item summary"
+                        style={{ width: '1.85rem', height: '1.85rem' }}
+                    >
+                        <X size={14} />
+                    </button>
                 </div>
             )}
 
-            {/* In-Chat Bargaining Active Offer Card (if any pending/accepted offer exists) */}
+            {/* Live offer */}
             {activeOffer && (
-                <div style={{ margin: '0.5rem 1rem 0', padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: activeOffer.status === 'accepted' ? '#F0FDF4' : activeOffer.status === 'declined' ? '#FEF2F2' : '#FFFBEB', border: `1.5px solid ${activeOffer.status === 'accepted' ? '#86EFAC' : activeOffer.status === 'declined' ? '#FECACA' : '#FDE68A'}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '0.5rem' }}>
-                    <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                            <Tag size={14} color={activeOffer.status === 'accepted' ? '#166534' : activeOffer.status === 'declined' ? '#991B1B' : '#B45309'} />
-                            <span style={{ fontSize: '0.75rem', fontWeight: 800, color: activeOffer.status === 'accepted' ? '#166534' : activeOffer.status === 'declined' ? '#991B1B' : '#B45309' }}>
-                                Offer: {formatNaira(activeOffer.offer_amount_naira)}
-                            </span>
-                            <span style={{ fontSize: '0.625rem', fontWeight: 700, padding: '0.05rem 0.35rem', borderRadius: '0.25rem', textTransform: 'uppercase', backgroundColor: activeOffer.status === 'accepted' ? '#DCFCE7' : activeOffer.status === 'declined' ? '#FEE2E2' : '#FEF3C7', color: activeOffer.status === 'accepted' ? '#166534' : activeOffer.status === 'declined' ? '#991B1B' : '#92400E' }}>
-                                {activeOffer.status}
-                            </span>
-                        </div>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: '#64748B' }}>
+                <div className={`zs-chat__offer ${offerTone}`}>
+                    <div style={{ minWidth: 0 }}>
+                        <span className="zs-chat__offer-label">
+                            <Tag size={13} aria-hidden="true" />
+                            Offer {formatNaira(activeOffer.offer_amount_naira)}
+                            <span className="zs-tag zs-tag--muted">{activeOffer.status}</span>
+                        </span>
+                        <p style={{ margin: '0.1rem 0 0', fontSize: 'var(--zs-fs-meta)', color: 'var(--color-text-secondary)' }}>
                             {activeOffer.buyer_id === myId ? 'You made this offer' : `${otherName} offered this price`}
                         </p>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                        {/* Seller Actions on Pending Offer */}
+                    <div style={{ display: 'flex', gap: '0.35rem', flexShrink: 0 }}>
                         {!isBuyer && activeOffer.status === 'pending' && (
                             <>
-                                <button
-                                    onClick={() => handleRespondOffer(activeOffer.id, 'accepted')}
-                                    style={{ padding: '0.375rem 0.625rem', borderRadius: '0.375rem', border: 'none', backgroundColor: '#10B981', color: 'white', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer' }}
-                                >
+                                <button type="button" className="zs-btn zs-btn--green zs-btn--sm" onClick={() => handleRespondOffer(activeOffer.id, 'accepted')}>
                                     Accept
                                 </button>
-                                <button
-                                    onClick={() => handleRespondOffer(activeOffer.id, 'declined')}
-                                    style={{ padding: '0.375rem 0.625rem', borderRadius: '0.375rem', border: '1px solid #FECACA', backgroundColor: '#FEF2F2', color: '#DC2626', fontSize: '0.6875rem', fontWeight: 700, cursor: 'pointer' }}
-                                >
+                                <button type="button" className="zs-btn zs-btn--outline zs-btn--sm" onClick={() => handleRespondOffer(activeOffer.id, 'declined')}>
                                     Decline
                                 </button>
                             </>
                         )}
-
-                        {/* Buyer Action on Accepted Offer -> Instant Checkout */}
                         {isBuyer && activeOffer.status === 'accepted' && (
                             <button
-                                onClick={() => setCheckoutProduct({
-                                    id: item?.id,
-                                    title: item?.title || 'Negotiated Purchase',
-                                    price: activeOffer.offer_amount_naira * 100, // kobo
-                                    isDigital: item?.isDigital || false,
-                                    seller_id: conversation?.sellerId || otherUser?.uid || otherUser?.id,
-                                })}
-                                style={{ padding: '0.375rem 0.75rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#2563EB', color: 'white', fontSize: '0.75rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.25rem', boxShadow: '0 2px 6px rgba(37,99,235,0.3)' }}
+                                type="button"
+                                className="zs-btn zs-btn--primary zs-btn--sm"
+                                onClick={() =>
+                                    setCheckoutProduct({
+                                        id: item?.id,
+                                        title: item?.title || 'Negotiated purchase',
+                                        price: activeOffer.offer_amount_naira * 100,
+                                        isDigital: item?.isDigital || false,
+                                        seller_id: conversation?.sellerId || otherUser?.uid || otherUser?.id,
+                                    })
+                                }
                             >
-                                <DollarSign size={12} /> Pay {formatNaira(activeOffer.offer_amount_naira)} Now
+                                <DollarSign size={13} /> Pay {formatNaira(activeOffer.offer_amount_naira)}
                             </button>
                         )}
                     </div>
                 </div>
             )}
 
-            {/* Messages Area */}
-            <div style={{ flex: 1, overflowY: 'auto', padding: '0.75rem 1rem' }}>
-                {/* Safety Banner */}
-                <div style={{ margin: '0 0 0.75rem', padding: '0.625rem 0.75rem', borderRadius: '0.625rem', backgroundColor: '#FEF3C7', border: '1px solid #FCD34D', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                    <AlertTriangle size={14} color="#92400E" style={{ flexShrink: 0 }} />
-                    <p style={{ margin: 0, fontSize: '0.625rem', color: '#92400E', lineHeight: 1.3 }}>
-                        <strong>UNIZIK Safety Tip:</strong> Meet only at campus Safe Meetup Zones (Garba Square, Chisco Park, Student Center). Never pay before inspecting physical items!
+            {/* Messages */}
+            <div className="zs-chat__scroll">
+                <div className="zs-notice" style={{ marginBottom: '0.5rem' }}>
+                    <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: '0.1rem' }} aria-hidden="true" />
+                    <p style={{ margin: 0 }}>
+                        Meet at a campus safe zone (Garba Square, Chisco Park, Student Center) and inspect a
+                        physical item before paying.
                     </p>
                 </div>
 
-                {/* Messages Loop */}
+                {messages.length === 0 && (
+                    <p style={{ textAlign: 'center', margin: '1.5rem 0', fontSize: 'var(--zs-fs-small)', color: 'var(--color-text-muted)' }}>
+                        No messages yet — say hello, or ask whether the item is still available.
+                    </p>
+                )}
+
                 {messages.map((msg) => {
                     const isMe = msg.senderId === myId
                     const msgDate = dateLabel(msg.createdAt)
@@ -512,46 +481,28 @@ export default function ChatPage() {
                         showDateHeader = true
                     }
 
-                    // Check if message has an image URL (e.g. cloudinary or data URL)
                     const lines = (msg.text || '').split('\n')
-                    const imageUrlMatch = lines.find(l => l.startsWith('http') && (l.includes('cloudinary') || l.includes('image') || l.endsWith('.jpg') || l.endsWith('.png') || l.endsWith('.webp')))
-                    const cleanText = lines.filter(l => l !== imageUrlMatch).join('\n')
+                    const imageUrlMatch = lines.find(
+                        (l) => l.startsWith('http') && (l.includes('cloudinary') || l.includes('image') || l.endsWith('.jpg') || l.endsWith('.png') || l.endsWith('.webp'))
+                    )
+                    const cleanText = lines.filter((l) => l !== imageUrlMatch).join('\n')
 
                     return (
                         <div key={msg.id}>
-                            {showDateHeader && (
-                                <div style={{ textAlign: 'center', margin: '0.75rem 0', fontSize: '0.625rem', color: 'var(--color-text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-                                    {msgDate}
-                                </div>
-                            )}
-                            <div style={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start', marginBottom: '0.5rem' }}>
-                                <div style={{
-                                    maxWidth: '80%',
-                                    padding: '0.625rem 0.875rem',
-                                    borderRadius: isMe ? '1rem 1rem 0.2rem 1rem' : '1rem 1rem 1rem 0.2rem',
-                                    backgroundColor: isMe ? 'var(--color-brand)' : 'white',
-                                    color: isMe ? 'white' : '#0F172A',
-                                    fontSize: '0.8125rem',
-                                    lineHeight: 1.45,
-                                    boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
-                                    border: isMe ? 'none' : '1px solid var(--color-border)',
-                                }}>
-                                    {imageUrlMatch && (
-                                        <div style={{ marginBottom: cleanText ? '0.5rem' : '0', borderRadius: '0.5rem', overflow: 'hidden', maxHeight: '14rem' }}>
-                                            <img src={imageUrlMatch} alt="Chat attachment" style={{ width: '100%', height: 'auto', display: 'block', objectFit: 'cover' }} />
-                                        </div>
-                                    )}
-                                    {cleanText && <p style={{ margin: 0, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{cleanText}</p>}
-                                    
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.25rem', marginTop: '0.25rem', fontSize: '0.5625rem', opacity: 0.8 }}>
+                            {showDateHeader && <div className="zs-chat__day">{msgDate}</div>}
+                            <div className={`zs-msg${isMe ? ' zs-msg--me' : ''}`}>
+                                <div className="zs-msg__bubble">
+                                    {imageUrlMatch && <img src={imageUrlMatch} alt="Chat attachment" loading="lazy" />}
+                                    {cleanText && <p className="zs-msg__text">{cleanText}</p>}
+                                    <div className="zs-msg__meta">
                                         <span>{timeLabel(msg.createdAt)}</span>
                                         {isMe && (
                                             msg.status === 'sending' ? (
                                                 <Loader2 size={10} className="animate-spin" />
                                             ) : msg.status === 'failed' ? (
-                                                <span style={{ color: '#FCA5A5' }}>! Failed</span>
+                                                <span>Not sent</span>
                                             ) : (
-                                                <CheckCheck size={12} />
+                                                <CheckCheck size={12} aria-label="Sent" />
                                             )
                                         )}
                                     </div>
@@ -563,263 +514,212 @@ export default function ChatPage() {
                 <div ref={messagesEndRef} />
             </div>
 
-            {/* Quick Response Chips */}
-            <div style={{ flexShrink: 0, padding: '0.375rem 0.75rem', display: 'flex', gap: '0.375rem', overflowX: 'auto', backgroundColor: '#F8FAFC', borderTop: '1px solid var(--color-border)' }} className="hide-scrollbar">
-                {campusQuickReplies.map((qr, i) => (
-                    <button
-                        key={i}
-                        onClick={() => handleSend(qr)}
-                        style={{
-                            padding: '0.3rem 0.625rem',
-                            borderRadius: '9999px',
-                            border: '1px solid #BFDBFE',
-                            backgroundColor: 'white',
-                            fontSize: '0.6875rem',
-                            fontWeight: 600,
-                            fontFamily: 'inherit',
-                            cursor: 'pointer',
-                            color: '#1E40AF',
-                            whiteSpace: 'nowrap',
-                            boxShadow: '0 1px 2px rgba(0,0,0,0.03)'
-                        }}
-                    >
+            {/* Photo staged for sending */}
+            {imagePreview && (
+                <div className="zs-chat__pending">
+                    <img src={imagePreview} alt="Preview of the selected photo" style={{ width: '2.2rem', height: '2.2rem', borderRadius: '0.35rem', objectFit: 'cover' }} />
+                    <span style={{ flex: 1 }}>Photo ready to send</span>
+                    <button type="button" className="zs-icon-btn" onClick={handleClearImage} aria-label="Remove photo" style={{ width: '1.85rem', height: '1.85rem' }}>
+                        <X size={14} />
+                    </button>
+                </div>
+            )}
+
+            {/* One-tap replies */}
+            <div className="zs-quick">
+                {campusQuickReplies.map((qr) => (
+                    <button key={qr} type="button" onClick={() => handleSend(qr)}>
                         {qr}
                     </button>
                 ))}
             </div>
 
-            {/* Image Preview Box before send */}
-            {imagePreview && (
-                <div style={{ flexShrink: 0, padding: '0.5rem 1rem', backgroundColor: '#FEF3C7', borderTop: '1px solid #FCD34D', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                        <img src={imagePreview} alt="Preview" style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.375rem', objectFit: 'cover' }} />
-                        <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#92400E' }}>Photo ready to send</span>
-                    </div>
-                    <button onClick={handleClearImage} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#92400E' }}>
-                        <X size={16} />
-                    </button>
-                </div>
-            )}
-
-            {/* Input Bar */}
-            <div style={{ flexShrink: 0, padding: '0.5rem 0.75rem', backgroundColor: 'white', borderTop: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleSelectImage}
-                    accept="image/*"
-                    style={{ display: 'none' }}
-                />
+            {/* Composer */}
+            <div className="zs-composer">
+                <input type="file" ref={fileInputRef} onChange={handleSelectImage} accept="image/*" style={{ display: 'none' }} />
                 <button
                     type="button"
+                    className="zs-icon-btn"
                     onClick={() => fileInputRef.current?.click()}
-                    title="Attach photo"
+                    aria-label="Attach a photo"
                     disabled={uploadingImage}
-                    style={{
-                        width: '2.25rem',
-                        height: '2.25rem',
-                        borderRadius: '50%',
-                        border: '1px solid var(--color-border)',
-                        backgroundColor: '#F8FAFC',
-                        color: '#64748B',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        flexShrink: 0,
-                    }}
                 >
                     <ImageIcon size={18} />
                 </button>
 
                 <input
                     type="text"
-                    placeholder="Write a message..."
+                    placeholder="Write a message"
+                    aria-label="Message"
                     value={text}
-                    onChange={e => setText(e.target.value)}
-                    onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend() } }}
-                    style={{ flex: 1, padding: '0.625rem 0.875rem', borderRadius: '1.25rem', border: '1.5px solid var(--color-border)', fontSize: '0.8125rem', fontFamily: 'inherit', outline: 'none', backgroundColor: '#F8FAFC' }}
-                    onFocus={e => (e.target.style.borderColor = '#2563EB')}
-                    onBlur={e => (e.target.style.borderColor = 'var(--color-border)')}
+                    onChange={(e) => setText(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault()
+                            handleSend()
+                        }
+                    }}
                 />
+
                 <button
+                    type="button"
+                    className="zs-composer__send"
                     onClick={() => handleSend()}
                     disabled={(!text.trim() && !selectedImageFile) || sending}
-                    style={{
-                        width: '2.5rem',
-                        height: '2.5rem',
-                        borderRadius: '9999px',
-                        border: 'none',
-                        background: (text.trim() || selectedImageFile) ? 'linear-gradient(135deg, #3B82F6, #2563EB)' : '#E2E8F0',
-                        color: (text.trim() || selectedImageFile) ? 'white' : '#94A3B8',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: (text.trim() || selectedImageFile) ? 'pointer' : 'not-allowed',
-                        boxShadow: (text.trim() || selectedImageFile) ? '0 2px 8px rgba(37,99,235,0.35)' : 'none',
-                        flexShrink: 0,
-                    }}
+                    aria-label="Send message"
                 >
                     {sending ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                 </button>
             </div>
 
-            {/* Call Bottom Sheet */}
+            {/* Call sheet */}
             {showCallSheet && (
-                <>
-                    <div onClick={() => setShowCallSheet(false)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100 }} />
-                    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 101, backgroundColor: 'white', borderRadius: '1.25rem 1.25rem 0 0', padding: '1.25rem 1rem', paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom, 0px))', animation: 'slideUp 0.25s ease-out' }}>
-                        <style>{`@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }`}</style>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '0.875rem', fontWeight: 800 }}>
-                                    {otherName.charAt(0).toUpperCase()}
-                                </div>
-                                <div>
-                                    <p style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 800, color: '#0F172A' }}>{otherName}</p>
-                                    {otherUser?.department && <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>{otherUser.department}</p>}
-                                </div>
-                            </div>
-                            <button onClick={() => setShowCallSheet(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem', display: 'flex' }}>
-                                <X size={20} color="var(--color-text-muted)" />
-                            </button>
-                        </div>
-
-                        {otherPhone ? (
-                            <div style={{ padding: '1rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem', backgroundColor: '#F8FAFC' }}>
-                                <div>
-                                    <p style={{ margin: 0, fontSize: '1.125rem', fontWeight: 800, fontFamily: 'monospace', letterSpacing: '0.02em', color: '#0F172A' }}>{otherPhone}</p>
-                                    <p style={{ margin: '0.25rem 0 0', fontSize: '0.625rem', color: 'var(--color-text-muted)' }}>Direct phone contact</p>
-                                </div>
-                                <a href={`tel:${otherPhone}`} style={{ padding: '0.625rem 1.25rem', borderRadius: '0.625rem', backgroundColor: '#10B981', color: 'white', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '0.5rem', boxShadow: '0 2px 8px rgba(16,185,129,0.35)' }}>
-                                    <Phone size={16} />
-                                    <span>Call Phone</span>
-                                </a>
-                            </div>
-                        ) : (
-                            <div style={{ padding: '1rem', borderRadius: '0.75rem', backgroundColor: '#FEF2F2', border: '1px solid #FECACA', textAlign: 'center', marginBottom: '1rem' }}>
-                                <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 700, color: '#DC2626' }}>Phone number not added</p>
-                                <p style={{ margin: '0.25rem 0 0', fontSize: '0.6875rem', color: '#B91C1C' }}>This student has not set a public phone number. Please use chat messages.</p>
-                            </div>
-                        )}
-
-                        <div style={{ padding: '0.75rem', borderRadius: '0.625rem', backgroundColor: '#FEF3C7', border: '1px solid #FCD34D' }}>
-                            <p style={{ margin: 0, fontSize: '0.625rem', color: '#92400E', lineHeight: 1.4 }}>
-                                <strong>⚠️ Campus Safety:</strong> Never pay before receiving physical goods. Always meet in public campus zones with friends nearby.
-                            </p>
-                        </div>
-                    </div>
-                </>
-            )}
-
-            {/* Make Offer Modal */}
-            {showOfferModal && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 110, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-                    <div style={{ width: '100%', maxWidth: '24rem', backgroundColor: 'white', borderRadius: '1rem', padding: '1.25rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                            <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 800, color: '#0F172A' }}>Make a Price Offer</h3>
-                            <button onClick={() => setShowOfferModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem' }}>
+                <div className="zs-sheet-backdrop" role="dialog" aria-modal="true" aria-label="Contact details" onClick={() => setShowCallSheet(false)}>
+                    <div className="zs-sheet" onClick={(e) => e.stopPropagation()}>
+                        <div className="zs-sheet__head">
+                            <strong style={{ fontSize: 'var(--zs-fs-card)' }}>{otherName}</strong>
+                            <button type="button" className="zs-icon-btn" onClick={() => setShowCallSheet(false)} aria-label="Close">
                                 <X size={16} />
                             </button>
                         </div>
-                        <p style={{ margin: '0 0 1rem', fontSize: '0.75rem', color: '#64748B' }}>
-                            Original Price: <strong>{formatNaira(item?.price)}</strong>. Enter your proposed price to negotiate with the seller.
-                        </p>
-                        <form onSubmit={handleCreateOffer}>
-                            <div style={{ marginBottom: '0.75rem' }}>
-                                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.25rem' }}>Your Offer (₦)</label>
+                        <div className="zs-sheet__body">
+                            {otherPhone ? (
+                                <>
+                                    <p style={{ margin: 0, fontSize: 'var(--zs-fs-body)', color: 'var(--color-text-secondary)' }}>
+                                        Call only to arrange a meetup. Never send money before you have the item.
+                                    </p>
+                                    <code style={{ fontSize: '1.05rem', fontWeight: 700 }}>{otherPhone}</code>
+                                    <a href={`tel:${otherPhone}`} className="zs-btn zs-btn--green zs-btn--block">
+                                        <Phone size={15} /> Call {otherName}
+                                    </a>
+                                </>
+                            ) : (
+                                <p style={{ margin: 0, fontSize: 'var(--zs-fs-body)', color: 'var(--color-text-secondary)' }}>
+                                    {otherName} has not added a phone number. Use chat to arrange the meetup.
+                                </p>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Offer sheet */}
+            {showOfferModal && (
+                <div className="zs-sheet-backdrop" role="dialog" aria-modal="true" aria-label="Make an offer" onClick={() => setShowOfferModal(false)}>
+                    <form className="zs-sheet" onSubmit={handleCreateOffer} onClick={(e) => e.stopPropagation()}>
+                        <div className="zs-sheet__head">
+                            <strong style={{ fontSize: 'var(--zs-fs-card)' }}>Offer a price</strong>
+                            <button type="button" className="zs-icon-btn" onClick={() => setShowOfferModal(false)} aria-label="Close">
+                                <X size={16} />
+                            </button>
+                        </div>
+                        <div className="zs-sheet__body">
+                            <p style={{ margin: 0, fontSize: 'var(--zs-fs-small)', color: 'var(--color-text-secondary)' }}>
+                                Listed at <strong>{formatNaira(item?.price)}</strong>. The seller can accept or decline.
+                            </p>
+                            <div>
+                                <label className="zs-label" htmlFor="offer-amount">Your offer (₦)</label>
                                 <input
+                                    id="offer-amount"
+                                    className="zs-input"
                                     type="number"
                                     placeholder="e.g. 2500"
                                     value={offerAmount}
-                                    onChange={e => setOfferAmount(e.target.value)}
+                                    onChange={(e) => setOfferAmount(e.target.value)}
                                     required
                                     min="1"
-                                    style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.5rem', border: '1.5px solid var(--color-brand)', fontSize: '1rem', fontWeight: 800, boxSizing: 'border-box' }}
                                 />
                             </div>
-                            <div style={{ marginBottom: '1rem' }}>
-                                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.25rem' }}>Note to Seller (Optional)</label>
+                            <div>
+                                <label className="zs-label" htmlFor="offer-note">Note to the seller (optional)</label>
                                 <input
+                                    id="offer-note"
+                                    className="zs-input"
                                     type="text"
-                                    placeholder="e.g. I can pick it up today at Garba Square"
+                                    placeholder="e.g. I can pick it up today"
                                     value={offerMessage}
-                                    onChange={e => setOfferMessage(e.target.value)}
-                                    style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-border)', fontSize: '0.75rem', boxSizing: 'border-box' }}
+                                    onChange={(e) => setOfferMessage(e.target.value)}
                                 />
                             </div>
-                            <button
-                                type="submit"
-                                disabled={submittingOffer}
-                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.625rem', border: 'none', backgroundColor: '#2563EB', color: 'white', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem' }}
-                            >
-                                {submittingOffer ? <Loader2 size={16} className="animate-spin" /> : <Tag size={16} />}
-                                {submittingOffer ? 'Sending Offer...' : 'Send Bargain Offer'}
+                        </div>
+                        <div className="zs-sheet__foot">
+                            <button type="button" className="zs-btn zs-btn--outline" onClick={() => setShowOfferModal(false)}>
+                                Cancel
                             </button>
-                        </form>
-                    </div>
+                            <button type="submit" className="zs-btn zs-btn--primary zs-btn--block" disabled={submittingOffer}>
+                                {submittingOffer ? <Loader2 size={15} className="animate-spin" /> : <Tag size={15} />}
+                                {submittingOffer ? 'Sending…' : 'Send offer'}
+                            </button>
+                        </div>
+                    </form>
                 </div>
             )}
 
-            {/* Handshake PIN Escrow Modal */}
+            {/* Handshake PIN sheet */}
             {showHandshakeModal && (
-                <div style={{ position: 'fixed', inset: 0, zIndex: 110, backgroundColor: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-                    <div style={{ width: '100%', maxWidth: '24rem', backgroundColor: 'white', borderRadius: '1rem', padding: '1.25rem', boxShadow: '0 20px 25px -5px rgba(0,0,0,0.2)' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                            <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 800, color: '#0F172A', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                                <Key size={16} color="#166534" /> Campus Handshake Escrow
-                            </h3>
-                            <button onClick={() => setShowHandshakeModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '0.25rem' }}>
+                <div className="zs-sheet-backdrop" role="dialog" aria-modal="true" aria-label="Campus handshake" onClick={() => setShowHandshakeModal(false)}>
+                    <div className="zs-sheet" onClick={(e) => e.stopPropagation()}>
+                        <div className="zs-sheet__head">
+                            <strong style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: 'var(--zs-fs-card)' }}>
+                                <ShieldCheck size={16} color="var(--color-campus-green)" aria-hidden="true" /> Campus handshake
+                            </strong>
+                            <button type="button" className="zs-icon-btn" onClick={() => setShowHandshakeModal(false)} aria-label="Close">
                                 <X size={16} />
                             </button>
                         </div>
-                        <p style={{ margin: '0 0 1rem', fontSize: '0.75rem', color: '#64748B' }}>
-                            {isBuyer
-                                ? 'Give your 4-digit Handshake PIN to the seller only after physically inspecting the item on campus.'
-                                : 'Enter the buyer’s 4-digit PIN upon handing over the physical item to release escrow payment to your bank.'}
-                        </p>
+                        <div className="zs-sheet__body">
+                            <p style={{ margin: 0, fontSize: 'var(--zs-fs-small)', lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
+                                {isBuyer
+                                    ? 'Give this PIN to the seller only after you have physically inspected the item on campus.'
+                                    : 'Enter the buyer’s PIN when you hand over the item. That releases the held payment to you.'}
+                            </p>
 
-                        {!isBuyer ? (
-                            <div>
-                                <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '0.25rem' }}>Buyer’s 4-Digit Handshake PIN</label>
-                                <input
-                                    type="text"
-                                    maxLength={4}
-                                    placeholder="e.g. 8492"
-                                    value={enteredPin}
-                                    onChange={e => setEnteredPin(e.target.value)}
-                                    style={{ width: '100%', padding: '0.75rem', borderRadius: '0.5rem', border: '1.5px solid var(--color-brand)', fontSize: '1.25rem', fontWeight: 800, textAlign: 'center', letterSpacing: '0.25em', boxSizing: 'border-box' }}
-                                />
-                                {pinResult && (
-                                    <p style={{ margin: '0.5rem 0 0', fontSize: '0.75rem', fontWeight: 700, color: pinResult.success ? '#059669' : '#DC2626' }}>
-                                        {pinResult.message}
+                            {!isBuyer ? (
+                                <>
+                                    <div>
+                                        <label className="zs-label" htmlFor="handshake-pin">Buyer’s 4-digit PIN</label>
+                                        <input
+                                            id="handshake-pin"
+                                            className="zs-input zs-input--code"
+                                            type="text"
+                                            inputMode="numeric"
+                                            maxLength={4}
+                                            placeholder="0000"
+                                            value={enteredPin}
+                                            onChange={(e) => setEnteredPin(e.target.value)}
+                                        />
+                                    </div>
+                                    {pinResult && (
+                                        <p style={{ margin: 0, fontSize: 'var(--zs-fs-small)', fontWeight: 600, color: pinResult.success ? 'var(--color-campus-green)' : 'var(--color-danger)' }}>
+                                            {pinResult.message}
+                                        </p>
+                                    )}
+                                    <button
+                                        type="button"
+                                        className="zs-btn zs-btn--green zs-btn--block"
+                                        onClick={() => handleVerifyPin(escrowTrades[0]?.id)}
+                                        disabled={verifyingPin || enteredPin.length !== 4}
+                                    >
+                                        {verifyingPin ? <Loader2 size={15} className="animate-spin" /> : <ShieldCheck size={15} />}
+                                        {verifyingPin ? 'Verifying…' : 'Verify and release payment'}
+                                    </button>
+                                </>
+                            ) : (
+                                <div className="zs-pin">
+                                    <p style={{ margin: 0, fontSize: 'var(--zs-fs-meta)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#166534' }}>
+                                        Your handshake PIN
                                     </p>
-                                )}
-                                <button
-                                    onClick={() => handleVerifyPin(escrowTrades[0]?.id)}
-                                    disabled={verifyingPin || enteredPin.length !== 4}
-                                    style={{ marginTop: '0.75rem', width: '100%', padding: '0.75rem', borderRadius: '0.625rem', border: 'none', backgroundColor: '#10B981', color: 'white', fontSize: '0.875rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem' }}
-                                >
-                                    {verifyingPin ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
-                                    {verifyingPin ? 'Verifying...' : 'Verify PIN & Release Funds'}
-                                </button>
-                            </div>
-                        ) : (
-                            <div style={{ textAlign: 'center', padding: '1rem', backgroundColor: '#F0FDF4', borderRadius: '0.75rem', border: '1px dashed #86EFAC' }}>
-                                <p style={{ margin: 0, fontSize: '0.6875rem', color: '#166534', fontWeight: 700, textTransform: 'uppercase' }}>Your Delivery Confirmation PIN</p>
-                                <p style={{ margin: '0.5rem 0', fontSize: '2rem', fontWeight: 900, fontFamily: 'monospace', letterSpacing: '0.2em', color: '#047857' }}>
-                                    {escrowTrades[0]?.handshake_pin || '••••'}
-                                </p>
-                                <p style={{ margin: 0, fontSize: '0.6875rem', color: '#065F46' }}>
-                                    Share this PIN with {otherName} at the meetup spot after you check the item.
-                                </p>
-                            </div>
-                        )}
+                                    <p className="zs-pin__value">{escrowTrades[0]?.handshake_pin || '••••'}</p>
+                                    <p style={{ margin: 0, fontSize: 'var(--zs-fs-meta)', color: '#065F46' }}>
+                                        Share it with {otherName} at the meetup, after you check the item.
+                                    </p>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             )}
 
-            {/* Direct Paystack Checkout for Accepted Offers */}
             {checkoutProduct && (
                 <PaystackCheckout
                     product={checkoutProduct}

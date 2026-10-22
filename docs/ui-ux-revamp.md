@@ -308,13 +308,37 @@ system was visible on arrival.
   badge, and the phone bar is Home · Library · Search · Sell · You.
   `BottomNav.jsx` is deleted; the shell owns its own navigation.
 
+**Phase 7 — the transactional pages.** These are the screens a signed-in
+student lives in, and they were the last ones outside the design system.
+
+- **Conversation** (`/chat/:id`): rebuilt as a chat app rather than a styled
+  page — identity header with verified state, an item strip that says what the
+  thread is about, date separators, bubbles, one-tap campus replies, a composer
+  with photo attach and send state. The offer, handshake-PIN and checkout flows
+  moved into `zs-sheet` panels; nothing was dropped. Kept full-screen: its
+  composer sits exactly where the phone nav bar would.
+- **Seller hub** (`/seller-hub`): four tabs of inline-styled cards became a
+  header, a chip tab row, one panel per section. Analytics shows only real
+  numbers; the payout panel says "no bank account linked" instead of offering a
+  withdraw button that cannot work. Inventory rows carry icon actions with
+  labels for screen readers.
+- **Account sub-pages** — saved items, purchases, settings, help — moved inside
+  the shell and rebuilt on tokens. They previously rendered their own sticky
+  header inside the shell's header.
+- **Seller profile** (`/seller/:id`, `/user/:id`): duplicate header removed,
+  filter chips and empty state on the design system. A profile with no reviews
+  now shows "No ratings" rather than a 5.0 built from an empty list.
+- **New listing** (`/post`): duplicate header removed; the form keeps its logic
+  and gains the shell's navigation.
+
 ### Still open (next pass)
 
 | Item | Why it matters |
 | --- | --- |
-| `SellerHubPage`, `ChatPage` restyle | still on the old inline-style system; the longest files left. `ChatPage` also carries the offer, escrow-PIN and checkout flows, so it needs care rather than a coat of paint |
-| `PostPage` inner form | the gate is fixed, the 500-line form behind it is not |
-| `/seller-hub`, `/profile/*` inside the shell | they sit outside it, so they have no navigation; move once their inner markup is converted |
+| `PostPage` inner form and `ItemDetailPage` inner markup | logic is unchanged and correct, but both still carry hundreds of inline styles |
+| `AdminPage` | deliberately untouched: an internal tool, not a student surface |
+| Visual regression check | no browser in the sandbox; every claim here is from DOM tests and reading the deployed HTML |
+| Remaining hex literals in `SellerProfilePage`, `PaymentSuccess` | tokens exist, adoption is partial |
 | Item detail two-column layout | content left, sticky action card right on ≥980px |
 | Visual regression check | no browser in the sandbox; the first real look is the preview deploy |
 | Replace remaining hex literals in the restyled pages | tokens exist, adoption is partial |

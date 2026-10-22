@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ArrowLeft, Save, Loader2, CheckCircle, ShieldCheck, Key, Lock, MapPin, GraduationCap } from 'lucide-react'
+import { Save, Loader2, CheckCircle, ShieldCheck, Key, Lock } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { upsertUser } from '../lib/database'
 import { UNIZIK_LOCATIONS, UNIZIK_FACULTIES, ACADEMIC_LEVELS } from '../lib/categories'
+import { PageHeader } from '../components/ui'
 
 export default function SettingsPage() {
     const navigate = useNavigate()
@@ -14,8 +15,7 @@ export default function SettingsPage() {
     const [department, setDepartment] = useState(user?.department || '')
     const [level, setLevel] = useState(user?.level || '100L')
     const [lodgeLocation, setLodgeLocation] = useState(user?.lodge_location || 'Garba Square (Perm Site)')
-    
-    // Emergency Password Binding State
+
     const [newPassword, setNewPassword] = useState('')
     const [confirmPassword, setConfirmPassword] = useState('')
     const [bindingPassword, setBindingPassword] = useState(false)
@@ -29,7 +29,7 @@ export default function SettingsPage() {
     const handleSave = async (e) => {
         e.preventDefault()
         if (!displayName.trim()) {
-            setError('Display name is required')
+            setError('A display name is required.')
             return
         }
         setSaving(true)
@@ -37,10 +37,8 @@ export default function SettingsPage() {
         setSaved(false)
 
         try {
-            const currentUserId = user?.uid || user?.id || session?.user?.id;
-            if (!currentUserId) {
-                throw new Error('Not authenticated')
-            }
+            const currentUserId = user?.uid || user?.id || session?.user?.id
+            if (!currentUserId) throw new Error('Not signed in')
 
             const updates = {
                 displayName: displayName.trim(),
@@ -63,7 +61,7 @@ export default function SettingsPage() {
             setTimeout(() => setSaved(false), 3000)
         } catch (err) {
             console.error('Settings save error:', err)
-            setError('Failed to save. Please try again.')
+            setError('Could not save your details. Try again.')
         } finally {
             setSaving(false)
         }
@@ -75,11 +73,11 @@ export default function SettingsPage() {
         setPasswordSuccess(false)
 
         if (newPassword.length < 6) {
-            setPasswordError('Password must be at least 6 characters')
+            setPasswordError('Use at least 6 characters.')
             return
         }
         if (newPassword !== confirmPassword) {
-            setPasswordError('Passwords do not match')
+            setPasswordError('The two passwords do not match.')
             return
         }
 
@@ -92,7 +90,7 @@ export default function SettingsPage() {
             setTimeout(() => setPasswordSuccess(false), 4000)
         } catch (err) {
             console.error('Bind password error:', err)
-            setPasswordError(err.message || 'Failed to bind password')
+            setPasswordError(err.message || 'Could not set a password.')
         } finally {
             setBindingPassword(false)
         }
@@ -100,183 +98,189 @@ export default function SettingsPage() {
 
     if (!isAuthenticated) {
         return (
-            <div>
-                <header style={{ position: 'sticky', top: 0, zIndex: 40, backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}><ArrowLeft size={20} /></button>
-                    <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 700 }}>Settings</h1>
-                </header>
-                <div style={{ padding: '3rem 1rem', textAlign: 'center' }}>
-                    <p style={{ fontSize: '2rem' }}>🔒</p>
-                    <p style={{ fontSize: '0.875rem', fontWeight: 600 }}>Sign in to access settings</p>
-                    <button onClick={() => navigate('/login')} style={{ marginTop: '1rem', padding: '0.75rem 2rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', fontSize: '0.875rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer' }}>Sign In</button>
+            <div className="zs-container">
+                <div className="zs-panel" style={{ maxWidth: '28rem', margin: '0 auto', textAlign: 'center' }}>
+                    <h1 style={{ margin: '0 0 0.5rem', fontSize: 'var(--zs-fs-h2)' }}>Settings</h1>
+                    <p style={{ margin: '0 0 1.25rem', fontSize: 'var(--zs-fs-body)', color: 'var(--color-text-secondary)' }}>
+                        Sign in to change your name, department and contact details.
+                    </p>
+                    <button type="button" className="zs-btn zs-btn--primary zs-btn--block" onClick={() => navigate('/login')}>
+                        Sign in
+                    </button>
                 </div>
             </div>
         )
     }
 
     return (
-        <div style={{ maxWidth: '640px', margin: '0 auto', paddingBottom: '3rem' }}>
-            <header style={{ position: 'sticky', top: 0, zIndex: 40, backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', padding: '0.75rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}><ArrowLeft size={20} /></button>
-                <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 700 }}>Profile & Account Settings</h1>
-            </header>
+        <div className="zs-container">
+            <PageHeader
+                eyebrow="Account"
+                title="Settings"
+                lead="Your name, department and where you usually meet buyers or sellers."
+            />
 
-            <form onSubmit={handleSave} style={{ padding: '1.25rem 1rem' }}>
-                {/* Account info header */}
-                <div style={{ padding: '1rem', backgroundColor: '#F8FAFC', borderRadius: '0.875rem', border: '1px solid #E2E8F0', marginBottom: '1.25rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '9999px', backgroundColor: '#2563EB', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '1.125rem' }}>
+            <div style={{ maxWidth: '34rem', display: 'grid', gap: '1rem' }}>
+                <div className="zs-panel" style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+                    <span
+                        aria-hidden="true"
+                        style={{ width: '2.4rem', height: '2.4rem', borderRadius: '9999px', background: 'var(--color-brand)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, flexShrink: 0 }}
+                    >
                         {displayName ? displayName.charAt(0).toUpperCase() : 'U'}
-                    </div>
-                    <div>
-                        <div style={{ fontSize: '0.875rem', fontWeight: 700, color: '#0F172A' }}>{user?.email || session?.user?.email}</div>
-                        <div style={{ fontSize: '0.6875rem', color: '#64748B', display: 'flex', alignItems: 'center', gap: '0.25rem', marginTop: '0.125rem' }}>
-                            <ShieldCheck size={12} color="#059669" /> Verified UNIZIK Student Account
-                        </div>
-                    </div>
-                </div>
-
-                {/* Display Name */}
-                <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ fontSize: '0.8125rem', fontWeight: 600, display: 'block', marginBottom: '0.375rem' }}>Full Name / Display Name *</label>
-                    <input type="text" value={displayName} onChange={e => setDisplayName(e.target.value)} required maxLength={50}
-                        style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
-                </div>
-
-                {/* Phone */}
-                <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ fontSize: '0.8125rem', fontWeight: 600, display: 'block', marginBottom: '0.375rem' }}>WhatsApp Phone Number *</label>
-                    <input type="tel" placeholder="2348012345678" value={phoneNumber} onChange={e => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ''))} maxLength={15}
-                        style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem', fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }} />
-                    <div style={{ marginTop: '0.375rem', padding: '0.5rem 0.625rem', borderRadius: '0.5rem', backgroundColor: '#EFF6FF', border: '1px solid #DBEAFE' }}>
-                        <p style={{ margin: 0, fontSize: '0.6875rem', color: '#1E40AF', fontWeight: 600 }}>Format: 2348012345678 (No + sign or spaces)</p>
-                    </div>
-                </div>
-
-                {/* Campus Lodge / Location */}
-                <div style={{ marginBottom: '1rem' }}>
-                    <label style={{ fontSize: '0.8125rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.375rem' }}>
-                        <MapPin size={14} color="#2563EB" /> Campus Meetup & Lodge Location
-                    </label>
-                    <select value={lodgeLocation} onChange={e => setLodgeLocation(e.target.value)}
-                        style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem', fontFamily: 'inherit', backgroundColor: 'white' }}>
-                        {UNIZIK_LOCATIONS.map(loc => (
-                            <option key={loc.id} value={loc.name}>{loc.name} ({loc.zone})</option>
-                        ))}
-                    </select>
-                </div>
-
-                {/* Faculty & Level */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1rem' }}>
-                    <div>
-                        <label style={{ fontSize: '0.8125rem', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem', marginBottom: '0.375rem' }}>
-                            <GraduationCap size={14} color="#059669" /> Faculty
-                        </label>
-                        <select value={faculty} onChange={e => setFaculty(e.target.value)}
-                            style={{ width: '100%', padding: '0.625rem 0.5rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', fontSize: '0.75rem', fontFamily: 'inherit', backgroundColor: 'white' }}>
-                            <option value="">Select Faculty...</option>
-                            {UNIZIK_FACULTIES.map(f => (
-                                <option key={f.name} value={f.name}>{f.name}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div>
-                        <label style={{ fontSize: '0.8125rem', fontWeight: 600, display: 'block', marginBottom: '0.375rem' }}>Academic Level</label>
-                        <select value={level} onChange={e => setLevel(e.target.value)}
-                            style={{ width: '100%', padding: '0.625rem 0.5rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', fontSize: '0.75rem', fontFamily: 'inherit', backgroundColor: 'white' }}>
-                            {ACADEMIC_LEVELS.map(lvl => (
-                                <option key={lvl} value={lvl}>{lvl}</option>
-                            ))}
-                        </select>
-                    </div>
-                </div>
-
-                {/* Department */}
-                <div style={{ marginBottom: '1.25rem' }}>
-                    <label style={{ fontSize: '0.8125rem', fontWeight: 600, display: 'block', marginBottom: '0.375rem' }}>Department</label>
-                    <input type="text" placeholder="e.g., Mechanical Engineering" value={department} onChange={e => setDepartment(e.target.value)} maxLength={60}
-                        style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem', fontFamily: 'inherit', boxSizing: 'border-box' }} />
-                </div>
-
-                {/* Error */}
-                {error && (
-                    <div style={{ padding: '0.625rem 0.875rem', borderRadius: '0.625rem', backgroundColor: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontSize: '0.75rem', fontWeight: 500, marginBottom: '1rem' }}>
-                        {error}
-                    </div>
-                )}
-
-                {/* Success */}
-                {saved && (
-                    <div style={{ padding: '0.625rem 0.875rem', borderRadius: '0.625rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', color: '#166534', fontSize: '0.75rem', fontWeight: 500, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                        <CheckCircle size={14} /> Profile updated successfully!
-                    </div>
-                )}
-
-                {/* Submit */}
-                <button type="submit" disabled={saving}
-                    style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', fontSize: '0.9375rem', fontWeight: 700, fontFamily: 'inherit', cursor: saving ? 'not-allowed' : 'pointer', background: saving ? '#BFDBFE' : 'linear-gradient(135deg, #1E40AF, #1E3A8A)', color: 'white', boxShadow: '0 4px 14px rgba(30,64,175,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                    {saving ? (
-                        <>
-                            <Loader2 size={18} style={{ animation: 'spin 1s linear infinite' }} />
-                            Saving...
-                        </>
-                    ) : (
-                        <>
-                            <Save size={18} />
-                            Save Profile Details
-                        </>
-                    )}
-                </button>
-            </form>
-
-            {/* Emergency Password Setup Card for Google / Manual Login */}
-            <div style={{ margin: '1rem', padding: '1.25rem', backgroundColor: '#F8FAFC', borderRadius: '1rem', border: '1px solid #E2E8F0' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
-                    <div style={{ padding: '0.375rem', borderRadius: '0.5rem', backgroundColor: '#EFF6FF', color: '#2563EB' }}>
-                        <Key size={18} />
-                    </div>
-                    <div>
-                        <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 700 }}>Emergency Password Setup</h3>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: '#64748B' }}>
-                            Bind a password to your account to sign in with email/password if Google OAuth is ever unavailable.
+                    </span>
+                    <div style={{ minWidth: 0 }}>
+                        <p style={{ margin: 0, fontSize: 'var(--zs-fs-small)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {user?.email || session?.user?.email}
+                        </p>
+                        <p style={{ margin: '0.1rem 0 0', display: 'flex', alignItems: 'center', gap: '0.25rem', fontSize: 'var(--zs-fs-meta)', color: user?.isVerified ? 'var(--color-campus-green)' : 'var(--color-text-muted)' }}>
+                            {user?.isVerified ? <ShieldCheck size={12} aria-hidden="true" /> : null}
+                            {user?.isVerified ? 'Verified UNIZIK student' : 'UNIZIK email not verified'}
                         </p>
                     </div>
                 </div>
 
-                <form onSubmit={handleBindPassword} style={{ marginTop: '1rem' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '0.75rem' }}>
+                <form onSubmit={handleSave} className="zs-panel" style={{ display: 'grid', gap: '0.85rem' }}>
+                    <div>
+                        <label className="zs-label" htmlFor="settings-name">Full name</label>
+                        <input
+                            id="settings-name"
+                            className="zs-input"
+                            type="text"
+                            value={displayName}
+                            onChange={(e) => setDisplayName(e.target.value)}
+                            required
+                            maxLength={50}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="zs-label" htmlFor="settings-phone">Phone number</label>
+                        <input
+                            id="settings-phone"
+                            className="zs-input"
+                            type="tel"
+                            inputMode="numeric"
+                            placeholder="2348012345678"
+                            value={phoneNumber}
+                            onChange={(e) => setPhoneNumber(e.target.value.replace(/[^0-9]/g, ''))}
+                            maxLength={15}
+                        />
+                        <p style={{ margin: '0.3rem 0 0', fontSize: 'var(--zs-fs-meta)', color: 'var(--color-text-muted)' }}>
+                            Shown only to a student you are already chatting with. Start with 234, no plus sign or spaces.
+                        </p>
+                    </div>
+
+                    <div>
+                        <label className="zs-label" htmlFor="settings-location">Usual meetup area</label>
+                        <select
+                            id="settings-location"
+                            className="zs-select"
+                            style={{ width: '100%' }}
+                            value={lodgeLocation}
+                            onChange={(e) => setLodgeLocation(e.target.value)}
+                        >
+                            {UNIZIK_LOCATIONS.map((loc) => (
+                                <option key={loc.id} value={loc.name}>{loc.name} ({loc.zone})</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(9rem, 1fr))', gap: '0.75rem' }}>
                         <div>
-                            <label style={{ fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: '0.25rem' }}>New Password</label>
-                            <input type="password" placeholder="Min. 6 chars" value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength={6}
-                                style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-border)', fontSize: '0.75rem', boxSizing: 'border-box' }} />
+                            <label className="zs-label" htmlFor="settings-faculty">Faculty</label>
+                            <select id="settings-faculty" className="zs-select" style={{ width: '100%' }} value={faculty} onChange={(e) => setFaculty(e.target.value)}>
+                                <option value="">Not set</option>
+                                {UNIZIK_FACULTIES.map((f) => (
+                                    <option key={f.name} value={f.name}>{f.name}</option>
+                                ))}
+                            </select>
                         </div>
                         <div>
-                            <label style={{ fontSize: '0.75rem', fontWeight: 600, display: 'block', marginBottom: '0.25rem' }}>Confirm Password</label>
-                            <input type="password" placeholder="Repeat password" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required minLength={6}
-                                style={{ width: '100%', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-border)', fontSize: '0.75rem', boxSizing: 'border-box' }} />
+                            <label className="zs-label" htmlFor="settings-level">Level</label>
+                            <select id="settings-level" className="zs-select" style={{ width: '100%' }} value={level} onChange={(e) => setLevel(e.target.value)}>
+                                {ACADEMIC_LEVELS.map((lvl) => (
+                                    <option key={lvl} value={lvl}>{lvl}</option>
+                                ))}
+                            </select>
                         </div>
                     </div>
 
-                    {passwordError && (
-                        <div style={{ padding: '0.5rem 0.75rem', borderRadius: '0.5rem', backgroundColor: '#FEF2F2', color: '#DC2626', fontSize: '0.6875rem', fontWeight: 600, marginBottom: '0.75rem' }}>
-                            {passwordError}
-                        </div>
-                    )}
+                    <div>
+                        <label className="zs-label" htmlFor="settings-department">Department</label>
+                        <input
+                            id="settings-department"
+                            className="zs-input"
+                            type="text"
+                            placeholder="e.g. Theatre and Film Studies"
+                            value={department}
+                            onChange={(e) => setDepartment(e.target.value)}
+                            maxLength={60}
+                        />
+                    </div>
 
+                    {error && <p className="zs-auth__error" role="alert">{error}</p>}
+                    {saved && <p className="zs-tag zs-tag--free" style={{ display: 'inline-flex' }}><CheckCircle size={12} /> Saved</p>}
+
+                    <button type="submit" className="zs-btn zs-btn--primary zs-btn--block" disabled={saving}>
+                        {saving ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                        {saving ? 'Saving…' : 'Save details'}
+                    </button>
+                </form>
+
+                <form onSubmit={handleBindPassword} className="zs-panel" style={{ display: 'grid', gap: '0.75rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                        <Key size={16} color="var(--color-brand)" aria-hidden="true" style={{ marginTop: '0.15rem' }} />
+                        <div>
+                            <h2 style={{ margin: 0, fontSize: 'var(--zs-fs-card)', fontWeight: 700 }}>Password sign-in</h2>
+                            <p style={{ margin: '0.15rem 0 0', fontSize: 'var(--zs-fs-meta)', color: 'var(--color-text-muted)' }}>
+                                Set a password so you can still sign in with your email if Google sign-in is unavailable.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(9rem, 1fr))', gap: '0.75rem' }}>
+                        <div>
+                            <label className="zs-label" htmlFor="settings-password">New password</label>
+                            <input
+                                id="settings-password"
+                                className="zs-input"
+                                type="password"
+                                autoComplete="new-password"
+                                placeholder="At least 6 characters"
+                                value={newPassword}
+                                onChange={(e) => setNewPassword(e.target.value)}
+                                required
+                                minLength={6}
+                            />
+                        </div>
+                        <div>
+                            <label className="zs-label" htmlFor="settings-password-confirm">Repeat password</label>
+                            <input
+                                id="settings-password-confirm"
+                                className="zs-input"
+                                type="password"
+                                autoComplete="new-password"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                required
+                                minLength={6}
+                            />
+                        </div>
+                    </div>
+
+                    {passwordError && <p className="zs-auth__error" role="alert">{passwordError}</p>}
                     {passwordSuccess && (
-                        <div style={{ padding: '0.5rem 0.75rem', borderRadius: '0.5rem', backgroundColor: '#F0FDF4', color: '#166534', fontSize: '0.6875rem', fontWeight: 600, marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
-                            <CheckCircle size={14} /> Password bound successfully! You can now log in with email and this password anytime.
-                        </div>
+                        <p className="zs-tag zs-tag--free" style={{ display: 'inline-flex' }}>
+                            <CheckCircle size={12} /> Password set — you can now sign in with email and password
+                        </p>
                     )}
 
-                    <button type="submit" disabled={bindingPassword}
-                        style={{ padding: '0.625rem 1.25rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#0F172A', color: 'white', fontSize: '0.8125rem', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                        {bindingPassword ? <Loader2 size={14} className="animate-spin" /> : <Lock size={14} />}
-                        {bindingPassword ? 'Saving Password...' : 'Bind / Update Login Password'}
+                    <button type="submit" className="zs-btn zs-btn--outline" disabled={bindingPassword} style={{ justifySelf: 'start' }}>
+                        {bindingPassword ? <Loader2 size={15} className="animate-spin" /> : <Lock size={15} />}
+                        {bindingPassword ? 'Saving…' : 'Set password'}
                     </button>
                 </form>
             </div>
-
-            <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
         </div>
     )
 }

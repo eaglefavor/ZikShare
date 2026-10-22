@@ -409,18 +409,20 @@ export default function PostPage() {
     }
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', paddingBottom: '5.5rem' }}>
-            {/* Header */}
-            <header style={{ position: 'sticky', top: 0, zIndex: 40, backgroundColor: 'white', borderBottom: '1px solid var(--color-border)', padding: '0.875rem 1rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                <button onClick={() => navigate(-1)} style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: '0.25rem' }}>
-                    <ArrowLeft size={20} />
+        <div className="zs-container" style={{ maxWidth: '38rem' }}>
+            <div style={{ marginBottom: '1rem' }}>
+                <button type="button" className="zs-link" onClick={() => navigate(-1)}>
+                    <ArrowLeft size={15} /> Back
                 </button>
-                <h1 style={{ margin: 0, fontSize: '1.0625rem', fontWeight: 800, color: '#0F172A' }}>Create Listing</h1>
-            </header>
+                <h1 style={{ margin: '0.5rem 0 0.35rem', fontSize: 'var(--zs-fs-title)', letterSpacing: '-0.02em' }}>New listing</h1>
+                <p className="zs-lead" style={{ margin: 0 }}>
+                    Sell something physical, or upload material you wrote yourself.
+                </p>
+            </div>
 
-            <div style={{ padding: '1rem', maxWidth: '32rem', margin: '0 auto' }}>
+            <div>
                 {/* Mode Selector Tabs */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '0.25rem', backgroundColor: '#E2E8F0', borderRadius: '0.75rem', marginBottom: '1.25rem' }}>
+                <div role="tablist" aria-label="What are you posting" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', padding: '0.25rem', backgroundColor: 'var(--color-canvas)', borderRadius: 'var(--zs-radius-md)', marginBottom: '1.25rem' }}>
                     <button
                         type="button"
                         onClick={() => handleTypeSwitch('physical')}

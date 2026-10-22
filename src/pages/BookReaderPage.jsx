@@ -11,7 +11,7 @@ import {
     ZoomIn,
     ZoomOut,
 } from 'lucide-react'
-import { findBookBySlug } from '../lib/christianBooks'
+import { findBookBySlug, findRelatedBooks } from '../lib/christianBooks'
 import {
     openPdfDocument,
     renderPdfPage,
@@ -26,6 +26,7 @@ const SCALE_STEP = 0.2
 
 function BookReader({ book, pdfPath }) {
     const navigate = useNavigate()
+    const nextBook = findRelatedBooks(book.slug, 1)[0] || null
 
     const canvasRef = useRef(null)
     const stageRef = useRef(null)
@@ -152,6 +153,17 @@ function BookReader({ book, pdfPath }) {
                 >
                     <Download size={16} />
                 </a>
+                {nextBook && (
+                    <button
+                        type="button"
+                        onClick={() => navigate(`/library/books/${nextBook.slug}/read`)}
+                        aria-label={`Read ${nextBook.title} next`}
+                        title={`Next: ${nextBook.title}`}
+                        style={{ width: '2.1rem', height: '2.1rem', borderRadius: '9999px', backgroundColor: '#1E293B', border: '1px solid #334155', color: '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
+                    >
+                        <ChevronRight size={16} />
+                    </button>
+                )}
             </div>
 
             {status === 'loading' && (
@@ -222,6 +234,14 @@ function BookReader({ book, pdfPath }) {
                             style={{ width: '2.25rem', height: '2.25rem', borderRadius: '0.5rem', border: '1px solid #334155', backgroundColor: '#1E293B', color: page >= numPages ? '#475569' : '#F8FAFC', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: page >= numPages ? 'not-allowed' : 'pointer' }}
                         >
                             <ChevronRight size={18} />
+                        </button>
+
+                        <button
+                            type="button"
+                            onClick={() => navigate(`/library/books/${book.slug}`)}
+                            style={{ background: 'none', border: 'none', color: '#94A3B8', fontSize: '0.72rem', fontWeight: 700, cursor: 'pointer', padding: '0 0.25rem' }}
+                        >
+                            Book details
                         </button>
 
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', marginLeft: '0.25rem' }}>

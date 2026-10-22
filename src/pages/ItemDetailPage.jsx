@@ -280,9 +280,17 @@ export default function ItemDetailPage() {
     const isOwnListing = currentUserId === sellerId
 
     return (
-        <div style={{ minHeight: '100vh', backgroundColor: 'var(--color-background)', paddingBottom: '5.5rem', maxWidth: '42rem', margin: '0 auto' }}>
-            <div style={{ position: 'relative' }}>
-                <div style={{ width: '100%', height: '300px', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem', overflow: 'hidden' }}>
+        <div className="zs-container" style={{ paddingBottom: '5.5rem', maxWidth: '52rem' }}>
+            <button
+                type="button"
+                onClick={() => navigate(-1)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.35rem', background: 'none', border: 'none', padding: '0.85rem 0 0', color: 'var(--color-brand)', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}
+            >
+                <ArrowLeft size={15} /> Back
+            </button>
+
+            <div style={{ position: 'relative', marginTop: '0.65rem', borderRadius: '0.9rem', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
+                <div style={{ width: '100%', height: '260px', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem', overflow: 'hidden' }}>
                     {images[currentImage] ? (
                         <img src={images[currentImage]} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     ) : item.isDigital ? '📄' : '📦'}
@@ -308,9 +316,7 @@ export default function ItemDetailPage() {
                 )}
 
                 <div style={{ position: 'absolute', top: 0, left: 0, right: 0, padding: '0.75rem 1rem', display: 'flex', justifyContent: 'space-between', background: 'linear-gradient(to bottom, rgba(0,0,0,0.25), transparent)' }}>
-                    <button onClick={() => navigate(-1)} style={{ width: '2.25rem', height: '2.25rem', borderRadius: '9999px', backgroundColor: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
-                        <ArrowLeft size={18} />
-                    </button>
+                    <span />
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                         <button onClick={handleShare} style={{ width: '2.25rem', height: '2.25rem', borderRadius: '9999px', backgroundColor: 'rgba(255,255,255,0.9)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(8px)' }}>
                             <Share2 size={18} />
@@ -515,14 +521,13 @@ export default function ItemDetailPage() {
 
                                     {/* Library packs are free; only independent seller PDFs still check out. */}
                                     {isFreePdf ? (
-                                        <a
-                                            href={freeDownloadHref}
-                                            download
-                                            style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.9375rem', fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}
-                                        >
-                                            <Download size={16} />
-                                            <span>Download Free PDF</span>
-                                        </a>
+                                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-text-secondary)' }}>
+                                            This document is free.{' '}
+                                            <a href={freeDownloadHref} download style={{ color: 'var(--color-brand)', fontWeight: 700 }}>
+                                                Download the PDF
+                                            </a>{' '}
+                                            — no payment, no account.
+                                        </p>
                                     ) : session?.user ? (
                                         <div id="buy-digital">
                                             <PaystackCheckout
@@ -749,7 +754,7 @@ export default function ItemDetailPage() {
 
             {/* Sticky Bottom CTA */}
             {!isOwnListing && (
-                <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '42rem', padding: '0.625rem 1rem', backgroundColor: 'white', borderTop: '1px solid var(--color-border)', display: 'flex', gap: '0.5rem', zIndex: 50, paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box' }}>
+                <div className="zs-mobile-only" style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '42rem', padding: '0.625rem 1rem', backgroundColor: 'white', borderTop: '1px solid var(--color-border)', display: 'flex', gap: '0.5rem', zIndex: 50, paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box' }}>
                     {item.isDigital ? (
                         isFreePdf ? (
                             <a

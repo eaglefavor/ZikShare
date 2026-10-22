@@ -3,7 +3,7 @@ import { Routes, Route } from 'react-router-dom'
 import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ToastProvider } from './components/Toast'
 import ErrorBoundary from './components/ErrorBoundary'
-import BottomNav from './components/BottomNav'
+import AppShell from './components/AppShell'
 import DebugConsole from './components/DebugConsole'
 import HomePage from './pages/HomePage'
 import AdminRoute, { isUserAdmin } from './components/AdminRoute'
@@ -61,11 +61,9 @@ function AppRoutes() {
         <Route path="/official-channel" element={<OfficialChannelPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/payment/success" element={<PaymentSuccess />} />
-        <Route path="/item/:id" element={<ItemDetailPage />} />
+
         {/* The reader is full-screen: no bottom navigation under the page controls */}
         <Route path="/library/books/:slug/read" element={<BookReaderPage />} />
-        <Route path="/seller/:id" element={<SellerProfilePage />} />
-        <Route path="/user/:id" element={<SellerProfilePage />} />
         <Route path="/seller-hub" element={<SellerHubPage />} />
         <Route path="/profile/listings" element={<MyListingsPage />} />
         <Route path="/profile/saved" element={<SavedItemsPage />} />
@@ -80,7 +78,7 @@ function AppRoutes() {
           path="*"
           element={
             <>
-              <main className="pb-safe">
+              <AppShell>
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/library" element={<LibraryPage />} />
@@ -89,9 +87,11 @@ function AppRoutes() {
                   <Route path="/post" element={<PostPage />} />
                   <Route path="/messages" element={<MessagesPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/item/:id" element={<ItemDetailPage />} />
+                  <Route path="/seller/:id" element={<SellerProfilePage />} />
+                  <Route path="/user/:id" element={<SellerProfilePage />} />
                 </Routes>
-              </main>
-              <BottomNav />
+              </AppShell>
             </>
           }
         />

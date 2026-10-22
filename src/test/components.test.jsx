@@ -71,7 +71,7 @@ describe('Components & ErrorBoundary Resilience', () => {
     spy.mockRestore()
   })
 
-  it('renders HomePage with search and Digital Library entry banner without throwing', async () => {
+  it('renders HomePage with the library as the first thing offered', async () => {
     const { default: HomePage } = await import('../pages/HomePage')
     const { MemoryRouter } = await import('react-router-dom')
 
@@ -83,7 +83,9 @@ describe('Components & ErrorBoundary Resilience', () => {
       </MemoryRouter>
     )
 
-    expect(screen.getByText(/UNIZIK Digital Library/i)).toBeInTheDocument()
-    expect(screen.getByText(/Search phones, laptops, generators, past questions/i)).toBeInTheDocument()
+    // The promise comes first, then the way in.
+    expect(screen.getByText(/Free study material, on your phone, right now/i)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Browse the library/i })).toBeInTheDocument()
+    expect(screen.getByText(/Course packs and|student-written course packs/i)).toBeInTheDocument()
   })
 })

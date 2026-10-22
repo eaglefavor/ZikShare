@@ -11,33 +11,35 @@ vi.mock('../lib/database', () => ({
   getDigitalProducts: vi.fn(),
 }))
 
-describe('Digital Library UI Component Tests', { timeout: 15000 }, () => {
+describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
   beforeEach(() => {
     vi.clearAllMocks()
     database.getDigitalProducts.mockResolvedValue([])
   })
 
-  it('renders library title, search bar, and all faculty selector pills', async () => {
+  const renderLibrary = () =>
     render(
       <MemoryRouter>
         <LibraryPage />
       </MemoryRouter>
     )
+
+  const openFilters = () => fireEvent.click(screen.getByRole('button', { name: /^Filters/ }))
+
+  it('opens with a title, one search field, and results already visible', async () => {
+    renderLibrary()
 
     expect(await screen.findByText('UNIZIK Digital Library')).toBeInTheDocument()
     expect(screen.getByPlaceholderText(/Search a course code/i)).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'All Faculties' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Faculty of Engineering' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Faculty of Medicine' })).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Faculty of Agriculture' })).toBeInTheDocument()
+
+    // The first document is on the first screen: no wall of filters above it.
+    expect(screen.getAllByRole('link', { name: /Download Free PDF/i }).length).toBeGreaterThan(0)
+    // Filters are behind one control until the reader asks for them.
+    expect(screen.queryByRole('button', { name: 'Faculty of Engineering' })).not.toBeInTheDocument()
   })
 
   it('filters study packs in real-time when searching by course code', async () => {
-    render(
-      <MemoryRouter>
-        <LibraryPage />
-      </MemoryRouter>
-    )
+    renderLibrary()
 
     const searchInput = screen.getByPlaceholderText(/Search a course code/i)
     fireEvent.change(searchInput, { target: { value: 'LAW 101' } })
@@ -46,92 +48,70 @@ describe('Digital Library UI Component Tests', { timeout: 15000 }, () => {
     expect(screen.queryByText(/FEG 101: Engineering Mathematics I/i)).not.toBeInTheDocument()
   })
 
-  it('dynamically reveals department selector pills when a faculty is selected', async () => {
-    render(
-      <MemoryRouter>
-        <LibraryPage />
-      </MemoryRouter>
-    )
+  it('reveals departments only after a faculty is chosen in the filter sheet', async () => {
+    renderLibrary()
+    openFilters()
 
-    // Initially department pills for Engineering should not be present
     expect(screen.queryByText(/Departments in Faculty of Engineering/i)).not.toBeInTheDocument()
 
-    // Click Faculty of Engineering
-    const engButton = screen.getByRole('button', { name: 'Faculty of Engineering' })
-    fireEvent.click(engButton)
+    fireEvent.click(screen.getByRole('button', { name: 'Faculty of Engineering' }))
 
-    // Verify departments appear as pill buttons
     expect(screen.getByText(/Departments in Faculty of Engineering/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Mechanical Engineering' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Electrical Engineering' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Civil Engineering' })).toBeInTheDocument()
   })
 
-  it('filters study packs by department when clicking a department pill', async () => {
-    render(
-      <MemoryRouter>
-        <LibraryPage />
-      </MemoryRouter>
-    )
+  it('filters packs by department and reports how many results remain', async () => {
+    renderLibrary()
+    openFilters()
 
-    // Select Faculty of Law
     fireEvent.click(screen.getByRole('button', { name: 'Faculty of Law' }))
-
-    // Select Public Law department pill
     fireEvent.click(screen.getByRole('button', { name: 'Public Law' }))
+    openFilters.call ? null : null
+    fireEvent.click(screen.getByRole('button', { name: /^Show \d+ results?$/ }))
 
-    // The LAW 101 pack belongs to Public Law; the engineering pack must disappear
     expect(screen.getByText(/LAW 101: The Nigerian Legal System/i)).toBeInTheDocument()
     expect(screen.queryByText(/FEG 101: Engineering Mathematics I/i)).not.toBeInTheDocument()
   })
 
-  it('resets filters cleanly when clicking Show All Faculties', async () => {
-    render(
-      <MemoryRouter>
-        <LibraryPage />
-      </MemoryRouter>
-    )
+  it('clears every filter in one action', async () => {
+    renderLibrary()
+    openFilters()
 
-    // Select Faculty of Law
     fireEvent.click(screen.getByRole('button', { name: 'Faculty of Law' }))
-    expect(screen.getByText(/Departments in Faculty of Law/i)).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: /^Clear all filters$/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^Show \d+ results?$/ }))
 
-    // Click Show All Faculties
-    fireEvent.click(screen.getByText('Show All Faculties'))
     expect(screen.queryByText(/Departments in Faculty of Law/i)).not.toBeInTheDocument()
     expect(screen.getAllByText(/GST 101/i).length).toBeGreaterThan(0)
   })
 
-  it('filters by material domain and exposes a free preview link for each PDF pack', async () => {
-    render(
-      <MemoryRouter>
-        <LibraryPage />
-      </MemoryRouter>
-    )
+  it('filters by shelf and keeps a free preview for each pack', async () => {
+    renderLibrary()
+    openFilters()
 
-    // Domain chips are rendered with pack counts
-    const studySkillsChip = screen.getByRole('button', { name: /Study Skills \(\d+\)/ })
-    fireEvent.click(studySkillsChip)
+    fireEvent.click(screen.getByRole('button', { name: /Study Skills \(\d+\)/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^Show \d+ results?$/ }))
 
     expect(screen.getByText(/How to Study at University/i)).toBeInTheDocument()
     expect(screen.queryByText(/GST 101: Use of English I/i)).not.toBeInTheDocument()
 
-    // Preview links point at real generated files
-    const previewLinks = screen.getAllByText(/Free 3-page preview/i)
+    const previewLinks = screen.getAllByText(/^Preview$/)
     expect(previewLinks.length).toBeGreaterThan(0)
     expect(previewLinks[0].getAttribute('href')).toMatch(/^\/library\/previews\/[a-z0-9-]+\.pdf$/)
   })
 
-  it('shows the full authored catalog count when no database rows exist', async () => {
-    render(
-      <MemoryRouter>
-        <LibraryPage />
-      </MemoryRouter>
-    )
-
+  it('counts every authored document, with or without database rows', async () => {
+    renderLibrary()
     const total = FRESHER_LIBRARY_PACKS.length + CHRISTIAN_BOOKS.length
-    expect(await screen.findByText(new RegExp(`All Domains \\(${total}\\)`))).toBeInTheDocument()
-    expect(screen.getByText(new RegExp(`Library Materials \\(${total}\\)`))).toBeInTheDocument()
+
+    expect(
+      await screen.findByText(new RegExp(`${FRESHER_LIBRARY_PACKS.length} student-written course packs`))
+    ).toBeInTheDocument()
+
+    openFilters()
+    expect(screen.getByRole('button', { name: `All Domains (${total})` })).toBeInTheDocument()
   })
 })
 
@@ -164,13 +144,16 @@ describe('Christian Books shelf UI', { timeout: 15000 }, () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByRole('button', { name: /Christian Books \(\d+\)/ })).toBeInTheDocument()
+    fireEvent.click(await screen.findByRole('button', { name: /^Filters/ }))
+    expect(screen.getByRole('button', { name: /Christian Books \(\d+\)/ })).toBeInTheDocument()
   })
 
   it('lists a book and opens its own page rather than an item page', async () => {
     renderLibraryWithBookRoute()
 
-    fireEvent.click(await screen.findByRole('button', { name: /Christian Books \(\d+\)/ }))
+    fireEvent.click(await screen.findByRole('button', { name: /^Filters/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Christian Books \(\d+\)/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^Show \d+ results?$/ }))
 
     expect(await screen.findByText('The Spiritual Man')).toBeInTheDocument()
     expect(screen.getAllByText(/Watchman Nee/).length).toBeGreaterThan(0)
@@ -197,7 +180,9 @@ describe('Christian Books shelf UI', { timeout: 15000 }, () => {
 
     renderLibraryWithBookRoute()
 
-    fireEvent.click(await screen.findByRole('button', { name: /Christian Books \(\d+\)/ }))
+    fireEvent.click(await screen.findByRole('button', { name: /^Filters/ }))
+    fireEvent.click(screen.getByRole('button', { name: /Christian Books \(\d+\)/ }))
+    fireEvent.click(screen.getByRole('button', { name: /^Show \d+ results?$/ }))
 
     const titles = await screen.findAllByText('The Spiritual Man')
     expect(titles).toHaveLength(1)

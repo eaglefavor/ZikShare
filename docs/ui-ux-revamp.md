@@ -300,6 +300,9 @@ system was visible on arrival.
   reading and download side by side, page count / size / Free as tags.
 - Search empty states distinguish "nothing is listed" from "nothing matches",
   and report how many items exist.
+- `/official-channel`: the beige WhatsApp pastiche (dark app bar, `#EFEAE2`
+  canvas) is gone. It now sits inside the shell as one more page: a heading, a
+  read-only notice, and announcement cards. Moved inside the shell layout.
 - `/messages`: rebuilt on tokens, and made reachable at all — it had no link
   anywhere in the app. The shell now carries a Messages icon with an unread
   badge, and the phone bar is Home · Library · Search · Sell · You.
@@ -309,7 +312,7 @@ system was visible on arrival.
 
 | Item | Why it matters |
 | --- | --- |
-| `SellerHubPage`, `ChatPage`, `OfficialChannelPage` restyle | still on the old inline-style system; the longest files left |
+| `SellerHubPage`, `ChatPage` restyle | still on the old inline-style system; the longest files left. `ChatPage` also carries the offer, escrow-PIN and checkout flows, so it needs care rather than a coat of paint |
 | `PostPage` inner form | the gate is fixed, the 500-line form behind it is not |
 | `/seller-hub`, `/profile/*` inside the shell | they sit outside it, so they have no navigation; move once their inner markup is converted |
 | Item detail two-column layout | content left, sticky action card right on ≥980px |

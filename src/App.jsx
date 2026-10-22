@@ -58,7 +58,6 @@ function AppRoutes() {
         {/* Full-screen pages (no bottom nav) */}
         <Route path="/admin/*" element={<AdminRoute><AdminPage /></AdminRoute>} />
         <Route path="/admin" element={<AdminRoute><AdminPage /></AdminRoute>} />
-        <Route path="/official-channel" element={<OfficialChannelPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/payment/success" element={<PaymentSuccess />} />
 
@@ -86,6 +85,7 @@ function AppRoutes() {
                   <Route path="/search" element={<SearchPage />} />
                   <Route path="/post" element={<PostPage />} />
                   <Route path="/messages" element={<MessagesPage />} />
+                  <Route path="/official-channel" element={<OfficialChannelPage />} />
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/item/:id" element={<ItemDetailPage />} />
                   <Route path="/seller/:id" element={<SellerProfilePage />} />

@@ -9,7 +9,11 @@
     "lint": "eslint .",
     "test": "vitest run",
     "test:watch": "vitest",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "library:build": "node scripts/build-library-pdfs.mjs",
+    "library:check": "node scripts/build-library-pdfs.mjs --check",
+    "library:seed": "node scripts/seed-library.mjs",
+    "library:verify": "node scripts/seed-library.mjs --verify"
   },
   "dependencies": {
     "@pdfsmaller/pdf-encrypt": "^1.2.0",

@@ -7,12 +7,7 @@ import {
 } from 'lucide-react'
 import { getDigitalProducts } from '../lib/database'
 import { UNIZIK_FACULTIES, ACADEMIC_LEVELS, ACADEMIC_MATERIAL_TYPES, formatCourseCode } from '../lib/categories'
-import { UNIZIK_OFFICIAL_STUDY_PACKS } from '../lib/academicCatalogData'
-
-function formatNaira(kobo) {
-    const naira = (kobo || 0) / 100
-    return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(naira)
-}
+import { FRESHER_LIBRARY_PACKS, FRESHER_LIBRARY_DOMAINS, mergeLibraryMaterials } from '../lib/fresherLibrary'
 
 export default function LibraryPage() {
     const navigate = useNavigate()
@@ -21,6 +16,7 @@ export default function LibraryPage() {
     const [selectedDepartment, setSelectedDepartment] = useState('All')
     const [selectedLevel, setSelectedLevel] = useState('All')
     const [selectedMaterialType, setSelectedMaterialType] = useState('All')
+    const [selectedDomain, setSelectedDomain] = useState('All')
     const [dbMaterials, setDbMaterials] = useState([])
     const [, setIsLoading] = useState(true)
 
@@ -59,31 +55,10 @@ export default function LibraryPage() {
         return () => { isMounted = false }
     }, [])
 
-    // Merge database items with configured official catalog fallback
-    const allMaterials = useMemo(() => {
-        if (dbMaterials.length > 0) {
-            return dbMaterials.map(d => ({
-                id: d.id,
-                code: d.course_code || '',
-                title: d.title,
-                faculty: d.faculty || 'General Studies (GST / CED)',
-                department: d.department || '',
-                level: d.level || '100L',
-                material_type: d.subcategory || 'lecture-notes',
-                priceKobo: d.price || 50000,
-                page_count: d.page_count || 65,
-                file_size_bytes: d.file_size_bytes || 4000000,
-                description: d.description || '',
-                is_official: true,
-            }))
-        }
-
-        // Fallback to static catalog if DB table not yet populated
-        return UNIZIK_OFFICIAL_STUDY_PACKS.map((item, idx) => ({
-            id: `catalog-${idx}`,
-            ...item,
-        }))
-    }, [dbMaterials])
+    // Database rows plus the authored PDF catalog. Packs that an admin has not
+    // yet seeded are still listed, with their free preview, so the library is
+    // never empty and every card links to a real document.
+    const allMaterials = useMemo(() => mergeLibraryMaterials(dbMaterials), [dbMaterials])
 
     // Filter logic
     const filteredMaterials = useMemo(() => {
@@ -97,10 +72,11 @@ export default function LibraryPage() {
             const matchesDepartment = selectedDepartment === 'All' || item.department === selectedDepartment || (item.title && item.title.toLowerCase().includes(selectedDepartment.toLowerCase()))
             const matchesLevel = selectedLevel === 'All' || item.level === selectedLevel
             const matchesType = selectedMaterialType === 'All' || item.material_type === selectedMaterialType
+            const matchesDomain = selectedDomain === 'All' || item.domain === selectedDomain
 
-            return matchesQuery && matchesFaculty && matchesDepartment && matchesLevel && matchesType
+            return matchesQuery && matchesFaculty && matchesDepartment && matchesLevel && matchesType && matchesDomain
         })
-    }, [allMaterials, searchQuery, selectedFaculty, selectedDepartment, selectedLevel, selectedMaterialType])
+    }, [allMaterials, searchQuery, selectedFaculty, selectedDepartment, selectedLevel, selectedMaterialType, selectedDomain])
 
     return (
         <div style={{ minHeight: '100vh', backgroundColor: '#F8FAFC', paddingBottom: '5rem' }}>
@@ -128,7 +104,7 @@ export default function LibraryPage() {
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'rgba(217, 119, 6, 0.2)', border: '1px solid rgba(253, 230, 138, 0.4)', borderRadius: '9999px', padding: '0.35rem 0.85rem', marginBottom: '0.85rem' }}>
                         <ShieldCheck size={16} color="#FBBF24" />
                         <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#FEF3C7', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                            Official UNIZIK Academic Vault
+                            Free Student Study Library
                         </span>
                     </div>
 
@@ -136,7 +112,7 @@ export default function LibraryPage() {
                         UNIZIK Digital Library
                     </h1>
                     <p style={{ fontSize: '0.92rem', color: '#E2E8F0', maxWidth: '640px', lineHeight: 1.5, marginBottom: '1.5rem' }}>
-                        Verified past questions, comprehensive lecture notes, formula handbooks, and exam marking schemes across all faculties — instant download to your phone or laptop.
+                        {FRESHER_LIBRARY_PACKS.length} student-written study packs across every faculty — including the Faculty of Arts and a year-by-year Theatre &amp; Film Studies outline archive. Everything is free: no fee, no sign-in, no payment step before download.
                     </p>
 
                     {/* Search Input Bar */}
@@ -199,8 +175,8 @@ export default function LibraryPage() {
                             <Award size={22} />
                         </div>
                         <div>
-                            <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0F172A' }}>Faculty-Verified Quality Guarantee</div>
-                            <div style={{ fontSize: '0.78rem', color: '#64748B' }}>100% syllabus aligned • Virus-free PDF • Instant post-payment download</div>
+                            <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0F172A' }}>Free, student-written, no payment step</div>
+                            <div style={{ fontSize: '0.78rem', color: '#64748B' }}>Syllabus-mapped (confirm with your department) • No fee • No sign-in • Direct PDF download</div>
                         </div>
                     </div>
 
@@ -315,6 +291,50 @@ export default function LibraryPage() {
                         </div>
                     )}
 
+                    {/* Domain Selector Pills */}
+                    <div style={{ marginBottom: '1rem', paddingTop: '0.75rem', borderTop: '1px solid #F1F5F9' }}>
+                        <div style={{ fontSize: '0.78rem', fontWeight: 700, color: '#475569', marginBottom: '0.5rem' }}>
+                            Material Domain ({FRESHER_LIBRARY_DOMAINS.length})
+                        </div>
+                        <div style={{ display: 'flex', gap: '0.4rem', overflowX: 'auto', paddingBottom: '0.25rem', scrollbarWidth: 'none' }}>
+                            <button
+                                onClick={() => setSelectedDomain('All')}
+                                style={{
+                                    whiteSpace: 'nowrap',
+                                    padding: '0.35rem 0.75rem',
+                                    borderRadius: '9999px',
+                                    fontSize: '0.78rem',
+                                    fontWeight: selectedDomain === 'All' ? 700 : 500,
+                                    backgroundColor: selectedDomain === 'All' ? '#0F172A' : '#F8FAFC',
+                                    color: selectedDomain === 'All' ? '#FFFFFF' : '#475569',
+                                    border: '1px solid #E2E8F0',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                All Domains ({FRESHER_LIBRARY_PACKS.length})
+                            </button>
+                            {FRESHER_LIBRARY_DOMAINS.map(domain => (
+                                <button
+                                    key={domain.name}
+                                    onClick={() => setSelectedDomain(domain.name)}
+                                    style={{
+                                        whiteSpace: 'nowrap',
+                                        padding: '0.35rem 0.75rem',
+                                        borderRadius: '9999px',
+                                        fontSize: '0.78rem',
+                                        fontWeight: selectedDomain === domain.name ? 700 : 500,
+                                        backgroundColor: selectedDomain === domain.name ? '#0F172A' : '#F8FAFC',
+                                        color: selectedDomain === domain.name ? '#FFFFFF' : '#475569',
+                                        border: '1px solid #E2E8F0',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    {domain.emoji} {domain.name} ({domain.count})
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Level & Material Type Row */}
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.25rem', paddingTop: '0.5rem', borderTop: '1px solid #F1F5F9' }}>
                         {/* Level Filter */}
@@ -424,7 +444,7 @@ export default function LibraryPage() {
                             Try searching for another course code or clearing some filters to explore other departments.
                         </p>
                         <button
-                            onClick={() => { handleFacultyChange('All'); setSelectedLevel('All'); setSelectedMaterialType('All'); setSearchQuery('') }}
+                            onClick={() => { handleFacultyChange('All'); setSelectedLevel('All'); setSelectedMaterialType('All'); setSelectedDomain('All'); setSearchQuery('') }}
                             style={{ backgroundColor: '#1E40AF', color: 'white', border: 'none', padding: '0.5rem 1.25rem', borderRadius: '0.5rem', fontSize: '0.85rem', fontWeight: 600, cursor: 'pointer' }}
                         >
                             Reset All Filters
@@ -435,7 +455,26 @@ export default function LibraryPage() {
                         {filteredMaterials.map((item) => (
                             <div
                                 key={item.id}
-                                onClick={() => item.id && !item.id.startsWith('catalog-') ? navigate(`/item/${item.id}`) : navigate(`/search?query=${encodeURIComponent(item.code || item.title)}`)}
+                                onClick={() => {
+                                    const id = String(item.id || '')
+                                    const isPublished = id && !id.startsWith('pdf-') && !id.startsWith('catalog-')
+                                    if (isPublished) {
+                                        navigate(`/item/${item.id}`)
+                                        return
+                                    }
+                                    // Unseeded packs still have a public free PDF, so
+                                    // open the full document rather than a preview.
+                                    const href = item.download_path || (item.slug ? `/library/packs/${item.slug}.pdf` : null)
+                                    if (href) {
+                                        window.open(href, '_blank', 'noopener,noreferrer')
+                                        return
+                                    }
+                                    if (item.preview_path) {
+                                        window.open(item.preview_path, '_blank', 'noopener,noreferrer')
+                                        return
+                                    }
+                                    navigate(`/search?query=${encodeURIComponent(item.code || item.title)}`)
+                                }}
                                 style={{
                                     backgroundColor: '#FFFFFF',
                                     borderRadius: '0.875rem',
@@ -486,7 +525,7 @@ export default function LibraryPage() {
                                             gap: '0.25rem',
                                             border: '1px solid #FDE68A'
                                         }}>
-                                            <ShieldCheck size={12} color="#D97706" /> Verified
+                                            <ShieldCheck size={12} color="#D97706" /> {item.page_count ? `${item.page_count} pages` : 'Verified'}
                                         </span>
                                     </div>
 
@@ -495,7 +534,24 @@ export default function LibraryPage() {
                                         {item.title}
                                     </h4>
 
+                                    {/* Outline archive years (only on year-demarcated packs) */}
+                                    {item.archive_years?.length > 0 && (
+                                        <div style={{ marginBottom: '0.5rem' }}>
+                                            <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#7C1D3F', backgroundColor: '#FDF2F8', border: '1px solid #FBCFE8', padding: '0.15rem 0.45rem', borderRadius: '9999px', letterSpacing: '0.02em' }}>
+                                                🗓 Archive: {item.archive_years.join(' → ')}
+                                            </span>
+                                        </div>
+                                    )}
+
                                     {/* Faculty, Department & Level Pill */}
+                                    {item.domain && (
+                                        <div style={{ marginBottom: '0.5rem' }}>
+                                            <span style={{ fontSize: '0.68rem', fontWeight: 700, color: '#0F766E', backgroundColor: '#ECFDF5', border: '1px solid #A7F3D0', padding: '0.15rem 0.45rem', borderRadius: '9999px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+                                                {item.domain}
+                                            </span>
+                                        </div>
+                                    )}
+
                                     <div style={{ fontSize: '0.75rem', color: '#64748B', marginBottom: '0.65rem', display: 'flex', alignItems: 'center', gap: '0.35rem', flexWrap: 'wrap' }}>
                                         <span style={{ fontWeight: 700, color: '#1E40AF' }}>{item.level}</span>
                                         <span>•</span>
@@ -518,23 +574,37 @@ export default function LibraryPage() {
                                 <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
                                         <div style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>Price</div>
-                                        <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#D97706' }}>
-                                            {formatNaira(item.priceKobo)}
+                                        <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#047857' }}>
+                                            Free
                                         </div>
                                     </div>
 
-                                    <div style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '0.35rem',
-                                        backgroundColor: '#1E40AF',
-                                        color: '#FFFFFF',
-                                        padding: '0.45rem 0.85rem',
-                                        borderRadius: '0.5rem',
-                                        fontSize: '0.8rem',
-                                        fontWeight: 700
-                                    }}>
-                                        <Download size={14} /> Get Material
+                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.35rem' }}>
+                                        <div style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '0.35rem',
+                                            backgroundColor: '#1E40AF',
+                                            color: '#FFFFFF',
+                                            padding: '0.45rem 0.85rem',
+                                            borderRadius: '0.5rem',
+                                            fontSize: '0.8rem',
+                                            fontWeight: 700
+                                        }}>
+                                            <Download size={14} />
+                                            Download Free PDF
+                                        </div>
+                                        {item.preview_path && (
+                                            <a
+                                                href={item.preview_path}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                onClick={(e) => e.stopPropagation()}
+                                                style={{ fontSize: '0.7rem', fontWeight: 700, color: '#2563EB', textDecoration: 'none' }}
+                                            >
+                                                Free {item.preview_page_count || 3}-page preview
+                                            </a>
+                                        )}
                                     </div>
                                 </div>
                             </div>

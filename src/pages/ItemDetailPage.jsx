@@ -9,6 +9,7 @@ import PaystackCheckout from '../components/PaystackCheckout'
 import { isSaved as checkSaved, toggleSaved } from '../lib/savedItems'
 import { getOrCreateConversation } from '../lib/messaging'
 import { isOfficialZikShareAccount } from '../lib/categories'
+import { findFresherPackBySlug, findFresherPackByStoragePath } from '../lib/fresherLibrary'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 
@@ -100,6 +101,16 @@ export default function ItemDetailPage() {
         { ttl: 5 * 60 * 1000 }
     )
 
+    // Library packs are free: match the row back to its authored pack and use the
+    // public copy of the PDF. Nothing here depends on an order or a session.
+    const freePack = item
+        ? findFresherPackByStoragePath(item.original_storage_path || item.storage_path)
+            || findFresherPackBySlug(item.slug || (String(id).startsWith('pdf-') ? String(id).slice(4) : ''))
+        : null
+    const isFreePdf = Boolean(freePack)
+    const freeDownloadHref = freePack ? (freePack.download_path || `/library/packs/${freePack.slug}.pdf`) : null
+    const freeArchiveYears = freePack?.archive_years || []
+
     useEffect(() => {
         if (isAuthenticated && currentUserId && item?.isDigital) {
             getUserPurchaseForProduct(currentUserId, item.id).then(order => {
@@ -146,11 +157,18 @@ export default function ItemDetailPage() {
         setPreviewLoading(true)
         setPreviewError('')
         try {
+            // The free 3-page preview is a public asset, so it works before
+            // purchase and without storage credentials. Only fall back to a
+            // signed URL when the product has no public preview file.
+            const previewUrl = item?.preview_path || null
             const storagePath = item?.original_storage_path
-            if (!storagePath) {
-                throw new Error('Preview document path not found.')
+            let signedUrl = previewUrl
+            if (!signedUrl) {
+                if (!storagePath) {
+                    throw new Error('Preview document path not found.')
+                }
+                signedUrl = await createSignedDownloadUrl(storagePath, 300)
             }
-            const signedUrl = await createSignedDownloadUrl(storagePath, 300)
             if (!signedUrl) throw new Error('Could not generate sample preview link.')
 
             setTimeout(async () => {
@@ -318,17 +336,54 @@ export default function ItemDetailPage() {
                             🎓 {item.level}
                         </span>
                     )}
+                    {freeArchiveYears.length > 0 && (
+                        <span style={{ fontSize: '0.6875rem', fontWeight: 800, padding: '0.15rem 0.5rem', borderRadius: '0.375rem', backgroundColor: '#FDF2F8', color: '#7C1D3F', border: '1px solid #FBCFE8' }}>
+                            🗓 Archive: {freeArchiveYears.join(' → ')}
+                        </span>
+                    )}
                 </div>
 
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-                    <p className="price-tag" style={{ margin: 0, fontSize: '1.5rem' }}>{formatNaira(item.price)}</p>
+                    {isFreePdf ? (
+                        <p className="price-tag" style={{ margin: 0, fontSize: '1.5rem', color: '#047857' }}>Free</p>
+                    ) : (
+                        <p className="price-tag" style={{ margin: 0, fontSize: '1.5rem' }}>{formatNaira(item.price)}</p>
+                    )}
                     <span className={`condition-badge ${condClass[item.condition] || 'condition-like-new'}`}>{item.condition || 'Available'}</span>
                 </div>
 
                 {!isOwnListing && (
                     item.isDigital ? (
                         <div style={{ marginBottom: '0.5rem' }}>
-                            {existingOrder ? (
+                            {isFreePdf ? (
+                                <div style={{ backgroundColor: '#F0FDF4', border: '1.5px solid #10B981', borderRadius: '0.875rem', padding: '1.125rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                                        <CheckCircle2 size={18} color="#10B981" />
+                                        <span style={{ fontWeight: 800, fontSize: '0.875rem', color: '#065F46' }}>Free download. No payment, no sign-in.</span>
+                                    </div>
+                                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#047857', lineHeight: 1.45 }}>
+                                        Every pack in the ZikShare Library is free. There is no fee, no checkout and no account required before you download the PDF.
+                                    </p>
+                                    <a
+                                        href={freeDownloadHref}
+                                        download
+                                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.625rem', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.875rem', fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}
+                                    >
+                                        <Download size={16} />
+                                        <span>Download the full PDF ({freePack.page_count || item.page_count || 0} pages)</span>
+                                    </a>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.6875rem', color: '#065F46' }}>
+                                        <Eye size={13} />
+                                        <button
+                                            type="button"
+                                            onClick={handleOpenPreview}
+                                            style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', color: '#1E40AF', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+                                        >
+                                            Read the sample pages first
+                                        </button>
+                                    </div>
+                                </div>
+                            ) : existingOrder ? (
                                 <div style={{ backgroundColor: '#F0FDF4', border: '1.5px solid #10B981', borderRadius: '0.875rem', padding: '1.125rem', boxShadow: '0 4px 12px rgba(16,185,129,0.1)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
@@ -394,7 +449,7 @@ export default function ItemDetailPage() {
                                             <span style={{ fontSize: '1.25rem' }}>📄</span>
                                             <div>
                                                 <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, color: '#0F172A' }}>Want to check the questions?</p>
-                                                <p style={{ margin: 0, fontSize: '0.625rem', color: '#64748B' }}>Preview Page 1 sample before purchasing</p>
+                                                <p style={{ margin: 0, fontSize: '0.625rem', color: '#64748B' }}>Free {item.preview_page_count || 3}-page preview {isFreePdf ? 'of the full document' : 'before purchasing'}</p>
                                             </div>
                                         </div>
                                         <button
@@ -419,15 +474,27 @@ export default function ItemDetailPage() {
                                         </button>
                                     </div>
 
-                                    {session?.user ? (
-                                        <PaystackCheckout
-                                            product={item}
-                                            user={session.user}
-                                            onSuccess={(ref) => navigate(`/payment/success?ref=${ref}`)}
-                                        />
+                                    {/* Library packs are free; only independent seller PDFs still check out. */}
+                                    {isFreePdf ? (
+                                        <a
+                                            href={freeDownloadHref}
+                                            download
+                                            style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.9375rem', fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}
+                                        >
+                                            <Download size={16} />
+                                            <span>Download Free PDF</span>
+                                        </a>
+                                    ) : session?.user ? (
+                                        <div id="buy-digital">
+                                            <PaystackCheckout
+                                                product={item}
+                                                user={session.user}
+                                                onSuccess={(ref) => navigate(`/payment/success?ref=${ref}`)}
+                                            />
+                                        </div>
                                     ) : (
-                                        <button onClick={() => navigate('/login')} style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.9375rem', fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>
-                                            <span>🔒 Sign in to Purchase PDF ({formatNaira(item.price)})</span>
+                                        <button onClick={() => navigate('/login')} style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #1E40AF, #1E3A8A)', color: 'white', fontSize: '0.9375rem', fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                                            <span>Sign in to purchase this seller PDF</span>
                                         </button>
                                     )}
                                 </div>
@@ -467,6 +534,13 @@ export default function ItemDetailPage() {
                         <div style={{ padding: '1rem' }}>
                             <canvas ref={previewCanvasRef} style={{ width: '100%', height: 'auto', boxShadow: '0 0 10px rgba(0,0,0,0.1)' }} />
                             <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.875rem' }}>Page 1 of {previewPageCount || '?'}</p>
+                            {item?.preview_path && (
+                                <p style={{ textAlign: 'center', marginTop: '0.5rem', fontSize: '0.75rem' }}>
+                                    <a href={item.preview_path} target="_blank" rel="noopener noreferrer" style={{ color: '#2563EB', fontWeight: 700 }}>
+                                        Open the full free preview in a new tab
+                                    </a>
+                                </p>
+                            )}
                         </div>
                     )}
                 </div>
@@ -559,7 +633,7 @@ export default function ItemDetailPage() {
                                         </span>
                                     </div>
                                     <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>
-                                        {isOfficial ? '(100% UNIZIK Syllabus Accuracy Guarantee)' : `(${sellerRatingSummary.totalReviews} verified ${sellerRatingSummary.totalReviews === 1 ? 'review' : 'reviews'})`}
+                                        {isOfficial ? '(student-authored study pack - confirm the official outline)' : `(${sellerRatingSummary.totalReviews} verified ${sellerRatingSummary.totalReviews === 1 ? 'review' : 'reviews'})`}
                                     </span>
                                 </div>
                             </div>
@@ -593,7 +667,17 @@ export default function ItemDetailPage() {
             {/* Safe Meetup (Physical Items) or Anti-Piracy Notice (Digital Items) */}
             <div style={{ margin: '0.5rem 0 1rem', padding: '1rem', backgroundColor: 'white' }}>
                 {item.isDigital ? (
-                    item.drm_enabled !== false ? (
+                    isFreePdf ? (
+                        <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: '#F0FDF4', border: '1.5px solid #BBF7D0', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                <CheckCircle size={18} color="#059669" />
+                                <strong style={{ fontSize: '0.75rem', color: '#065F46', textTransform: 'uppercase' }}>Always Free — No Fees</strong>
+                            </div>
+                            <p style={{ margin: 0, fontSize: '0.6875rem', color: '#047857', lineHeight: 1.4 }}>
+                                This pack is free to download, with no payment step, no watermark and no account requirement. Share the ZikShare link rather than the file so your coursemates get the latest version.
+                            </p>
+                        </div>
+                    ) : item.drm_enabled !== false ? (
                         <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: '#FEF2F2', border: '1.5px solid #FECACA', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <ShieldAlert size={18} color="#DC2626" />
@@ -628,22 +712,28 @@ export default function ItemDetailPage() {
             {!isOwnListing && (
                 <div style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '42rem', padding: '0.625rem 1rem', backgroundColor: 'white', borderTop: '1px solid var(--color-border)', display: 'flex', gap: '0.5rem', zIndex: 50, paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box' }}>
                     {item.isDigital ? (
-                        existingOrder ? (
+                        isFreePdf ? (
+                            <a
+                                href={freeDownloadHref}
+                                download
+                                style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.9375rem', fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}
+                            >
+                                <Download size={16} />
+                                <span>Download Free PDF — No Payment</span>
+                            </a>
+                        ) : existingOrder ? (
                             <button
                                 onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
                                 style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.9375rem', fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}
                             >
                                 <span>✅ You Own This Material — View / Download</span>
                             </button>
-                        ) : session?.user ? (
-                            <PaystackCheckout
-                                product={item}
-                                user={session.user}
-                                onSuccess={(ref) => navigate(`/payment/success?ref=${ref}`)}
-                            />
                         ) : (
-                            <button onClick={() => navigate('/login')} style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.9375rem', fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>
-                                <span>🔒 Sign in to Purchase PDF ({formatNaira(item.price)})</span>
+                            <button
+                                onClick={() => (isAuthenticated ? document.getElementById('buy-digital')?.scrollIntoView({ behavior: 'smooth' }) : navigate('/login'))}
+                                style={{ width: '100%', padding: '0.875rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #1E40AF, #1E3A8A)', color: 'white', fontSize: '0.9375rem', fontWeight: 800, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}
+                            >
+                                <span>{isAuthenticated ? 'See purchase options' : 'Sign in to purchase this seller PDF'}</span>
                             </button>
                         )
                     ) : (

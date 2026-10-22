@@ -8,4 +8,5 @@ export const DOMAINS = [
     'Money & Career',
     'Digital Skills',
     'Health & Wellbeing',
+    'Christian Books',
 ]

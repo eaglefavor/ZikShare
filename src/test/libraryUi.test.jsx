@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { FRESHER_LIBRARY_PACKS } from '../lib/fresherLibrary'
+import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
 import LibraryPage from '../pages/LibraryPage'
 import * as database from '../lib/database'
 
@@ -127,8 +128,47 @@ describe('Digital Library UI Component Tests', { timeout: 15000 }, () => {
       </MemoryRouter>
     )
 
-    const total = FRESHER_LIBRARY_PACKS.length
+    const total = FRESHER_LIBRARY_PACKS.length + CHRISTIAN_BOOKS.length
     expect(await screen.findByText(new RegExp(`All Domains \\(${total}\\)`))).toBeInTheDocument()
-    expect(screen.getByText(new RegExp(`Available Study Packs \\(${total}\\)`))).toBeInTheDocument()
+    expect(screen.getByText(new RegExp(`Library Materials \\(${total}\\)`))).toBeInTheDocument()
+  })
+})
+
+describe('Christian Books shelf UI', { timeout: 15000 }, () => {
+  beforeEach(() => {
+    vi.clearAllMocks()
+    database.getDigitalProducts.mockResolvedValue([])
+  })
+
+  it('offers a Christian Books domain in the filter list', async () => {
+    render(
+      <MemoryRouter>
+        <LibraryPage />
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByRole('button', { name: /Christian Books \(\d+\)/ })).toBeInTheDocument()
+  })
+
+  it('lists a book and opens its PDF rather than an item page', async () => {
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+    render(
+      <MemoryRouter>
+        <LibraryPage />
+      </MemoryRouter>
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: /Christian Books \(\d+\)/ }))
+
+    expect(await screen.findByText('The Spiritual Man')).toBeInTheDocument()
+    expect(screen.getAllByText(/Watchman Nee/).length).toBeGreaterThan(0)
+
+    fireEvent.click(screen.getByText('The Spiritual Man'))
+    expect(openSpy).toHaveBeenCalledWith(
+      '/library/books/the-spiritual-man-watchman-nee.pdf',
+      '_blank',
+      'noopener,noreferrer'
+    )
+    openSpy.mockRestore()
   })
 })

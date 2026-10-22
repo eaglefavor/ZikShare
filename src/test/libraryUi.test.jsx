@@ -171,4 +171,41 @@ describe('Christian Books shelf UI', { timeout: 15000 }, () => {
     )
     openSpy.mockRestore()
   })
+
+  it('still opens the PDF for a book that has a database row', async () => {
+    const seeded = CHRISTIAN_BOOKS.find((b) => b.slug === 'the-spiritual-man-watchman-nee')
+    database.getDigitalProducts.mockResolvedValue([
+      {
+        id: '33333333-3333-3333-3333-333333333333',
+        title: 'The Spiritual Man',
+        category: 'Christian Books',
+        subcategory: 'textbooks',
+        domain: 'Christian Books',
+        page_count: seeded.page_count,
+        original_storage_path: `christian-books/${seeded.slug}.pdf`,
+        price: 0,
+        is_free: true,
+      },
+    ])
+
+    const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null)
+    render(
+      <MemoryRouter>
+        <LibraryPage />
+      </MemoryRouter>
+    )
+
+    fireEvent.click(await screen.findByRole('button', { name: /Christian Books \(\d+\)/ }))
+
+    const titles = await screen.findAllByText('The Spiritual Man')
+    expect(titles).toHaveLength(1)
+
+    fireEvent.click(titles[0])
+    expect(openSpy).toHaveBeenCalledWith(
+      '/library/books/the-spiritual-man-watchman-nee.pdf',
+      '_blank',
+      'noopener,noreferrer'
+    )
+    openSpy.mockRestore()
+  })
 })

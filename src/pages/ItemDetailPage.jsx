@@ -10,6 +10,7 @@ import { isSaved as checkSaved, toggleSaved } from '../lib/savedItems'
 import { getOrCreateConversation } from '../lib/messaging'
 import { isOfficialZikShareAccount } from '../lib/categories'
 import { findFresherPackBySlug, findFresherPackByStoragePath } from '../lib/fresherLibrary'
+import { findBookByStoragePath } from '../lib/christianBooks'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 
@@ -107,8 +108,19 @@ export default function ItemDetailPage() {
         ? findFresherPackByStoragePath(item.original_storage_path || item.storage_path)
             || findFresherPackBySlug(item.slug || (String(id).startsWith('pdf-') ? String(id).slice(4) : ''))
         : null
-    const isFreePdf = Boolean(freePack)
-    const freeDownloadHref = freePack ? (freePack.download_path || `/library/packs/${freePack.slug}.pdf`) : null
+    // Books on the Christian Books shelf are complete third-party PDFs served
+    // from the site. A book row has no object in Supabase Storage, so it must
+    // never reach the signed-URL download path below.
+    const freeBook = item && !freePack
+        ? findBookByStoragePath(item.original_storage_path || item.storage_path)
+        : null
+    const isFreePdf = Boolean(freePack || freeBook)
+    const freeDownloadHref = freePack
+        ? (freePack.download_path || `/library/packs/${freePack.slug}.pdf`)
+        : freeBook
+            ? (freeBook.download_path || `/library/books/${freeBook.slug}.pdf`)
+            : null
+    const freePageCount = freePack?.page_count || freeBook?.page_count || item?.page_count || 0
     const freeArchiveYears = freePack?.archive_years || []
 
     useEffect(() => {
@@ -362,7 +374,9 @@ export default function ItemDetailPage() {
                                         <span style={{ fontWeight: 800, fontSize: '0.875rem', color: '#065F46' }}>Free download. No payment, no sign-in.</span>
                                     </div>
                                     <p style={{ margin: 0, fontSize: '0.75rem', color: '#047857', lineHeight: 1.45 }}>
-                                        Every pack in the ZikShare Library is free. There is no fee, no checkout and no account required before you download the PDF.
+                                        {freeBook
+                                            ? 'This book is free to download. There is no fee, no checkout and no account required. Rights in the text remain with its author and publisher.'
+                                            : 'Every pack in the ZikShare Library is free. There is no fee, no checkout and no account required before you download the PDF.'}
                                     </p>
                                     <a
                                         href={freeDownloadHref}
@@ -370,7 +384,7 @@ export default function ItemDetailPage() {
                                         style={{ width: '100%', padding: '0.75rem', borderRadius: '0.625rem', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: '0.875rem', fontWeight: 800, textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(16,185,129,0.3)' }}
                                     >
                                         <Download size={16} />
-                                        <span>Download the full PDF ({freePack.page_count || item.page_count || 0} pages)</span>
+                                        <span>Download the full {freeBook ? 'book' : 'PDF'} ({freePageCount} pages)</span>
                                     </a>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.6875rem', color: '#065F46' }}>
                                         <Eye size={13} />

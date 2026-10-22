@@ -479,6 +479,14 @@ export default function LibraryPage() {
                                 key={item.id}
                                 onClick={() => {
                                     const id = String(item.id || '')
+                                    // Books are served as complete PDFs whether or
+                                    // not they have a database row: a seeded book
+                                    // must not fall through to an item page that
+                                    // has no download for it.
+                                    if (item.isBook && item.download_path) {
+                                        window.open(item.download_path, '_blank', 'noopener,noreferrer')
+                                        return
+                                    }
                                     const isPublished = id
                                         && !id.startsWith('pdf-')
                                         && !id.startsWith('catalog-')

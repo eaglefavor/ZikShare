@@ -260,6 +260,29 @@ describe('Fresher library - store merge behaviour', () => {
         expect(unseeded.preview_path).toBe(FRESHER_LIBRARY_PACKS[1].preview_path)
     })
 
+    it('keeps a seeded book on its own shelf, once, with the row identity', () => {
+        const book = CHRISTIAN_BOOKS[1]
+        const dbRows = [{
+            id: '22222222-2222-2222-2222-222222222222',
+            title: 'A title edited in the database',
+            category: 'Academic & Study Materials',
+            subcategory: 'textbooks',
+            domain: 'Christian Books',
+            page_count: book.page_count,
+            original_storage_path: `christian-books/${book.slug}.pdf`,
+        }]
+
+        const merged = mergeLibraryMaterials(dbRows)
+        expect(merged).toHaveLength(FRESHER_LIBRARY_PACKS.length + CHRISTIAN_BOOKS.length)
+
+        const seededBook = merged.find((m) => m.id === dbRows[0].id)
+        expect(seededBook.isBook).toBe(true)
+        expect(seededBook.title).toBe(book.title)
+        expect(seededBook.author).toBe(book.author)
+        expect(seededBook.download_path).toBe(`/library/books/${book.slug}.pdf`)
+        expect(merged.filter((m) => m.title === book.title)).toHaveLength(1)
+    })
+
     it('resolves a pack by its storage path', () => {
         const pack = FRESHER_LIBRARY_PACKS[5]
         expect(findFresherPackByStoragePath(pack.storage_path)?.slug).toBe(pack.slug)

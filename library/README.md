@@ -188,6 +188,26 @@ Ministries). Distributing those files publicly needs the publisher's permission.
 The Library page states on the shelf that these are third-party works and that
 rights remain with the publishers.
 
+### Catalogue rows
+
+The books are also published into `digital_products` so they come from the
+database the same way the study packs do:
+
+```bash
+node scripts/emit-book-rows.mjs --seller <official-account-uuid> > books.sql
+```
+
+The emitter reads `library/books.generated.json`, so a row carries the measured
+page count and byte size. Every row is `price = 0`, `is_free = true`,
+`drm_enabled = false`, `domain = 'Christian Books'`.
+
+`original_storage_path` for a book is `christian-books/<slug>.pdf`. That value
+is a **catalogue key**, not a file in Supabase Storage: the PDF itself is served
+from `public/library/books/<slug>.pdf` by the site. The key is what lets the app
+match a row back to its catalogue entry — when it matches, the shelf keeps the
+card the catalogue describes (author, topics, rights note) and only borrows the
+row's id, so an edit in the database cannot turn a book into a pack.
+
 Adding a book:
 
 1. add an entry to `library/content/books.mjs` with an accurate `rights` value;

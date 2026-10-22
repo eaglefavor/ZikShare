@@ -78,6 +78,30 @@ is not both an active row and an uploaded object. The admin UI's "Seed / Sync
 Official Library" button only writes catalog rows; it tells you how many PDFs
 still need uploading rather than claiming the library is live.
 
+### Seeding without HTTPS egress (SQL path)
+
+Some environments can reach Postgres through a dashboard or SQL tool but cannot
+make outbound HTTPS calls to `*.supabase.co`. For those, emit reviewable SQL
+straight from the generated catalog:
+
+```bash
+node scripts/emit-library-rows.mjs --seller <official-user-uuid> --chunk 40 > rows.sql
+# then paste rows.sql into the Supabase SQL editor, or:
+psql "$DATABASE_URL" -f rows.sql
+```
+
+The emitted statements are idempotent (they upsert on
+`seller_id, original_storage_path`) and always write `price 0`,
+`is_free true`, `drm_enabled false`, `status active`. `description` receives the
+authored subtitle: the app renders the full description from the catalog, so a
+database row can never invent copy that the PDFs do not contain.
+
+A row does **not** require the storage object to exist. Full PDFs are served as
+public static files from `/library/packs/<slug>.pdf`, which is the download path
+used by the library UI; `original_storage_path` is the private bucket copy used
+for ownership-based downloads and admin housekeeping. If that copy has not been
+uploaded yet, say so rather than claiming storage is populated.
+
 ## Adding a pack
 
 1. Add an object to the right file in `library/content/` with the fields used by

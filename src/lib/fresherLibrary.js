@@ -88,35 +88,43 @@ export function findFresherPackByStoragePath(storagePath) {
 
 /**
  * Merges database rows with the authored PDF catalog.
- * Database rows win (they are the purchasable record); packs that have not yet
- * been seeded are still listed so the library is never empty.
+ *
+ * The authored catalog is the source of truth for *content* (title, description,
+ * domain, chapter metadata); the database row supplies identity and state (id,
+ * status, any admin edit). Matching on `original_storage_path` means a row can
+ * never invent copy that the catalog does not contain, and a pack that has not
+ * been seeded still appears with its free PDF.
  */
 export function mergeLibraryMaterials(dbMaterials = []) {
     const seededPaths = new Set(
         dbMaterials.map((d) => d.original_storage_path || d.storage_path).filter(Boolean)
     )
 
-    const fromDb = dbMaterials.map((d) => ({
-        id: d.id,
-        slug: findFresherPackByStoragePath(d.original_storage_path)?.slug || null,
-        code: d.course_code || '',
-        title: d.title,
-        faculty: d.faculty || 'General Studies (GST / CED)',
-        department: d.department || '',
-        level: d.level || '100L',
-        material_type: d.subcategory || 'lecture-notes',
-        domain: d.domain || findFresherPackByStoragePath(d.original_storage_path)?.domain || null,
-        priceKobo: 0,
-        page_count: d.page_count || 0,
-        file_size_bytes: d.file_size_bytes || 0,
-        description: d.description || '',
-        preview_path: d.preview_path || findFresherPackByStoragePath(d.original_storage_path)?.preview_path || null,
-        preview_page_count: d.preview_page_count || 3,
-        download_path: findFresherPackByStoragePath(d.original_storage_path)?.download_path || null,
-        is_free: true,
-        is_official: true,
-        isFresherPdf: Boolean(d.original_storage_path),
-    }))
+    const fromDb = dbMaterials.map((d) => {
+        const pack = findFresherPackByStoragePath(d.original_storage_path || d.storage_path)
+        return {
+            id: d.id,
+            slug: pack?.slug || null,
+            code: pack?.code || d.course_code || '',
+            title: pack?.title || d.title,
+            faculty: pack?.faculty || d.faculty || 'General Studies (GST / CED)',
+            department: pack?.department || d.department || '',
+            level: pack?.level || d.level || '100L',
+            material_type: pack?.material_type || d.subcategory || 'lecture-notes',
+            domain: pack?.domain || d.domain || null,
+            priceKobo: 0,
+            page_count: pack?.page_count || d.page_count || 0,
+            file_size_bytes: pack?.file_size_bytes || d.file_size_bytes || 0,
+            description: pack?.description || d.description || '',
+            preview_path: pack?.preview_path || d.preview_path || null,
+            preview_page_count: pack?.preview_page_count || d.preview_page_count || 3,
+            download_path: pack?.download_path || (pack ? `/library/packs/${pack.slug}.pdf` : null),
+            archive_years: pack?.archive_years || [],
+            is_free: true,
+            is_official: true,
+            isFresherPdf: Boolean(pack || d.original_storage_path),
+        }
+    })
 
     const notYetSeeded = FRESHER_LIBRARY_PACKS
         .filter((p) => !seededPaths.has(p.storage_path))

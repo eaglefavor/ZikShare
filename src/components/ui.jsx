@@ -51,13 +51,16 @@ export function Tag({ tone = 'muted', children }) {
 }
 
 export function PageHeader({ eyebrow, title, lead, actions }) {
+    // A <div>, not <header>: page-level <header> elements get stripped by
+    // readability-style extractors, which made the page title disappear from
+    // link previews and text mirrors.
     return (
-        <header className="zs-page-head">
+        <div className="zs-page-head">
             {eyebrow && <div className="zs-eyebrow">{eyebrow}</div>}
             <h1>{title}</h1>
             {lead && <p className="zs-lead">{lead}</p>}
             {actions && <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '1rem' }}>{actions}</div>}
-        </header>
+        </div>
     )
 }
 

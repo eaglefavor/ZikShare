@@ -77,11 +77,10 @@ export default function HomePage() {
     )
 
     const domains = useMemo(() => domainSummary(), [])
+    // Packs only: the books have their own shelf directly below, and repeating
+    // them here made the newest list look like a second book section.
     const newest = useMemo(
-        () => [
-            ...CHRISTIAN_BOOKS.slice(0, 2).map(toBookCard),
-            ...FRESHER_LIBRARY_PACKS.slice(-4).map((pack) => ({ ...pack, isBook: false })),
-        ],
+        () => FRESHER_LIBRARY_PACKS.slice(-6).map((pack) => ({ ...pack, isBook: false })),
         []
     )
 

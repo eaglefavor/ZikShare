@@ -38,8 +38,55 @@ describe('Fresher PDF library - authored content', () => {
 
     it('spreads content across at least six distinct domains with no thin domain', () => {
         expect(FRESHER_LIBRARY_DOMAINS.length).toBeGreaterThanOrEqual(6)
-        for (const domain of FRESHER_LIBRARY_DOMAINS) {
+        // Departmental Archive is a single index pack by design: it carries the
+        // whole departmental session record rather than one pack per year band.
+        for (const domain of FRESHER_LIBRARY_DOMAINS.filter((d) => d.name !== 'Departmental Archive')) {
             expect(domain.count, `${domain.name} has only ${domain.count} packs`).toBeGreaterThanOrEqual(3)
+        }
+    })
+
+    it('makes the Faculty of Arts and Theatre & Film Studies the deepest coverage', () => {
+        const arts = FRESHER_PACKS.filter((p) => p.faculty === 'Faculty of Arts')
+        const theatre = FRESHER_PACKS.filter((p) => p.department === 'Theatre & Film Studies')
+        // General Studies is a directorate of compulsory courses, not a faculty,
+        // so it is excluded from the faculty-depth comparison.
+        const otherFaculties = [...new Set(
+            FRESHER_PACKS
+                .filter((p) => p.faculty !== 'Faculty of Arts' && p.faculty.startsWith('Faculty of'))
+                .map((p) => p.faculty)
+        )]
+        expect(theatre.length).toBeGreaterThanOrEqual(10)
+        expect(arts.length).toBeGreaterThan(Math.max(...otherFaculties.map(
+            (f) => FRESHER_PACKS.filter((p) => p.faculty === f).length
+        )))
+        // Other departments are kept, not demoted away.
+        expect(otherFaculties.length).toBeGreaterThanOrEqual(10)
+    })
+
+    it('demarcates every archived outline by year with a source', () => {
+        const archived = FRESHER_PACKS.filter((p) => p.archive)
+        expect(archived.length).toBeGreaterThanOrEqual(5)
+        for (const pack of archived) {
+            const years = pack.archive.sessions.map((s) => s.year)
+            expect(new Set(years).size).toBe(years.length)
+            expect(years.length).toBeGreaterThanOrEqual(2)
+            for (const session of pack.archive.sessions) {
+                expect(session.label).toBeTruthy()
+                if (session.status !== 'current') {
+                    expect(session.source, `${pack.slug} ${session.year} needs a source`).toBeTruthy()
+                    expect(session.retrieved).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+                }
+            }
+            // Exactly one band may be presented as the current working map.
+            expect(pack.archive.sessions.filter((s) => s.status === 'current').length).toBe(1)
+        }
+    })
+
+    it('keeps every pack free and gives each one a public download path', () => {
+        for (const pack of FRESHER_LIBRARY_PACKS) {
+            expect(pack.priceKobo, `${pack.slug} must be free`).toBe(0)
+            expect(pack.download_path).toBe(`/library/packs/${pack.slug}.pdf`)
+            expect(fs.existsSync(path.join(ROOT, 'public', pack.download_path))).toBe(true)
         }
     })
 

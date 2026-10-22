@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
+import { FRESHER_LIBRARY_PACKS } from '../lib/fresherLibrary'
 import LibraryPage from '../pages/LibraryPage'
 import * as database from '../lib/database'
 
@@ -126,7 +127,8 @@ describe('Digital Library UI Component Tests', { timeout: 15000 }, () => {
       </MemoryRouter>
     )
 
-    expect(await screen.findByText(/All Domains \(53\)/)).toBeInTheDocument()
-    expect(screen.getByText(/Available Study Packs \(53\)/)).toBeInTheDocument()
+    const total = FRESHER_LIBRARY_PACKS.length
+    expect(await screen.findByText(new RegExp(`All Domains \\(${total}\\)`))).toBeInTheDocument()
+    expect(screen.getByText(new RegExp(`Available Study Packs \\(${total}\\)`))).toBeInTheDocument()
   })
 })

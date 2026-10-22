@@ -1609,8 +1609,8 @@ export default function AdminPage() {
                                                     </div>
                                                 </div>
                                                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                                                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#F59E0B' }}>
-                                                        {formatNaira(pack.priceKobo / 100)}
+                                                    <div style={{ fontSize: '0.82rem', fontWeight: 800, color: '#34D399' }}>
+                                                        Free
                                                     </div>
                                                     <div style={{ fontSize: '0.625rem', color: '#34D399' }}>{pack.page_count} pages</div>
                                                 </div>

@@ -176,7 +176,8 @@ async function main() {
         seller_id: seller.uid,
         title: pack.title,
         description: pack.description,
-        price: pack.priceKobo,
+        price: 0, // the library is free by policy: priceKobo is 0 everywhere
+        is_free: true,
         category: 'Academic & Study Materials',
         subcategory: pack.subcategory,
         course_code: pack.code,
@@ -189,7 +190,7 @@ async function main() {
         page_count: pack.page_count,
         file_size_bytes: pack.file_size_bytes,
         status: 'active',
-        drm_enabled: true,
+        drm_enabled: false, // free downloads are not watermarked or password-locked
     }))
 
     const { data: upserted, error: upErr } = await supabase

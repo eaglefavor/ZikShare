@@ -12,7 +12,7 @@ export const FACULTY_PRIMER_PACKS_C = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 55000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["ACC 101", "Financial Accounting", "Double Entry", "Trial Balance", "100L"],
         description: "Accounting is a skill, not a set of definitions. This pack walks you through the accounting equation, double entry, books of original entry, the trial balance and simple final accounts, with worked transactions you can replicate on paper.",
         outcomes: [
@@ -91,7 +91,7 @@ export const FACULTY_PRIMER_PACKS_C = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 50000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["MKT 101", "Marketing", "Marketing Mix", "Segmentation", "Consumer Behaviour", "100L"],
         description: "Marketing is often reduced to advertising, which is like reducing medicine to injections. This pack explains value, exchange, segmentation, positioning and the extended marketing mix, using Nigerian campus and consumer examples you can analyse in assignments.",
         outcomes: [
@@ -170,7 +170,7 @@ export const FACULTY_PRIMER_PACKS_C = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 50000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["PSY 101", "Psychology", "Learning", "Memory", "Research Methods", "100L"],
         description: "Psychology freshers arrive with strong intuitions and weak methods. This pack introduces the major perspectives, learning and memory, developmental and social psychology, and the research reasoning needed to tell evidence from anecdote.",
         outcomes: [
@@ -249,7 +249,7 @@ export const FACULTY_PRIMER_PACKS_C = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 50000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["MAC 101", "Mass Communication", "Media Theory", "Journalism", "Media Ethics", "100L"],
         description: "Mass communication is studied as a system of institutions, technologies, audiences and effects. This pack covers the communication process, media functions and theories, news values, and the ethical and legal issues Nigerian journalists face.",
         outcomes: [
@@ -328,7 +328,7 @@ export const FACULTY_PRIMER_PACKS_C = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 45000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["IGB 101", "Igbo", "Language", "Culture", "Phonology", "100L"],
         description: "Students entering Igbo studies vary from native speakers to complete beginners. This pack sets out the sound system, tone, noun classes and basic sentence patterns, and connects language to Igbo worldview through proverbs, naming and festivals, with drills that suit both groups.",
         outcomes: [
@@ -411,7 +411,7 @@ export const FACULTY_PRIMER_PACKS_C = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 45000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["EDU 101", "Education", "Philosophy of Education", "Curriculum", "100L"],
         description: "Education students often memorise definitions without understanding the debates underneath them. This pack covers the meaning and aims of education, major philosophies, the Nigerian education system and the basics of curriculum and assessment.",
         outcomes: [
@@ -490,7 +490,7 @@ export const FACULTY_PRIMER_PACKS_C = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 50000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["AGR 101", "Agriculture", "Soil Science", "Crop Production", "Farming Systems", "100L"],
         description: "This pack introduces agriculture as applied science and business: soil formation and fertility, crop growth and management, animal production basics, farming systems and the realities of extension and markets in Nigeria.",
         outcomes: [
@@ -569,7 +569,7 @@ export const FACULTY_PRIMER_PACKS_C = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 45000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["VTE 101", "Vocational Education", "Workshop Safety", "Competency Assessment", "100L"],
         description: "Vocational education is judged by whether learners can do the work safely and well. This pack explains its philosophy, the workshop environment, competency-based assessment and the link between skills and enterprise.",
         outcomes: [

@@ -3,6 +3,8 @@ import { FRESHER_LIBRARY_PACKS } from './fresherLibraryData'
 export const FRESHER_LIBRARY_DOMAIN_ORDER = [
     'GST & Compulsory Courses',
     'Faculty Primer',
+    'Theatre & Film Studies',
+    'Departmental Archive',
     'Study Skills',
     'Campus Life',
     'Money & Career',
@@ -13,6 +15,8 @@ export const FRESHER_LIBRARY_DOMAIN_ORDER = [
 export const FRESHER_DOMAIN_EMOJI = {
     'GST & Compulsory Courses': '🏛️',
     'Faculty Primer': '🎓',
+    'Theatre & Film Studies': '🎭',
+    'Departmental Archive': '🗂️',
     'Study Skills': '📖',
     'Campus Life': '🏫',
     'Money & Career': '💼',
@@ -49,7 +53,9 @@ export function toLibraryCard(pack) {
         level: pack.level,
         material_type: pack.material_type,
         domain: pack.domain,
-        priceKobo: pack.priceKobo,
+        priceKobo: 0,
+        is_free: true,
+        download_path: pack.download_path || `/library/packs/${pack.slug}.pdf`,
         page_count: pack.page_count,
         file_size_bytes: pack.file_size_bytes,
         description: pack.description,
@@ -59,6 +65,16 @@ export function toLibraryCard(pack) {
         is_official: true,
         isFresherPdf: true,
     }
+}
+
+/** True for every library pack: nothing in the library is sold. */
+export function isFreeLibraryItem(item) {
+    return Boolean(item?.isFresherPdf || item?.is_free || item?.priceKobo === 0)
+}
+
+/** Archive year bands for a pack, newest last. Empty for non-archive packs. */
+export function getArchiveYears(pack) {
+    return (pack?.archive_years || []).slice()
 }
 
 export function findFresherPackBySlug(slug) {
@@ -90,12 +106,14 @@ export function mergeLibraryMaterials(dbMaterials = []) {
         level: d.level || '100L',
         material_type: d.subcategory || 'lecture-notes',
         domain: d.domain || findFresherPackByStoragePath(d.original_storage_path)?.domain || null,
-        priceKobo: d.price || 50000,
+        priceKobo: 0,
         page_count: d.page_count || 0,
         file_size_bytes: d.file_size_bytes || 0,
         description: d.description || '',
         preview_path: d.preview_path || findFresherPackByStoragePath(d.original_storage_path)?.preview_path || null,
         preview_page_count: d.preview_page_count || 3,
+        download_path: findFresherPackByStoragePath(d.original_storage_path)?.download_path || null,
+        is_free: true,
         is_official: true,
         isFresherPdf: Boolean(d.original_storage_path),
     }))

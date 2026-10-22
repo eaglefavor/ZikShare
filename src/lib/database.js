@@ -493,7 +493,8 @@ export async function seedDigitalLibraryPacks(adminUserId) {
             seller_id: adminUserId,
             title: item.title,
             description: item.description,
-            price: item.priceKobo,
+            price: 0, // library packs are free
+            is_free: true,
             category: 'Academic & Study Materials',
             subcategory: item.subcategory,
             course_code: item.code,
@@ -506,7 +507,7 @@ export async function seedDigitalLibraryPacks(adminUserId) {
             page_count: item.page_count,
             file_size_bytes: item.file_size_bytes,
             status: 'active',
-            drm_enabled: true,
+            drm_enabled: false,
             cover_image_url: null,
         }))
 

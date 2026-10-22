@@ -45,7 +45,8 @@ export function validatePacks(packs, { minPacks = 50 } = {}) {
         if (pack.code !== null && (!pack.code || !/^[A-Z]{2,4} [0-9]{3}[A-Z]?$/.test(pack.code))) {
             push('code must be null or a course code like "GST 101"')
         }
-        if (!Number.isInteger(pack.priceKobo) || pack.priceKobo < 10000) push('priceKobo must be an integer >= 10000')
+        // The library is free by policy: a build with any paid pack must fail.
+        if (pack.priceKobo !== 0) push(`priceKobo must be 0 (free library); found ${pack.priceKobo}`)
         if (!Array.isArray(pack.tags) || pack.tags.length < 3) push('needs at least 3 tags')
 
         if (!Array.isArray(pack.outcomes) || pack.outcomes.length < 3) push('needs at least 3 outcomes')
@@ -66,6 +67,25 @@ export function validatePacks(packs, { minPacks = 50 } = {}) {
                 section.callout?.body,
             ].filter(Boolean).join(' ')
             if (body.length < 120) push(`section "${section.heading}" is too thin (${body.length} chars)`)
+        }
+
+        if (pack.archive !== undefined) {
+            const archive = pack.archive
+            if (!archive || !Array.isArray(archive.sessions) || archive.sessions.length < 2) {
+                push('archive must contain at least 2 year-demarcated sessions')
+            } else {
+                const years = new Set()
+                for (const session of archive.sessions) {
+                    if (!session.year) push('archive session missing year')
+                    else if (years.has(session.year)) push(`duplicate archive year "${session.year}"`)
+                    else years.add(session.year)
+                    if (!session.label) push(`archive session ${session.year || '?'} missing label`)
+                    if (!['archived', 'current', 'superseded'].includes(session.status)) push(`archive session ${session.year || '?'} has invalid status "${session.status}"`)
+                    if (!Array.isArray(session.topics) || session.topics.length < 3) push(`archive session ${session.year || '?'} needs at least 3 topics`)
+                    if (session.status !== 'current' && !session.source) push(`archive session ${session.year || '?'} needs a source note`)
+                }
+                if (!archive.sessions.some((s) => s.status === 'current')) push('archive must mark one session as current')
+            }
         }
 
         for (const item of pack.practice || []) {

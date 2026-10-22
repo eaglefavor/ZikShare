@@ -50,19 +50,21 @@ describe('UNIZIK Digital Library & Academic Repository Suite', () => {
             expect(FRESHER_LIBRARY_PACKS.length).toBeGreaterThanOrEqual(50)
         })
 
-        it('ensures every study pack has valid course metadata, measured page counts and kobo pricing', () => {
+        it('ensures every study pack is free and has valid course metadata with measured page counts', () => {
             const facultyNames = new Set(UNIZIK_FACULTIES.map(f => f.name))
 
             for (const pack of FRESHER_LIBRARY_PACKS) {
                 expect(pack.slug).toBeDefined()
                 expect(pack.title.length).toBeGreaterThan(10)
                 expect(Number.isInteger(pack.priceKobo)).toBe(true)
-                expect(pack.priceKobo).toBeGreaterThan(0)
+                // Free library: no pack may reintroduce a fee before download.
+                expect(pack.priceKobo).toBe(0)
                 expect(ACADEMIC_LEVELS).toContain(pack.level)
                 expect(facultyNames.has(pack.faculty)).toBe(true)
                 expect(pack.page_count).toBeGreaterThanOrEqual(5)
                 expect(pack.file_size_bytes).toBeGreaterThan(0)
                 expect(pack.preview_path).toMatch(/^\/library\/previews\/.+\.pdf$/)
+                expect(pack.download_path).toMatch(/^\/library\/packs\/.+\.pdf$/)
             }
         })
 

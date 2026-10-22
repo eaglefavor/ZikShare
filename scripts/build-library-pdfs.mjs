@@ -21,6 +21,7 @@ import { validatePacks } from './lib/validate-packs.mjs'
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const SOURCE_DIR = path.join(ROOT, 'library', 'source')
 const PREVIEW_DIR = path.join(ROOT, 'public', 'library', 'previews')
+const FREE_DIR = path.join(ROOT, 'public', 'library', 'packs')
 const CATALOG_JSON = path.join(ROOT, 'library', 'catalog.generated.json')
 const APP_DATA = path.join(ROOT, 'src', 'lib', 'fresherLibraryData.js')
 const PREVIEW_PAGES = 3
@@ -35,12 +36,14 @@ function fail(message) {
 
 const META_FIELDS = [
     'slug', 'code', 'title', 'subtitle', 'domain', 'faculty', 'department', 'level',
-    'material_type', 'subcategory', 'priceKobo', 'tags', 'description',
+    'material_type', 'subcategory', 'priceKobo', 'tags', 'description', 'archive',
 ]
 
 function toMeta(pack, stats) {
     const meta = {}
     for (const key of META_FIELDS) meta[key] = pack[key] ?? null
+    meta.is_free = true
+    meta.archive_years = pack.archive?.sessions?.map((s) => s.year) || []
     return Object.assign(meta, stats)
 }
 
@@ -57,6 +60,7 @@ async function run() {
     if (!checkOnly) {
         await fs.mkdir(SOURCE_DIR, { recursive: true })
         await fs.mkdir(PREVIEW_DIR, { recursive: true })
+        await fs.mkdir(FREE_DIR, { recursive: true })
     }
 
     const catalog = []
@@ -69,14 +73,17 @@ async function run() {
         if (checkOnly) {
             const existing = await fs.readFile(sourcePath).catch(() => null)
             const previewBuf = await fs.readFile(previewPath).catch(() => null)
+            const freeBuf = await fs.readFile(path.join(FREE_DIR, `${pack.slug}.pdf`)).catch(() => null)
             if (!existing) problems.push(`missing full PDF: ${pack.slug}`)
             if (!previewBuf) problems.push(`missing preview PDF: ${pack.slug}`)
+            if (!freeBuf) problems.push(`missing public free PDF: ${pack.slug}`)
             if (existing) {
                 const stats = await readExistingMeta(sourcePath)
                 catalog.push(toMeta(pack, {
                     ...stats,
                     preview_page_count: PREVIEW_PAGES,
                     preview_path: `/library/previews/${pack.slug}.pdf`,
+                    download_path: `/library/packs/${pack.slug}.pdf`,
                     storage_path: `official-library/${pack.slug}.pdf`,
                 }))
             }
@@ -93,6 +100,8 @@ async function run() {
 
         await fs.writeFile(sourcePath, fullBytes)
         await fs.writeFile(previewPath, previewBytes)
+        // Free public copy: the download itself must never require a payment step.
+        await fs.writeFile(path.join(FREE_DIR, `${pack.slug}.pdf`), fullBytes)
 
         catalog.push(toMeta(pack, {
             page_count: pageCount,
@@ -101,6 +110,7 @@ async function run() {
             preview_page_count: Math.min(PREVIEW_PAGES, pageCount),
             preview_size_bytes: previewBytes.length,
             preview_path: `/library/previews/${pack.slug}.pdf`,
+            download_path: `/library/packs/${pack.slug}.pdf`,
             storage_path: `official-library/${pack.slug}.pdf`,
         }))
         process.stdout.write(`  built ${pack.slug} (${pageCount} pages, ${(fullBytes.length / 1024).toFixed(0)} KB)\n`)

@@ -12,7 +12,7 @@ export const STUDY_AND_CAMPUS_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 45000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Study Skills", "Freshers", "Independent Learning", "Study Routine", "100L"],
         description: "University rewards independent work, and many freshers keep using a method built for supervised secondary school. This pack sets out a weekly system: preparing before lectures, processing notes after them, and revising in spaced cycles instead of one desperate week.",
         outcomes: [
@@ -91,7 +91,7 @@ export const STUDY_AND_CAMPUS_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Note Taking", "Lectures", "Cornell Method", "Study Skills", "100L"],
         description: "Writing every word is impossible and unnecessary. This pack teaches structural note-taking, the Cornell layout, abbreviation systems and a post-lecture consolidation routine that turns messy notes into usable revision material.",
         outcomes: [
@@ -170,7 +170,7 @@ export const STUDY_AND_CAMPUS_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 45000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Exam Preparation", "Revision", "Study Plan", "Exam Technique", "100L"],
         description: "This pack gives you a four-week revision architecture, a way to prioritise courses by risk and weight, and exam-hall technique for multiple-choice, theory and calculation papers. It also covers the practical side: materials, timing and the night before.",
         outcomes: [
@@ -253,7 +253,7 @@ export const STUDY_AND_CAMPUS_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Time Management", "Procrastination", "Productivity", "Study Skills", "100L"],
         description: "Most procrastination is not laziness; it is avoidance of ambiguity, fear or exhaustion. This pack explains why we delay, then gives a practical system: fixed commitments, priority tasks, time blocks and honest weekly reviews.",
         outcomes: [
@@ -332,7 +332,7 @@ export const STUDY_AND_CAMPUS_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 45000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Academic Writing", "Referencing", "Plagiarism", "APA", "Assignments", "100L"],
         description: "Marks are lost for the same reasons every semester: no clear argument, weak structure, quotation without citation and padding. This pack covers essay structure, paragraph logic, APA-style citation, paraphrasing and proofreading.",
         outcomes: [
@@ -415,7 +415,7 @@ export const STUDY_AND_CAMPUS_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Memory", "Active Recall", "Spaced Repetition", "Flashcards", "100L"],
         description: "Memory is not a recording device. This pack explains encoding, consolidation and retrieval, then converts that into concrete practice: retrieval questions, spaced schedules, flashcards done correctly and techniques for formulas and vocabulary.",
         outcomes: [
@@ -494,7 +494,7 @@ export const STUDY_AND_CAMPUS_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 45000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["UNIZIK", "Freshers", "Registration", "Campus Life", "Orientation", "100L"],
         description: "First semester is easier when you know the sequence: documents, registration, course allocation, departmental orientation and the small habits that prevent avoidable problems. This pack is a practical checklist, not a rumour collection.",
         outcomes: [
@@ -573,7 +573,7 @@ export const STUDY_AND_CAMPUS_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Accommodation", "Hostel", "Off-Campus", "Roommates", "Campus Life", "100L"],
         description: "Accommodation decisions affect cost, safety, study time and stress. This pack covers comparing hostel and off-campus options, inspecting a lodge before paying, understanding rent and agency fees, and managing shared living without daily conflict.",
         outcomes: [
@@ -652,7 +652,7 @@ export const STUDY_AND_CAMPUS_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Campus Safety", "Fraud", "Scams", "Security", "100L"],
         description: "Students lose money to fake agents, fake accommodation, fake scholarship portals and social-engineering calls. This pack covers how common scams work, how to verify before paying, safe meet-up habits and what to do after an incident.",
         outcomes: [
@@ -731,7 +731,7 @@ export const STUDY_AND_CAMPUS_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Clubs", "Leadership", "Volunteering", "Soft Skills", "Campus Life", "100L"],
         description: "Extracurricular activity can build real skills or quietly consume your study time. This pack helps you choose a small number of commitments deliberately, contribute well, and record what you learn in a way that later helps with internships and job applications.",
         outcomes: [
@@ -810,7 +810,7 @@ export const STUDY_AND_CAMPUS_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Peer Pressure", "Social Life", "Boundaries", "Belonging", "100L"],
         description: "Freshers face new freedoms and new pressure at the same time. This pack explains how group influence works, gives scripts for refusing without drama, and helps you build friendships that support rather than undermine your goals.",
         outcomes: [
@@ -889,7 +889,7 @@ export const STUDY_AND_CAMPUS_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Academic Integrity", "Exams", "Plagiarism", "Misconduct", "100L"],
         description: "Misconduct findings can end a programme faster than poor grades. This pack explains plagiarism, collusion, impersonation, exam-hall offences and the reasonable steps that protect you, including how to handle accidental similarity and how to study when you feel unprepared.",
         outcomes: [

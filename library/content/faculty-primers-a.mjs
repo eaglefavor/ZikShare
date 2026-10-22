@@ -14,7 +14,7 @@ export const FACULTY_PRIMER_PACKS_A = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 60000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["FEG 101", "Engineering Mathematics", "Calculus", "Vectors", "Engineering", "100L"],
         description: "Engineering students fail FEG 101 for two reasons: weak algebra and rushing calculus without understanding limits. This pack rebuilds the algebra foundations, explains differentiation and integration through physical meaning, and drills vector operations with engineering-flavoured worked examples.",
         outcomes: [
@@ -98,7 +98,7 @@ export const FACULTY_PRIMER_PACKS_A = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 60000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["LAW 101", "Nigerian Legal System", "Legal Method", "Courts", "Precedent", "100L"],
         description: "LAW 101 is where law students learn that law is a system of sources and reasoning, not a list of rules. This pack covers the sources of Nigerian law, the court hierarchy, the doctrine of precedent, statutory interpretation and the IRAC method, with worked examples you can imitate in tutorials.",
         outcomes: [
@@ -180,7 +180,7 @@ export const FACULTY_PRIMER_PACKS_A = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 55000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["ARC 101", "Architecture", "Design Process", "Drawing", "Site Analysis", "100L"],
         description: "Architecture freshers meet two demands at once: thinking conceptually and drawing precisely. This pack explains the design process, how to read and produce scale drawings, site and climate considerations, and the vocabulary you need to critique a building intelligently.",
         outcomes: [
@@ -263,7 +263,7 @@ export const FACULTY_PRIMER_PACKS_A = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 55000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["PHY 101", "General Physics", "Mechanics", "Waves", "100L"],
         description: "This pack treats General Physics as a small number of powerful ideas applied repeatedly. You get a structured method for solving mechanics problems, a clear treatment of simple harmonic motion and waves, and a formula sheet with the conditions under which each formula is valid.",
         outcomes: [
@@ -345,7 +345,7 @@ export const FACULTY_PRIMER_PACKS_A = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 55000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["CHM 101", "General Chemistry", "Atomic Structure", "Bonding", "Stoichiometry", "100L"],
         description: "CHM 101 rewards students who can move between the microscopic picture and the calculation. This pack connects atomic structure, periodicity, bonding and stoichiometry, then shows how to set up mole calculations that do not collapse under exam pressure.",
         outcomes: [
@@ -428,7 +428,7 @@ export const FACULTY_PRIMER_PACKS_A = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 50000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["MTH 101", "Elementary Mathematics", "Algebra", "Trigonometry", "Sequences", "100L"],
         description: "MTH 101 assumes you already own certain algebraic habits. Many freshers do not, and the course moves fast. This pack rebuilds those habits - factorisation, indices, quadratic theory, trigonometric identities and sequences - with short explanations and worked examples that model good layout.",
         outcomes: [
@@ -506,7 +506,7 @@ export const FACULTY_PRIMER_PACKS_A = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 50000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["CSC 101", "Computer Science", "Binary", "Algorithms", "Hardware", "100L"],
         description: "CSC 101 is often taught as a tour of parts, but the exam tests understanding. This pack explains the stored-program model, number systems, data representation, operating systems, networks and algorithmic thinking, with worked binary and flowchart exercises.",
         outcomes: [
@@ -585,7 +585,7 @@ export const FACULTY_PRIMER_PACKS_A = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 50000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["BIO 101", "Biology", "Cell Biology", "Genetics", "Ecology", "100L"],
         description: "BIO 101 covers an enormous syllabus, so the danger is memorising isolated facts. This pack organises the course around four unifying ideas - cells, information, energy and evolution - and gives you diagram-and-label practice for the questions that always appear.",
         outcomes: [

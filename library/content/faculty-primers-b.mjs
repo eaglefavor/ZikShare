@@ -12,7 +12,7 @@ export const FACULTY_PRIMER_PACKS_B = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 65000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["ANA 101", "Human Anatomy", "Histology", "Skeletal System", "100L"],
         description: "Anatomy has a reputation for impossible memorisation. It becomes manageable when you learn structures by relationship, function and clinical relevance. This pack covers anatomical terminology, tissue types, bone structure and the axial and appendicular skeleton, with a revision method built around drawing and recall.",
         outcomes: [
@@ -95,7 +95,7 @@ export const FACULTY_PRIMER_PACKS_B = [
         level: "200L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 65000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["BCS 201", "Pathology", "Cell Injury", "Inflammation", "Neoplasia", "200L"],
         description: "Pathology explains what goes wrong and why. This pack introduces cell injury, inflammation, repair, haemodynamics and neoplasia as a connected story, with the vocabulary you need for later clinical courses and a method for describing any pathological process.",
         outcomes: [
@@ -174,7 +174,7 @@ export const FACULTY_PRIMER_PACKS_B = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 70000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["MED 101", "Medicine", "History Taking", "Medical Ethics", "Professionalism", "100L"],
         description: "Medical school begins with learning how to listen. This pack introduces patient history taking, communication, confidentiality, consent and the Nigerian medical code of conduct, along with a practical study routine for a course load that punishes passive reading.",
         outcomes: [
@@ -257,7 +257,7 @@ export const FACULTY_PRIMER_PACKS_B = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 60000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["PHA 101", "Pharmacy", "Dosage Forms", "Pharmaceutical Calculations", "100L"],
         description: "This pack orients new pharmacy students to the profession, explains drug nomenclature and dosage forms, and drills the pharmaceutical calculations that catch students out in early assessments, including percentage concentrations, dilutions and dose calculations.",
         outcomes: [
@@ -340,7 +340,7 @@ export const FACULTY_PRIMER_PACKS_B = [
         level: "100L",
         material_type: "lab-manuals",
         subcategory: "lab-manuals",
-        priceKobo: 60000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["NUR 101", "Nursing", "Patient Safety", "Vital Signs", "Infection Control", "100L"],
         description: "Nursing fundamentals are assessed both in written papers and in the skills laboratory. This pack explains the nursing process, vital signs, infection prevention and patient safety, and includes a skills-practice log you can bring to demonstrations.",
         outcomes: [
@@ -419,7 +419,7 @@ export const FACULTY_PRIMER_PACKS_B = [
         level: "100L",
         material_type: "lab-manuals",
         subcategory: "lab-manuals",
-        priceKobo: 60000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["MLS 101", "Medical Laboratory Science", "Specimen Collection", "Lab Safety", "Quality Control", "100L"],
         description: "Most laboratory errors happen before the sample reaches the analyser. This pack introduces the laboratory disciplines, specimen collection and handling, biosafety, quality control and the meaning of reference ranges, with practical checklists for the teaching laboratory.",
         outcomes: [

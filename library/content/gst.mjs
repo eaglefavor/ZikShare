@@ -14,7 +14,7 @@ export const GST_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["GST 101", "Use of English", "Grammar", "Concord", "Comprehension", "100L"],
         description: "Most freshers lose easy GST marks not because English is hard, but because they answer by ear. This pack turns the rules of concord, tense, punctuation and comprehension into short, testable patterns you can apply under exam pressure. It includes a sentence-error drill, a summary-writing method and a 7-day revision plan.",
         outcomes: [
@@ -122,7 +122,7 @@ export const GST_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["GST 102", "Use of English", "Essay Writing", "Formal Letters", "Comprehension", "100L"],
         description: "GST 102 moves from sentence rules to whole pieces of writing. This pack gives you reusable structures for argumentative and expository essays, formal letters, reports and minutes, plus a marking-style checklist so you can grade your own drafts before your lecturer does.",
         outcomes: [
@@ -226,7 +226,7 @@ export const GST_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["GST 103", "Philosophy", "Logic", "Fallacies", "Critical Thinking", "100L"],
         description: "Philosophy and Logic is where many science and management students switch off - until they meet the objective questions. This pack explains validity, soundness, syllogisms and informal fallacies in plain language, with everyday UNIZIK examples and a fallacy-spotting drill.",
         outcomes: [
@@ -335,7 +335,7 @@ export const GST_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["GST 105", "Humanities", "Literature", "Art", "Music", "Philosophy", "100L"],
         description: "Humanities questions look broad, so students answer with vague generalities. This pack gives you concrete definitions, examples and evaluation language for literature, visual art, music, theatre and philosophy, plus a method for analysing a work you have never seen before.",
         outcomes: [
@@ -433,7 +433,7 @@ export const GST_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["GST 107", "Nigerian Peoples", "Culture", "History", "Nation-Building", "100L"],
         description: "This pack organises Nigeria's pre-colonial societies, cultural institutions, colonial experience and post-independence challenges into clear themes you can actually remember. It replaces vague 'unity in diversity' answers with specific examples, dates and arguments.",
         outcomes: [
@@ -526,7 +526,7 @@ export const GST_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["GST 104", "Philosophy of Science", "Scientific Method", "History of Science", "Ethics", "100L"],
         description: "This pack explains what makes science different from mere belief, how scientific ideas have changed across history, and how African knowledge systems contributed to medicine, metallurgy and agriculture. It also gives you the vocabulary for ethics-of-science questions.",
         outcomes: [

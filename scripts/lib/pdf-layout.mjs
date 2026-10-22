@@ -6,6 +6,8 @@ export const MARGIN = 56
 export const CONTENT_WIDTH = A4.width - MARGIN * 2
 
 export const DOMAIN_STYLES = {
+    'Theatre & Film Studies': { color: '#7C1D3F', accent: '#F59E0B', label: 'THEATRE & FILM' },
+    'Departmental Archive': { color: '#312E81', accent: '#FBBF24', label: 'DEPARTMENTAL ARCHIVE' },
     'GST & Compulsory Courses': { color: '#1E3A8A', accent: '#F59E0B', label: 'GST / COMPULSORY' },
     'Faculty Primer': { color: '#0F766E', accent: '#F59E0B', label: 'FACULTY PRIMER' },
     'Study Skills': { color: '#B45309', accent: '#1E3A8A', label: 'STUDY SKILLS' },
@@ -300,6 +302,11 @@ export async function buildPackPdf(pack) {
     ])
 
     writer.callout(
+        'Free to download, always',
+        'This pack is free. There is no fee, no subscription and no payment step before download, and the full PDF is not watermarked or locked. Share the link with a coursemate instead of forwarding the file.'
+    )
+
+    writer.callout(
         'Confirm your official course outline',
         `Course codes, credit units and outlines can differ by department and session. Treat this pack as supplementary support and confirm the current outline with your lecturer, course rep or departmental handbook before an assessment.`
     )
@@ -315,6 +322,11 @@ export async function buildPackPdf(pack) {
         if (section.numbered) writer.numbered(section.numbered)
         if (section.callout) writer.callout(section.callout.title, section.callout.body)
     })
+
+    // ── Outline archive (year-demarcated) ──
+    if (pack.archive?.sessions?.length) {
+        drawArchivePage(doc, fonts, style, pack)
+    }
 
     // ── Practice ──
     if (pack.practice?.length) {
@@ -361,6 +373,123 @@ export async function buildPackPdf(pack) {
     drawNotesPage(doc, fonts, style, pack)
 
     return doc
+}
+
+function statusChip(status) {
+    if (status === 'current') return { text: 'CURRENT WORKING MAP', color: rgb(0.02, 0.35, 0.24) }
+    if (status === 'superseded') return { text: 'SUPERSEDED', color: rgb(0.55, 0.25, 0.05) }
+    return { text: 'ARCHIVED', color: rgb(0.35, 0.37, 0.42) }
+}
+
+function drawArchivePage(doc, fonts, style, pack) {
+    const base = hexToRgb(style.color)
+    const accent = hexToRgb(style.accent)
+    let page = null
+    let y = 0
+    let part = 0
+
+    const startPage = () => {
+        page = doc.addPage([A4.width, A4.height])
+        part += 1
+        y = A4.height - 72
+        if (part === 1) {
+            page.drawText('OUTLINE ARCHIVE', {
+                x: MARGIN, y, size: 8, font: fonts.bold, color: accent, characterSpacing: 1.1,
+            })
+            y -= 26
+            page.drawText(ascii(pack.code ? `Session record: ${pack.code}` : 'Session record'), {
+                x: MARGIN, y, size: 16, font: fonts.bold, color: base,
+            })
+            y -= 18
+            page.drawText(ascii(pack.archive.coverage || 'Archived departmental listings, oldest first'), {
+                x: MARGIN, y, size: 9, font: fonts.oblique, color: rgb(0.4, 0.43, 0.48),
+            })
+            y -= 22
+            page.drawLine({ start: { x: MARGIN, y }, end: { x: A4.width - MARGIN, y }, thickness: 1.2, color: base })
+            y -= 18
+            for (const line of wrapText(pack.archive.note || '', fonts.regular, 8.8, CONTENT_WIDTH)) {
+                page.drawText(line, { x: MARGIN, y, size: 8.8, font: fonts.regular, color: rgb(0.32, 0.35, 0.4) })
+                y -= 12.5
+            }
+            y -= 10
+        } else {
+            page.drawText(ascii(`${pack.code || 'Session record'} - archive continued (part ${part})`), {
+                x: MARGIN, y, size: 12, font: fonts.bold, color: base,
+            })
+            y -= 16
+            page.drawText('Years are still in chronological order; nothing has been reordered or merged.', {
+                x: MARGIN, y, size: 8.6, font: fonts.regular, color: rgb(0.4, 0.43, 0.48),
+            })
+            y -= 24
+        }
+        page.drawLine({ start: { x: MARGIN, y: 44 }, end: { x: A4.width - MARGIN, y: 44 }, thickness: 0.5, color: rgb(0.85, 0.87, 0.9) })
+        page.drawText(ascii(`ZikShare Academic Vault  |  ${pack.domain}`), {
+            x: MARGIN, y: 30, size: 7.2, font: fonts.regular, color: rgb(0.42, 0.45, 0.5),
+        })
+    }
+
+    startPage()
+
+    for (const session of pack.archive.sessions) {
+        const chip = statusChip(session.status)
+        const topicLines = (session.topics || []).flatMap((t) => wrapText(`- ${t}`, fonts.regular, 8.8, CONTENT_WIDTH - 22))
+        const changedLines = session.changed
+            ? wrapText(`What changed: ${session.changed}`, fonts.oblique, 8.2, CONTENT_WIDTH - 8)
+            : []
+        const sourceLines = session.source
+            ? wrapText(`Source: ${session.source}${session.retrieved ? ` (retrieved ${session.retrieved})` : ''}`, fonts.regular, 7.6, CONTENT_WIDTH - 8)
+            : []
+        const blockHeight = 32 + topicLines.length * 11.6 + (changedLines.length ? changedLines.length * 11 + 3 : 0) + sourceLines.length * 10 + 16
+
+        if (y - blockHeight < 60) startPage()
+
+        page.drawRectangle({
+            x: MARGIN, y: y - 20, width: CONTENT_WIDTH, height: 22,
+            color: session.status === 'current' ? rgb(0.94, 0.99, 0.96) : rgb(0.96, 0.96, 0.97),
+        })
+        page.drawText(ascii(session.year), {
+            x: MARGIN + 8, y: y - 14, size: 10.5, font: fonts.bold,
+            color: session.status === 'current' ? accent : base,
+        })
+        page.drawText(ascii(session.label), {
+            x: MARGIN + 78, y: y - 14, size: 8.8, font: fonts.regular, color: rgb(0.28, 0.31, 0.36),
+        })
+        const chipWidth = fonts.bold.widthOfTextAtSize(chip.text, 6.6) + 12
+        page.drawText(chip.text, {
+            x: A4.width - MARGIN - chipWidth + 6, y: y - 14, size: 6.6, font: fonts.bold, color: chip.color,
+        })
+        y -= 32
+
+        for (const line of topicLines) {
+            page.drawText(ascii(line), { x: MARGIN + 8, y, size: 8.8, font: fonts.regular, color: rgb(0.17, 0.2, 0.25) })
+            y -= 11.6
+        }
+
+        if (changedLines.length) {
+            y -= 3
+            for (const line of changedLines) {
+                page.drawText(ascii(line), { x: MARGIN + 8, y, size: 8.2, font: fonts.oblique, color: rgb(0.55, 0.3, 0.05) })
+                y -= 11
+            }
+        }
+
+        if (sourceLines.length) {
+            y -= 3
+            for (const line of sourceLines) {
+                page.drawText(ascii(line), { x: MARGIN + 8, y, size: 7.6, font: fonts.regular, color: rgb(0.45, 0.48, 0.53) })
+                y -= 10
+            }
+        }
+        y -= 16
+    }
+
+    const disclaimer = pack.archive.disclaimer
+        || 'An archive entry records what a public page listed in that year. It is not a prediction of the current curriculum.'
+    for (const line of wrapText(disclaimer, fonts.oblique, 8, CONTENT_WIDTH)) {
+        if (y < 80) startPage()
+        page.drawText(ascii(line), { x: MARGIN, y, size: 8, font: fonts.oblique, color: rgb(0.4, 0.43, 0.48) })
+        y -= 11
+    }
 }
 
 function drawNotesPage(doc, fonts, style, pack) {
@@ -494,10 +623,23 @@ function drawCover(doc, fonts, style, pack) {
     page.drawText('Practical notes, worked examples, practice questions and a revision plan.', {
         x: MARGIN, y: 126, size: 8.8, font: fonts.regular, color: rgb(0.4, 0.44, 0.5),
     })
-    page.drawText('Study smarter. Ask better questions. Pass with understanding.', {
-        x: MARGIN, y: 110, size: 8.8, font: fonts.regular, color: rgb(0.4, 0.44, 0.5),
-    })
 
+    if (pack.archive?.sessions?.length) {
+        const years = pack.archive.sessions.map((s) => s.year).join('  •  ')
+        const band = `OUTLINE ARCHIVE: ${years}`
+        const bandWidth = fonts.bold.widthOfTextAtSize(ascii(band), 7.4) + 20
+        page.drawRectangle({
+            x: MARGIN, y: 172, width: Math.min(bandWidth, CONTENT_WIDTH), height: 18,
+            color: accent, opacity: 0.16,
+        })
+        page.drawText(ascii(band), {
+            x: MARGIN + 10, y: 178, size: 7.4, font: fonts.bold, color: rgb(0.25, 0.22, 0.1),
+        })
+    }
+
+    page.drawText('Free to download. No fee, no payment step, no watermark.', {
+        x: MARGIN, y: 96, size: 8, font: fonts.bold, color: base,
+    })
     page.drawText('Independent study support | Not an official UNIZIK publication', {
         x: MARGIN, y: 62, size: 7.4, font: fonts.regular, color: rgb(0.55, 0.58, 0.62),
     })

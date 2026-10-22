@@ -3,16 +3,11 @@ import { useNavigate } from 'react-router-dom'
 import { 
     BookOpen, Search, Filter, ShieldCheck, Sparkles, GraduationCap, 
     FileText, Award, Download, CheckCircle, ChevronRight, ArrowRight,
-    Library, Layers, BookmarkCheck, Star, Eye
+    Library, Layers, BookmarkCheck, Star
 } from 'lucide-react'
 import { getDigitalProducts } from '../lib/database'
 import { UNIZIK_FACULTIES, ACADEMIC_LEVELS, ACADEMIC_MATERIAL_TYPES, formatCourseCode } from '../lib/categories'
 import { FRESHER_LIBRARY_PACKS, FRESHER_LIBRARY_DOMAINS, mergeLibraryMaterials } from '../lib/fresherLibrary'
-
-function formatNaira(kobo) {
-    const naira = (kobo || 0) / 100
-    return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(naira)
-}
 
 export default function LibraryPage() {
     const navigate = useNavigate()
@@ -109,7 +104,7 @@ export default function LibraryPage() {
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', backgroundColor: 'rgba(217, 119, 6, 0.2)', border: '1px solid rgba(253, 230, 138, 0.4)', borderRadius: '9999px', padding: '0.35rem 0.85rem', marginBottom: '0.85rem' }}>
                         <ShieldCheck size={16} color="#FBBF24" />
                         <span style={{ fontSize: '0.78rem', fontWeight: 700, color: '#FEF3C7', letterSpacing: '0.04em', textTransform: 'uppercase' }}>
-                            Official UNIZIK Academic Vault
+                            Free Student Study Library
                         </span>
                     </div>
 
@@ -117,7 +112,7 @@ export default function LibraryPage() {
                         UNIZIK Digital Library
                     </h1>
                     <p style={{ fontSize: '0.92rem', color: '#E2E8F0', maxWidth: '640px', lineHeight: 1.5, marginBottom: '1.5rem' }}>
-                        Verified past questions, comprehensive lecture notes, formula handbooks, and exam marking schemes across all faculties — instant download to your phone or laptop.
+                        {FRESHER_LIBRARY_PACKS.length} student-written study packs across every faculty — including the Faculty of Arts and a year-by-year Theatre &amp; Film Studies outline archive. Everything is free: no fee, no sign-in, no payment step before download.
                     </p>
 
                     {/* Search Input Bar */}
@@ -180,8 +175,8 @@ export default function LibraryPage() {
                             <Award size={22} />
                         </div>
                         <div>
-                            <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0F172A' }}>Faculty-Verified Quality Guarantee</div>
-                            <div style={{ fontSize: '0.78rem', color: '#64748B' }}>100% syllabus aligned • Virus-free PDF • Instant post-payment download</div>
+                            <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#0F172A' }}>Free, student-written, no payment step</div>
+                            <div style={{ fontSize: '0.78rem', color: '#64748B' }}>Syllabus-mapped (confirm with your department) • No fee • No sign-in • Direct PDF download</div>
                         </div>
                     </div>
 
@@ -467,6 +462,13 @@ export default function LibraryPage() {
                                         navigate(`/item/${item.id}`)
                                         return
                                     }
+                                    // Unseeded packs still have a public free PDF, so
+                                    // open the full document rather than a preview.
+                                    const href = item.download_path || (item.slug ? `/library/packs/${item.slug}.pdf` : null)
+                                    if (href) {
+                                        window.open(href, '_blank', 'noopener,noreferrer')
+                                        return
+                                    }
                                     if (item.preview_path) {
                                         window.open(item.preview_path, '_blank', 'noopener,noreferrer')
                                         return
@@ -532,6 +534,15 @@ export default function LibraryPage() {
                                         {item.title}
                                     </h4>
 
+                                    {/* Outline archive years (only on year-demarcated packs) */}
+                                    {item.archive_years?.length > 0 && (
+                                        <div style={{ marginBottom: '0.5rem' }}>
+                                            <span style={{ fontSize: '0.68rem', fontWeight: 800, color: '#7C1D3F', backgroundColor: '#FDF2F8', border: '1px solid #FBCFE8', padding: '0.15rem 0.45rem', borderRadius: '9999px', letterSpacing: '0.02em' }}>
+                                                🗓 Archive: {item.archive_years.join(' → ')}
+                                            </span>
+                                        </div>
+                                    )}
+
                                     {/* Faculty, Department & Level Pill */}
                                     {item.domain && (
                                         <div style={{ marginBottom: '0.5rem' }}>
@@ -563,8 +574,8 @@ export default function LibraryPage() {
                                 <div style={{ borderTop: '1px solid #F1F5F9', paddingTop: '0.75rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
                                         <div style={{ fontSize: '0.7rem', color: '#94A3B8', fontWeight: 600, textTransform: 'uppercase' }}>Price</div>
-                                        <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#D97706' }}>
-                                            {formatNaira(item.priceKobo)}
+                                        <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#047857' }}>
+                                            Free
                                         </div>
                                     </div>
 
@@ -580,8 +591,8 @@ export default function LibraryPage() {
                                             fontSize: '0.8rem',
                                             fontWeight: 700
                                         }}>
-                                            {String(item.id).startsWith('pdf-') ? <Eye size={14} /> : <Download size={14} />}
-                                            {String(item.id).startsWith('pdf-') ? 'Read Free Preview' : 'Get Material'}
+                                            <Download size={14} />
+                                            Download Free PDF
                                         </div>
                                         {item.preview_path && (
                                             <a

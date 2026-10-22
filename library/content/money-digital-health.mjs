@@ -12,7 +12,7 @@ export const MONEY_DIGITAL_HEALTH_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 45000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Budgeting", "Money", "Saving", "Financial Literacy", "100L"],
         description: "Running out of money mid-month is usually a planning problem rather than an income problem. This pack shows you how to track spending for one week, build a realistic monthly budget, separate needs from wants, and create a small emergency fund without pretending rice is optional.",
         outcomes: [
@@ -91,7 +91,7 @@ export const MONEY_DIGITAL_HEALTH_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 45000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Freelancing", "Side Hustle", "Income", "Clients", "100L"],
         description: "Many students want income but start with no skill and no plan. This pack helps you choose a realistic hustle, build one service people actually pay for, price it, find your first five clients and avoid the scams that target young freelancers.",
         outcomes: [
@@ -170,7 +170,7 @@ export const MONEY_DIGITAL_HEALTH_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Scholarships", "Financial Aid", "Grants", "Applications", "100L"],
         description: "Scholarship information is scattered and often surrounded by fraud. This pack explains where legitimate opportunities are announced, how to prepare a reusable document pack, how to write a personal statement that does not sound generic, and how to recognise fake portals.",
         outcomes: [
@@ -249,7 +249,7 @@ export const MONEY_DIGITAL_HEALTH_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 45000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["CV", "Interviews", "Internships", "Career", "100L"],
         description: "Freshers often believe they have nothing to put on a CV. This pack shows how to convert coursework, volunteering and side projects into evidence of skill, structure a one-page CV, prepare for common interview questions and approach internships without waiting for third year.",
         outcomes: [
@@ -328,7 +328,7 @@ export const MONEY_DIGITAL_HEALTH_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 45000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Entrepreneurship", "Business", "Customers", "Validation", "CED", "100L"],
         description: "Most student businesses fail because nobody wanted the product, not because the owner lacked passion. This pack teaches problem-first thinking, cheap validation, unit economics and a first-sale plan, with Nigerian campus examples you can test within a week.",
         outcomes: [
@@ -407,7 +407,7 @@ export const MONEY_DIGITAL_HEALTH_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 45000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Microsoft Word", "Excel", "PowerPoint", "Digital Skills", "Assignments", "100L"],
         description: "A well-formatted report signals care; a spreadsheet that recalculates saves hours; a clear slide deck earns attention. This pack covers the specific features students actually need: styles, table of contents, page numbering, formulas, charts and presentation structure.",
         outcomes: [
@@ -486,7 +486,7 @@ export const MONEY_DIGITAL_HEALTH_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Google Drive", "Google Docs", "Collaboration", "Cloud Storage", "Digital Skills", "100L"],
         description: "Group work fails when files are scattered across WhatsApp and nobody knows which version is final. This pack explains shared drives, document permissions, comments and suggestions, version history and offline access, plus a simple group workflow.",
         outcomes: [
@@ -565,7 +565,7 @@ export const MONEY_DIGITAL_HEALTH_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 45000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["AI", "Study Tools", "Academic Integrity", "Prompting", "Digital Skills", "100L"],
         description: "AI tools are useful tutors and dangerous shortcuts. This pack explains what they do well, where they confidently produce wrong answers, how to write prompts that produce checkable output, and how to stay within your department's integrity rules.",
         outcomes: [
@@ -644,7 +644,7 @@ export const MONEY_DIGITAL_HEALTH_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Cybersecurity", "Phishing", "Online Safety", "Cybercrime Act", "Digital Skills", "100L"],
         description: "Students are targeted because they hold bank details, social accounts and personal data with limited security habits. This pack covers strong authentication, phishing recognition, device hygiene and the Nigerian legal consequences of offences such as identity theft and unauthorised access.",
         outcomes: [
@@ -723,7 +723,7 @@ export const MONEY_DIGITAL_HEALTH_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Mental Health", "Stress", "Coping", "Wellbeing", "100L"],
         description: "First year brings new academic pressure, financial strain and social change at once. This pack explains the stress response, distinguishes normal pressure from warning signs, teaches practical coping skills and sets out how and where to seek help.",
         outcomes: [
@@ -802,7 +802,7 @@ export const MONEY_DIGITAL_HEALTH_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Nutrition", "Diet", "Student Health", "Budget Meals", "100L"],
         description: "Cheap food is not automatically bad food, and expensive food is not automatically balanced. This pack explains the basics of a balanced plate, builds affordable Nigerian meal combinations, and covers hydration, food safety and the effects of caffeine and energy drinks.",
         outcomes: [
@@ -881,7 +881,7 @@ export const MONEY_DIGITAL_HEALTH_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 40000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Sleep", "Fitness", "Posture", "Student Health", "100L"],
         description: "Sleep and movement are not luxuries to be traded for study hours - they are part of how learning is consolidated. This pack covers sleep hygiene, a no-equipment exercise routine, posture for long study sessions and recovering after late nights.",
         outcomes: [
@@ -960,7 +960,7 @@ export const MONEY_DIGITAL_HEALTH_PACKS = [
         level: "100L",
         material_type: "lecture-notes",
         subcategory: "lecture-notes",
-        priceKobo: 45000,
+        priceKobo: 0, // free: no fee, no payment before download
         tags: ["Sexual Health", "Consent", "Relationships", "Student Health", "100L"],
         description: "Freshers receive a lot of rumour and very little accurate information. This pack covers consent, contraception and barrier protection, common sexually transmitted infections, testing and where to get confidential care, with no moralising and no shame.",
         outcomes: [

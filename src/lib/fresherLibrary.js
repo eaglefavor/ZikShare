@@ -108,6 +108,12 @@ export function mergeLibraryMaterials(dbMaterials = []) {
     const fromDb = dbMaterials.map((d) => {
         const pack = findFresherPackByStoragePath(d.original_storage_path || d.storage_path)
         const book = pack ? null : findBookByStoragePath(d.original_storage_path || d.storage_path)
+
+        // A seeded book keeps its catalogue card (author, topics, shelf note)
+        // and only borrows the row's identity, so an admin edit in the database
+        // cannot turn a book into something the catalogue does not describe.
+        if (book) return { ...toBookCard(book), id: d.id }
+
         return {
             id: d.id,
             slug: pack?.slug || null,
@@ -117,23 +123,18 @@ export function mergeLibraryMaterials(dbMaterials = []) {
             department: pack?.department || d.department || '',
             level: pack?.level || d.level || '100L',
             material_type: pack?.material_type || d.subcategory || 'lecture-notes',
-            domain: pack?.domain || book?.domain || d.domain || null,
+            domain: pack?.domain || d.domain || null,
             priceKobo: 0,
-            page_count: pack?.page_count || book?.page_count || d.page_count || 0,
-            file_size_bytes: pack?.file_size_bytes || book?.file_size_bytes || d.file_size_bytes || 0,
-            description: pack?.description || book?.description || d.description || '',
+            page_count: pack?.page_count || d.page_count || 0,
+            file_size_bytes: pack?.file_size_bytes || d.file_size_bytes || 0,
+            description: pack?.description || d.description || '',
             preview_path: pack?.preview_path || d.preview_path || null,
             preview_page_count: pack?.preview_page_count || d.preview_page_count || 3,
-            download_path:
-                pack?.download_path ||
-                book?.download_path ||
-                (pack ? `/library/packs/${pack.slug}.pdf` : null),
+            download_path: pack?.download_path || (pack ? `/library/packs/${pack.slug}.pdf` : null),
             archive_years: pack?.archive_years || [],
             is_free: true,
             is_official: true,
             isFresherPdf: Boolean(pack || d.original_storage_path),
-            isBook: Boolean(book),
-            author: book?.author || null,
         }
     })
 

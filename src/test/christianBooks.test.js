@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { PDFDocument } from 'pdf-lib'
 import { CHRISTIAN_BOOKS } from '../../library/content/books.mjs'
-import { CHRISTIAN_BOOKS_DOMAIN } from '../../src/lib/christianBooks'
+import { CHRISTIAN_BOOKS_DOMAIN, findBookByStoragePath } from '../../src/lib/christianBooks'
 
 const ROOT = process.cwd()
 const BOOKS_DIR = path.join(ROOT, 'public', 'library', 'books')
@@ -52,6 +52,14 @@ describe('Christian Books shelf', () => {
             expect(await pageCount(file)).toBe(book.page_count)
             expect(fs.statSync(file).size).toBe(book.file_size_bytes)
         }
+    })
+
+    it('matches a database row back to the public book PDF', () => {
+        const book = CHRISTIAN_BOOKS[0]
+        const found = findBookByStoragePath(`christian-books/${book.slug}.pdf`)
+        expect(found?.slug).toBe(book.slug)
+        expect(found?.download_path).toBe(`/library/books/${book.slug}.pdf`)
+        expect(findBookByStoragePath('official-library/gst-101-use-of-english.pdf')).toBeNull()
     })
 
     it('never charges for a book', () => {

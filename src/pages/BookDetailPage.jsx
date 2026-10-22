@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Download, BookOpen, ShieldAlert, FileText, ExternalLink } from 'lucide-react'
-import { findBookBySlug, toBookCard, CHRISTIAN_BOOKS_DOMAIN } from '../lib/christianBooks'
+import { findBookBySlug, findRelatedBooks, toBookCard, CHRISTIAN_BOOKS_DOMAIN } from '../lib/christianBooks'
+import BookCover from '../components/BookCover'
 
 const RIGHTS_NOTE = {
     'publisher-copyright': 'The edition in this file carries a publisher copyright notice. Rights in the text and this edition remain with the publisher; ZikShare hosts it for reading and does not claim any licence over it.',
@@ -41,6 +42,7 @@ export default function BookDetailPage() {
 
     const card = toBookCard(book)
     const size = formatSize(book.file_size_bytes)
+    const related = findRelatedBooks(book.slug)
 
     return (
         <div style={{ maxWidth: '860px', margin: '0 auto', padding: '1.5rem 1rem 4rem' }}>
@@ -53,11 +55,14 @@ export default function BookDetailPage() {
 
             <div style={{ backgroundColor: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '1rem', padding: '1.5rem', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                 <div style={{ display: 'flex', gap: '1.5rem', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                    <img
-                        src={card.cover_path}
-                        alt={`Cover of ${book.title}`}
-                        style={{ width: '190px', aspectRatio: '3 / 4', objectFit: 'cover', objectPosition: 'top center', borderRadius: '0.75rem', border: '1px solid #E2E8F0', backgroundColor: '#F8FAFC', flexShrink: 0 }}
-                    />
+                    <div style={{ width: '190px', flexShrink: 0 }}>
+                        <BookCover
+                            src={card.cover_path}
+                            title={book.title}
+                            author={book.author}
+                            alt={`Cover of ${book.title}`}
+                        />
+                    </div>
 
                     <div style={{ flex: '1 1 280px', minWidth: 0 }}>
                         <span style={{ display: 'inline-block', fontSize: '0.68rem', fontWeight: 800, letterSpacing: '0.04em', textTransform: 'uppercase', color: '#7C1D3F', backgroundColor: '#FDF2F8', border: '1px solid #FBCFE8', borderRadius: '9999px', padding: '0.15rem 0.6rem', marginBottom: '0.6rem' }}>
@@ -91,15 +96,12 @@ export default function BookDetailPage() {
                         </div>
 
                         <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-                            <a
-                                href={card.download_path}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', backgroundColor: '#1E40AF', color: '#FFFFFF', padding: '0.65rem 1.1rem', borderRadius: '0.625rem', fontSize: '0.85rem', fontWeight: 800, textDecoration: 'none' }}
+                            <button
+                                onClick={() => navigate(`/library/books/${book.slug}/read`)}
+                                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.45rem', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', padding: '0.65rem 1.1rem', borderRadius: '0.625rem', fontSize: '0.85rem', fontWeight: 800, cursor: 'pointer' }}
                             >
                                 <BookOpen size={16} /> Start reading
-                                <ExternalLink size={13} style={{ opacity: 0.75 }} />
-                            </a>
+                            </button>
                             <a
                                 href={card.download_path}
                                 download
@@ -109,7 +111,10 @@ export default function BookDetailPage() {
                             </a>
                         </div>
                         <p style={{ fontSize: '0.72rem', color: '#94A3B8', margin: '0.6rem 0 0' }}>
-                            Opens the complete book. No account and no payment are required.
+                            Reading happens here in the browser. No account and no payment are required.{' '}
+                            <a href={card.download_path} target="_blank" rel="noopener noreferrer" style={{ color: '#2563EB', fontWeight: 700, textDecoration: 'none' }}>
+                                Open the PDF in a new tab <ExternalLink size={11} style={{ display: 'inline', verticalAlign: '-1px' }} />
+                            </a>
                         </p>
                     </div>
                 </div>
@@ -139,6 +144,40 @@ export default function BookDetailPage() {
                     </p>
                 </div>
             </div>
+
+            {/* Same author first, then books that share a subject. Hidden when
+                the shelf genuinely has nothing related. */}
+            {related.length > 0 && (
+                <div style={{ marginTop: '1.5rem' }}>
+                    <h2 style={{ fontSize: '1rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.75rem' }}>
+                        More on this shelf
+                    </h2>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '0.85rem' }}>
+                        {related.map((other) => (
+                            <button
+                                key={other.slug}
+                                onClick={() => navigate(`/library/books/${other.slug}`)}
+                                style={{ display: 'flex', gap: '0.7rem', alignItems: 'flex-start', textAlign: 'left', background: '#FFFFFF', border: '1px solid #E2E8F0', borderRadius: '0.75rem', padding: '0.75rem', cursor: 'pointer', font: 'inherit' }}
+                            >
+                                <div style={{ width: '58px', flexShrink: 0 }}>
+                                    <BookCover
+                                        src={toBookCard(other).cover_path}
+                                        title={other.title}
+                                        author={other.author}
+                                        alt={`Cover of ${other.title}`}
+                                        style={{ borderRadius: '0.375rem' }}
+                                    />
+                                </div>
+                                <div style={{ minWidth: 0 }}>
+                                    <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0F172A', lineHeight: 1.3 }}>{other.title}</div>
+                                    <div style={{ fontSize: '0.7rem', color: '#64748B', marginTop: '0.2rem' }}>{other.author}</div>
+                                    <div style={{ fontSize: '0.68rem', color: '#94A3B8', marginTop: '0.25rem' }}>{other.page_count} pages · Free</div>
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                </div>
+            )}
         </div>
     )
 }

@@ -7,6 +7,8 @@ import {
 } from 'lucide-react'
 import { getDigitalProducts } from '../lib/database'
 import { UNIZIK_FACULTIES, ACADEMIC_LEVELS, ACADEMIC_MATERIAL_TYPES, formatCourseCode } from '../lib/categories'
+import { matchesLibraryQuery } from '../lib/librarySearch'
+import BookCover from '../components/BookCover'
 import { FRESHER_LIBRARY_PACKS, FRESHER_LIBRARY_DOMAINS, mergeLibraryMaterials } from '../lib/fresherLibrary'
 import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
 
@@ -64,10 +66,9 @@ export default function LibraryPage() {
     // Filter logic
     const filteredMaterials = useMemo(() => {
         return allMaterials.filter(item => {
-            const matchesQuery = !searchQuery.trim() || 
-                item.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (item.code && item.code.toLowerCase().includes(searchQuery.toLowerCase())) ||
-                (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()))
+            // One matcher for packs and books: code, title, author, publisher,
+            // subject and description all count, so "Nee" finds the bookshelf.
+            const matchesQuery = matchesLibraryQuery(item, searchQuery)
 
             const matchesFaculty = selectedFaculty === 'All' || item.faculty === selectedFaculty
             const matchesDepartment = selectedDepartment === 'All' || item.department === selectedDepartment || (item.title && item.title.toLowerCase().includes(selectedDepartment.toLowerCase()))
@@ -130,7 +131,7 @@ export default function LibraryPage() {
                         <Search size={20} color="#64748B" style={{ flexShrink: 0, marginRight: '0.5rem' }} />
                         <input
                             type="text"
-                            placeholder="Search course code (e.g. GST 112, FEG 280, ACC 101, LAW 101)..."
+                            placeholder="Search a course code, book title or author (e.g. GST 112, THA 151, Watchman Nee)…"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             style={{
@@ -532,23 +533,16 @@ export default function LibraryPage() {
                             >
                                 <div>
                                     {/* Books show their own title page as a cover */}
-                                    {item.isBook && item.cover_path && (
-                                        <img
-                                            src={item.cover_path}
-                                            alt={`Cover of ${item.title}`}
-                                            loading="lazy"
-                                            style={{
-                                                width: '100%',
-                                                aspectRatio: '3 / 4',
-                                                objectFit: 'cover',
-                                                objectPosition: 'top center',
-                                                borderRadius: '0.625rem',
-                                                border: '1px solid #E2E8F0',
-                                                backgroundColor: '#F8FAFC',
-                                                display: 'block',
-                                                marginBottom: '0.75rem'
-                                            }}
-                                        />
+                                    {item.isBook && (
+                                        <div style={{ marginBottom: '0.75rem' }}>
+                                            <BookCover
+                                                src={item.cover_path}
+                                                title={item.title}
+                                                author={item.author}
+                                                alt={`Cover of ${item.title}`}
+                                                style={{ borderRadius: '0.625rem' }}
+                                            />
+                                        </div>
                                     )}
 
                                     {/* Card Top Badges */}

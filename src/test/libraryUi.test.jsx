@@ -25,7 +25,7 @@ describe('Digital Library UI Component Tests', { timeout: 15000 }, () => {
     )
 
     expect(await screen.findByText('UNIZIK Digital Library')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText(/Search course code/i)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/Search a course code/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'All Faculties' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Faculty of Engineering' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Faculty of Medicine' })).toBeInTheDocument()
@@ -39,7 +39,7 @@ describe('Digital Library UI Component Tests', { timeout: 15000 }, () => {
       </MemoryRouter>
     )
 
-    const searchInput = screen.getByPlaceholderText(/Search course code/i)
+    const searchInput = screen.getByPlaceholderText(/Search a course code/i)
     fireEvent.change(searchInput, { target: { value: 'LAW 101' } })
 
     expect(screen.getByText(/LAW 101: The Nigerian Legal System/i)).toBeInTheDocument()
@@ -212,6 +212,7 @@ describe('Christian Books shelf UI', { timeout: 15000 }, () => {
       <MemoryRouter initialEntries={['/library/books/let-us-pray-watchman-nee']}>
         <Routes>
           <Route path="/library/books/:slug" element={<BookDetailPage />} />
+          <Route path="/library/books/:slug/read" element={<BookRouteProbe />} />
         </Routes>
       </MemoryRouter>
     )
@@ -227,12 +228,55 @@ describe('Christian Books shelf UI', { timeout: 15000 }, () => {
       expect(screen.getByText(topic)).toBeInTheDocument()
     }
 
-    const fullText = screen.getByRole('link', { name: /Start reading/ })
-    expect(fullText).toHaveAttribute('href', '/library/books/let-us-pray-watchman-nee.pdf')
+    // The PDF is still one click away, without leaving the page.
     expect(screen.getByRole('link', { name: /Download the PDF/ })).toHaveAttribute(
       'href',
       '/library/books/let-us-pray-watchman-nee.pdf'
     )
+    expect(screen.getByRole('link', { name: /Open the PDF in a new tab/ })).toHaveAttribute(
+      'href',
+      '/library/books/let-us-pray-watchman-nee.pdf'
+    )
+
+    // Reading happens in the app.
+    fireEvent.click(screen.getByRole('button', { name: /Start reading/ }))
+    expect(await screen.findByText('BOOK PAGE let-us-pray-watchman-nee')).toBeInTheDocument()
+  })
+
+  it('offers other books from the same author on a book page', async () => {
+    render(
+      <MemoryRouter initialEntries={['/library/books/let-us-pray-watchman-nee']}>
+        <Routes>
+          <Route path="/library/books/:slug" element={<BookDetailPage />} />
+        </Routes>
+      </MemoryRouter>
+    )
+
+    expect(await screen.findByText('More on this shelf')).toBeInTheDocument()
+    expect(screen.getByText('The Spiritual Man')).toBeInTheDocument()
+    // The book you are reading is never offered as its own suggestion.
+    expect(screen.queryAllByText('Let Us Pray')).toHaveLength(1)
+  })
+
+  it('finds books by author and by subject, not only by course code', async () => {
+    database.getDigitalProducts.mockResolvedValue([])
+    render(
+      <MemoryRouter>
+        <LibraryPage />
+      </MemoryRouter>
+    )
+
+    const search = await screen.findByPlaceholderText(/Search a course code/i)
+    fireEvent.change(search, { target: { value: 'Watchman Nee' } })
+
+    expect(await screen.findByText('The Spiritual Man')).toBeInTheDocument()
+    expect(screen.getByText('Let Us Pray')).toBeInTheDocument()
+    // A different author's book does not match this author's name.
+    expect(screen.queryByText('Lucifer Exposed')).not.toBeInTheDocument()
+    expect(screen.queryByText(/THA 151/)).not.toBeInTheDocument()
+
+    fireEvent.change(search, { target: { value: 'prayer' } })
+    expect(await screen.findByText('Let Us Pray')).toBeInTheDocument()
   })
 
   it('puts a real download link on every card', async () => {

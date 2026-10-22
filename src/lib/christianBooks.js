@@ -58,6 +58,26 @@ export function findBookByStoragePath(storagePath) {
 
 export const CHRISTIAN_BOOK_CARDS = CHRISTIAN_BOOKS.map(toBookCard)
 
+/**
+ * Other books worth opening next: same author first, then books that share a
+ * topic. Never includes the book you are already on, and never invents one.
+ * Returns [] when the shelf has nothing related, so callers can hide the row.
+ */
+export function findRelatedBooks(slug, limit = 3) {
+    const current = findBookBySlug(slug)
+    if (!current) return []
+
+    const others = CHRISTIAN_BOOKS.filter((b) => b.slug !== current.slug)
+    const sameAuthor = others.filter((b) => b.author === current.author)
+    const sharesTopic = others.filter(
+        (b) =>
+            b.author !== current.author &&
+            (b.topics || []).some((topic) => (current.topics || []).includes(topic))
+    )
+
+    return [...sameAuthor, ...sharesTopic].slice(0, limit)
+}
+
 /** True where the document itself carries a publisher copyright notice. */
 export function isPublisherCopyrighted(book) {
     return book?.rights === 'publisher-copyright'

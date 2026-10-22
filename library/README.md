@@ -200,7 +200,9 @@ npm run books:audit
 
 A book must have at least 20,000 characters of extractable text and at least 80%
 of its pages must carry more than 20 characters. That catches a blank scan or a
-cover-only teaser, which a file-size check cannot.
+cover-only teaser, which a file-size check cannot. The same run checks that each
+rendered cover exists and is not a blank rectangle (pixel standard deviation
+below 8 fails), so a cover cannot silently render as an empty white card.
 
 ### Storage originals
 
@@ -249,6 +251,36 @@ npm run books:covers:check  # verify every cover exists
 A book card opens `/library/books/<slug>`, a page with the cover, author,
 publisher, page count, file size, description, topics, rights note, and links
 to read or download the complete PDF. Books never link to `/item/<id>`.
+
+### Reading in the browser
+
+`/library/books/<slug>/read` is a full-page reader: one page at a time, drawn
+by the same PDF.js build the app already loads for sample previews (no new
+dependency). Arrow keys and Page Up/Down page through it, the page box jumps to
+a typed number, and zoom is clamped to 50–300%. The page you stop on is
+remembered per book in `localStorage`, in that browser only.
+
+If PDF.js cannot load, the reader says so and offers the file directly — it
+never shows a blank page and pretends the book is empty.
+
+### Finding books
+
+`src/lib/librarySearch.js` is the single matcher for both shelves. A query is
+split into words and every word must appear in the record, across title,
+subtitle, course code, author, publisher, topics, description, department,
+faculty, domain and level. So `THA 151` still finds a pack by code, `Watchman
+Nee` finds four books by author, and `nee prayer` narrows the four down to the
+one on prayer.
+
+Each book page also ends with **More on this shelf**: other books by the same
+author, then books sharing a topic, never the book you are on, and never
+padding when the shelf has nothing related.
+
+### Covers if the image fails
+
+`src/components/BookCover.jsx` draws the real cover and, if that image cannot
+load, falls back to a typographic cover built from the book's own title and
+author rather than a broken image box.
 
 ### Catalogue rows
 

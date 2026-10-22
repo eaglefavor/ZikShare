@@ -14,6 +14,10 @@ Thresholds (a book must clear both):
 
 A page image with no text layer counts against it, so a closed scan is caught.
 
+It also checks the rendered cover: it must exist, be a JPEG, and carry real
+pixels (a blank white rectangle has almost no variation, so its standard
+deviation is near zero).
+
 Requires PyMuPDF:  pip install pymupdf
 """
 import json
@@ -29,9 +33,12 @@ ROOT = Path(__file__).resolve().parent.parent
 BOOKS_DIR = ROOT / "public" / "library" / "books"
 CATALOG = ROOT / "library" / "books.generated.json"
 
+COVERS_DIR = BOOKS_DIR / "covers"
+
 MIN_CHARS = 20_000
 MIN_TEXT_PAGE_RATIO = 0.80
 THIN_CHARS = 20
+MIN_COVER_STDDEV = 8.0
 
 
 def audit(path: Path) -> dict:
@@ -57,6 +64,20 @@ def audit(path: Path) -> dict:
         doc.close()
 
 
+def cover_stddev(path: Path) -> float:
+    """Standard deviation of sampled pixel values: ~0 for a blank cover."""
+    pix = pymupdf.Pixmap(str(path))
+    try:
+        samples = pix.samples
+        step = max(1, len(samples) // 4000)
+        values = [samples[i] for i in range(0, len(samples), step)]
+        mean = sum(values) / len(values)
+        variance = sum((v - mean) ** 2 for v in values) / len(values)
+        return variance ** 0.5
+    finally:
+        pix = None
+
+
 def main() -> int:
     verbose = "--verbose" in sys.argv
     catalog = json.loads(CATALOG.read_text())
@@ -78,6 +99,16 @@ def main() -> int:
             f"{result['pages']:>4}p  {result['chars']:>8} chars  "
             f"{result['text_ratio'] * 100:5.1f}% pages with text"
         )
+
+        cover = COVERS_DIR / f"{book['slug']}.jpg"
+        if not cover.exists():
+            failures.append(f"{book['slug']}: cover missing at {cover.name}")
+        else:
+            spread = cover_stddev(cover)
+            if spread < MIN_COVER_STDDEV:
+                failures.append(
+                    f"{book['slug']}: cover is virtually blank (pixel spread {spread:.1f})"
+                )
 
         if not ok_chars:
             failures.append(

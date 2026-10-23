@@ -12,6 +12,7 @@ import BookCover from './BookCover'
  */
 export default function LibraryCard({ item, onOpen }) {
     const href = item.isBook ? `/library/books/${item.slug}` : item.download_path
+    const isPlay = Boolean(item.isDrama || item.isRoman || item.isMedieval || item.isRenaissance)
 
     return (
         <article className="zs-item-card" style={{ padding: 0, overflow: 'hidden' }}>
@@ -31,7 +32,7 @@ export default function LibraryCard({ item, onOpen }) {
                     <Tag tone={item.isBook ? 'book' : 'pack'}>
                         {item.isBook
                             ? 'BOOK'
-                            : item.code || (item.isDrama || item.isRoman || item.isMedieval ? 'PLAY' : 'PACK')}
+                            : item.code || (isPlay ? 'PLAY' : 'PACK')}
                     </Tag>
                     <span className="zs-item-card__sub" style={{ marginLeft: 'auto' }}>
                         {item.page_count} pages
@@ -49,9 +50,7 @@ export default function LibraryCard({ item, onOpen }) {
                 </button>
 
                 <p className="zs-item-card__sub">
-                    {item.isBook || item.isDrama || item.isRoman || item.isMedieval
-                        ? item.author
-                        : item.department}
+                    {item.isBook || isPlay ? item.author : item.department}
                 </p>
 
                 <p className="zs-item-card__desc">{item.description}</p>

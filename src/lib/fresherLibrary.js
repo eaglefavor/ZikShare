@@ -4,6 +4,7 @@ import { DRAMA_DOMAIN, DRAMA_PLAYS, toDramaCard } from './dramaLibrary'
 import { GST_CARDS, GST_DOMAIN, ENTREPRENEURSHIP_DOMAIN } from './gstLibrary'
 import { ROMAN_DOMAIN, ROMAN_PLAYS, toRomanCard } from './romanLibrary'
 import { MEDIEVAL_DOMAIN, MEDIEVAL_PLAYS, toMedievalCard } from './medievalLibrary'
+import { RENAISSANCE_DOMAIN, RENAISSANCE_PLAYS, toRenaissanceCard } from './renaissanceLibrary'
 
 /**
  * Display order of the shelves a study pack can sit on.
@@ -19,6 +20,7 @@ export const FRESHER_LIBRARY_DOMAIN_ORDER = [
     DRAMA_DOMAIN,
     ROMAN_DOMAIN,
     MEDIEVAL_DOMAIN,
+    RENAISSANCE_DOMAIN,
     'Faculty Primer',
     'Theatre & Film Studies',
     'Departmental Archive',
@@ -33,6 +35,7 @@ export const FRESHER_DOMAIN_EMOJI = {
     [DRAMA_DOMAIN]: '🎭',
     [ROMAN_DOMAIN]: '🏺',
     [MEDIEVAL_DOMAIN]: '🕯️',
+    [RENAISSANCE_DOMAIN]: '👑',
     'GST & Compulsory Courses': '🏛️',
     'Faculty Primer': '🎓',
     'Theatre & Film Studies': '🎭',
@@ -64,6 +67,8 @@ export function libraryCounts() {
     const roman = ROMAN_PLAYS.length
     // Medieval cycle plays, moralities and Hrotsvitha, hosted the same way.
     const medieval = MEDIEVAL_PLAYS.length
+    // Shakespeare and the Elizabethan, Jacobean and Caroline stage.
+    const renaissance = RENAISSANCE_PLAYS.length
     // NOUN courseware is hosted on ZikShare: these download from us.
     const hosted = GST_CARDS.length
     return {
@@ -72,8 +77,9 @@ export function libraryCounts() {
         plays,
         roman,
         medieval,
+        renaissance,
         hosted,
-        total: packs + books + plays + roman + medieval + hosted,
+        total: packs + books + plays + roman + medieval + renaissance + hosted,
     }
 }
 
@@ -82,7 +88,7 @@ function countOf(n, one, many) {
 }
 
 /** e.g. "8 full-length books" or "12 study packs and 8 full-length books". */
-export function libraryCountLabel({ packs, books, plays, roman, medieval, hosted } = libraryCounts()) {
+export function libraryCountLabel({ packs, books, plays, roman, medieval, renaissance, hosted } = libraryCounts()) {
     const parts = []
     if (packs > 0) parts.push(countOf(packs, 'study pack', 'study packs'))
     if (books > 0) parts.push(countOf(books, 'full-length book', 'full-length books'))
@@ -90,6 +96,7 @@ export function libraryCountLabel({ packs, books, plays, roman, medieval, hosted
     if (plays > 0) parts.push(`${plays} Greek plays to download`)
     if (roman > 0) parts.push(`${roman} Roman plays to download`)
     if (medieval > 0) parts.push(`${medieval} medieval plays to download`)
+    if (renaissance > 0) parts.push(`${renaissance} Renaissance plays to download`)
     if (parts.length === 0) return 'No documents yet'
     if (parts.length === 1) return parts[0]
     return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`
@@ -108,6 +115,7 @@ export const FRESHER_LIBRARY_DOMAINS = FRESHER_LIBRARY_DOMAIN_ORDER
             DRAMA_PLAYS.filter(() => name === DRAMA_DOMAIN).length +
             ROMAN_PLAYS.filter(() => name === ROMAN_DOMAIN).length +
             MEDIEVAL_PLAYS.filter(() => name === MEDIEVAL_DOMAIN).length +
+            RENAISSANCE_PLAYS.filter(() => name === RENAISSANCE_DOMAIN).length +
             GST_CARDS.filter((card) => card.domain === name).length,
     }))
     .filter((d) => d.count > 0)
@@ -242,8 +250,19 @@ export function mergeLibraryMaterials(dbMaterials = []) {
     const roman = ROMAN_PLAYS.map(toRomanCard)
     // Medieval plays are hosted PDFs too, under /library/medieval.
     const medieval = MEDIEVAL_PLAYS.map(toMedievalCard)
+    // Renaissance plays are hosted PDFs too, under /library/renaissance.
+    const renaissance = RENAISSANCE_PLAYS.map(toRenaissanceCard)
 
     // NOUN courseware is hosted here, so it is a normal library document with a
     // real download path. A database row never shadows it.
-    return [...fromDb, ...notYetSeeded, ...books, ...GST_CARDS, ...plays, ...roman, ...medieval]
+    return [
+        ...fromDb,
+        ...notYetSeeded,
+        ...books,
+        ...GST_CARDS,
+        ...plays,
+        ...roman,
+        ...medieval,
+        ...renaissance,
+    ]
 }

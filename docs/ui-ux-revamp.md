@@ -538,3 +538,88 @@ leaving the reader to find out.
 **St George is labelled as a survival.** The Cornish mummers' play was recorded
 in the nineteenth century, four hundred years after the cycles were suppressed.
 It is the only folk play in the library, and its card says what it is.
+
+---
+
+## Phase 13 — The Renaissance theatre shelf
+
+**What it is.** Sixty-nine plays of the English Renaissance, from Lyly's *Endymion*
+(1588) to Shirley's *The Cardinal* (1641), typeset as PDFs and hosted on ZikShare:
+all thirty-eight Shakespeare plays and thirty-one by his contemporaries. The
+shelf is the widest in the library and the first one big enough that a flat grid
+of cards stops helping.
+
+### How it was built
+
+| Group | Plays | Text |
+| --- | --- | --- |
+| Shakespeare: comedies | 12 | *Complete Works* (Globe edition), Gutenberg #100 |
+| Shakespeare: histories | 10 | same volume |
+| Shakespeare: tragedies | 11 | same volume |
+| Shakespeare: romances and late plays | 5 | same volume |
+| The first Elizabethans (Lyly, Peele, Greene, Kyd) | 4 | *Chief Elizabethan Dramatists*, ed. Neilson (1911), #77587 |
+| Marlowe | 5 | #77587, plus *Tamburlaine Part Two* from #1589 |
+| Chapman | 1 | #77587 |
+| Jonson | 4 | #77587 |
+| Dekker | 3 | #77587 |
+| Heywood | 1 | #77587 |
+| Marston and Webster | 1 | #77587 |
+| Beaumont and Fletcher | 3 | #77587 |
+| Fletcher alone | 2 | #77587 |
+| Webster | 1 | #77587 |
+| Middleton | 2 | #77587 |
+| Massinger | 1 | #77587 |
+| Ford | 1 | #77587 |
+| Shirley | 2 | #77587 |
+
+**Three volumes hold the whole shelf**, all on Gutenberg: #100 for Shakespeare,
+#77587 for the Elizabethans, Jacobeans and Carolines, and #1589 for the second
+part of *Tamburlaine* so the sequel is not a conspicuous hole beside the first
+part. A temporary workflow fetched them, because the sandbox cannot reach
+Gutenberg; it has been deleted and the texts sit in `library/renaissance/source/`.
+
+**Cutting without cutting a play in half.** Both big volumes hold their plays in
+one continuous file. The builder finds each play's heading *at the left margin*
+— both volumes indent their tables of contents, which is what keeps a contents
+entry from being mistaken for the play — and ends it at the next heading. Where
+two plays share one heading (Dekker's two parts of *The Honest Whore*), the
+headings are handed out in source order. After a first build the cuts are checked
+for overrun: no PDF may contain a second cast list or a sixth act, which is how
+two bad slices (*The Winter's Tale* running into the poems, *Pericles* running
+into *Richard II*) were caught and fixed.
+
+**The 1911 volume numbers its verse lines, and the numbers had to go.** Neilson's
+edition prints a number at the end of every line, or every fifth, and the
+transcription leaves them scattered through the text — sometimes at the end of a
+line, sometimes in the middle of a sentence ("such lofty 15 titles"). A PDF full
+of stray integers is not a play. The builder strips trailing numbers, removes
+parenthesised ones, and drops the few that reflow into the middle of a line,
+while leaving alone the numbers that belong to the text ("1 Lord", "4 Avocatori",
+"edit. 1600"). It also removes the edition's italic underscores.
+
+**Its glosses are kept.** The volume prints one numbered word-list at the back
+covering all thirty plays. As with the medieval glossary, the builder reads it
+once and prints exactly the notes each play cites at the end of that play, so a
+`[3906]` in the text has a `[3906]` in the notes. Shakespeare's Globe text has no
+notes, and the cards say nothing about notes for those plays.
+
+**Sixty-nine cards, listed by playwright.** The Renaissance shelf renders as
+eighteen groups — the four Shakespeare genres, then each playwright — each with a
+count and the trade dates of that group. Keeping sixty-nine cards as one
+undifferentiated grid was the alternative, and it was worse.
+
+**The gaps are named.** "What the Renaissance shelf leaves out" lists the largest
+holes and why each one is a hole: Shakespeare's poems (they are not plays),
+*The White Devil*, *'Tis Pity She's a Whore*, *Bartholomew Fair* and the late
+Jonson, *Women Beware Women*, the original-spelling *Massacre at Paris* and
+*Dido*, the other Elizabethans, and the court masques. No card promises a file
+that does not exist.
+
+### Numbers, measured rather than written
+
+- 69 plays, 6,954 pages, 13.4 MB of PDF; SHA-256 recorded for every file.
+- Library total: 8 books + 22 NOUN manuals + 31 Greek + 36 Roman + 17 medieval +
+  69 Renaissance = **183 documents**, printed from `libraryCounts()`.
+- 186 tests in 22 files. A new `renaissanceLibrary.test.js` asserts, among other
+  things, that every card's PDF exists on disk, opens as `%PDF-`, matches its
+  recorded checksum and never links out to Gutenberg.

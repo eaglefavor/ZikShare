@@ -21,6 +21,7 @@ export const ACCENTS = {
     greek: rgb(0.42, 0.12, 0.24),
     roman: rgb(0.13, 0.29, 0.45),
     medieval: rgb(0.44, 0.32, 0.11),
+    renaissance: rgb(0.35, 0.2, 0.42),
 }
 
 const REPLACE = {
@@ -35,7 +36,10 @@ const REPLACE = {
  */
 export function clean(text) {
     return String(text ?? '')
-        .replace(/[ŒœÆæ—–‘’“”•…]/g, (c) => REPLACE[c] ?? c)
+        // A dash set solid between words ("magnificence—in so rare") needs the
+        // spaces the original could give it, or the PDF reads as one long word.
+        .replace(/\s*—\s*/g, ' - ')
+        .replace(/[ŒœÆæ–‘’“”•…]/g, (c) => REPLACE[c] ?? c)
         .replace(/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/g, '')
         .replace(/\r/g, '')
 }

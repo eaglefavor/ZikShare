@@ -8,6 +8,7 @@ import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
 import { DRAMA_PLAYS } from '../lib/dramaLibrary'
 import { ROMAN_PLAYS } from '../lib/romanLibrary'
 import { MEDIEVAL_PLAYS } from '../lib/medievalLibrary'
+import { RENAISSANCE_PLAYS } from '../lib/renaissanceLibrary'
 import { GST_SHELF } from '../lib/gstLibraryData'
 import {
     FRESHER_LIBRARY_PACKS,
@@ -89,12 +90,16 @@ describe('Library - the shelf state the operator asked for', () => {
             'Greek Tragedy',
             'Roman Theatre',
             'Medieval Theatre',
+            'Renaissance Theatre',
             'Christian Books',
         ])
         expect(FRESHER_LIBRARY_DOMAINS.find((d) => d.name === 'Christian Books').count).toBe(CHRISTIAN_BOOKS.length)
         expect(FRESHER_LIBRARY_DOMAINS.find((d) => d.name === 'Greek Tragedy').count).toBe(DRAMA_PLAYS.length)
         expect(FRESHER_LIBRARY_DOMAINS.find((d) => d.name === 'Roman Theatre').count).toBe(ROMAN_PLAYS.length)
         expect(FRESHER_LIBRARY_DOMAINS.find((d) => d.name === 'Medieval Theatre').count).toBe(MEDIEVAL_PLAYS.length)
+        expect(FRESHER_LIBRARY_DOMAINS.find((d) => d.name === 'Renaissance Theatre').count).toBe(
+            RENAISSANCE_PLAYS.length
+        )
     })
 
     it('counts what is actually there instead of a hard-coded total', () => {
@@ -105,18 +110,21 @@ describe('Library - the shelf state the operator asked for', () => {
             plays: DRAMA_PLAYS.length,
             roman: ROMAN_PLAYS.length,
             medieval: MEDIEVAL_PLAYS.length,
+            renaissance: RENAISSANCE_PLAYS.length,
             hosted: GST_SHELF.length,
             total:
                 CHRISTIAN_BOOKS.length +
                 DRAMA_PLAYS.length +
                 ROMAN_PLAYS.length +
                 MEDIEVAL_PLAYS.length +
+                RENAISSANCE_PLAYS.length +
                 GST_SHELF.length,
         })
         expect(libraryCountLabel(counts)).toBe(
             `${CHRISTIAN_BOOKS.length} full-length books, ${GST_SHELF.length} NOUN course manuals to download, ` +
-                `${DRAMA_PLAYS.length} Greek plays to download, ${ROMAN_PLAYS.length} Roman plays to download ` +
-                `and ${MEDIEVAL_PLAYS.length} medieval plays to download`
+                `${DRAMA_PLAYS.length} Greek plays to download, ${ROMAN_PLAYS.length} Roman plays to download, ` +
+                `${MEDIEVAL_PLAYS.length} medieval plays to download and ` +
+                `${RENAISSANCE_PLAYS.length} Renaissance plays to download`
         )
     })
 
@@ -177,9 +185,14 @@ describe('Library - the store merge when the pack shelf is empty', () => {
                 DRAMA_PLAYS.length +
                 ROMAN_PLAYS.length +
                 MEDIEVAL_PLAYS.length +
+                RENAISSANCE_PLAYS.length +
                 GST_SHELF.length
         )
-        expect(merged.every((m) => m.isBook || m.isDrama || m.isRoman || m.isMedieval || m.isGst)).toBe(
+        expect(
+            merged.every(
+                (m) => m.isBook || m.isDrama || m.isRoman || m.isMedieval || m.isRenaissance || m.isGst
+            )
+        ).toBe(
             true
         )
         // The plays are hosted too, so every one of them has a download.

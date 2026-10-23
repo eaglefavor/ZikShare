@@ -113,7 +113,7 @@ export default function LibraryPage() {
                     </>
                 }
                 title="UNIZIK Digital Library"
-                lead={`${COUNT_LABEL}. Everything opens and downloads for free — no sign-in, no payment step.`}
+                lead={`${COUNT_LABEL}. Everything is free — no sign-in, no payment step. Books download as PDF; the plays open in full on Project Gutenberg.`}
             />
 
             {/* ── One toolbar, always in reach ──────────────────────────── */}

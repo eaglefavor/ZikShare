@@ -226,6 +226,18 @@ for (const entry of manifest) {
     const official = TITLES[key]
     const printed = official && titleIsInDocument(official, info.flat) ? official : (info.title || entry.title)
     const titleVerified = Boolean(official && titleIsInDocument(official, info.flat))
+
+    // The file is named after what it actually contains, not after the row on
+    // NOUN's table that linked to it. NEE 003's row is titled "Value Chain and
+    // Record Keeping" but the PDF is Financial Planning and Management, so the
+    // file is renamed to match the document.
+    const slug = slugify(`${key} ${printed}`)
+    const desired = path.join(DIR, `${slug}.pdf`)
+    if (path.resolve(file) !== path.resolve(desired)) {
+        if (fs.existsSync(desired)) fs.rmSync(desired)
+        fs.renameSync(file, desired)
+        console.log(`renamed ${path.basename(file)} -> ${path.basename(desired)}`)
+    }
     shelf.push({
         code: key,
         codeLabel: key.startsWith('NEE') ? `NEE ${key.slice(3)}` : key.replace(/(GST)(\d{3})/, '$1 $2'),
@@ -238,8 +250,9 @@ for (const entry of manifest) {
         unizik: note.unizik,
         level: `${note.level}L`,
         semester: `${note.semester}${note.semester === '1' ? 'st' : 'nd'} semester`,
-        download_path: entry.file,
-        slug: slugify(`${key} ${printed}`),
+        download_path: `/library/gst/${slug}.pdf`,
+        slug,
+        source_url: entry.url,
     })
 }
 

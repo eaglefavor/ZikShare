@@ -27,8 +27,9 @@ jobs:
           mkdir -p library/modern/source
           cd library/modern/source
 
-          # Ibsen, Collected Works (Archer), 11 volumes.
-          for id in 66060 66186 66238 66239 66240 70705 70566 70577 70684 74237 74642; do
+          # Ibsen: the two verse volumes of the Collected Works, and the prose
+          # plays from their own single-play e-texts, which carry no running heads.
+          for id in 66238 66239 2542 8121 2446 73631 2289 2765 4093 4070 7942 4782 2296 18792; do
             curl -fsSL --retry 3 -A "ZikShare library build" \
               "https://www.gutenberg.org/cache/epub/$id/pg$id.txt" -o "$id.txt"
           done
@@ -40,7 +41,7 @@ jobs:
           done
 
           # Strindberg.
-          for id in 8499 45375 14347 44233 8875 7363; do
+          for id in 8499 45375 14347 44233 44302 8875 7363; do
             curl -fsSL --retry 3 -A "ZikShare library build" \
               "https://www.gutenberg.org/cache/epub/$id/pg$id.txt" -o "$id.txt"
           done

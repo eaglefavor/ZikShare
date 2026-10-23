@@ -650,9 +650,8 @@ translator it was set from, and not one card pointing off-site.
 Toller are in copyright and absent from Gutenberg in English. That is the whole
 of the Epic and Absurd movements, so the shelf cannot carry them. The library
 page renders a "What the play shelves leave out" panel naming Brecht, Beckett,
-Ionesco, Pinter, Genet, Jarry, the German expressionists and the two Ibsen verse
-volumes, with the reason for each. A card that opens nothing would be a lie; a
-named gap is not.
+Ionesco, Pinter, Genet, Jarry and the German expressionists, with the reason for
+each. A card that opens nothing would be a lie; a named gap is not.
 
 ### How it was built
 
@@ -681,7 +680,8 @@ volume appendix; both are cut at the essay or appendix heading.
 **Two verse plays the first pass lost.** *Brand* and *Peer Gynt* print their act
 headings indented and their titles centred, so the left-margin heading search
 finds nothing; but Gutenberg's #66238 and #66239 are single-work volumes, so
-they need no cut at all and are used whole, five acts each.
+they need no cut at all and are used whole, five acts each. They are therefore
+on the shelf, at the head of the Symbolism group, rather than named as gaps.
 
 **Typeface.** The shared typesetter only writes WinAnsi, which cannot encode
 Čapek's Č. The shared `clean()` now transliterates the Central and Eastern

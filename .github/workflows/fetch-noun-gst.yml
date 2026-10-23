@@ -1,9 +1,14 @@
 name: fetch-noun-gst
 
 # One-off utility: download the NOUN General Studies e-courseware PDFs so they
-# can be reviewed and hosted. Dispatch manually only — this is not part of the
-# app's build or deploy pipeline.
+# can be reviewed and hosted. Triggered only by a change to this file or to the
+# trigger marker below — it is not part of the app's build or deploy pipeline,
+# and it is removed once the files are in place.
 on:
+  push:
+    paths:
+      - '.github/workflows/fetch-noun-gst.yml'
+      - 'scripts/fetch-noun-gst.trigger'
   workflow_dispatch:
 
 jobs:

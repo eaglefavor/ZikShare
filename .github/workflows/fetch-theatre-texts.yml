@@ -1,0 +1,38 @@
+name: Fetch theatre texts
+
+on:
+  push:
+    paths:
+      - 'scripts/fetch-theatre.trigger'
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download the Gutenberg texts
+        run: |
+          set -e
+          mkdir -p library/theatre/source
+          for id in 10865 36580 39973 18769 76719 18230 1974 7148 13589 36790 63188 62270 47546 69095 44064 44065 48551 6333 13029 67972 70937 43435; do
+            if [ -f "library/theatre/source/$id.txt" ]; then
+              echo "have $id"
+              continue
+            fi
+            echo "fetching $id"
+            curl -sSL --fail "https://www.gutenberg.org/cache/epub/$id/pg$id.txt" -o "library/theatre/source/$id.txt" || \
+            curl -sSL --fail "https://www.gutenberg.org/files/$id/$id-0.txt" -o "library/theatre/source/$id.txt" || \
+            echo "FAILED $id"
+            sleep 1
+          done
+          ls -la library/theatre/source | tail -5
+      - name: Commit
+        run: |
+          git config user.name "ZikShare bot"
+          git config user.email "bot@zikshare.local"
+          git add library/theatre/source
+          git diff --cached --quiet || git commit -m "Fetch theatre arts source texts"
+          git push

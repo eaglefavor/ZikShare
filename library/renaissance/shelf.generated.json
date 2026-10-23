@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-23T19:59:34.073Z",
+  "generatedAt": "2026-10-23T20:02:57.153Z",
   "count": 69,
   "shelf": [
     {
@@ -16,8 +16,8 @@
       "pages": 109,
       "words": 24473,
       "notes": 0,
-      "bytes": 215840,
-      "sha256": "f247a0990defb1d22f6c8f0a30a65e80b09425f9993211a43bb9c5cfd7c41810"
+      "bytes": 215838,
+      "sha256": "149ce6d09ccd8b95b04b7135c56c49a85ba56cdb755017f00236ae99e8cff63c"
     },
     {
       "slug": "as-you-like-it",
@@ -33,8 +33,8 @@
       "pages": 98,
       "words": 23090,
       "notes": 0,
-      "bytes": 195244,
-      "sha256": "4a3b8370babe604c3e48f04dc28e9f80375de25ee90c29d1c95fb9d9cddc8fb1"
+      "bytes": 195245,
+      "sha256": "9e0e6383779510d3272b604a8e54c7c066be83fc8ec517ee06270ca12fcf8d03"
     },
     {
       "slug": "comedy-of-errors",
@@ -50,8 +50,8 @@
       "pages": 73,
       "words": 16160,
       "notes": 0,
-      "bytes": 144725,
-      "sha256": "d4e9683f856fed29f1222447d53f467830ab13343cee61055a33e64f859e2365"
+      "bytes": 144723,
+      "sha256": "776feb4395d5559c8296cea9a59d30bef6b97c361d241cf553d60a08e26bfb6d"
     },
     {
       "slug": "loves-labours-lost",
@@ -68,7 +68,7 @@
       "words": 22619,
       "notes": 0,
       "bytes": 208887,
-      "sha256": "8bd7aa32839da1fa1b4f56a07edf3537a1d772342858b807de1bc247ed0b09c2"
+      "sha256": "7273b20acd80bec600c82a113756a6729007d78f579943a0a9e97c40d98f99ac"
     },
     {
       "slug": "measure-for-measure",
@@ -84,8 +84,8 @@
       "pages": 108,
       "words": 22928,
       "notes": 0,
-      "bytes": 208929,
-      "sha256": "974a8a9e2253f47d512ccdd80993903d34c5f6eb77b66c84203f164834acc417"
+      "bytes": 208920,
+      "sha256": "0e2eac53051aa04b85d3141f4e7440e58468497b2a52699a2b2e58e027b35176"
     },
     {
       "slug": "merchant-of-venice",
@@ -101,8 +101,8 @@
       "pages": 93,
       "words": 22288,
       "notes": 0,
-      "bytes": 192294,
-      "sha256": "c95e805dc2094cde9337c4b9d0a1df2a6d164e2aab4160765ff0b9916e7fa570"
+      "bytes": 192291,
+      "sha256": "37093672beeb252e5d5c8ce0bcb748036c433075938c97d5385b9f4d31c0492e"
     },
     {
       "slug": "merry-wives-of-windsor",
@@ -118,8 +118,8 @@
       "pages": 106,
       "words": 23729,
       "notes": 0,
-      "bytes": 204640,
-      "sha256": "6cad7ed0745f464bd92d84853d693e2ab1ee8e4cd04a9ebdfa626695ee5bef7a"
+      "bytes": 204638,
+      "sha256": "d858dee1a46598bfba24e8518e3951d8d6ffdbeb41108162ae46c32562c84530"
     },
     {
       "slug": "a-midsummer-nights-dream",
@@ -135,8 +135,8 @@
       "pages": 78,
       "words": 17247,
       "notes": 0,
-      "bytes": 160262,
-      "sha256": "1f976cfab43fdff73dec2c9d7ec5ee09951c8024b8852fccbddbed582b73785b"
+      "bytes": 160261,
+      "sha256": "f3fb0f2b19a89081480a6e0f3244ed2f1c19d96739ab444133f542283616671e"
     },
     {
       "slug": "much-ado-about-nothing",
@@ -152,8 +152,8 @@
       "pages": 101,
       "words": 22609,
       "notes": 0,
-      "bytes": 196885,
-      "sha256": "05e7d37e35ab6b4ae74855e6cfac36720ea44eb0310ae64d3ab966e055213b11"
+      "bytes": 196883,
+      "sha256": "6015f45bdf26a02aa8c622b8c60b532e059232c88972f4bc0320d3b886ae8343"
     },
     {
       "slug": "the-taming-of-the-shrew",
@@ -169,8 +169,8 @@
       "pages": 107,
       "words": 22206,
       "notes": 0,
-      "bytes": 204836,
-      "sha256": "92b06e9d3c1192c1ed6935bcc2ed5295f792a5827f903f5ccc3d6d782e932a74"
+      "bytes": 204834,
+      "sha256": "089a8ce66821d72c0bbfdf12fcd1f093270791b3986eec18dad1cc193dfc3dd2"
     },
     {
       "slug": "twelfth-night",
@@ -186,8 +186,8 @@
       "pages": 99,
       "words": 21293,
       "notes": 0,
-      "bytes": 190032,
-      "sha256": "4e6b40af1deb379a73d938c5a00ea2a8d1e51b97898bd169cee2e8e6d9f5dfb0"
+      "bytes": 190033,
+      "sha256": "5422e461ff9043983274f1f378f21c1003368e6989b017a019821a86959a7d7e"
     },
     {
       "slug": "the-two-gentlemen-of-verona",
@@ -203,8 +203,8 @@
       "pages": 94,
       "words": 18433,
       "notes": 0,
-      "bytes": 175398,
-      "sha256": "6aa54bd23226fd89bb7452b72305c030e5c529d3b3b3798f2d5979d054a37201"
+      "bytes": 175396,
+      "sha256": "32fc7b2b8593c19057c9cdcddae6bc35287a1b5abeaac27920d47f06d76a6d27"
     },
     {
       "slug": "henry-iv-part-1",
@@ -220,8 +220,8 @@
       "pages": 106,
       "words": 25788,
       "notes": 0,
-      "bytes": 219501,
-      "sha256": "549be0ea15ebe40becb5d741cf2be145b5a58ec97545db33525c2f4af8e6b15f"
+      "bytes": 219499,
+      "sha256": "e732bf6793936136e69fc57755e67dd595446687d817ddcce9df9a4780ce4b68"
     },
     {
       "slug": "henry-iv-part-2",
@@ -237,8 +237,8 @@
       "pages": 114,
       "words": 27608,
       "notes": 0,
-      "bytes": 233946,
-      "sha256": "359a7897dd92ef884503408e649b3cf2c11919caf0147fb411687dd8fa1a25cb"
+      "bytes": 233945,
+      "sha256": "7c4d82d6731c58f7446fc66e1dd08940e3b2c9c777d56f51ac2319e9367bdd24"
     },
     {
       "slug": "henry-v",
@@ -254,8 +254,8 @@
       "pages": 109,
       "words": 27413,
       "notes": 0,
-      "bytes": 229518,
-      "sha256": "9344ad6964e94c796eb93996c2bf0705fa03c8b134137b0943cc9ded5b3b4399"
+      "bytes": 229514,
+      "sha256": "5ae27019676cd79dc7e159e493bc759d4b17d098a16ea8841407411b546ac7ad"
     },
     {
       "slug": "henry-vi-part-1",
@@ -271,8 +271,8 @@
       "pages": 102,
       "words": 22723,
       "notes": 0,
-      "bytes": 210724,
-      "sha256": "eb54745f282b6fc03d637cdee472f3614bae070cc3d1c9a72317d9f65d7ff95d"
+      "bytes": 210720,
+      "sha256": "b51c23f7d3881c5a641a596b254063d6bb5989138f1b7f300078e7a1c8eff6bb"
     },
     {
       "slug": "henry-vi-part-2",
@@ -288,8 +288,8 @@
       "pages": 114,
       "words": 26892,
       "notes": 0,
-      "bytes": 235921,
-      "sha256": "eba9afd83c6b3ecf3446d51f963d0ebac335747297b2454e07d3c16d122beaca"
+      "bytes": 235920,
+      "sha256": "0982b0dea2d2306b7fab6012f08932efd7563d9058c135e2d3581ea218202e35"
     },
     {
       "slug": "henry-vi-part-3",
@@ -305,8 +305,8 @@
       "pages": 112,
       "words": 25965,
       "notes": 0,
-      "bytes": 228755,
-      "sha256": "028ab1875ff3d35e3c4847b17e2c8a32bad4ce759e90581434ecba47b974e12f"
+      "bytes": 228756,
+      "sha256": "dfa5eb49992770f5240acf4386bd5698a6ae6ad6874a150434eb5361d0830d7b"
     },
     {
       "slug": "henry-viii",
@@ -322,8 +322,8 @@
       "pages": 113,
       "words": 26009,
       "notes": 0,
-      "bytes": 233166,
-      "sha256": "a7018c36b7985ba515896fb4707cb9d3f29a13cbe73089830712362c5d67daf6"
+      "bytes": 233164,
+      "sha256": "7cf9a67132640b4bd8377cbf77ee2e9704b1ca69f389ffa4a63ccff1e436bf78"
     },
     {
       "slug": "king-john",
@@ -339,8 +339,8 @@
       "pages": 91,
       "words": 21897,
       "notes": 0,
-      "bytes": 192904,
-      "sha256": "d6d277589b1976f40c1f9d95272bbe3a276beb37e748b866bd31983a4c4083cc"
+      "bytes": 192902,
+      "sha256": "d3e019f021a7e38f6efed254afc3fe5a146f6c41bbe81572b0c1b9bed6f8ea8e"
     },
     {
       "slug": "richard-ii",
@@ -356,8 +356,8 @@
       "pages": 96,
       "words": 23441,
       "notes": 0,
-      "bytes": 203988,
-      "sha256": "bcb69af36e3eb2d69be55083369bad6507e5085fd6c8300b8832e2c9ae70f86e"
+      "bytes": 203985,
+      "sha256": "bda4fc34df0cc7e5eb9d60629295162d2d7a757d9ac8f2b2e414119ecd07cfd8"
     },
     {
       "slug": "richard-iii",
@@ -373,8 +373,8 @@
       "pages": 141,
       "words": 31292,
       "notes": 0,
-      "bytes": 275569,
-      "sha256": "143bbd2975b11e20c794fab940666f1ec7bb340c5a5734afe13cc2e023b8234d"
+      "bytes": 275568,
+      "sha256": "f0cf1fafe4e90c890e1a3f01444a42631d83db7d379099eb29284498689529a8"
     },
     {
       "slug": "antony-and-cleopatra",
@@ -391,7 +391,7 @@
       "words": 26634,
       "notes": 0,
       "bytes": 264031,
-      "sha256": "8114db20f0f1185ed97eabd7745ed5958458acaed8139ae1246440c53462274d"
+      "sha256": "bf922bf440f8e42873d89390dabda8079e1d16802dcc449acb75c6df25772a0b"
     },
     {
       "slug": "coriolanus",
@@ -408,7 +408,7 @@
       "words": 29545,
       "notes": 0,
       "bytes": 269833,
-      "sha256": "9d35b942b7ae055def37d2a7eb39ffeee8a21031e2676194d5549af34f65b086"
+      "sha256": "8071ed55debe26a27a8a24298c82f6c7f42dec75251beb91743b48dbc54e9dc9"
     },
     {
       "slug": "hamlet",
@@ -424,8 +424,8 @@
       "pages": 145,
       "words": 32016,
       "notes": 0,
-      "bytes": 283417,
-      "sha256": "5d6837d607d207c56245c55369df71ed7cb5163744dffbe38e162982125286f4"
+      "bytes": 283414,
+      "sha256": "389c0ffc7659194dc797fa4d31c1632fbe44e615ca27bd174afa79a247503447"
     },
     {
       "slug": "julius-caesar",
@@ -441,8 +441,8 @@
       "pages": 103,
       "words": 20909,
       "notes": 0,
-      "bytes": 196085,
-      "sha256": "d15bf2f8e8bf9863d8e40b2901a962b5ea29a3a3f361e927b6d238e37d5a43f2"
+      "bytes": 196081,
+      "sha256": "6323c69b91ae64e38b18786447a9ad386449aa41735630a1c6c476bd60255246"
     },
     {
       "slug": "king-lear",
@@ -458,8 +458,8 @@
       "pages": 133,
       "words": 27562,
       "notes": 0,
-      "bytes": 257243,
-      "sha256": "5f205cebd257a62b429f01ce809371a06b650774e24c460c90df7626266eaae2"
+      "bytes": 257242,
+      "sha256": "1d8de2e62c25c32cb3910e9b6904e52dc99051c7440d96b9d8ae2476fdc15cba"
     },
     {
       "slug": "macbeth",
@@ -475,8 +475,8 @@
       "pages": 92,
       "words": 18395,
       "notes": 0,
-      "bytes": 179914,
-      "sha256": "4a2e64beb6aeea25b93cdf53eff712b49578295df9545a4959cc112c2300ec9c"
+      "bytes": 179915,
+      "sha256": "2d3f3afd626d8832eb794dae390f998d63f593e87b94bdc25f60e0474d1c6739"
     },
     {
       "slug": "othello",
@@ -492,8 +492,8 @@
       "pages": 137,
       "words": 27964,
       "notes": 0,
-      "bytes": 256875,
-      "sha256": "916a81fb16c3fa92dcbc622cbbfc6a69edb80044067b60c84498e92faf0a13b3"
+      "bytes": 256872,
+      "sha256": "ed0d0f36b8676b6224ef2f6364350c177e23543d2e9ace5a1eee8766cb6f3636"
     },
     {
       "slug": "romeo-and-juliet",
@@ -509,8 +509,8 @@
       "pages": 115,
       "words": 25898,
       "notes": 0,
-      "bytes": 227250,
-      "sha256": "0cd37de6f27d69f789298c3961330191ffd6aa0369343ae069444a0cbca4d0d9"
+      "bytes": 227248,
+      "sha256": "4ef06ec088f2ac1276279d65b3df692133e219dc8cd8542d6a5f02f17c0a70df"
     },
     {
       "slug": "timon-of-athens",
@@ -526,8 +526,8 @@
       "pages": 98,
       "words": 19767,
       "notes": 0,
-      "bytes": 188732,
-      "sha256": "1e7efd01570ac0e4923415533cf25716d1002c0f2f30401d2c19fbf61f9b7164"
+      "bytes": 188729,
+      "sha256": "526d25674ee82250b808b85f3a49711c77978b411a8275094e0b39b28fb7667e"
     },
     {
       "slug": "titus-andronicus",
@@ -543,8 +543,8 @@
       "pages": 92,
       "words": 21630,
       "notes": 0,
-      "bytes": 191763,
-      "sha256": "2657df6f2fc680dd8d91c6f53cb3fbf375ad1378add3ec28b24a973516def7b4"
+      "bytes": 191760,
+      "sha256": "cd94bde4edc8277f0aa44fb98be53dd8675c0df0380270c32b5f20f1126840a1"
     },
     {
       "slug": "troilus-and-cressida",
@@ -560,8 +560,8 @@
       "pages": 134,
       "words": 27639,
       "notes": 0,
-      "bytes": 256655,
-      "sha256": "b8c47cc7a15753640274f9e84bf227b4d41940d015c0c7a521a4d8e733f9709d"
+      "bytes": 256653,
+      "sha256": "ab7b061ce536b4077c83ea18fcbc87945503930b905bfc506b400bf2b0036c78"
     },
     {
       "slug": "cymbeline",
@@ -577,8 +577,8 @@
       "pages": 128,
       "words": 28841,
       "notes": 0,
-      "bytes": 260175,
-      "sha256": "8d7b44a9d2b370af0f33dea736466bac58346d52cab36ea4c98e0a287afe41cb"
+      "bytes": 260171,
+      "sha256": "bfadc8d9625d4cc6e3034fcc68573326663df467be4c65a44b558284f326ff94"
     },
     {
       "slug": "pericles",
@@ -594,8 +594,8 @@
       "pages": 92,
       "words": 19626,
       "notes": 0,
-      "bytes": 183633,
-      "sha256": "5b6c117ca4928ad22e38b375196c62bf57432bad201ae98254a5a956484109ee"
+      "bytes": 183631,
+      "sha256": "2e192203b036e021ad41433bf6fc512e66c97f52b293f42034a7fd4eeef52ca1"
     },
     {
       "slug": "the-tempest",
@@ -611,8 +611,8 @@
       "pages": 86,
       "words": 17591,
       "notes": 0,
-      "bytes": 170803,
-      "sha256": "805eeff49bf14372a1f4dc574788ddf8122465cff7525b10dd6eee54900428dc"
+      "bytes": 170801,
+      "sha256": "61228282a4efa3144cd17cb0d4faa985f15b3cb2789038e7c710220a6fc3616d"
     },
     {
       "slug": "the-two-noble-kinsmen",
@@ -628,8 +628,8 @@
       "pages": 121,
       "words": 25840,
       "notes": 0,
-      "bytes": 238021,
-      "sha256": "de54d4e10ad98287c91958f408c05ad6ae6a9f53d6953470e0ba0d5bfdd02952"
+      "bytes": 238020,
+      "sha256": "6f454d434ce2d036283edac4785ddd36f981fb09f7ce7fdcc00b29553b972ed3"
     },
     {
       "slug": "the-winters-tale",
@@ -645,8 +645,8 @@
       "pages": 110,
       "words": 26131,
       "notes": 0,
-      "bytes": 230129,
-      "sha256": "19ceb6c0d558c0c567cd8fc3994dc8289ab8f4a6a0e33bbadba5c64fdb0a0145"
+      "bytes": 230126,
+      "sha256": "f67e7857ce57b7d98cf1b57b3ed1c4ead21843ff1349a3be9513d0bf1531ff25"
     },
     {
       "slug": "endymion",
@@ -662,8 +662,8 @@
       "pages": 73,
       "words": 20894,
       "notes": 103,
-      "bytes": 160538,
-      "sha256": "3fa694c3d0b312aee393668cc642b0d9f8a55840fa44e3d325eaebc7c0df1a42"
+      "bytes": 160539,
+      "sha256": "c7b3433a68f7d166eaa782ca5ea9e5a186cf13c47871f7d87adc4bb122b0954a"
     },
     {
       "slug": "the-old-wives-tale",
@@ -679,8 +679,8 @@
       "pages": 37,
       "words": 8968,
       "notes": 44,
-      "bytes": 81392,
-      "sha256": "b897d574555ba045fef05aee71f15b26afc0772ab22fdf8262ab7aea9201bc31"
+      "bytes": 81388,
+      "sha256": "3fc5e03a89022d0d0479a379ce95fe505cf392f75c47f48222e86218350501b2"
     },
     {
       "slug": "friar-bacon-and-friar-bungay",
@@ -696,8 +696,8 @@
       "pages": 71,
       "words": 18214,
       "notes": 118,
-      "bytes": 154388,
-      "sha256": "0fc193784a8d3e8e021b3b4189cf83daa2638c5062393a65ddce097003117ffe"
+      "bytes": 154385,
+      "sha256": "63c001027af4c1130915f77adbe8e431d223f9dc460cdf45e8888170e8586e4f"
     },
     {
       "slug": "the-spanish-tragedy",
@@ -714,7 +714,7 @@
       "words": 26132,
       "notes": 166,
       "bytes": 216974,
-      "sha256": "2b6b194c2f3314e8be77676946d366fa62ce4d34e0b5a359cdaa0a031510294a"
+      "sha256": "a7981b240e17b4c776428e74a7a08eea80c9fa70e7fb5c92b3665277756b3d19"
     },
     {
       "slug": "tamburlaine-part-1",
@@ -730,8 +730,8 @@
       "pages": 73,
       "words": 18804,
       "notes": 97,
-      "bytes": 165299,
-      "sha256": "19879d517ddf277c2fd7b1033bf55cf0e9751d7a0479ec4a1520c94978583d66"
+      "bytes": 165297,
+      "sha256": "20b75b4df7f9d2aecd8f92137849b2346f8d1d56f17c6fe508cba1a65f389579"
     },
     {
       "slug": "tamburlaine-part-2",
@@ -747,8 +747,8 @@
       "pages": 86,
       "words": 24681,
       "notes": 317,
-      "bytes": 198154,
-      "sha256": "0944a21b56f5c76c12247b1c9affd762f4bc03a764c114bbb904885b7538fcfb"
+      "bytes": 198151,
+      "sha256": "6be1150c72755b479aa294aa0b1e22e16cbaf48c9b24eabb2843ebe3762941e5"
     },
     {
       "slug": "doctor-faustus",
@@ -764,8 +764,8 @@
       "pages": 54,
       "words": 13269,
       "notes": 103,
-      "bytes": 117817,
-      "sha256": "17963a4268644768c830dd1b4263860beeb45b27937c2a0a90bbe9f342698f84"
+      "bytes": 117814,
+      "sha256": "7dc1fe04b5d5ed8e43b35d62de7ba8f105c959352d0ef8f15ab92e8ccb71de8f"
     },
     {
       "slug": "the-jew-of-malta",
@@ -781,8 +781,8 @@
       "pages": 87,
       "words": 20678,
       "notes": 134,
-      "bytes": 174375,
-      "sha256": "0dab17a70a8bfd123b09849486a9e295eaea920f136d045e4bf004c112923ff7"
+      "bytes": 174376,
+      "sha256": "353ebcc9a1320eac4e759f659d21567a514d3625328bb01b57635a638a9101d9"
     },
     {
       "slug": "edward-the-second",
@@ -798,8 +798,8 @@
       "pages": 96,
       "words": 23872,
       "notes": 126,
-      "bytes": 196122,
-      "sha256": "5262132e274a239438f85221ff0fd1c23264a217e3d1b86b7246a0a566e78cac"
+      "bytes": 196119,
+      "sha256": "59c57f59d61a47c953ee05b865ee09442514803517e563eafa5e82d1f17fbf13"
     },
     {
       "slug": "bussy-dambois",
@@ -815,8 +815,8 @@
       "pages": 92,
       "words": 24185,
       "notes": 215,
-      "bytes": 198560,
-      "sha256": "decd2e74ce38ff22c2645e13c049ef80e8b1c1d57eabe4aa09654c10a86ed0d8"
+      "bytes": 198557,
+      "sha256": "6623b933e98b8c14e07f0ac1dd297c771b8522401500ca4d15c6b348e340f150"
     },
     {
       "slug": "every-man-in-his-humour",
@@ -833,7 +833,7 @@
       "words": 30170,
       "notes": 252,
       "bytes": 227204,
-      "sha256": "a074f7a8d13b4bae0c57a55c7e6e33af7cdf64b04a8fd6ded8ac36e5b23349d3"
+      "sha256": "940fa7f68915d532a455ce034f6b2247cb4e681953a2c0ebb149c0f00fa1a95f"
     },
     {
       "slug": "sejanus-his-fall",
@@ -849,8 +849,8 @@
       "pages": 124,
       "words": 30293,
       "notes": 196,
-      "bytes": 258883,
-      "sha256": "fc50315dfdbb08c8fb3d078e21afea2e8855ff7ad1193fe01d443314c6aca2b9"
+      "bytes": 258882,
+      "sha256": "54245281981912f96acb976a3ab0086e7553209694f53d281e528f52a743ee3d"
     },
     {
       "slug": "volpone",
@@ -866,8 +866,8 @@
       "pages": 135,
       "words": 30729,
       "notes": 194,
-      "bytes": 260090,
-      "sha256": "4522baf844cf62ce950390fd90bd8959e583b78970ee0745184e50426daa18fe"
+      "bytes": 260087,
+      "sha256": "9334bf8719bb915d68be117fa4b95c328c379b5527e508a2c2ab2e29618de877"
     },
     {
       "slug": "the-alchemist",
@@ -883,8 +883,8 @@
       "pages": 149,
       "words": 32222,
       "notes": 335,
-      "bytes": 275614,
-      "sha256": "eaab393e6dedfdd667bb7f6d29815ff9e1bf3a85f4857dd3e4ce8db4d74398fe"
+      "bytes": 275609,
+      "sha256": "d301d438012ae8594f6e5603634d8a7d7ad2ddb49e9f66cc4ced5ae230ff6909"
     },
     {
       "slug": "the-shoemakers-holiday",
@@ -900,8 +900,8 @@
       "pages": 83,
       "words": 21890,
       "notes": 176,
-      "bytes": 173488,
-      "sha256": "71a949a7ec82b49083b34bf863cde30c5590d2a596bf6596155aad1eb63ef369"
+      "bytes": 173493,
+      "sha256": "1771285ac0b9531f2278d00dee4dea8ccb9e1ea95a528a987d55a8d0d8b0e120"
     },
     {
       "slug": "the-honest-whore-part-1",
@@ -917,8 +917,8 @@
       "pages": 107,
       "words": 27301,
       "notes": 200,
-      "bytes": 216006,
-      "sha256": "136fbd5f7135a743dc9591798508e8ef13eccd9bcc4e8a19127fef2c8990e7f7"
+      "bytes": 216002,
+      "sha256": "fe7c91e629d195ab77815934288f1b0a3ba7eb0df3883404aee2ef722e388bda"
     },
     {
       "slug": "the-honest-whore-part-2",
@@ -935,7 +935,7 @@
       "words": 26632,
       "notes": 151,
       "bytes": 207365,
-      "sha256": "3a6204ec6ce9a57fae6f8ef2c76636c1b12ef42776c303c7b6ea8ba013115e21"
+      "sha256": "5dfbd0c688d7d154e74debbb37c1a8a4a2f4111924ebcd7663fb115c15e1b51f"
     },
     {
       "slug": "a-woman-killed-with-kindness",
@@ -951,8 +951,8 @@
       "pages": 74,
       "words": 18574,
       "notes": 142,
-      "bytes": 156074,
-      "sha256": "af0ffc59c5c24ca7bbaf66cbf5c8e945cd3504cf816f779f8d3e97fe467e72ab"
+      "bytes": 156071,
+      "sha256": "080304b08d2dbc01d720e40b50f784916e48c9bb5a64eb7c6cb430d6c92840ee"
     },
     {
       "slug": "the-malcontent",
@@ -968,8 +968,8 @@
       "pages": 93,
       "words": 23027,
       "notes": 192,
-      "bytes": 193931,
-      "sha256": "22291acaf1e297437dd38695dc06c95d9f6ec0b4e75a95081c65f9f49a8bfceb"
+      "bytes": 193930,
+      "sha256": "a05275bfffe3a62324a1078f34befc0fae3575d09461dea6a2d7c1d2ecf3c7ac"
     },
     {
       "slug": "the-knight-of-the-burning-pestle",
@@ -986,7 +986,7 @@
       "words": 24378,
       "notes": 228,
       "bytes": 198477,
-      "sha256": "10a91a763a0305992ce0a5af72415d4d9a2c63c838aa60df61b7a5782fc449b8"
+      "sha256": "1ebbe3c1c5e0f5d6a2814069609c544483c4fa27437d4c14486a4b483762f6f4"
     },
     {
       "slug": "philaster",
@@ -1002,8 +1002,8 @@
       "pages": 95,
       "words": 23938,
       "notes": 140,
-      "bytes": 198011,
-      "sha256": "0dc141877d62ff8a06569aaa33d1abb0e2d72478f97547be6a3269554631221d"
+      "bytes": 198012,
+      "sha256": "7e222f96403e60aa52c332f543eef9f9beba8a61dc483655c7bb075be7abacf8"
     },
     {
       "slug": "the-maids-tragedy",
@@ -1020,7 +1020,7 @@
       "words": 24173,
       "notes": 101,
       "bytes": 201314,
-      "sha256": "e2e1b698d752869e5c80125823214cae8d94bff3bd42f588728c309b78a8bb51"
+      "sha256": "96ee11ad385ea925c00dffb5759bd01e0f5461d1a40bcc5784535473ef1b86ef"
     },
     {
       "slug": "the-faithful-shepherdess",
@@ -1036,8 +1036,8 @@
       "pages": 82,
       "words": 21814,
       "notes": 91,
-      "bytes": 182568,
-      "sha256": "9dfc888fe093f388f268bd4bbc3e24b1f3dce313cf32bf5cbedb0927631db440"
+      "bytes": 182564,
+      "sha256": "2c87538d6598f99d37968c54ef6634a275bcc680c88fae619058f07a185a2e9c"
     },
     {
       "slug": "the-wild-goose-chase",
@@ -1053,8 +1053,8 @@
       "pages": 100,
       "words": 24427,
       "notes": 139,
-      "bytes": 199025,
-      "sha256": "daf8cff894679d4d6979f5936985839d5ca7fcf151089517ba3c7d0f54725538"
+      "bytes": 199023,
+      "sha256": "13d4949d8f90d97951ad90f09f5cd81ae4efb1b659b917547e426c782dc71243"
     },
     {
       "slug": "the-duchess-of-malfi",
@@ -1070,8 +1070,8 @@
       "pages": 113,
       "words": 26590,
       "notes": 144,
-      "bytes": 226781,
-      "sha256": "d38c2b580c8a53f1b4690be7a5086a8c5d65e5e5991a98505e2862dc5919f189"
+      "bytes": 226780,
+      "sha256": "a07f31c06f5317968ec888e4eb28d467c5f0b207d3637b1972ad0a44194b61aa"
     },
     {
       "slug": "a-trick-to-catch-the-old-one",
@@ -1087,8 +1087,8 @@
       "pages": 85,
       "words": 21290,
       "notes": 120,
-      "bytes": 171150,
-      "sha256": "d78c95ee6489c9e56c1f77056d0abb9cf2a40ba0ef0fa52b4dcca24d8889d69d"
+      "bytes": 171146,
+      "sha256": "3f84300259925dafff2d76ae8c7f9be7a040ce1aa41fb91afdc43b11004d4d66"
     },
     {
       "slug": "the-changeling",
@@ -1104,8 +1104,8 @@
       "pages": 89,
       "words": 21049,
       "notes": 111,
-      "bytes": 177717,
-      "sha256": "628f4fec6bdb8ed07971cfcdf9373fbf27e0e01101f5fa19f06258304a43a1a2"
+      "bytes": 177716,
+      "sha256": "fd0aefeb1352e944adf6409fd81d01d304d2cea5c467af1adfd7eec31ff048a2"
     },
     {
       "slug": "a-new-way-to-pay-old-debts",
@@ -1121,8 +1121,8 @@
       "pages": 93,
       "words": 22245,
       "notes": 107,
-      "bytes": 192675,
-      "sha256": "f7c8a35775c639833d83282ec7f8ae61c053a1a5be89dc91afcec894a2059a9c"
+      "bytes": 192673,
+      "sha256": "8f9a87ef2a054d7d6f88211625b44659daa4b8ac6ccd73f50714a7b34c9c2083"
     },
     {
       "slug": "the-broken-heart",
@@ -1138,8 +1138,8 @@
       "pages": 97,
       "words": 21757,
       "notes": 109,
-      "bytes": 200384,
-      "sha256": "ce7ba15d6e7c639eb6f9836976c22b4a259d25b2a4bd393a210eaad084951aeb"
+      "bytes": 200383,
+      "sha256": "bf87c7d9dfa9f34a2d90524ba63bfe34d88e52cd49e26d6c16ab15356dcf3482"
     },
     {
       "slug": "the-lady-of-pleasure",
@@ -1155,8 +1155,8 @@
       "pages": 101,
       "words": 23084,
       "notes": 123,
-      "bytes": 200931,
-      "sha256": "c1d5bd98f8f14b18aeae7e7df6349f394ad2cf2d29393ac85d9f10396867e642"
+      "bytes": 200930,
+      "sha256": "173ada7f5916702ab2abb1f95023c17fe08383c986b58a09fc6154beaa231856"
     },
     {
       "slug": "the-cardinal",
@@ -1172,8 +1172,8 @@
       "pages": 80,
       "words": 18446,
       "notes": 52,
-      "bytes": 162579,
-      "sha256": "706ab231302131f4e721394c90deda903c68c021f64f28d8541f147595ef31af"
+      "bytes": 162576,
+      "sha256": "81515db36f2736927541617950bb2bde51e517068894b58501308d70b0ff4d5b"
     }
   ]
 }

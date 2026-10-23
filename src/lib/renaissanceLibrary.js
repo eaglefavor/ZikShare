@@ -6,15 +6,15 @@
  *
  * Sixty-nine plays in three public-domain editions Gutenberg holds:
  *
- * - *The Complete Works of William Shakespeare* (Globe edition, Gutenberg
- *   #100): all thirty-eight plays, from *The Two Gentlemen of Verona* to
- *   *The Two Noble Kinsmen*.
- * - *The Chief Elizabethan Dramatists, excluding Shakespeare*, ed. W. A.
+ * - The Complete Works of William Shakespeare (Globe edition, Gutenberg
+ *   #100): all thirty-eight plays, from The Two Gentlemen of Verona to
+ *   The Two Noble Kinsmen.
+ * - The Chief Elizabethan Dramatists, excluding Shakespeare, ed. W. A.
  *   Neilson (Houghton Mifflin, 1911; Gutenberg #77587): thirty plays by
  *   Lyly, Peele, Greene, Marlowe, Kyd, Chapman, Jonson, Dekker, Marston,
  *   Heywood, Beaumont, Fletcher, Webster, Middleton, Massinger, Ford and
  *   Shirley. The volume's glosses are printed at the end of each play.
- * - *Tamburlaine the Great, Part Two* in Dyce's edition (Gutenberg #1589),
+ * - Tamburlaine the Great, Part Two in Dyce's edition (Gutenberg #1589),
  *   so the sequel stands beside the first part instead of being a gap.
  *
  * ## What is not here, and why
@@ -45,7 +45,7 @@ export const RENAISSANCE_GROUPS = [
     {
         name: 'Shakespeare: comedies',
         dates: 'c. 1590–1604',
-        note: 'Twelve comedies, from the Plautine farce of *The Comedy of Errors* to the problem comedies written under James, in which the marriage at the end costs somebody something.',
+        note: 'Twelve comedies, from the Plautine farce of The Comedy of Errors to the problem comedies written under James, in which the marriage at the end costs somebody something.',
     },
     {
         name: 'Shakespeare: histories',
@@ -55,7 +55,7 @@ export const RENAISSANCE_GROUPS = [
     {
         name: 'Shakespeare: tragedies',
         dates: 'c. 1591–1608',
-        note: 'Eleven tragedies, from the Roman blood of *Titus Andronicus* to the late, cold tragedies written after the great four.',
+        note: 'Eleven tragedies, from the Roman blood of Titus Andronicus to the late, cold tragedies written after the great four.',
     },
     {
         name: 'Shakespeare: romances and late plays',
@@ -75,7 +75,7 @@ export const RENAISSANCE_GROUPS = [
     {
         name: 'George Chapman',
         dates: 'c. 1603–1604',
-        note: 'Chapman translated Homer and wrote the French histories that Ben Jonson mocked and John Keats loved. *Bussy D\u2019Ambois* is his best-known tragedy.',
+        note: 'Chapman translated Homer and wrote the French histories that Ben Jonson mocked and John Keats loved. Bussy D\u2019Ambois is his best-known tragedy.',
     },
     {
         name: 'Ben Jonson',
@@ -95,7 +95,7 @@ export const RENAISSANCE_GROUPS = [
     {
         name: 'John Marston and John Webster',
         dates: 'c. 1600–1604',
-        note: 'Marston wrote *The Malcontent*; Webster supplied an induction and additions when the King\u2019s Men revived it. The two men are the darkest writers of the Jacobean stage, and this is where their work overlaps.',
+        note: 'Marston wrote The Malcontent; Webster supplied an induction and additions when the King\u2019s Men revived it. The two men are the darkest writers of the Jacobean stage, and this is where their work overlaps.',
     },
     {
         name: 'Beaumont and Fletcher',
@@ -110,7 +110,7 @@ export const RENAISSANCE_GROUPS = [
     {
         name: 'John Webster',
         dates: '1613–1614',
-        note: 'Webster wrote slowly and little. *The Duchess of Malfi* is the one everybody knows; the shelf also holds his share of *The Malcontent*.',
+        note: 'Webster wrote slowly and little. The Duchess of Malfi is the one everybody knows; the shelf also holds his share of The Malcontent.',
     },
     {
         name: 'Thomas Middleton',
@@ -120,12 +120,12 @@ export const RENAISSANCE_GROUPS = [
     {
         name: 'Philip Massinger',
         dates: '1621–1622',
-        note: 'Massinger took over Fletcher\u2019s company and his manner. *A New Way to Pay Old Debts* kept Sir Giles Overreach on the stage for two centuries.',
+        note: 'Massinger took over Fletcher\u2019s company and his manner. A New Way to Pay Old Debts kept Sir Giles Overreach on the stage for two centuries.',
     },
     {
         name: 'John Ford',
         dates: 'c. 1625–1633',
-        note: 'The Caroline tragedian of incest and endurance. *The Broken Heart* is his most controlled play, and the one least often staged.',
+        note: 'The Caroline tragedian of incest and endurance. The Broken Heart is his most controlled play, and the one least often staged.',
     },
     {
         name: 'James Shirley',
@@ -228,7 +228,7 @@ const COMEDIES = [
         synopsis:
             'The Duke of Vienna hands the city to the puritan Angelo and stays behind dressed as a friar. Angelo condemns Claudio to death for fornication, then offers Claudio\u2019s sister Isabella a bargain: her brother\u2019s life for her body.',
         context:
-            'A comedy that behaves like a tragedy, written in the same years as *Othello*. Its final scene gives a man who has abused his authority a wife, and gives nobody else an explanation.',
+            'A comedy that behaves like a tragedy, written in the same years as Othello. Its final scene gives a man who has abused his authority a wife, and gives nobody else an explanation.',
         topics: ['Angelo', 'Isabella', 'justice', 'Vienna', 'disguised duke'],
     },
     {
@@ -734,7 +734,7 @@ export const FIRST_ELIZABETHANS = [
         synopsis:
             'A group of Londoners lost in the woods meet an old woman who tells them a tale: a princess stolen by a bear, a wandering knight, a magic sword, and a head that speaks warnings. The audience is asked to take it as a winter\u2019s story and not to expect sense.',
         context:
-            'A parody of the romances that were the staple of the 1580s, and a forerunner of *The Knight of the Burning Pestle* and of the induction in *The Taming of the Shrew*. It is the only play of Peele\u2019s that keeps the stage.',
+            'A parody of the romances that were the staple of the 1580s, and a forerunner of The Knight of the Burning Pestle and of the induction in The Taming of the Shrew. It is the only play of Peele\u2019s that keeps the stage.',
         topics: ['folk tale', 'romance parody', 'Old Wife', 'Eumenides', 'the bear'],
     },
     {
@@ -764,7 +764,7 @@ export const FIRST_ELIZABETHANS = [
         synopsis:
             'Hieronimo\u2019s son is murdered under a tree in his own garden, and the law will do nothing. He goes mad, then uses a court play as the instrument of revenge: the actors kill the murderers for real on stage, and Hieronimo bites out his own tongue rather than tell where he is.',
         context:
-            'The most successful tragedy of the 1590s, and the play that made revenge the central form of English tragedy for fifty years. Shakespeare parodies it in *A Midsummer Night\u2019s Dream* and answers it in *Hamlet*.',
+            'The most successful tragedy of the 1590s, and the play that made revenge the central form of English tragedy for fifty years. Shakespeare parodies it in A Midsummer Night\u2019s Dream and answers it in Hamlet.',
         topics: ['revenge', 'Hieronimo', 'the play within a play', 'madness', 'blood'],
     },
 ]
@@ -830,7 +830,7 @@ export const MARLOWE_PLAYS = [
         synopsis:
             'Barabas loses his fortune to a Christian governor\u2019s tax and begins to kill: his daughter, two friars, a whole nunnery by poisoned porridge, a slave by treachery. He finally falls into his own cauldron and cannot get out.',
         context:
-            'The most popular villain Marlowe wrote, and the play that gave the English stage its stage Jew a decade before *The Merchant of Venice*. It opens with a prologue by Machiavelli.',
+            'The most popular villain Marlowe wrote, and the play that gave the English stage its stage Jew a decade before The Merchant of Venice. It opens with a prologue by Machiavelli.',
         topics: ['Barabas', 'Machiavelli', 'Malta', 'antisemitism', 'the cauldron'],
     },
     {
@@ -1014,7 +1014,7 @@ export const MARSTON_PLAYS = [
         synopsis:
             'Malevole, disguised as a court jester in Genoa, tells every courtier the truth about himself and is beaten for it. He is in fact the deposed duke, and by the last act he has exposed the usurper, forgiven him, and taken back his throne and his wife.',
         context:
-            'Marston\u2019s angriest play, revived by the King\u2019s Men in 1604 with an induction and additions by John Webster. Its prose is the most corrosive in Jacobean drama, and its disguised duke is the model for the Duke in *Measure for Measure*.',
+            'Marston\u2019s angriest play, revived by the King\u2019s Men in 1604 with an induction and additions by John Webster. Its prose is the most corrosive in Jacobean drama, and its disguised duke is the model for the Duke in Measure for Measure.',
         topics: ['disguise', 'court satire', 'Genoa', 'Webster\u2019s induction', 'usurpation'],
     },
 ]
@@ -1255,31 +1255,31 @@ export const RENAISSANCE_PLAYS = [
 export const RENAISSANCE_NOT_AVAILABLE = [
     {
         title: 'Shakespeare\u2019s poems and sonnets',
-        note: 'The sonnets, *Venus and Adonis*, *The Rape of Lucrece* and the shorter poems are all in the same Gutenberg volume as the plays. They are not on a theatre shelf because they are not plays, not because they cannot be hosted.',
+        note: 'The sonnets, Venus and Adonis, The Rape of Lucrece and the shorter poems are all in the same Gutenberg volume as the plays. They are not on a theatre shelf because they are not plays, not because they cannot be hosted.',
     },
     {
         title: 'Webster, The White Devil',
-        note: 'Not in the 1911 Neilson anthology the shelf is built from, and not yet typeset from a separate edition. Webster\u2019s other play, *The Duchess of Malfi*, is on the shelf.',
+        note: 'Not in the 1911 Neilson anthology the shelf is built from, and not yet typeset from a separate edition. Webster\u2019s other play, The Duchess of Malfi, is on the shelf.',
     },
     {
         title: 'Ford, \u2019Tis Pity She\u2019s Whore',
-        note: 'Ford\u2019s most famous tragedy is not in the anthology, which prints *The Broken Heart* instead. It is a gap on this shelf, not a lost play.',
+        note: 'Ford\u2019s most famous tragedy is not in the anthology, which prints The Broken Heart instead. It is a gap on this shelf, not a lost play.',
     },
     {
         title: 'Jonson, Bartholomew Fair, Epicoene and the late comedies',
-        note: 'The shelf carries the four Jonson plays the anthology prints. *Bartholomew Fair* (1614), *Epicoene* (1609) and *The Devil is an Ass* (1616) are the major plays still missing from this shelf.',
+        note: 'The shelf carries the four Jonson plays the anthology prints. Bartholomew Fair (1614), Epicoene (1609) and The Devil is an Ass (1616) are the major plays still missing from this shelf.',
     },
     {
         title: 'Middleton, Women Beware Women and The Roaring Girl',
-        note: 'Two City tragedies and comedies of the same years as *The Changeling*, neither of them in the anthology. *Women Beware Women* is the largest single gap in the Middleton holdings here.',
+        note: 'Two City tragedies and comedies of the same years as The Changeling, neither of them in the anthology. Women Beware Women is the largest single gap in the Middleton holdings here.',
     },
     {
         title: 'Marlowe, The Massacre at Paris and Dido, Queen of Carthage',
-        note: 'Both survive only in the spelling of the 1590s quartos — *The Massacre at Paris* in a short, corrupt undated text, *Dido* in a 1594 quarto reproduced in facsimile. They exist; they are not readable without editorial modernisation, which the shelf does not do.',
+        note: 'Both survive only in the spelling of the 1590s quartos — The Massacre at Paris in a short, corrupt undated text, Dido in a 1594 quarto reproduced in facsimile. They exist; they are not readable without editorial modernisation, which the shelf does not do.',
     },
     {
         title: 'The other Elizabethans: Sackville and Norton, Preston, Lodge, Porter',
-        note: '*Gorboduc* (1561), *Cambises* (c. 1569), *The Wounds of Civil War* and *The Two Angry Women of Abington* are the period\u2019s other surviving plays. None of them is in the two editions this shelf is built from.',
+        note: 'Gorboduc (1561), Cambises (c. 1569), The Wounds of Civil War and The Two Angry Women of Abington are the period\u2019s other surviving plays. None of them is in the two editions this shelf is built from.',
     },
     {
         title: 'The court masques',

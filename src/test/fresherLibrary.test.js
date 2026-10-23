@@ -7,6 +7,7 @@ import { validatePacks } from '../../scripts/lib/validate-packs.mjs'
 import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
 import { DRAMA_PLAYS } from '../lib/dramaLibrary'
 import { ROMAN_PLAYS } from '../lib/romanLibrary'
+import { MEDIEVAL_PLAYS } from '../lib/medievalLibrary'
 import { GST_SHELF } from '../lib/gstLibraryData'
 import {
     FRESHER_LIBRARY_PACKS,
@@ -87,11 +88,13 @@ describe('Library - the shelf state the operator asked for', () => {
             'Money & Career',
             'Greek Tragedy',
             'Roman Theatre',
+            'Medieval Theatre',
             'Christian Books',
         ])
         expect(FRESHER_LIBRARY_DOMAINS.find((d) => d.name === 'Christian Books').count).toBe(CHRISTIAN_BOOKS.length)
         expect(FRESHER_LIBRARY_DOMAINS.find((d) => d.name === 'Greek Tragedy').count).toBe(DRAMA_PLAYS.length)
         expect(FRESHER_LIBRARY_DOMAINS.find((d) => d.name === 'Roman Theatre').count).toBe(ROMAN_PLAYS.length)
+        expect(FRESHER_LIBRARY_DOMAINS.find((d) => d.name === 'Medieval Theatre').count).toBe(MEDIEVAL_PLAYS.length)
     })
 
     it('counts what is actually there instead of a hard-coded total', () => {
@@ -101,13 +104,19 @@ describe('Library - the shelf state the operator asked for', () => {
             books: CHRISTIAN_BOOKS.length,
             plays: DRAMA_PLAYS.length,
             roman: ROMAN_PLAYS.length,
+            medieval: MEDIEVAL_PLAYS.length,
             hosted: GST_SHELF.length,
             total:
-                CHRISTIAN_BOOKS.length + DRAMA_PLAYS.length + ROMAN_PLAYS.length + GST_SHELF.length,
+                CHRISTIAN_BOOKS.length +
+                DRAMA_PLAYS.length +
+                ROMAN_PLAYS.length +
+                MEDIEVAL_PLAYS.length +
+                GST_SHELF.length,
         })
         expect(libraryCountLabel(counts)).toBe(
             `${CHRISTIAN_BOOKS.length} full-length books, ${GST_SHELF.length} NOUN course manuals to download, ` +
-                `${DRAMA_PLAYS.length} Greek plays to download and ${ROMAN_PLAYS.length} Roman plays to download`
+                `${DRAMA_PLAYS.length} Greek plays to download, ${ROMAN_PLAYS.length} Roman plays to download ` +
+                `and ${MEDIEVAL_PLAYS.length} medieval plays to download`
         )
     })
 
@@ -164,13 +173,23 @@ describe('Library - the store merge when the pack shelf is empty', () => {
     it('returns the books, the hosted plays and the manuals, and no pack', () => {
         const merged = mergeLibraryMaterials([])
         expect(merged).toHaveLength(
-            CHRISTIAN_BOOKS.length + DRAMA_PLAYS.length + ROMAN_PLAYS.length + GST_SHELF.length
+            CHRISTIAN_BOOKS.length +
+                DRAMA_PLAYS.length +
+                ROMAN_PLAYS.length +
+                MEDIEVAL_PLAYS.length +
+                GST_SHELF.length
         )
-        expect(merged.every((m) => m.isBook || m.isDrama || m.isRoman || m.isGst)).toBe(true)
+        expect(merged.every((m) => m.isBook || m.isDrama || m.isRoman || m.isMedieval || m.isGst)).toBe(
+            true
+        )
         // The plays are hosted too, so every one of them has a download.
         expect(merged.filter((m) => m.isDrama).every((m) => m.download_path && !m.external_url)).toBe(true)
         // Roman plays are hosted on the same terms.
         expect(merged.filter((m) => m.isRoman).every((m) => m.download_path && !m.external_url)).toBe(true)
+        // ...and so are the medieval ones.
+        expect(merged.filter((m) => m.isMedieval).every((m) => m.download_path && !m.external_url)).toBe(
+            true
+        )
         // The NOUN manuals are hosted by ZikShare, so they do have a download.
         expect(merged.filter((m) => m.isGst).every((m) => m.download_path && !m.external_url)).toBe(true)
     })

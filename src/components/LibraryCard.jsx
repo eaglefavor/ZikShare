@@ -29,7 +29,9 @@ export default function LibraryCard({ item, onOpen }) {
             <div style={{ padding: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
                 <div className="zs-item-card__top">
                     <Tag tone={item.isBook ? 'book' : 'pack'}>
-                        {item.isBook ? 'BOOK' : item.code || (item.isDrama || item.isRoman ? 'PLAY' : 'PACK')}
+                        {item.isBook
+                            ? 'BOOK'
+                            : item.code || (item.isDrama || item.isRoman || item.isMedieval ? 'PLAY' : 'PACK')}
                     </Tag>
                     <span className="zs-item-card__sub" style={{ marginLeft: 'auto' }}>
                         {item.page_count} pages
@@ -47,7 +49,9 @@ export default function LibraryCard({ item, onOpen }) {
                 </button>
 
                 <p className="zs-item-card__sub">
-                    {item.isBook || item.isDrama || item.isRoman ? item.author : item.department}
+                    {item.isBook || item.isDrama || item.isRoman || item.isMedieval
+                        ? item.author
+                        : item.department}
                 </p>
 
                 <p className="zs-item-card__desc">{item.description}</p>

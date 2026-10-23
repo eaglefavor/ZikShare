@@ -3,6 +3,7 @@ import { CHRISTIAN_BOOKS, CHRISTIAN_BOOKS_DOMAIN, toBookCard, findBookByStorageP
 import { DRAMA_DOMAIN, DRAMA_PLAYS, toDramaCard } from './dramaLibrary'
 import { GST_CARDS, GST_DOMAIN, ENTREPRENEURSHIP_DOMAIN } from './gstLibrary'
 import { ROMAN_DOMAIN, ROMAN_PLAYS, toRomanCard } from './romanLibrary'
+import { MEDIEVAL_DOMAIN, MEDIEVAL_PLAYS, toMedievalCard } from './medievalLibrary'
 
 /**
  * Display order of the shelves a study pack can sit on.
@@ -17,6 +18,7 @@ export const FRESHER_LIBRARY_DOMAIN_ORDER = [
     'Money & Career',
     DRAMA_DOMAIN,
     ROMAN_DOMAIN,
+    MEDIEVAL_DOMAIN,
     'Faculty Primer',
     'Theatre & Film Studies',
     'Departmental Archive',
@@ -30,6 +32,7 @@ export const FRESHER_LIBRARY_DOMAIN_ORDER = [
 export const FRESHER_DOMAIN_EMOJI = {
     [DRAMA_DOMAIN]: '🎭',
     [ROMAN_DOMAIN]: '🏺',
+    [MEDIEVAL_DOMAIN]: '🕯️',
     'GST & Compulsory Courses': '🏛️',
     'Faculty Primer': '🎓',
     'Theatre & Film Studies': '🎭',
@@ -59,9 +62,19 @@ export function libraryCounts() {
     const plays = DRAMA_PLAYS.length
     // Roman comedy and tragedy, typeset here from out-of-copyright editions.
     const roman = ROMAN_PLAYS.length
+    // Medieval cycle plays, moralities and Hrotsvitha, hosted the same way.
+    const medieval = MEDIEVAL_PLAYS.length
     // NOUN courseware is hosted on ZikShare: these download from us.
     const hosted = GST_CARDS.length
-    return { packs, books, plays, roman, hosted, total: packs + books + plays + roman + hosted }
+    return {
+        packs,
+        books,
+        plays,
+        roman,
+        medieval,
+        hosted,
+        total: packs + books + plays + roman + medieval + hosted,
+    }
 }
 
 function countOf(n, one, many) {
@@ -69,13 +82,14 @@ function countOf(n, one, many) {
 }
 
 /** e.g. "8 full-length books" or "12 study packs and 8 full-length books". */
-export function libraryCountLabel({ packs, books, plays, roman, hosted } = libraryCounts()) {
+export function libraryCountLabel({ packs, books, plays, roman, medieval, hosted } = libraryCounts()) {
     const parts = []
     if (packs > 0) parts.push(countOf(packs, 'study pack', 'study packs'))
     if (books > 0) parts.push(countOf(books, 'full-length book', 'full-length books'))
     if (hosted > 0) parts.push(`${hosted} NOUN course manuals to download`)
     if (plays > 0) parts.push(`${plays} Greek plays to download`)
     if (roman > 0) parts.push(`${roman} Roman plays to download`)
+    if (medieval > 0) parts.push(`${medieval} medieval plays to download`)
     if (parts.length === 0) return 'No documents yet'
     if (parts.length === 1) return parts[0]
     return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`
@@ -93,6 +107,7 @@ export const FRESHER_LIBRARY_DOMAINS = FRESHER_LIBRARY_DOMAIN_ORDER
             CHRISTIAN_BOOKS.filter((b) => b.domain === name).length +
             DRAMA_PLAYS.filter(() => name === DRAMA_DOMAIN).length +
             ROMAN_PLAYS.filter(() => name === ROMAN_DOMAIN).length +
+            MEDIEVAL_PLAYS.filter(() => name === MEDIEVAL_DOMAIN).length +
             GST_CARDS.filter((card) => card.domain === name).length,
     }))
     .filter((d) => d.count > 0)
@@ -225,8 +240,10 @@ export function mergeLibraryMaterials(dbMaterials = []) {
     const plays = DRAMA_PLAYS.map(toDramaCard)
     // Roman plays are hosted PDFs too, under /library/roman.
     const roman = ROMAN_PLAYS.map(toRomanCard)
+    // Medieval plays are hosted PDFs too, under /library/medieval.
+    const medieval = MEDIEVAL_PLAYS.map(toMedievalCard)
 
     // NOUN courseware is hosted here, so it is a normal library document with a
     // real download path. A database row never shadows it.
-    return [...fromDb, ...notYetSeeded, ...books, ...GST_CARDS, ...plays, ...roman]
+    return [...fromDb, ...notYetSeeded, ...books, ...GST_CARDS, ...plays, ...roman, ...medieval]
 }

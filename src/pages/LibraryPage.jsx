@@ -4,6 +4,7 @@ import { Filter, Search, ShieldCheck, X } from 'lucide-react'
 import { getDigitalProducts } from '../lib/database'
 import { UNIZIK_FACULTIES, ACADEMIC_LEVELS, ACADEMIC_MATERIAL_TYPES } from '../lib/categories'
 import { EURIPIDES_NOT_AVAILABLE } from '../lib/dramaLibrary'
+import { MEDIEVAL_NOT_AVAILABLE } from '../lib/medievalLibrary'
 import {
     FRESHER_LIBRARY_DOMAINS,
     libraryCountLabel,
@@ -113,7 +114,7 @@ export default function LibraryPage() {
                     </>
                 }
                 title="UNIZIK Digital Library"
-                lead={`${COUNT_LABEL}. Everything is free — no sign-in, no payment step. Manuals, books, Greek tragedies and Roman plays all download as PDF from this page.`}
+                lead={`${COUNT_LABEL}. Everything is free — no sign-in, no payment step. Manuals, books, Greek tragedies, Roman plays and medieval plays all download as PDF from this page.`}
             />
 
             {/* ── One toolbar, always in reach ──────────────────────────── */}
@@ -240,14 +241,43 @@ export default function LibraryPage() {
                 </div>
             </section>
 
+            {/* ── Medieval plays with no modern public-domain text ──────── */}
+            <section className="zs-section" aria-labelledby="missing-medieval-plays">
+                <SectionHeading
+                    id="missing-medieval-plays"
+                    title="Seven medieval plays are not on this shelf"
+                    description="They survive, but only in Middle English spelling or in modern editions still in copyright. Naming them is more honest than giving them a card that opens nothing."
+                />
+                <div className="zs-panel" style={{ margin: 0 }}>
+                    <ul
+                        style={{
+                            margin: 0,
+                            paddingLeft: '1.1rem',
+                            display: 'grid',
+                            gap: '0.55rem',
+                            fontSize: '0.8rem',
+                            lineHeight: 1.6,
+                            color: 'var(--color-text-secondary)',
+                        }}
+                    >
+                        {MEDIEVAL_NOT_AVAILABLE.map((play) => (
+                            <li key={play.title}>
+                                <strong style={{ color: 'var(--color-text)' }}>{play.title}.</strong>{' '}
+                                {play.note}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </section>
+
             <div className="zs-panel" style={{ marginTop: '2.5rem', display: 'flex', gap: '0.85rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
                 <ShieldCheck size={18} color="var(--color-campus-green)" style={{ flexShrink: 0, marginTop: 2 }} />
                 <p style={{ margin: 0, fontSize: '0.8rem', lineHeight: 1.6, color: 'var(--color-text-secondary)', flex: '1 1 18rem' }}>
                     <strong>NOUN course manuals</strong> are published by the National Open University of
                     Nigeria and hosted here free of charge; NOUN permits educational use and prohibits
                     commercial use. <strong>Books</strong> are third-party works: copyright stays with the
-                    author and publisher. <strong>Greek and Roman plays</strong> are public-domain English
-                    translations, typeset as PDFs and hosted here too; the edition and translator of each one
+                    author and publisher. <strong>Greek, Roman and medieval plays</strong> are public-domain
+                    English texts, typeset as PDFs and hosted here too; the edition and translator of each one
                     is credited on the card and printed inside the file. Always confirm your current outline
                     with your department.
                 </p>

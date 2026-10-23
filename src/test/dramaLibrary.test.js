@@ -139,7 +139,12 @@ describe('Greek tragedy shelf - how it appears in the library', () => {
         expect(counts.plays).toBe(DRAMA_PLAYS.length)
         expect(counts.hosted).toBeGreaterThan(0)
         expect(counts.total).toBe(
-            counts.packs + counts.books + counts.plays + counts.roman + counts.hosted
+            counts.packs +
+                counts.books +
+                counts.plays +
+                counts.roman +
+                counts.medieval +
+                counts.hosted
         )
     })
 

@@ -20,6 +20,7 @@ export const MUTED = rgb(0.42, 0.45, 0.5)
 export const ACCENTS = {
     greek: rgb(0.42, 0.12, 0.24),
     roman: rgb(0.13, 0.29, 0.45),
+    medieval: rgb(0.44, 0.32, 0.11),
 }
 
 const REPLACE = {

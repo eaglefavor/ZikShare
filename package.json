@@ -21,7 +21,8 @@
     "books:audit": "python3 scripts/audit-book-content.py",
     "gst:build": "node scripts/build-gst-shelf.mjs",
     "drama:build": "node scripts/build-drama-pdfs.mjs",
-    "roman:build": "node scripts/build-roman-pdfs.mjs"
+    "roman:build": "node scripts/build-roman-pdfs.mjs",
+    "medieval:build": "node scripts/build-medieval-pdfs.mjs"
   },
   "dependencies": {
     "@pdfsmaller/pdf-encrypt": "^1.2.0",

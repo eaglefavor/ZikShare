@@ -700,3 +700,73 @@ goes through it. Without that the build dies at *R.U.R.*
   movement; that the four covered movements add up to the shelf; and that the
   two gaps are still declared and still name Brecht, Beckett, Ionesco, Pinter,
   Genet and Jarry.
+
+---
+
+## Phase 15 — The Theatre Arts shelf
+
+**What it is.** Fifty-six titles across the seventeen topics a Theatre and Film
+Studies department actually teaches, typeset as PDFs and hosted on ZikShare.
+Every card downloads from `/library/theatre/<slug>.pdf`; nothing on the shelf
+sends a reader to another website.
+
+**Two kinds of document, and the card says which.** Twenty-two are complete
+public-domain books from Project Gutenberg, with author, editor and edition
+credited on the card and printed on the cover. Thirty-four are ZikShare's own
+teaching units, written for this shelf and labelled **ZikShare guide** on the
+card, on the cover and inside the file. A guide is never dressed up as a
+published book, and a classic is never rewritten.
+
+### What each topic carries
+
+| Topic | Titles | What is there |
+| --- | --- | --- |
+| Directing | 3 | Clark's *How to Produce Amateur Plays* (1917); the director's craft; blocking and stage pictures |
+| Scriptwriting | 7 | Archer's *Play-Making*, Baker's *Dramatic Technique*, Bronson Howard, Lope de Vega, *How to Write a Play*; two ZikShare units |
+| Lighting | 2 | Lanterns, angles and colour; the plot and the cue sheet |
+| Set Design | 2 | Reading the script for space; the model, elevation and build |
+| Props Design | 2 | Sourcing, making and running; period, function and symbol |
+| Makeup Art | 2 | Stage makeup (straight, character, age); makeup for film and television |
+| Costume | 3 | Mrs. Aria's *Costume* (1906); script to fitting; wardrobe and the run |
+| Sound & Song Design | 2 | System, plot and cue; song design for the Nigerian stage |
+| History of African Theatre | 2 | A history in five traditions; the Yoruba travelling theatre |
+| Evolution of Theatre | 5 | Flickinger's *Greek Theater*, both volumes of Cibber's *Apology*; Greeks to the Globe; the modern stage |
+| Theatre Management | 2 | Running a company; budgeting, marketing and front of house |
+| Pre-Colonial Theatre | 2 | Performance in Nigeria before the encounter; ritual, mask and festival |
+| Colonial Theatre | 2 | The colonial stage; church, school and concert |
+| Post-Colonial Theatre | 2 | Soyinka, Rotimi, Sofola, Osofisan; the festival and the fringe |
+| Dramatic Criticism | 10 | Aristotle's *Poetics*, Schlegel, Hamilton, Matthews, Nathan, Symons, Huneker, Moulton; how to review; approaches to drama |
+| Speech Arts | 3 | Winter's *Public Speaking* (1912); breath, voice and articulation; Nigerian English on stage |
+| Film Analysis | 5 | Lindsay's *Art of the Moving Picture*, Talbot, Phillips; shot, cut and sound; Nollywood |
+
+**Why the guides exist.** The applied topics the department lists — lighting,
+props, makeup, sound design, theatre management, pre-colonial and post-colonial
+theatre — have almost no public-domain books. The books that exist are in
+copyright, and the African material was never written down in a form that can be
+hosted. Rather than pad the shelf with irrelevant classics, those topics carry
+ZikShare's own units, which say on their first page that they are ZikShare's
+text, not a published book, and list the real books to read next.
+
+**How the classics were sourced.** A temporary GitHub Actions workflow fetched
+twenty-two Gutenberg e-texts, because the sandbox cannot reach gutenberg.org for
+downloads. It has been deleted; the texts sit in `library/theatre/source/`. Each
+one is typeset whole — no cutting, because each is a single work — with
+Gutenberg's header and licence reproduced unchanged inside the file.
+
+**One typesetter change.** *The Greek Theater and Its Drama* prints polytonic
+Greek, which the PDF base fonts cannot encode. `buildPlayPdf` now folds
+`headerText`, `bodyText` and `footerText` through `clean()` once, at the door, so
+an unprintable glyph can no longer kill a build anywhere on the site.
+
+### Numbers, measured rather than written
+
+- 56 titles, 4,244 pages, 11.1 MB of PDF; SHA-256 recorded for every file.
+- 22 public-domain books (about 3,900 pages) and 34 ZikShare guides (about 24,000
+  words of original text).
+- Library total: 8 books + 22 NOUN manuals + 31 Greek + 36 Roman + 17 medieval +
+  69 Renaissance + 70 modern + 56 Theatre Arts = **309 documents**, printed from
+  `libraryCounts()`.
+- 217 tests in 24 files. `theatreArtsLibrary.test.js` asserts that all seventeen
+  topics hold at least two titles, that every classic credits a Gutenberg id and
+  an editor, that every guide is labelled as ZikShare's, that every card's PDF
+  exists on disk, opens as `%PDF-`, matches its checksum and links nowhere else.

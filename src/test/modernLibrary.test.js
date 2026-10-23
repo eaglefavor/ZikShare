@@ -14,6 +14,7 @@ import {
     toModernCard,
 } from '../lib/modernLibrary'
 import { libraryCountLabel, libraryCounts, mergeLibraryMaterials } from '../lib/fresherLibrary'
+import { THEATRE_TITLES } from '../lib/theatreArtsLibrary'
 
 const PUBLIC_DIR = path.join(process.cwd(), 'public')
 
@@ -189,6 +190,7 @@ describe('Modern theatre shelf - how it appears in the library', () => {
                 counts.medieval +
                 counts.renaissance +
                 counts.modern +
+                counts.theatre +
                 counts.hosted
         )
         expect(libraryCountLabel(counts)).toContain(`${MODERN_PLAYS.length} modern plays to download`)

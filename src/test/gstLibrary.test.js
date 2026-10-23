@@ -14,6 +14,7 @@ import {
 } from '../lib/gstLibrary'
 import { mergeLibraryMaterials, libraryCounts } from '../lib/fresherLibrary'
 import { MODERN_PLAYS } from '../lib/modernLibrary'
+import { THEATRE_TITLES } from '../lib/theatreArtsLibrary'
 
 const ROOT = process.cwd()
 
@@ -135,6 +136,7 @@ describe('NOUN GST shelf - how it appears in the library', () => {
                 counts.medieval +
                 counts.renaissance +
                 counts.modern +
+                counts.theatre +
                 counts.hosted
         )
     })

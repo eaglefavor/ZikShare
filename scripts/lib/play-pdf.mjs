@@ -23,6 +23,7 @@ export const ACCENTS = {
     medieval: rgb(0.44, 0.32, 0.11),
     renaissance: rgb(0.35, 0.2, 0.42),
     modern: rgb(0.16, 0.36, 0.35),
+    theatre: rgb(0.45, 0.26, 0.06),
 }
 
 const REPLACE = {
@@ -100,6 +101,13 @@ export async function buildPlayPdf(play, options) {
         footerText = '',
     } = options
 
+    // Sources from outside the play shelves can carry polytonic Greek or other
+    // glyphs the base fonts cannot print. Fold them here, once, so no caller has
+    // to remember: an unprintable character otherwise kills the whole build.
+    const headerTextClean = clean(headerText)
+    const bodyTextClean = clean(bodyText)
+    const footerTextClean = clean(footerText)
+
     const doc = await PDFDocument.create()
     const serif = await doc.embedFont(StandardFonts.TimesRoman)
     const serifBold = await doc.embedFont(StandardFonts.TimesRomanBold)
@@ -170,9 +178,9 @@ export async function buildPlayPdf(play, options) {
         cursor -= gap
     }
 
-    writeBlock(headerText, { font: mono, size: 7.5, leading: 9.5, colour: MUTED })
-    writeBlock(bodyText, { font: serif, size: 10.5, leading: 14.5, gap: 2 })
-    writeBlock(footerText, { font: mono, size: 7.5, leading: 9.5, colour: MUTED })
+    writeBlock(headerTextClean, { font: mono, size: 7.5, leading: 9.5, colour: MUTED })
+    writeBlock(bodyTextClean, { font: serif, size: 10.5, leading: 14.5, gap: 2 })
+    writeBlock(footerTextClean, { font: mono, size: 7.5, leading: 9.5, colour: MUTED })
 
     /* Running footer */
     doc.getPages().slice(1).forEach((p, index) => {

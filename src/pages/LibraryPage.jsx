@@ -7,6 +7,7 @@ import { EURIPIDES_NOT_AVAILABLE } from '../lib/dramaLibrary'
 import { MEDIEVAL_NOT_AVAILABLE } from '../lib/medievalLibrary'
 import { RENAISSANCE_DOMAIN, RENAISSANCE_NOT_AVAILABLE } from '../lib/renaissanceLibrary'
 import { MODERN_DOMAIN, MODERN_UNHOSTABLE } from '../lib/modernLibrary'
+import { THEATRE_DOMAIN } from '../lib/theatreArtsLibrary'
 import {
     FRESHER_LIBRARY_DOMAINS,
     libraryCountLabel,
@@ -135,7 +136,7 @@ export default function LibraryPage() {
                     </>
                 }
                 title="UNIZIK Digital Library"
-                lead={`${COUNT_LABEL}. Everything is free — no sign-in, no payment step. Manuals, books, Greek tragedies, Roman plays, medieval plays, Renaissance plays and modern plays all download as PDF from this page.`}
+                lead={`${COUNT_LABEL}. Everything is free — no sign-in, no payment step. Manuals, books, Greek tragedies, Roman plays, medieval plays, Renaissance plays, modern plays and Theatre Arts titles all download as PDF from this page.`}
             />
 
             {/* ── One toolbar, always in reach ──────────────────────────── */}
@@ -218,7 +219,9 @@ export default function LibraryPage() {
                             title={`${shelf.emoji} ${shelf.name}`}
                             description={`${shelf.items.length} ${shelf.items.length === 1 ? 'document' : 'documents'} · free`}
                         />
-                        {shelf.name === RENAISSANCE_DOMAIN || shelf.name === MODERN_DOMAIN ? (
+                        {shelf.name === RENAISSANCE_DOMAIN ||
+                        shelf.name === MODERN_DOMAIN ||
+                        shelf.name === THEATRE_DOMAIN ? (
                             groupPlays(shelf.items).map((group) => (
                                 <div key={group.name}>
                                     <h3

@@ -14,6 +14,7 @@ import {
   sortLibrary,
 } from '../lib/libraryView'
 import { MODERN_PLAYS } from '../lib/modernLibrary'
+import { THEATRE_TITLES } from '../lib/theatreArtsLibrary'
 
 const all = mergeLibraryMaterials([])
 
@@ -27,6 +28,7 @@ describe('library view', () => {
         MEDIEVAL_PLAYS.length +
         RENAISSANCE_PLAYS.length +
         MODERN_PLAYS.length +
+        THEATRE_TITLES.length +
         GST_SHELF.length
     )
   })
@@ -41,6 +43,7 @@ describe('library view', () => {
       'Medieval Theatre',
       'Renaissance Theatre',
       'Modern Theatre',
+      'Theatre Arts',
       'Christian Books',
     ])
     expect(shelves.reduce((total, shelf) => total + shelf.items.length, 0)).toBe(all.length)
@@ -67,11 +70,12 @@ describe('library view', () => {
         ROMAN_PLAYS.length +
         MEDIEVAL_PLAYS.length +
         RENAISSANCE_PLAYS.length +
-        MODERN_PLAYS.length
+        MODERN_PLAYS.length +
+        THEATRE_TITLES.length
     )
     expect(
       arts.every(
-        (item) => item.isDrama || item.isRoman || item.isMedieval || item.isRenaissance || item.isModern
+        (item) => item.isDrama || item.isRoman || item.isMedieval || item.isRenaissance || item.isModern || item.isTheatre
       )
     ).toBe(true)
 

@@ -1,0 +1,57 @@
+name: Fetch Renaissance drama texts
+
+# Temporary: pulls the public-domain Renaissance play texts into the repository,
+# because the build sandbox cannot reach Project Gutenberg directly.
+# Delete once the texts are committed.
+
+on:
+  push:
+    paths:
+      - scripts/fetch-renaissance.trigger
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Download texts
+        run: |
+          set -eux
+          mkdir -p library/renaissance/source
+          cd library/renaissance/source
+
+          # The Complete Works of William Shakespeare.
+          curl -fsSL --retry 3 -A "ZikShare library build" \
+            https://www.gutenberg.org/cache/epub/100/pg100.txt -o 100.txt
+
+          # The Chief Elizabethan Dramatists, ed. W. A. Neilson (1911).
+          curl -fsSL --retry 3 -A "ZikShare library build" \
+            https://www.gutenberg.org/cache/epub/77587/pg77587.txt -o 77587.txt
+
+          # Marlowe's three plays the anthology does not carry.
+          curl -fsSL --retry 3 -A "ZikShare library build" \
+            https://www.gutenberg.org/cache/epub/1589/pg1589.txt -o 1589.txt   # Tamburlaine II
+          curl -fsSL --retry 3 -A "ZikShare library build" \
+            https://www.gutenberg.org/cache/epub/1496/pg1496.txt -o 1496.txt   # Massacre at Paris
+          curl -fsSL --retry 3 -A "ZikShare library build" \
+            https://www.gutenberg.org/cache/epub/16169/pg16169.txt -o 16169.txt # Dido, Queen of Carthage
+
+          for file in 100.txt 77587.txt 1589.txt 1496.txt 16169.txt; do
+            test -s "$file"
+          done
+          wc -c ./*.txt
+
+      - name: Commit
+        run: |
+          git config user.name "ZikShare build"
+          git config user.email "build@zikshare.local"
+          git add library/renaissance/source
+          git commit -m "Add the Renaissance drama source texts"
+          git push

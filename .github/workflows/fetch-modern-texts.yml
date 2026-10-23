@@ -1,0 +1,99 @@
+name: Fetch modern drama texts
+
+# Temporary: pulls the public-domain modern drama texts into the repository,
+# because the build sandbox cannot reach Project Gutenberg directly.
+# Delete once the texts are committed.
+
+on:
+  push:
+    paths:
+      - scripts/fetch-modern.trigger
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Download texts
+        run: |
+          set -eux
+          mkdir -p library/modern/source
+          cd library/modern/source
+
+          # Ibsen, Collected Works (Archer), 11 volumes.
+          for id in 66060 66186 66238 66239 66240 70705 70566 70577 70684 74237 74642; do
+            curl -fsSL --retry 3 -A "ZikShare library build" \
+              "https://www.gutenberg.org/cache/epub/$id/pg$id.txt" -o "$id.txt"
+          done
+
+          # Chekhov.
+          for id in 1754 1756 55351 1755 1753 7986; do
+            curl -fsSL --retry 3 -A "ZikShare library build" \
+              "https://www.gutenberg.org/cache/epub/$id/pg$id.txt" -o "$id.txt"
+          done
+
+          # Strindberg.
+          for id in 8499 45375 14347 44233 8875 7363; do
+            curl -fsSL --retry 3 -A "ZikShare library build" \
+              "https://www.gutenberg.org/cache/epub/$id/pg$id.txt" -o "$id.txt"
+          done
+
+          # Shaw.
+          for id in 3825 3328 1097 3618 3790 3543 3329 76323 4023 5070 3638 4003; do
+            curl -fsSL --retry 3 -A "ZikShare library build" \
+              "https://www.gutenberg.org/cache/epub/$id/pg$id.txt" -o "$id.txt"
+          done
+
+          # Wilde.
+          for id in 844 790 885 42704 854; do
+            curl -fsSL --retry 3 -A "ZikShare library build" \
+              "https://www.gutenberg.org/cache/epub/$id/pg$id.txt" -o "$id.txt"
+          done
+
+          # Maeterlinck.
+          for id in 13329 8606 70550 34343; do
+            curl -fsSL --retry 3 -A "ZikShare library build" \
+              "https://www.gutenberg.org/cache/epub/$id/pg$id.txt" -o "$id.txt"
+          done
+
+          # Hauptmann, Dramatic Works I-II.
+          for id in 9971 9972; do
+            curl -fsSL --retry 3 -A "ZikShare library build" \
+              "https://www.gutenberg.org/cache/epub/$id/pg$id.txt" -o "$id.txt"
+          done
+
+          # Yeats, Collected Works 2-4.
+          for id in 49609 49610 49611; do
+            curl -fsSL --retry 3 -A "ZikShare library build" \
+              "https://www.gutenberg.org/cache/epub/$id/pg$id.txt" -o "$id.txt"
+          done
+
+          # Synge.
+          for id in 994 1240 1922 1618 1241 1328; do
+            curl -fsSL --retry 3 -A "ZikShare library build" \
+              "https://www.gutenberg.org/cache/epub/$id/pg$id.txt" -o "$id.txt"
+          done
+
+          # Čapek, Gorky, Tolstoy.
+          for id in 59112 61420 52468 26661; do
+            curl -fsSL --retry 3 -A "ZikShare library build" \
+              "https://www.gutenberg.org/cache/epub/$id/pg$id.txt" -o "$id.txt"
+          done
+
+          ls -la
+          wc -c ./*.txt | tail -1
+
+      - name: Commit
+        run: |
+          git config user.name "ZikShare build"
+          git config user.email "build@zikshare.local"
+          git add library/modern/source
+          git commit -m "Add the modern drama source texts"
+          git push

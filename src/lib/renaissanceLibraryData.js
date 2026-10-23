@@ -14,11 +14,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/alls-well-that-ends-well.pdf",
-        "pages": 108,
+        "pages": 109,
         "words": 24473,
         "notes": 0,
-        "bytes": 215031,
-        "sha256": "d20df9a488843b17a3273a12171beb243919e6543664760b4dedcc42be5f3f19"
+        "bytes": 215840,
+        "sha256": "f247a0990defb1d22f6c8f0a30a65e80b09425f9993211a43bb9c5cfd7c41810"
     },
     {
         "slug": "as-you-like-it",
@@ -34,8 +34,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 98,
         "words": 23090,
         "notes": 0,
-        "bytes": 195088,
-        "sha256": "b667a407468b32beb704ee7899215073183b5f8c0b9dd0af03bfd61be3615281"
+        "bytes": 195244,
+        "sha256": "4a3b8370babe604c3e48f04dc28e9f80375de25ee90c29d1c95fb9d9cddc8fb1"
     },
     {
         "slug": "comedy-of-errors",
@@ -51,8 +51,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 73,
         "words": 16160,
         "notes": 0,
-        "bytes": 144724,
-        "sha256": "27902a4805bcf4b49d6875fe555dad9a8787f2c3c752ef256537648e4cdcb01c"
+        "bytes": 144725,
+        "sha256": "d4e9683f856fed29f1222447d53f467830ab13343cee61055a33e64f859e2365"
     },
     {
         "slug": "loves-labours-lost",
@@ -65,11 +65,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/loves-labours-lost.pdf",
-        "pages": 109,
+        "pages": 110,
         "words": 22619,
         "notes": 0,
-        "bytes": 208236,
-        "sha256": "c3cb2ea85b80e87c0d5d1e1b129e7160ac1a3237f310935ff5e5b7a7421a5225"
+        "bytes": 208887,
+        "sha256": "8bd7aa32839da1fa1b4f56a07edf3537a1d772342858b807de1bc247ed0b09c2"
     },
     {
         "slug": "measure-for-measure",
@@ -82,11 +82,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/measure-for-measure.pdf",
-        "pages": 107,
+        "pages": 108,
         "words": 22928,
         "notes": 0,
-        "bytes": 208081,
-        "sha256": "00b01ab9ac91fff7dedf60650b90f1e467a3bfa1b634cf6a506c63d2130bbf8f"
+        "bytes": 208929,
+        "sha256": "974a8a9e2253f47d512ccdd80993903d34c5f6eb77b66c84203f164834acc417"
     },
     {
         "slug": "merchant-of-venice",
@@ -99,11 +99,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/merchant-of-venice.pdf",
-        "pages": 92,
+        "pages": 93,
         "words": 22288,
         "notes": 0,
-        "bytes": 191327,
-        "sha256": "a071f756b4b74d9df79793518e352cbdcdbdef8b7b222349208065d9f891e9b8"
+        "bytes": 192294,
+        "sha256": "c95e805dc2094cde9337c4b9d0a1df2a6d164e2aab4160765ff0b9916e7fa570"
     },
     {
         "slug": "merry-wives-of-windsor",
@@ -119,8 +119,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 106,
         "words": 23729,
         "notes": 0,
-        "bytes": 204153,
-        "sha256": "2e32e9d6f3f0139bbdac47150a7838e662e6bfc2e647f7ba2db45d2e09b2d041"
+        "bytes": 204640,
+        "sha256": "6cad7ed0745f464bd92d84853d693e2ab1ee8e4cd04a9ebdfa626695ee5bef7a"
     },
     {
         "slug": "a-midsummer-nights-dream",
@@ -136,8 +136,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 78,
         "words": 17247,
         "notes": 0,
-        "bytes": 160317,
-        "sha256": "db8a14b27eba1197a40a4bd8958c65fe6d363575f808ff5be7328cd405c316e9"
+        "bytes": 160262,
+        "sha256": "1f976cfab43fdff73dec2c9d7ec5ee09951c8024b8852fccbddbed582b73785b"
     },
     {
         "slug": "much-ado-about-nothing",
@@ -150,11 +150,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/much-ado-about-nothing.pdf",
-        "pages": 100,
+        "pages": 101,
         "words": 22609,
         "notes": 0,
-        "bytes": 196022,
-        "sha256": "bf6b6e280d3e8fd5a4d56bbe8f2a377936b3100367caf99e449adde70b3ec6f2"
+        "bytes": 196885,
+        "sha256": "05e7d37e35ab6b4ae74855e6cfac36720ea44eb0310ae64d3ab966e055213b11"
     },
     {
         "slug": "the-taming-of-the-shrew",
@@ -170,8 +170,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 107,
         "words": 22206,
         "notes": 0,
-        "bytes": 204557,
-        "sha256": "b427a928a847c638b588f8beca8bfb7a811836803b74f59f93e7585a76545ec9"
+        "bytes": 204836,
+        "sha256": "92b06e9d3c1192c1ed6935bcc2ed5295f792a5827f903f5ccc3d6d782e932a74"
     },
     {
         "slug": "twelfth-night",
@@ -187,8 +187,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 99,
         "words": 21293,
         "notes": 0,
-        "bytes": 189459,
-        "sha256": "4034e39f41a6ded77f18101f6386ed17a393d53b7ef340070bc5e0cb69c4254e"
+        "bytes": 190032,
+        "sha256": "4e6b40af1deb379a73d938c5a00ea2a8d1e51b97898bd169cee2e8e6d9f5dfb0"
     },
     {
         "slug": "the-two-gentlemen-of-verona",
@@ -204,8 +204,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 94,
         "words": 18433,
         "notes": 0,
-        "bytes": 174953,
-        "sha256": "69e718188f4391bcc9c17230025984ca4faa933164b9677b02cdc58a849bc037"
+        "bytes": 175398,
+        "sha256": "6aa54bd23226fd89bb7452b72305c030e5c529d3b3b3798f2d5979d054a37201"
     },
     {
         "slug": "henry-iv-part-1",
@@ -218,11 +218,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/henry-iv-part-1.pdf",
-        "pages": 105,
+        "pages": 106,
         "words": 25788,
         "notes": 0,
-        "bytes": 217874,
-        "sha256": "c41e5fdf489f419e32f7732e40a42daf6bd7ccde98b1fafb53afc2c87634548c"
+        "bytes": 219501,
+        "sha256": "549be0ea15ebe40becb5d741cf2be145b5a58ec97545db33525c2f4af8e6b15f"
     },
     {
         "slug": "henry-iv-part-2",
@@ -238,8 +238,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 114,
         "words": 27608,
         "notes": 0,
-        "bytes": 233558,
-        "sha256": "65ca018262a963dc988447ea18994053c82f55d8247c576ab9166926ce01f0b9"
+        "bytes": 233946,
+        "sha256": "359a7897dd92ef884503408e649b3cf2c11919caf0147fb411687dd8fa1a25cb"
     },
     {
         "slug": "henry-v",
@@ -252,11 +252,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/henry-v.pdf",
-        "pages": 108,
+        "pages": 109,
         "words": 27413,
         "notes": 0,
-        "bytes": 229068,
-        "sha256": "437b4c64eb1eb432be76c18fce37975e9dbd298b9404d6339c0038c1e0eadfa0"
+        "bytes": 229518,
+        "sha256": "9344ad6964e94c796eb93996c2bf0705fa03c8b134137b0943cc9ded5b3b4399"
     },
     {
         "slug": "henry-vi-part-1",
@@ -272,8 +272,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 102,
         "words": 22723,
         "notes": 0,
-        "bytes": 210770,
-        "sha256": "e3412c40d158e591a12efb8cc97402dd87281466fe4cb44cf7edcb0af84ba33a"
+        "bytes": 210724,
+        "sha256": "eb54745f282b6fc03d637cdee472f3614bae070cc3d1c9a72317d9f65d7ff95d"
     },
     {
         "slug": "henry-vi-part-2",
@@ -286,11 +286,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/henry-vi-part-2.pdf",
-        "pages": 113,
+        "pages": 114,
         "words": 26892,
         "notes": 0,
-        "bytes": 235342,
-        "sha256": "13ee3641d3bc1348b2a108575cb3d42bf6f63bca4540318746a5883acf84a5c2"
+        "bytes": 235921,
+        "sha256": "eba9afd83c6b3ecf3446d51f963d0ebac335747297b2454e07d3c16d122beaca"
     },
     {
         "slug": "henry-vi-part-3",
@@ -306,8 +306,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 112,
         "words": 25965,
         "notes": 0,
-        "bytes": 228693,
-        "sha256": "d5af3297907e8313f196cbe3f061f2aedd02034f0e920de21280548bbe82e14a"
+        "bytes": 228755,
+        "sha256": "028ab1875ff3d35e3c4847b17e2c8a32bad4ce759e90581434ecba47b974e12f"
     },
     {
         "slug": "henry-viii",
@@ -320,11 +320,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/henry-viii.pdf",
-        "pages": 112,
+        "pages": 113,
         "words": 26009,
         "notes": 0,
-        "bytes": 231513,
-        "sha256": "daeaf1ee607befe9c30fc2ecd38743c82f0067540982eee3208516f35392145a"
+        "bytes": 233166,
+        "sha256": "a7018c36b7985ba515896fb4707cb9d3f29a13cbe73089830712362c5d67daf6"
     },
     {
         "slug": "king-john",
@@ -340,8 +340,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 91,
         "words": 21897,
         "notes": 0,
-        "bytes": 192363,
-        "sha256": "d082cb8e7571b0c6c9c329a65b8fdc3c5191ed8f45cc7fb067e5a13572710ff8"
+        "bytes": 192904,
+        "sha256": "d6d277589b1976f40c1f9d95272bbe3a276beb37e748b866bd31983a4c4083cc"
     },
     {
         "slug": "richard-ii",
@@ -357,8 +357,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 96,
         "words": 23441,
         "notes": 0,
-        "bytes": 203633,
-        "sha256": "9f599845e3a7c2067e5b4bd09e43f41b38c50cf08fa534d578caf7c5dc6cb3d3"
+        "bytes": 203988,
+        "sha256": "bcb69af36e3eb2d69be55083369bad6507e5085fd6c8300b8832e2c9ae70f86e"
     },
     {
         "slug": "richard-iii",
@@ -371,11 +371,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/richard-iii.pdf",
-        "pages": 139,
+        "pages": 141,
         "words": 31292,
         "notes": 0,
-        "bytes": 273592,
-        "sha256": "2d3b7ebe1cf0aad141d14c2e35a95d6bc61f2e1abe7a7a0e676953d1965bfcb5"
+        "bytes": 275569,
+        "sha256": "143bbd2975b11e20c794fab940666f1ec7bb340c5a5734afe13cc2e023b8234d"
     },
     {
         "slug": "antony-and-cleopatra",
@@ -388,11 +388,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/antony-and-cleopatra.pdf",
-        "pages": 141,
+        "pages": 143,
         "words": 26634,
         "notes": 0,
-        "bytes": 262212,
-        "sha256": "0d17086d20d5402d96db5572aad2679ba8b258916988d026b6ea65315037e0c6"
+        "bytes": 264031,
+        "sha256": "8114db20f0f1185ed97eabd7745ed5958458acaed8139ae1246440c53462274d"
     },
     {
         "slug": "coriolanus",
@@ -405,11 +405,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/coriolanus.pdf",
-        "pages": 138,
+        "pages": 140,
         "words": 29545,
         "notes": 0,
-        "bytes": 267634,
-        "sha256": "e225936396a3ab66dfc21ae5c81605ea5eb270061741165f7da6874c448feeb5"
+        "bytes": 269833,
+        "sha256": "9d35b942b7ae055def37d2a7eb39ffeee8a21031e2676194d5549af34f65b086"
     },
     {
         "slug": "hamlet",
@@ -422,11 +422,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/hamlet.pdf",
-        "pages": 144,
+        "pages": 145,
         "words": 32016,
         "notes": 0,
-        "bytes": 282011,
-        "sha256": "f1a0c7dc02b9cd544c6bb75ed43fe7b382b401f74d39a7bbab22868492e49fe5"
+        "bytes": 283417,
+        "sha256": "5d6837d607d207c56245c55369df71ed7cb5163744dffbe38e162982125286f4"
     },
     {
         "slug": "julius-caesar",
@@ -439,11 +439,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/julius-caesar.pdf",
-        "pages": 102,
+        "pages": 103,
         "words": 20909,
         "notes": 0,
-        "bytes": 195653,
-        "sha256": "a0f65df373aaebf83bf360cc24f658a6f015ba5b980b1f2900592f740804a2bd"
+        "bytes": 196085,
+        "sha256": "d15bf2f8e8bf9863d8e40b2901a962b5ea29a3a3f361e927b6d238e37d5a43f2"
     },
     {
         "slug": "king-lear",
@@ -456,11 +456,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/king-lear.pdf",
-        "pages": 132,
+        "pages": 133,
         "words": 27562,
         "notes": 0,
-        "bytes": 256270,
-        "sha256": "c4509fcb62d39f9276c3cd0bc6bc72d4125fe466162942322e7f7eda4f24ddab"
+        "bytes": 257243,
+        "sha256": "5f205cebd257a62b429f01ce809371a06b650774e24c460c90df7626266eaae2"
     },
     {
         "slug": "macbeth",
@@ -473,11 +473,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/macbeth.pdf",
-        "pages": 91,
+        "pages": 92,
         "words": 18395,
         "notes": 0,
-        "bytes": 178787,
-        "sha256": "7ed92df70672f044fe1123b3fcf5b4753ab6e50d055532b1d46559c35d336d3c"
+        "bytes": 179914,
+        "sha256": "4a2e64beb6aeea25b93cdf53eff712b49578295df9545a4959cc112c2300ec9c"
     },
     {
         "slug": "othello",
@@ -490,11 +490,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/othello.pdf",
-        "pages": 136,
+        "pages": 137,
         "words": 27964,
         "notes": 0,
-        "bytes": 255638,
-        "sha256": "3b597640b307b4c4e898c485eef18bf5d9fed3d73880e6c652512389c2115194"
+        "bytes": 256875,
+        "sha256": "916a81fb16c3fa92dcbc622cbbfc6a69edb80044067b60c84498e92faf0a13b3"
     },
     {
         "slug": "romeo-and-juliet",
@@ -510,8 +510,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 115,
         "words": 25898,
         "notes": 0,
-        "bytes": 226966,
-        "sha256": "0d2bde102539f599b9aaec64ba3c49f33c15c920724e00ba6e768fb8ebd0bdee"
+        "bytes": 227250,
+        "sha256": "0cd37de6f27d69f789298c3961330191ffd6aa0369343ae069444a0cbca4d0d9"
     },
     {
         "slug": "timon-of-athens",
@@ -524,11 +524,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/timon-of-athens.pdf",
-        "pages": 97,
+        "pages": 98,
         "words": 19767,
         "notes": 0,
-        "bytes": 187750,
-        "sha256": "c15e75fd444165a67657f6aa0209c011bf22c553ad61b2ca778d8748f225b9c4"
+        "bytes": 188732,
+        "sha256": "1e7efd01570ac0e4923415533cf25716d1002c0f2f30401d2c19fbf61f9b7164"
     },
     {
         "slug": "titus-andronicus",
@@ -541,11 +541,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/titus-andronicus.pdf",
-        "pages": 91,
+        "pages": 92,
         "words": 21630,
         "notes": 0,
-        "bytes": 191012,
-        "sha256": "6679d091aa48aa2d009fe5973aac255e7e4e07e2bc055fcac74c879dae6a4087"
+        "bytes": 191763,
+        "sha256": "2657df6f2fc680dd8d91c6f53cb3fbf375ad1378add3ec28b24a973516def7b4"
     },
     {
         "slug": "troilus-and-cressida",
@@ -558,11 +558,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/troilus-and-cressida.pdf",
-        "pages": 133,
+        "pages": 134,
         "words": 27639,
         "notes": 0,
-        "bytes": 255209,
-        "sha256": "19dca7b2ef9af23c1b8d71f6203c804d09892f3f77229f88a575f34e2f32b089"
+        "bytes": 256655,
+        "sha256": "b8c47cc7a15753640274f9e84bf227b4d41940d015c0c7a521a4d8e733f9709d"
     },
     {
         "slug": "cymbeline",
@@ -578,8 +578,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 128,
         "words": 28841,
         "notes": 0,
-        "bytes": 260108,
-        "sha256": "d3df3bca3d80589c271d1345b48be237e60cdd6a5669e30a23d39b116dc0333e"
+        "bytes": 260175,
+        "sha256": "8d7b44a9d2b370af0f33dea736466bac58346d52cab36ea4c98e0a287afe41cb"
     },
     {
         "slug": "pericles",
@@ -595,8 +595,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 92,
         "words": 19626,
         "notes": 0,
-        "bytes": 183391,
-        "sha256": "9fd4a7f1d709a2df8bdd08333cea6c3eef07ed589928868d1379a04c3078f38c"
+        "bytes": 183633,
+        "sha256": "5b6c117ca4928ad22e38b375196c62bf57432bad201ae98254a5a956484109ee"
     },
     {
         "slug": "the-tempest",
@@ -609,11 +609,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/the-tempest.pdf",
-        "pages": 85,
+        "pages": 86,
         "words": 17591,
         "notes": 0,
-        "bytes": 169713,
-        "sha256": "c3ed190d732a933d646c2d5e7f5ac3dca50069d4e06b8947b1b8af2a618def2d"
+        "bytes": 170803,
+        "sha256": "805eeff49bf14372a1f4dc574788ddf8122465cff7525b10dd6eee54900428dc"
     },
     {
         "slug": "the-two-noble-kinsmen",
@@ -626,11 +626,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 100,
         "sourceName": "Project Gutenberg eBook #100",
         "download_path": "/library/renaissance/the-two-noble-kinsmen.pdf",
-        "pages": 119,
+        "pages": 121,
         "words": 25840,
         "notes": 0,
-        "bytes": 236607,
-        "sha256": "0353f69505e5fc7195f63821df6a46f8aa879e1bae5c542772baa44d4471f461"
+        "bytes": 238021,
+        "sha256": "de54d4e10ad98287c91958f408c05ad6ae6a9f53d6953470e0ba0d5bfdd02952"
     },
     {
         "slug": "the-winters-tale",
@@ -646,8 +646,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 110,
         "words": 26131,
         "notes": 0,
-        "bytes": 229900,
-        "sha256": "2c258e624d08cfe0c72826f1eab90a7cb44b62ef3087c59d41f79386f62aa0a6"
+        "bytes": 230129,
+        "sha256": "19ceb6c0d558c0c567cd8fc3994dc8289ab8f4a6a0e33bbadba5c64fdb0a0145"
     },
     {
         "slug": "endymion",
@@ -663,8 +663,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 73,
         "words": 20894,
         "notes": 103,
-        "bytes": 160472,
-        "sha256": "046d72fd77b056b7a8f37d425b74b15c129207628f29d114bb2402d23c916a44"
+        "bytes": 160538,
+        "sha256": "3fa694c3d0b312aee393668cc642b0d9f8a55840fa44e3d325eaebc7c0df1a42"
     },
     {
         "slug": "the-old-wives-tale",
@@ -680,8 +680,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 37,
         "words": 8968,
         "notes": 44,
-        "bytes": 81232,
-        "sha256": "2f56f000c9039d2663cd2d0af5ed430521cff0af438432252f3a8bd1d0121f28"
+        "bytes": 81392,
+        "sha256": "b897d574555ba045fef05aee71f15b26afc0772ab22fdf8262ab7aea9201bc31"
     },
     {
         "slug": "friar-bacon-and-friar-bungay",
@@ -697,8 +697,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 71,
         "words": 18214,
         "notes": 118,
-        "bytes": 153600,
-        "sha256": "d0a637717787a8bb1aa8e8afd732336cab9988471f6b972cc999bbd192027391"
+        "bytes": 154388,
+        "sha256": "0fc193784a8d3e8e021b3b4189cf83daa2638c5062393a65ddce097003117ffe"
     },
     {
         "slug": "the-spanish-tragedy",
@@ -711,11 +711,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/the-spanish-tragedy.pdf",
-        "pages": 102,
+        "pages": 103,
         "words": 26132,
         "notes": 166,
-        "bytes": 215453,
-        "sha256": "1d7251e8554e52c8bed1c88275890d7fad047c838cb4e9ad6940763931006a8c"
+        "bytes": 216974,
+        "sha256": "2b6b194c2f3314e8be77676946d366fa62ce4d34e0b5a359cdaa0a031510294a"
     },
     {
         "slug": "tamburlaine-part-1",
@@ -731,8 +731,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 73,
         "words": 18804,
         "notes": 97,
-        "bytes": 164833,
-        "sha256": "a782ad82626cdc452958102925fa5fc9194ccd34d17b76811424eea9eb78a584"
+        "bytes": 165299,
+        "sha256": "19879d517ddf277c2fd7b1033bf55cf0e9751d7a0479ec4a1520c94978583d66"
     },
     {
         "slug": "tamburlaine-part-2",
@@ -749,7 +749,7 @@ export const RENAISSANCE_SHELF = [
         "words": 24681,
         "notes": 317,
         "bytes": 198154,
-        "sha256": "267a01ba3b5a8256e2f46ee41d5ab4fd16c86f9abe000a45bcb114c04891b8a6"
+        "sha256": "0944a21b56f5c76c12247b1c9affd762f4bc03a764c114bbb904885b7538fcfb"
     },
     {
         "slug": "doctor-faustus",
@@ -765,8 +765,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 54,
         "words": 13269,
         "notes": 103,
-        "bytes": 117689,
-        "sha256": "50ccf3f93109d9e1bdc675453bf7fe2d6b374a43e269b6366f4204d55da9e34d"
+        "bytes": 117817,
+        "sha256": "17963a4268644768c830dd1b4263860beeb45b27937c2a0a90bbe9f342698f84"
     },
     {
         "slug": "the-jew-of-malta",
@@ -779,11 +779,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/the-jew-of-malta.pdf",
-        "pages": 86,
+        "pages": 87,
         "words": 20678,
         "notes": 134,
-        "bytes": 173224,
-        "sha256": "c9279b72e655642e20f4fbd2daa24abb36ebb690cd4e88bd8571e0fd1b5d74cc"
+        "bytes": 174375,
+        "sha256": "0dab17a70a8bfd123b09849486a9e295eaea920f136d045e4bf004c112923ff7"
     },
     {
         "slug": "edward-the-second",
@@ -796,11 +796,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/edward-the-second.pdf",
-        "pages": 95,
+        "pages": 96,
         "words": 23872,
         "notes": 126,
-        "bytes": 195042,
-        "sha256": "f8749dfb0fd06b41af49846ef1f98bc4c09e1bf9b1b419c70e2cfba92e4024b6"
+        "bytes": 196122,
+        "sha256": "5262132e274a239438f85221ff0fd1c23264a217e3d1b86b7246a0a566e78cac"
     },
     {
         "slug": "bussy-dambois",
@@ -816,8 +816,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 92,
         "words": 24185,
         "notes": 215,
-        "bytes": 198376,
-        "sha256": "a417e02b99bf295c78c8ec184b35658064c73286894a50027bde4ffa8a7a5b48"
+        "bytes": 198560,
+        "sha256": "decd2e74ce38ff22c2645e13c049ef80e8b1c1d57eabe4aa09654c10a86ed0d8"
     },
     {
         "slug": "every-man-in-his-humour",
@@ -830,11 +830,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/every-man-in-his-humour.pdf",
-        "pages": 107,
+        "pages": 108,
         "words": 30170,
         "notes": 252,
-        "bytes": 225863,
-        "sha256": "638875b88e702f5bd50a68218e7ddc19bde086e37bce207fd53b030a76034701"
+        "bytes": 227204,
+        "sha256": "a074f7a8d13b4bae0c57a55c7e6e33af7cdf64b04a8fd6ded8ac36e5b23349d3"
     },
     {
         "slug": "sejanus-his-fall",
@@ -847,11 +847,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/sejanus-his-fall.pdf",
-        "pages": 123,
+        "pages": 124,
         "words": 30293,
         "notes": 196,
-        "bytes": 257688,
-        "sha256": "174a9666c8f1a84084c3b292aab12281b752061851825b449f55ae44eb65cb85"
+        "bytes": 258883,
+        "sha256": "fc50315dfdbb08c8fb3d078e21afea2e8855ff7ad1193fe01d443314c6aca2b9"
     },
     {
         "slug": "volpone",
@@ -864,11 +864,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/volpone.pdf",
-        "pages": 129,
-        "words": 30730,
+        "pages": 135,
+        "words": 30729,
         "notes": 194,
-        "bytes": 254761,
-        "sha256": "e7259b9c1d21b4322698a8427dd5fd7346792e538734eabab5f01155f8a57ad8"
+        "bytes": 260090,
+        "sha256": "4522baf844cf62ce950390fd90bd8959e583b78970ee0745184e50426daa18fe"
     },
     {
         "slug": "the-alchemist",
@@ -881,11 +881,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/the-alchemist.pdf",
-        "pages": 144,
-        "words": 32223,
+        "pages": 149,
+        "words": 32222,
         "notes": 335,
-        "bytes": 271135,
-        "sha256": "373d2e8613e5e9b1bd0bf541478cb2fb9afeea49dbbe8bb4dce8003e217c9402"
+        "bytes": 275614,
+        "sha256": "eaab393e6dedfdd667bb7f6d29815ff9e1bf3a85f4857dd3e4ce8db4d74398fe"
     },
     {
         "slug": "the-shoemakers-holiday",
@@ -901,8 +901,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 83,
         "words": 21890,
         "notes": 176,
-        "bytes": 173402,
-        "sha256": "bd50e1400d608cbecdfbd81706392d6cb49a85a3ce8b98b94efdb1cd9bccff7e"
+        "bytes": 173488,
+        "sha256": "71a949a7ec82b49083b34bf863cde30c5590d2a596bf6596155aad1eb63ef369"
     },
     {
         "slug": "the-honest-whore-part-1",
@@ -915,11 +915,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/the-honest-whore-part-1.pdf",
-        "pages": 106,
+        "pages": 107,
         "words": 27301,
         "notes": 200,
-        "bytes": 214706,
-        "sha256": "b00593dc43fe0ffbe29d565f0aeb521811d0dd11acaccf1170354a908467a409"
+        "bytes": 216006,
+        "sha256": "136fbd5f7135a743dc9591798508e8ef13eccd9bcc4e8a19127fef2c8990e7f7"
     },
     {
         "slug": "the-honest-whore-part-2",
@@ -932,11 +932,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/the-honest-whore-part-2.pdf",
-        "pages": 101,
+        "pages": 102,
         "words": 26632,
         "notes": 151,
-        "bytes": 206229,
-        "sha256": "b3a2485fc680d79bcbc0ca3328aa55e5f7baa5a0b196de57967ec96792123f96"
+        "bytes": 207365,
+        "sha256": "3a6204ec6ce9a57fae6f8ef2c76636c1b12ef42776c303c7b6ea8ba013115e21"
     },
     {
         "slug": "a-woman-killed-with-kindness",
@@ -949,11 +949,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/a-woman-killed-with-kindness.pdf",
-        "pages": 72,
+        "pages": 74,
         "words": 18574,
         "notes": 142,
-        "bytes": 154413,
-        "sha256": "420fb5cc2f216f5a2a50b1d7001ccf2c2fd51d19753670594a67c97387e0348d"
+        "bytes": 156074,
+        "sha256": "af0ffc59c5c24ca7bbaf66cbf5c8e945cd3504cf816f779f8d3e97fe467e72ab"
     },
     {
         "slug": "the-malcontent",
@@ -966,11 +966,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/the-malcontent.pdf",
-        "pages": 91,
+        "pages": 93,
         "words": 23027,
         "notes": 192,
-        "bytes": 192649,
-        "sha256": "a0acd0a4cba32d863bd19864c5f47bc135ae3ba43a098c777dbc932fb46595fc"
+        "bytes": 193931,
+        "sha256": "22291acaf1e297437dd38695dc06c95d9f6ec0b4e75a95081c65f9f49a8bfceb"
     },
     {
         "slug": "the-knight-of-the-burning-pestle",
@@ -986,8 +986,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 94,
         "words": 24378,
         "notes": 228,
-        "bytes": 197855,
-        "sha256": "442a833361f303324b66530c116e527772a75376eb511fbd8cdef75c9b02e350"
+        "bytes": 198477,
+        "sha256": "10a91a763a0305992ce0a5af72415d4d9a2c63c838aa60df61b7a5782fc449b8"
     },
     {
         "slug": "philaster",
@@ -1000,11 +1000,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/philaster.pdf",
-        "pages": 94,
+        "pages": 95,
         "words": 23938,
         "notes": 140,
-        "bytes": 196896,
-        "sha256": "69afad1c0625832c9fdd8400d3c9272bbd897b061af4ca1b3dd22b2423289952"
+        "bytes": 198011,
+        "sha256": "0dc141877d62ff8a06569aaa33d1abb0e2d72478f97547be6a3269554631221d"
     },
     {
         "slug": "the-maids-tragedy",
@@ -1017,11 +1017,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/the-maids-tragedy.pdf",
-        "pages": 99,
+        "pages": 100,
         "words": 24173,
         "notes": 101,
-        "bytes": 199610,
-        "sha256": "03b1d94a349fe893ca839e6d9fccfafd2cf67a46431275e1622dd6dc9c010385"
+        "bytes": 201314,
+        "sha256": "e2e1b698d752869e5c80125823214cae8d94bff3bd42f588728c309b78a8bb51"
     },
     {
         "slug": "the-faithful-shepherdess",
@@ -1037,8 +1037,8 @@ export const RENAISSANCE_SHELF = [
         "pages": 82,
         "words": 21814,
         "notes": 91,
-        "bytes": 181812,
-        "sha256": "190d9ecff321706a547cd87e286d9dd9009bab4e2c31ad9c743250c92030c1e6"
+        "bytes": 182568,
+        "sha256": "9dfc888fe093f388f268bd4bbc3e24b1f3dce313cf32bf5cbedb0927631db440"
     },
     {
         "slug": "the-wild-goose-chase",
@@ -1051,11 +1051,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/the-wild-goose-chase.pdf",
-        "pages": 96,
+        "pages": 100,
         "words": 24427,
         "notes": 139,
-        "bytes": 195199,
-        "sha256": "9f1321e6701dff46b614fd54f076862b7731029310fefe4ec3d026c436ab519f"
+        "bytes": 199025,
+        "sha256": "daf8cff894679d4d6979f5936985839d5ca7fcf151089517ba3c7d0f54725538"
     },
     {
         "slug": "the-duchess-of-malfi",
@@ -1068,11 +1068,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/the-duchess-of-malfi.pdf",
-        "pages": 112,
+        "pages": 113,
         "words": 26590,
         "notes": 144,
-        "bytes": 225301,
-        "sha256": "4d5864516c4adbd626ca84aa728394b386518f9e4e2ec18580780d83267c0d36"
+        "bytes": 226781,
+        "sha256": "d38c2b580c8a53f1b4690be7a5086a8c5d65e5e5991a98505e2862dc5919f189"
     },
     {
         "slug": "a-trick-to-catch-the-old-one",
@@ -1085,11 +1085,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/a-trick-to-catch-the-old-one.pdf",
-        "pages": 84,
+        "pages": 85,
         "words": 21290,
         "notes": 120,
-        "bytes": 170429,
-        "sha256": "d7c7e4fc7ca9c264c3281f819552d7f135f4a5a9670ee0e06372ba6c9e30c159"
+        "bytes": 171150,
+        "sha256": "d78c95ee6489c9e56c1f77056d0abb9cf2a40ba0ef0fa52b4dcca24d8889d69d"
     },
     {
         "slug": "the-changeling",
@@ -1102,11 +1102,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/the-changeling.pdf",
-        "pages": 88,
+        "pages": 89,
         "words": 21049,
         "notes": 111,
-        "bytes": 176510,
-        "sha256": "ea8ac84f6247c6d09a6262684d1d876491065189bf20e455385c372ab9527eb2"
+        "bytes": 177717,
+        "sha256": "628f4fec6bdb8ed07971cfcdf9373fbf27e0e01101f5fa19f06258304a43a1a2"
     },
     {
         "slug": "a-new-way-to-pay-old-debts",
@@ -1119,11 +1119,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/a-new-way-to-pay-old-debts.pdf",
-        "pages": 92,
+        "pages": 93,
         "words": 22245,
         "notes": 107,
-        "bytes": 191333,
-        "sha256": "8de6d89dae142ccbc62dc54fb2e8809d0aab1d498fa20076398546ffd28a1214"
+        "bytes": 192675,
+        "sha256": "f7c8a35775c639833d83282ec7f8ae61c053a1a5be89dc91afcec894a2059a9c"
     },
     {
         "slug": "the-broken-heart",
@@ -1136,11 +1136,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/the-broken-heart.pdf",
-        "pages": 94,
+        "pages": 97,
         "words": 21757,
         "notes": 109,
-        "bytes": 197340,
-        "sha256": "e3fd2493b75727589592a0f7813934384a7f23769f4ff5767d6b704f3e3afded"
+        "bytes": 200384,
+        "sha256": "ce7ba15d6e7c639eb6f9836976c22b4a259d25b2a4bd393a210eaad084951aeb"
     },
     {
         "slug": "the-lady-of-pleasure",
@@ -1153,11 +1153,11 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/the-lady-of-pleasure.pdf",
-        "pages": 99,
+        "pages": 101,
         "words": 23084,
         "notes": 123,
-        "bytes": 199197,
-        "sha256": "e9481e15582abb069ee588f8ab259f7e0455be39384bd23901c8d04ca66d534e"
+        "bytes": 200931,
+        "sha256": "c1d5bd98f8f14b18aeae7e7df6349f394ad2cf2d29393ac85d9f10396867e642"
     },
     {
         "slug": "the-cardinal",
@@ -1170,10 +1170,10 @@ export const RENAISSANCE_SHELF = [
         "sourceId": 77587,
         "sourceName": "Project Gutenberg eBook #77587",
         "download_path": "/library/renaissance/the-cardinal.pdf",
-        "pages": 78,
+        "pages": 80,
         "words": 18446,
         "notes": 52,
-        "bytes": 160658,
-        "sha256": "e117c37626e5f21917605f4862867fb05f357b53e66a2e58d98c4f7bb1de619d"
+        "bytes": 162579,
+        "sha256": "706ab231302131f4e721394c90deda903c68c021f64f28d8541f147595ef31af"
     }
 ]

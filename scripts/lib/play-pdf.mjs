@@ -38,7 +38,9 @@ export function clean(text) {
     return String(text ?? '')
         // A dash set solid between words ("magnificence—in so rare") needs the
         // spaces the original could give it, or the PDF reads as one long word.
-        .replace(/\s*—\s*/g, ' - ')
+        // Only spaces are consumed: a line ending in a dash is an interrupted
+        // speech, and the next line is the next speaker, not the same one.
+        .replace(/[ \t]*—[ \t]*/g, ' - ')
         .replace(/[ŒœÆæ–‘’“”•…]/g, (c) => REPLACE[c] ?? c)
         .replace(/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/g, '')
         .replace(/\r/g, '')

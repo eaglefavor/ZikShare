@@ -617,7 +617,7 @@ that does not exist.
 
 ### Numbers, measured rather than written
 
-- 69 plays, 6,954 pages, 13.4 MB of PDF; SHA-256 recorded for every file.
+- 69 plays, 7,019 pages, 13.5 MB of PDF; SHA-256 recorded for every file.
 - Library total: 8 books + 22 NOUN manuals + 31 Greek + 36 Roman + 17 medieval +
   69 Renaissance = **183 documents**, printed from `libraryCounts()`.
 - 186 tests in 22 files. A new `renaissanceLibrary.test.js` asserts, among other

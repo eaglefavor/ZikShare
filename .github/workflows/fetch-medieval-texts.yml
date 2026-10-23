@@ -1,0 +1,53 @@
+name: Fetch medieval drama texts
+
+# Temporary: pulls the public-domain medieval play texts into the repository,
+# because the build sandbox cannot reach Project Gutenberg directly.
+# Delete once the texts are committed.
+
+on:
+  push:
+    paths:
+      - scripts/fetch-medieval.trigger
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Download texts
+        run: |
+          set -eux
+          mkdir -p library/medieval/source
+          cd library/medieval/source
+
+          # "Everyman" with other interludes, including eight miracle plays (1909).
+          curl -fsSL --retry 3 -A "ZikShare library build" \
+            https://www.gutenberg.org/cache/epub/19481/pg19481.txt -o 19481.txt
+
+          # The Plays of Roswitha, trans. Christopher St. John (1923).
+          curl -fsSL --retry 3 -A "ZikShare library build" \
+            https://www.gutenberg.org/cache/epub/59770/pg59770.txt -o 59770.txt
+
+          # Lydgate, The Disguising at Hertford (c. 1427).
+          curl -fsSL --retry 3 -A "ZikShare library build" \
+            https://www.gutenberg.org/cache/epub/2878/pg2878.txt -o 2878.txt
+
+          for file in 19481.txt 59770.txt 2878.txt; do
+            test -s "$file"
+          done
+          wc -c ./*.txt
+
+      - name: Commit
+        run: |
+          git config user.name "ZikShare build"
+          git config user.email "build@zikshare.local"
+          git add library/medieval/source
+          git commit -m "Add the medieval drama source texts"
+          git push

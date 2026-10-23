@@ -4,11 +4,15 @@ This directory holds the authored, generated PDF study library, plus the content
 that produces it.
 
 **Current state: the authored pack shelf is empty.** The operator cleared every
-course pack and study pack; the only documents in the library are the eight
-full-length books on the Christian Books shelf (`library/content/books.mjs`,
-served from `public/library/books/`). The pipeline below is kept intact so new
-material — GST past questions, GST textbooks, Theatre Arts documents — can be
-added as packs without rebuilding anything.
+course pack and study pack. The library now holds the eight full-length books on
+the Christian Books shelf (`library/content/books.mjs`, served from
+`public/library/books/`), the hosted NOUN GST manuals, and four typeset play
+shelves — Greek (`npm run drama:build`), Roman (`npm run roman:build`), medieval
+(`npm run medieval:build`) and Renaissance (`npm run renaissance:build`), each
+built from the public-domain sources committed under `library/<shelf>/source/`.
+The pack pipeline below is kept intact so new material — GST past questions, GST
+textbooks, Theatre Arts documents — can be added as packs without rebuilding
+anything.
 
 **The library is free.** Every pack has `priceKobo: 0`, no DRM, no watermark and
 no payment step. `scripts/lib/validate-packs.mjs` fails the build if any pack

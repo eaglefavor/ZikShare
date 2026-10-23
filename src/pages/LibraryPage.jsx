@@ -5,6 +5,7 @@ import { getDigitalProducts } from '../lib/database'
 import { UNIZIK_FACULTIES, ACADEMIC_LEVELS, ACADEMIC_MATERIAL_TYPES } from '../lib/categories'
 import { EURIPIDES_NOT_AVAILABLE } from '../lib/dramaLibrary'
 import { MEDIEVAL_NOT_AVAILABLE } from '../lib/medievalLibrary'
+import { RENAISSANCE_DOMAIN, RENAISSANCE_NOT_AVAILABLE } from '../lib/renaissanceLibrary'
 import {
     FRESHER_LIBRARY_DOMAINS,
     libraryCountLabel,
@@ -25,6 +26,25 @@ import LibraryCard from '../components/LibraryCard'
 const COUNTS = libraryCounts()
 const TOTAL = COUNTS.total
 const COUNT_LABEL = libraryCountLabel(COUNTS)
+
+/**
+ * The Renaissance shelf holds sixty-nine plays, so it is listed by playwright
+ * instead of as one undifferentiated wall of cards. The order is the order the
+ * cards arrive in, which is the order the catalogue declares.
+ */
+function groupPlays(items) {
+    const groups = []
+    for (const item of items) {
+        const name = item.group || 'Plays'
+        let group = groups.find((entry) => entry.name === name)
+        if (!group) {
+            group = { name, items: [] }
+            groups.push(group)
+        }
+        group.items.push(item)
+    }
+    return groups
+}
 
 function FilterGroup({ label, children }) {
     return (
@@ -114,7 +134,7 @@ export default function LibraryPage() {
                     </>
                 }
                 title="UNIZIK Digital Library"
-                lead={`${COUNT_LABEL}. Everything is free — no sign-in, no payment step. Manuals, books, Greek tragedies, Roman plays and medieval plays all download as PDF from this page.`}
+                lead={`${COUNT_LABEL}. Everything is free — no sign-in, no payment step. Manuals, books, Greek tragedies, Roman plays, medieval plays and Renaissance plays all download as PDF from this page.`}
             />
 
             {/* ── One toolbar, always in reach ──────────────────────────── */}
@@ -197,11 +217,39 @@ export default function LibraryPage() {
                             title={`${shelf.emoji} ${shelf.name}`}
                             description={`${shelf.items.length} ${shelf.items.length === 1 ? 'document' : 'documents'} · free`}
                         />
-                        <div className="zs-grid">
-                            {shelf.items.map((item) => (
-                                <LibraryCard key={item.id} item={item} onOpen={openItem} />
-                            ))}
-                        </div>
+                        {shelf.name === RENAISSANCE_DOMAIN ? (
+                            groupPlays(shelf.items).map((group) => (
+                                <div key={group.name}>
+                                    <h3
+                                        style={{
+                                            fontSize: '0.72rem',
+                                            fontWeight: 800,
+                                            letterSpacing: '0.09em',
+                                            textTransform: 'uppercase',
+                                            color: '#64748B',
+                                            margin: '1.4rem 0 0.6rem',
+                                        }}
+                                    >
+                                        {group.name}
+                                        <span style={{ fontWeight: 500, letterSpacing: 0, textTransform: 'none' }}>
+                                            {' '}
+                                            · {group.items.length} {group.items.length === 1 ? 'play' : 'plays'}
+                                        </span>
+                                    </h3>
+                                    <div className="zs-grid">
+                                        {group.items.map((item) => (
+                                            <LibraryCard key={item.id} item={item} onOpen={openItem} />
+                                        ))}
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <div className="zs-grid">
+                                {shelf.items.map((item) => (
+                                    <LibraryCard key={item.id} item={item} onOpen={openItem} />
+                                ))}
+                            </div>
+                        )}
                     </section>
                 ))
             ) : (
@@ -270,13 +318,42 @@ export default function LibraryPage() {
                 </div>
             </section>
 
+            {/* ── What the Renaissance shelf leaves out, and why ─────────── */}
+            <section className="zs-section" aria-labelledby="missing-renaissance-plays">
+                <SectionHeading
+                    id="missing-renaissance-plays"
+                    title="What the Renaissance shelf leaves out"
+                    description="Sixty-nine plays is not the whole of the English Renaissance stage. These are the largest gaps, named here rather than given a card that opens nothing."
+                />
+                <div className="zs-panel" style={{ margin: 0 }}>
+                    <ul
+                        style={{
+                            margin: 0,
+                            paddingLeft: '1.1rem',
+                            display: 'grid',
+                            gap: '0.55rem',
+                            fontSize: '0.8rem',
+                            lineHeight: 1.6,
+                            color: 'var(--color-text-secondary)',
+                        }}
+                    >
+                        {RENAISSANCE_NOT_AVAILABLE.map((play) => (
+                            <li key={play.title}>
+                                <strong style={{ color: 'var(--color-text)' }}>{play.title}.</strong>{' '}
+                                {play.note}
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            </section>
+
             <div className="zs-panel" style={{ marginTop: '2.5rem', display: 'flex', gap: '0.85rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
                 <ShieldCheck size={18} color="var(--color-campus-green)" style={{ flexShrink: 0, marginTop: 2 }} />
                 <p style={{ margin: 0, fontSize: '0.8rem', lineHeight: 1.6, color: 'var(--color-text-secondary)', flex: '1 1 18rem' }}>
                     <strong>NOUN course manuals</strong> are published by the National Open University of
                     Nigeria and hosted here free of charge; NOUN permits educational use and prohibits
                     commercial use. <strong>Books</strong> are third-party works: copyright stays with the
-                    author and publisher. <strong>Greek, Roman and medieval plays</strong> are public-domain
+                    author and publisher. <strong>Greek, Roman, medieval and Renaissance plays</strong> are public-domain
                     English texts, typeset as PDFs and hosted here too; the edition and translator of each one
                     is credited on the card and printed inside the file. Always confirm your current outline
                     with your department.

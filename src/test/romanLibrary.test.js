@@ -153,6 +153,7 @@ describe('Roman theatre shelf - how it appears in the library', () => {
                 counts.plays +
                 counts.roman +
                 counts.medieval +
+                counts.renaissance +
                 counts.hosted
         )
         expect(libraryCountLabel(counts)).toContain(`${ROMAN_PLAYS.length} Roman plays to download`)

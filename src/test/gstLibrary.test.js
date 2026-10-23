@@ -132,6 +132,7 @@ describe('NOUN GST shelf - how it appears in the library', () => {
                 counts.plays +
                 counts.roman +
                 counts.medieval +
+                counts.renaissance +
                 counts.hosted
         )
     })

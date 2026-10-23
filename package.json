@@ -19,7 +19,8 @@
     "books:covers": "python3 scripts/render-book-covers.py",
     "books:covers:check": "python3 scripts/render-book-covers.py --check",
     "books:audit": "python3 scripts/audit-book-content.py",
-    "gst:build": "node scripts/build-gst-shelf.mjs"
+    "gst:build": "node scripts/build-gst-shelf.mjs",
+    "drama:build": "node scripts/build-drama-pdfs.mjs"
   },
   "dependencies": {
     "@pdfsmaller/pdf-encrypt": "^1.2.0",

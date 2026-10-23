@@ -88,7 +88,7 @@ describe('Components & ErrorBoundary Resilience', () => {
     expect(screen.getByRole('button', { name: /Browse the library/i })).toBeInTheDocument()
     // The opening line counts what is really on the shelf, and never claims
     // course packs that were cleared.
-    expect(screen.getAllByText(/Greek plays linked to free full texts/i).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/Greek plays to download/i).length).toBeGreaterThan(0)
     expect(screen.queryByText(/student-written course packs/i)).not.toBeInTheDocument()
   })
 })

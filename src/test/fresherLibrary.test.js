@@ -101,13 +101,14 @@ describe('Library - the shelf state the operator asked for', () => {
             total: CHRISTIAN_BOOKS.length + DRAMA_PLAYS.length + GST_SHELF.length,
         })
         expect(libraryCountLabel(counts)).toBe(
-            `${CHRISTIAN_BOOKS.length} full-length books, ${GST_SHELF.length} NOUN course manuals to download and ${DRAMA_PLAYS.length} Greek plays linked to free full texts`
+            `${CHRISTIAN_BOOKS.length} full-length books, ${GST_SHELF.length} NOUN course manuals to download and ${DRAMA_PLAYS.length} Greek plays to download`
         )
     })
 
-    it('says "linked to" for the plays, because ZikShare does not host them', () => {
+    it('counts the plays as downloads, because ZikShare hosts the PDFs', () => {
         const label = libraryCountLabel(libraryCounts())
-        expect(label).toContain('linked to free full texts')
+        expect(label).toContain('Greek plays to download')
+        expect(label).not.toContain('linked to')
         for (const play of DRAMA_PLAYS) {
             expect(play.gutenbergId).toBeGreaterThan(0)
             expect(play.synopsis.length).toBeGreaterThan(120)
@@ -154,11 +155,12 @@ describe('Library - the shelf state the operator asked for', () => {
 })
 
 describe('Library - the store merge when the pack shelf is empty', () => {
-    it('returns the books and the linked plays, and no pack', () => {
+    it('returns the books, the hosted plays and the manuals, and no pack', () => {
         const merged = mergeLibraryMaterials([])
         expect(merged).toHaveLength(CHRISTIAN_BOOKS.length + DRAMA_PLAYS.length + GST_SHELF.length)
         expect(merged.every((m) => m.isBook || m.isDrama || m.isGst)).toBe(true)
-        expect(merged.filter((m) => m.isDrama).every((m) => m.external_url && !m.download_path)).toBe(true)
+        // The plays are hosted too, so every one of them has a download.
+        expect(merged.filter((m) => m.isDrama).every((m) => m.download_path && !m.external_url)).toBe(true)
         // The NOUN manuals are hosted by ZikShare, so they do have a download.
         expect(merged.filter((m) => m.isGst).every((m) => m.download_path && !m.external_url)).toBe(true)
     })

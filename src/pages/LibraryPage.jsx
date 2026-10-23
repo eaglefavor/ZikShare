@@ -218,7 +218,7 @@ export default function LibraryPage() {
                         </>
                     }
                     title="Digital Library"
-                    lead={`${COUNT_LABEL}. Pick a shelf, or search by course code, title or author.`}
+                    lead={`${TOTAL} free documents on nine shelves. Pick a shelf, or search by course code, title or author.`}
                 />
             )}
 
@@ -318,6 +318,10 @@ export default function LibraryPage() {
                     </div>
 
                     <div style={{ marginTop: '1.5rem', display: 'grid', gap: '0.5rem' }}>
+                        <details className="zs-details">
+                            <summary>What the library holds</summary>
+                            <p className="zs-details__lead">{COUNT_LABEL}.</p>
+                        </details>
                         <GapPanel name="Greek Tragedy" />
                         <GapPanel name="Medieval Theatre" />
                         <GapPanel name="Renaissance Theatre" />

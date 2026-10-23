@@ -85,6 +85,48 @@ function GapPanel({ name }) {
     )
 }
 
+/**
+ * All four gap notes behind one control on the index, so a reader sees five
+ * shelf cards and two footers instead of nine competing blocks.
+ */
+function GapLibrary() {
+    const shelves = ['Greek Tragedy', 'Medieval Theatre', 'Renaissance Theatre', 'Modern Theatre']
+    const total = shelves.reduce((sum, name) => sum + (shelfGaps(name)?.items.length || 0), 0)
+    return (
+        <details className="zs-details">
+            <summary>
+                Titles that are not on these shelves
+                <span className="zs-details__hint"> ({total})</span>
+            </summary>
+            {shelves.map((name) => {
+                const gaps = shelfGaps(name)
+                if (!gaps) return null
+                return (
+                    <div key={name} className="zs-details__block">
+                        <h3 className="zs-details__title">{name}</h3>
+                        <p className="zs-details__lead">{gaps.description}</p>
+                        <ul className="zs-details__list">
+                            {gaps.items.map((item) => (
+                                <li key={item.label}>
+                                    <strong>{item.label}</strong>
+                                    {item.hint && (
+                                        <>
+                                            {' ('}
+                                            <span className="zs-details__hint">{item.hint}</span>
+                                            {')'}
+                                        </>
+                                    )}
+                                    . <span className="zs-details__note">{item.note}</span>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
+                )
+            })}
+        </details>
+    )
+}
+
 function Licence({ compact = false }) {
     return (
         <details className="zs-details">
@@ -322,10 +364,7 @@ export default function LibraryPage() {
                             <summary>What the library holds</summary>
                             <p className="zs-details__lead">{COUNT_LABEL}.</p>
                         </details>
-                        <GapPanel name="Greek Tragedy" />
-                        <GapPanel name="Medieval Theatre" />
-                        <GapPanel name="Renaissance Theatre" />
-                        <GapPanel name="Modern Theatre" />
+                        <GapLibrary />
                         <Licence />
                     </div>
                 </section>

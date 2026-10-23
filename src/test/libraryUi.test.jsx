@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Routes, Route, useParams } from 'react-router-dom'
-import { FRESHER_LIBRARY_PACKS } from '../lib/fresherLibrary'
+import { FRESHER_LIBRARY_DOMAINS, FRESHER_LIBRARY_PACKS } from '../lib/fresherLibrary'
 import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
 import { DRAMA_PLAYS, EURIPIDES_NOT_AVAILABLE } from '../lib/dramaLibrary'
 import { ROMAN_PLAYS } from '../lib/romanLibrary'
@@ -56,6 +56,24 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
     expect(screen.queryByText('The Spiritual Man')).not.toBeInTheDocument()
     // Filters are behind one control until the reader asks for them.
     expect(screen.queryByRole('button', { name: 'Faculty of Engineering' })).not.toBeInTheDocument()
+  })
+
+  it('offers every shelf from the index, and no documents until one is chosen', async () => {
+    renderLibrary()
+
+    for (const shelf of FRESHER_LIBRARY_DOMAINS) {
+      expect(
+        screen.getByRole('button', {
+          name: new RegExp(shelf.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')),
+        })
+      ).toBeInTheDocument()
+    }
+
+    // The index is a map, not a document list.
+    expect(screen.queryAllByRole('link', { name: /Download Free PDF/i })).toHaveLength(0)
+
+    // Every gap note still exists, but behind one control instead of five.
+    expect(screen.getByText(/Titles that are not on these shelves/)).toBeInTheDocument()
   })
 
   it('reaches any shelf and its documents in one tap, and back again', async () => {

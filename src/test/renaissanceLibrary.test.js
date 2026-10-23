@@ -144,6 +144,16 @@ describe('Renaissance theatre shelf - every card is a real download', () => {
         }
     })
 
+    it('writes plain text, because the cards and the gap panel render it as-is', () => {
+        // The UI does not parse markdown: an asterisk would be printed.
+        for (const play of RENAISSANCE_PLAYS) {
+            expect(`${play.synopsis} ${play.context}`, `${play.slug} carries markdown`).not.toContain('*')
+        }
+        for (const gap of RENAISSANCE_NOT_AVAILABLE) {
+            expect(gap.note, `${gap.title} carries markdown`).not.toContain('*')
+        }
+    })
+
     it('dates every play, and does not invent a single year where the record only gives a range', () => {
         const ranged = RENAISSANCE_PLAYS.filter((play) => play.dateLabel.includes('–'))
         expect(ranged.length).toBeGreaterThan(20)

@@ -375,35 +375,43 @@ the shelf.
 
 ## Phase 9 — The Greek tragedy shelf
 
-The library's first new shelf after the clear-out: the complete surviving plays of
-Aeschylus, Sophocles and Euripides — 29 texts, each linked to a free
-public-domain English translation on Project Gutenberg.
+The library's first new shelf after the clear-out: the surviving plays of
+Aeschylus, Sophocles and Euripides — 31 texts, each typeset as a PDF and hosted
+by ZikShare at `/library/drama/<slug>.pdf`.
 
-**What the shelf is.** These are not ZikShare files. Every card is an external
-link, the CTA says *Read the full text*, and the card shows no page count
-because we do not hold the document. `toDramaCard()` sets `download_path: null`
-and a test asserts it, so the download machinery cannot reach them by accident.
+**This shelf was rebuilt to stop linking out.** It began as 29 cards pointing at
+Project Gutenberg. The operator asked for the plays to be hosted here instead, so
+`scripts/build-drama-pdfs.mjs` cuts each play out of a public-domain Gutenberg
+volume, sets it as a PDF, and writes both the files and the catalogue
+(`src/lib/dramaLibraryData.js`). Every card now has a real `download_path`, a real
+page count, and a real file behind it; `isExternal` is false and a test asserts
+that no `gutenberg.org` link is rendered anywhere on the page.
 
-**How the data was built.** Each `gutenbergId` was read off Project Gutenberg's
-own catalogue page for that text (author pages: Aeschylus 2825, Sophocles 26,
-Euripides 1680), so every link resolves to the edition its card describes. A
-translator is credited only where Gutenberg's ebook page names one (Wodhull,
-Buckley, Morshead); the rest say only *Free full text at Project Gutenberg*.
+**How a play is cut out of a volume.** A collection prints several plays in one
+file, so each play runs from its own heading to the next play's heading — or to
+the translator's notes, whichever comes first. A heading is located by matching
+the exact title the volume's table of contents prints, requiring the argument or
+cast list a few lines below it, which is what separates a title from a
+character's name in the dialogue. The build fails rather than ship a slice that
+comes out under 2,500 words.
 
-**The four gaps, stated on the page.** *Ion*, *The Suppliants*, *Iphigenia at
-Aulis* and *The Phoenician Women* survive in Greek but have no public-domain
-English translation in the Gutenberg catalogue. They are listed in a dedicated
-panel with a one-line note each, and given no card and no link.
+**Editions, credited on the card.** Morshead for Aeschylus, Campbell for
+Sophocles, and for Euripides Gilbert Murray where he translated the play
+(Alcestis, Medea, Hippolytus, Trojan Women, Iphigenia in Tauris, Electra, Bacchae,
+Rhesus) and Buckley or Wodhull otherwise. Each PDF also reproduces Project
+Gutenberg's header and closing notice verbatim, because their licence travels
+with the text; the credit on the card is attribution, not a link to read through.
 
-**Why 29 and not 33.** The three playwrights have 32 surviving plays between
-them plus the transmitted *Rhesus*: 7 + 7 + 19 = 33, of which 29 have a free
-English text. The count in the library lead is derived from the shelf, so it
-reads 29 and says "linked to free full texts" rather than implying downloads.
+**Still only 31, and said so on the page.** Aeschylus 7 + Sophocles 7 + Euripides
+19 = 33 survive. *Ion* and *The Suppliants* have no public-domain English
+translation in the Gutenberg catalogue, so they are named in a panel with the
+reason and given no card.
 
-**What each card carries.** Playwright, date (BC) or "date unknown", the Greek
-title, a written-for-ZikShare plot synopsis, and a reading note that says what to
-watch for — its trilogy, its staging problem, or the argument it is having with
-another version of the same myth.
+**Two plays were found on the second pass.** *Iphigenia at Aulis* and *The
+Phoenician Women* turned out to sit inside Buckley's *Tragedies of Euripides,
+Volume I* (Gutenberg #15081), whose ten plays are spread across the volume rather
+than listed per title in the search result that had first suggested they were
+missing.
 
 ## Phase 10 — The hosted NOUN courseware shelf
 

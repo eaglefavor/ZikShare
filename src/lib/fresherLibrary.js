@@ -51,8 +51,8 @@ export { FRESHER_LIBRARY_PACKS }
 export function libraryCounts() {
     const packs = FRESHER_LIBRARY_PACKS.length
     const books = CHRISTIAN_BOOKS.length
-    // Greek plays live on Project Gutenberg: they are listed and linked, not
-    // hosted, so they are counted separately and never described as downloads.
+    // Greek plays are typeset as PDFs and hosted here too, counted apart from
+    // the manuals because they are a different shelf, not a different promise.
     const plays = DRAMA_PLAYS.length
     // NOUN courseware is hosted on ZikShare: these download from us.
     const hosted = GST_CARDS.length
@@ -69,7 +69,7 @@ export function libraryCountLabel({ packs, books, plays, hosted } = libraryCount
     if (packs > 0) parts.push(countOf(packs, 'study pack', 'study packs'))
     if (books > 0) parts.push(countOf(books, 'full-length book', 'full-length books'))
     if (hosted > 0) parts.push(`${hosted} NOUN course manuals to download`)
-    if (plays > 0) parts.push(`${plays} Greek plays linked to free full texts`)
+    if (plays > 0) parts.push(`${plays} Greek plays to download`)
     if (parts.length === 0) return 'No documents yet'
     if (parts.length === 1) return parts[0]
     return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`
@@ -213,9 +213,8 @@ export function mergeLibraryMaterials(dbMaterials = []) {
         .filter((b) => !seededPaths.has(b.storage_path || `christian-books/${b.slug}.pdf`))
         .map(toBookCard)
 
-    // Greek plays are external links to Project Gutenberg. They are always
-    // listed: there is no database row or storage object for them to collide
-    // with, and ZikShare does not host the text.
+    // Greek plays are PDFs hosted under /library/drama. They are always listed:
+    // there is no database row for them to collide with.
     const plays = DRAMA_PLAYS.map(toDramaCard)
 
     // NOUN courseware is hosted here, so it is a normal library document with a

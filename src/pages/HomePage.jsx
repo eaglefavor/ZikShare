@@ -123,8 +123,8 @@ export default function HomePage() {
                     </div>
                     <p className="zs-item-card__title">Study library</p>
                     <p className="zs-item-card__desc">
-                        {LIBRARY_LABEL}. Books download as PDF; the plays open free on Project
-                        Gutenberg.
+                        {LIBRARY_LABEL}. Every document downloads as a PDF from this site,
+                        including the Greek plays.
                     </p>
                     <div className="zs-item-card__foot">
                         <span className="zs-item-card__sub">Open instantly</span>

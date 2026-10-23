@@ -5,7 +5,7 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Routes, Route, useParams } from 'react-router-dom'
 import { FRESHER_LIBRARY_PACKS } from '../lib/fresherLibrary'
 import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
-import { DRAMA_PLAYS, EURIPIDES_NOT_ON_GUTENBERG } from '../lib/dramaLibrary'
+import { DRAMA_PLAYS, EURIPIDES_NOT_AVAILABLE } from '../lib/dramaLibrary'
 import { GST_SHELF } from '../lib/gstLibraryData'
 import LibraryPage from '../pages/LibraryPage'
 import BookDetailPage from '../pages/BookDetailPage'
@@ -50,7 +50,7 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
     expect(
       await screen.findByText(
         new RegExp(
-          `^${CHRISTIAN_BOOKS.length} full-length books, ${GST_SHELF.length} NOUN course manuals to download and \\d+ Greek plays linked to free full texts\\.`
+          `^${CHRISTIAN_BOOKS.length} full-length books, ${GST_SHELF.length} NOUN course manuals to download and \\d+ Greek plays to download\\.`
         )
       )
     ).toBeInTheDocument()
@@ -147,44 +147,52 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
     database.getDigitalProducts.mockResolvedValue([])
   })
 
-  it('links every play straight to its free full text on Project Gutenberg', async () => {
+  it('offers every play as a PDF download from this site', async () => {
     render(
       <MemoryRouter>
         <LibraryPage />
       </MemoryRouter>
     )
 
-    const links = await screen.findAllByRole('link', { name: /Read the full text/i })
-    expect(links).toHaveLength(DRAMA_PLAYS.length)
+    const links = await screen.findAllByRole('link', { name: /Download Free PDF/i })
+    // The plays are downloads now too, so they join the NOUN manuals. Books keep
+    // their own "Read book" control, which opens the book page.
+    expect(links).toHaveLength(GST_SHELF.length + DRAMA_PLAYS.length)
+    expect(screen.getAllByRole('link', { name: /Read book/i })).toHaveLength(CHRISTIAN_BOOKS.length)
 
-    for (const link of links) {
-      expect(link.getAttribute('href')).toMatch(/^https:\/\/www\.gutenberg\.org\/ebooks\/\d+$/)
-      expect(link.getAttribute('target')).toBe('_blank')
-      expect(link.getAttribute('rel')).toContain('noopener')
+    const playHrefs = links.map((link) => link.getAttribute('href')).filter((href) => href.includes('/library/drama/'))
+    expect(playHrefs).toHaveLength(DRAMA_PLAYS.length)
+    for (const href of playHrefs) {
+      expect(href).toMatch(/^\/library\/drama\/[a-z0-9-]+\.pdf$/)
     }
 
-    // A play opens on Gutenberg, so it never claims a page count it cannot know:
-    // only the hosted books carry a page count on this page.
+    // Nothing on the shelf sends a reader to another website to read a play.
+    expect(screen.queryByRole('link', { name: /Read the full text/i })).not.toBeInTheDocument()
+    expect(document.querySelector('a[href*="gutenberg.org"]')).toBeNull()
+
+    // Every card states the page count of the file it hands over.
     expect(screen.getByText('Antigone')).toBeInTheDocument()
-    expect(screen.getAllByText(/^\d+ pages$/)).toHaveLength(CHRISTIAN_BOOKS.length + GST_SHELF.length)
+    expect(screen.getAllByText(/^\d+ pages$/)).toHaveLength(
+      CHRISTIAN_BOOKS.length + GST_SHELF.length + DRAMA_PLAYS.length
+    )
   })
 
-  it('says plainly which four plays have no free English text', async () => {
+  it('says plainly which two plays have no public-domain English text', async () => {
     render(
       <MemoryRouter>
         <LibraryPage />
       </MemoryRouter>
     )
 
-    expect(await screen.findByText('Four Euripides plays are not linked here')).toBeInTheDocument()
-    for (const play of EURIPIDES_NOT_ON_GUTENBERG) {
+    expect(await screen.findByText('Two Euripides plays are not on this shelf')).toBeInTheDocument()
+    for (const play of EURIPIDES_NOT_AVAILABLE) {
       // "The Suppliants" is also an Aeschylus play on this page, so the note is
       // checked by presence rather than by uniqueness.
       expect(screen.getAllByText(play.title).length).toBeGreaterThan(0)
       expect(screen.getByText(play.note)).toBeInTheDocument()
     }
-    // ...and does not pretend to link them.
-    expect(screen.queryByRole('link', { name: /Read the full text.*Ion/i })).not.toBeInTheDocument()
+    // ...and does not pretend to offer them: nothing here links out.
+    expect(document.querySelector('a[href*="gutenberg"]')).toBeNull()
   })
 
   it('finds a play by playwright and by its own title', async () => {

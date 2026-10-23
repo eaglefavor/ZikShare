@@ -1,35 +1,39 @@
 /**
- * Greek tragedy shelf — the complete surviving plays of Aeschylus, Sophocles
- * and Euripides, each linked to a free public-domain English translation.
+ * Greek tragedy shelf — the surviving plays of Aeschylus, Sophocles and
+ * Euripides, typeset as PDFs and hosted by ZikShare.
  *
- * ## What this shelf is, and what it is not
+ * ## What this shelf is
  *
- * These are **not** ZikShare PDFs. Nothing here is hosted, copied or downloaded
- * by ZikShare: every card opens the full text on Project Gutenberg, where the
- * file is free and the copyright has expired. The card says so, the link is an
- * external link, and no page count is invented for a document we do not hold.
+ * Every card here downloads a real PDF from this site, cut from a public-domain
+ * English translation and typeset by `scripts/build-drama-pdfs.mjs`. Nothing on
+ * the shelf links out to another website: the reader never leaves ZikShare to
+ * read the play. The Gutenberg edition each PDF came from is credited on the
+ * card and reproduced verbatim inside the file, because Project Gutenberg's
+ * licence travels with the text; the credit is attribution, not a link to read
+ * through.
  *
- * ## How the links were chosen
+ * ## Why thirty-one plays, not thirty-three
  *
- * Each `gutenbergId` was read off Project Gutenberg's own catalogue (author
- * pages for Aeschylus id 2825, Sophocles id 26, Euripides id 1680, plus the
- * individual ebook pages), so the id in this file is the id Gutenberg publishes.
- * A translation is credited only where the ebook page states the translator.
+ * Aeschylus (7), Sophocles (7) and Euripides (19) survive complete. The
+ * Gutenberg catalogue holds public-domain English translations of all but two
+ * Euripides plays, *Ion* and *The Suppliants*, which are listed in
+ * `EURIPIDES_NOT_AVAILABLE` with the reason rather than given a card pointing at
+ * something that does not exist.
  *
- * ## The four plays that are missing, and why
+ * ## Editions
  *
- * Euripides' *Ion*, *The Suppliants*, *Iphigenia at Aulis* and *The Phoenician
- * Women* have no public-domain English translation in the Gutenberg catalogue.
- * They are listed in `EURIPIDES_NOT_ON_GUTENBERG` instead of being given a card
- * with a dead or misleading link — a reader is told they exist and told where
- * they are not.
+ * Each play records the translation actually used and the volume it was cut
+ * from, so a reader can cite it. Where an edition holds all of a playwright's
+ * plays, that one edition is used throughout: Morshead for Aeschylus, Campbell
+ * for Sophocles.
  *
  * ## Synopses
  *
- * The plot summaries are written for ZikShare from the plays themselves. They
- * are not copied from a publisher's blurb, and they do not pretend to replace
- * reading the text.
+ * The plot summaries are written for ZikShare. They are not copied from a
+ * publisher's blurb, and they do not pretend to replace reading the text.
  */
+
+import { DRAMA_SHELF } from './dramaLibraryData.js'
 
 export const DRAMA_DOMAIN = 'Greek Tragedy'
 
@@ -64,7 +68,7 @@ export const AESCHYLUS_PLAYS = [
         greekTitle: 'Πέρσαι',
         author: 'Aeschylus',
         year: 472,
-        translator: null,
+        translator: 'E. D. A. Morshead',
         gutenbergId: 8714,
         collection: 'Four Plays of Aeschylus',
         kind: 'tragedy',
@@ -80,9 +84,9 @@ export const AESCHYLUS_PLAYS = [
         greekTitle: 'Ἑπτὰ ἐπὶ Θήβας',
         author: 'Aeschylus',
         year: 467,
-        translator: null,
-        gutenbergId: 27458,
-        collection: 'Prometheus Bound and the Seven Against Thebes',
+        translator: 'E. D. A. Morshead',
+        gutenbergId: 8714,
+        collection: 'Four Plays of Aeschylus',
         kind: 'tragedy',
         synopsis:
             'The Argive army under Polynices camps outside Thebes with seven champions against seven gates. Inside, King Eteocles posts his own defenders gate by gate, until only one pairing is left: he must face his brother, and both die.',
@@ -96,7 +100,7 @@ export const AESCHYLUS_PLAYS = [
         greekTitle: 'Ἱκέτιδες',
         author: 'Aeschylus',
         year: -463,
-        translator: null,
+        translator: 'E. D. A. Morshead',
         gutenbergId: 8714,
         collection: 'Four Plays of Aeschylus',
         kind: 'tragedy',
@@ -112,7 +116,7 @@ export const AESCHYLUS_PLAYS = [
         greekTitle: 'Ἀγαμέμνων',
         author: 'Aeschylus',
         year: 458,
-        translator: null,
+        translator: 'Gilbert Murray',
         gutenbergId: 14417,
         collection: 'The Agamemnon of Aeschylus',
         kind: 'tragedy',
@@ -128,7 +132,7 @@ export const AESCHYLUS_PLAYS = [
         greekTitle: 'Χοηφόροι',
         author: 'Aeschylus',
         year: 458,
-        translator: null,
+        translator: 'E. D. A. Morshead',
         gutenbergId: 8604,
         collection: 'The House of Atreus',
         kind: 'tragedy',
@@ -144,7 +148,7 @@ export const AESCHYLUS_PLAYS = [
         greekTitle: 'Εὐμενίδες',
         author: 'Aeschylus',
         year: 458,
-        translator: null,
+        translator: 'E. D. A. Morshead',
         gutenbergId: 8604,
         collection: 'The House of Atreus',
         kind: 'tragedy',
@@ -160,9 +164,9 @@ export const AESCHYLUS_PLAYS = [
         greekTitle: 'Προμηθεὺς Δεσμώτης',
         author: 'Aeschylus',
         year: null,
-        translator: null,
-        gutenbergId: 27458,
-        collection: 'Prometheus Bound and the Seven Against Thebes',
+        translator: 'E. D. A. Morshead',
+        gutenbergId: 8714,
+        collection: 'Four Plays of Aeschylus',
         kind: 'tragedy',
         synopsis:
             'Prometheus, chained to a rock at the edge of the world for stealing fire for humanity, defies every visit — from Ocean, from Io, from Hermes — and refuses to say what he knows about Zeus\'s fall. The play ends with him hurled into the earth.',
@@ -183,7 +187,7 @@ export const SOPHOCLES_PLAYS = [
         greekTitle: 'Αἴας',
         author: 'Sophocles',
         year: -445,
-        translator: null,
+        translator: 'Lewis Campbell',
         gutenbergId: 14484,
         collection: 'The Seven Plays in English Verse',
         kind: 'tragedy',
@@ -199,9 +203,9 @@ export const SOPHOCLES_PLAYS = [
         greekTitle: 'Ἀντιγόνη',
         author: 'Sophocles',
         year: -441,
-        translator: null,
-        gutenbergId: 31,
-        collection: 'Plays of Sophocles',
+        translator: 'Lewis Campbell',
+        gutenbergId: 14484,
+        collection: 'The Seven Plays in English Verse',
         kind: 'tragedy',
         synopsis:
             'Creon forbids the burial of the traitor Polynices; his niece Antigone buries him anyway and is walled up alive. By the time Creon changes his mind, Antigone, his son Haemon and his wife Eurydice are all dead.',
@@ -215,7 +219,7 @@ export const SOPHOCLES_PLAYS = [
         greekTitle: 'Τραχίνιαι',
         author: 'Sophocles',
         year: null,
-        translator: null,
+        translator: 'Lewis Campbell',
         gutenbergId: 14484,
         collection: 'The Seven Plays in English Verse',
         kind: 'tragedy',
@@ -231,9 +235,9 @@ export const SOPHOCLES_PLAYS = [
         greekTitle: 'Οἰδίπους Τύραννος',
         author: 'Sophocles',
         year: -429,
-        translator: null,
-        gutenbergId: 27673,
-        collection: 'Oedipus King of Thebes',
+        translator: 'Lewis Campbell',
+        gutenbergId: 14484,
+        collection: 'The Seven Plays in English Verse',
         kind: 'tragedy',
         synopsis:
             'Thebes is dying of plague, and Oedipus swears to find the murderer of the previous king. He interrogates a prophet, a shepherd and finally himself, and learns he killed his father at a crossroads and married his mother. He blinds himself with her brooch.',
@@ -247,7 +251,7 @@ export const SOPHOCLES_PLAYS = [
         greekTitle: 'Ἠλέκτρα',
         author: 'Sophocles',
         year: null,
-        translator: null,
+        translator: 'Lewis Campbell',
         gutenbergId: 14484,
         collection: 'The Seven Plays in English Verse',
         kind: 'tragedy',
@@ -263,7 +267,7 @@ export const SOPHOCLES_PLAYS = [
         greekTitle: 'Φιλοκτήτης',
         author: 'Sophocles',
         year: -409,
-        translator: null,
+        translator: 'Lewis Campbell',
         gutenbergId: 14484,
         collection: 'The Seven Plays in English Verse',
         kind: 'tragedy',
@@ -279,9 +283,9 @@ export const SOPHOCLES_PLAYS = [
         greekTitle: 'Οἰδίπους ἐπὶ Κολωνῷ',
         author: 'Sophocles',
         year: -401,
-        translator: null,
-        gutenbergId: 31,
-        collection: 'Plays of Sophocles',
+        translator: 'Lewis Campbell',
+        gutenbergId: 14484,
+        collection: 'The Seven Plays in English Verse',
         kind: 'tragedy',
         synopsis:
             'The blinded Oedipus, guided by Antigone, arrives as a beggar at a grove outside Athens. Both his sons want him back for the blessing his grave will bring; he curses them, and dies off-stage in a mystery that Theseus alone is allowed to see.',
@@ -302,7 +306,7 @@ export const EURIPIDES_PLAYS = [
         greekTitle: 'Ἄλκηστις',
         author: 'Euripides',
         year: -438,
-        translator: null,
+        translator: 'Gilbert Murray',
         gutenbergId: 10523,
         collection: 'Alcestis',
         kind: 'tragedy',
@@ -318,7 +322,7 @@ export const EURIPIDES_PLAYS = [
         greekTitle: 'Μήδεια',
         author: 'Euripides',
         year: -431,
-        translator: null,
+        translator: 'Gilbert Murray',
         gutenbergId: 35451,
         collection: 'Medea of Euripides',
         kind: 'tragedy',
@@ -334,9 +338,9 @@ export const EURIPIDES_PLAYS = [
         greekTitle: 'Ἡρακλεῖδαι',
         author: 'Euripides',
         year: -430,
-        translator: 'Michael Wodhull',
-        gutenbergId: 77336,
-        collection: 'Hecuba and Other Plays',
+        translator: 'Theodore Alois Buckley',
+        gutenbergId: 15081,
+        collection: 'The Tragedies of Euripides, Volume I',
         kind: 'tragedy',
         synopsis:
             'The children of Heracles, hunted by Eurystheus, reach Athens and throw themselves on the city\'s protection. To save them, Heracles\' old mother offers to die, one of the daughters volunteers instead, and the play ends in a battle in which Athens breaks the pursuit.',
@@ -350,7 +354,7 @@ export const EURIPIDES_PLAYS = [
         greekTitle: 'Ἱππόλυτος',
         author: 'Euripides',
         year: -428,
-        translator: null,
+        translator: 'Gilbert Murray',
         gutenbergId: 8418,
         collection: 'Hippolytus; The Bacchae',
         kind: 'tragedy',
@@ -414,7 +418,7 @@ export const EURIPIDES_PLAYS = [
         greekTitle: 'Τρῳάδες',
         author: 'Euripides',
         year: -415,
-        translator: null,
+        translator: 'Gilbert Murray',
         gutenbergId: 35171,
         collection: 'The Trojan Women of Euripides',
         kind: 'tragedy',
@@ -430,7 +434,7 @@ export const EURIPIDES_PLAYS = [
         greekTitle: 'Ἰφιγένεια ἡ ἐν Ταύροις',
         author: 'Euripides',
         year: -413,
-        translator: null,
+        translator: 'Gilbert Murray',
         gutenbergId: 5063,
         collection: 'The Iphigenia in Tauris of Euripides',
         kind: 'tragedy',
@@ -462,7 +466,7 @@ export const EURIPIDES_PLAYS = [
         greekTitle: 'Ἠλέκτρα',
         author: 'Euripides',
         year: -413,
-        translator: null,
+        translator: 'Gilbert Murray',
         gutenbergId: 14322,
         collection: 'The Electra of Euripides',
         kind: 'tragedy',
@@ -494,7 +498,7 @@ export const EURIPIDES_PLAYS = [
         greekTitle: 'Βάκχαι',
         author: 'Euripides',
         year: -405,
-        translator: null,
+        translator: 'Gilbert Murray',
         gutenbergId: 35173,
         collection: 'The Bacchae of Euripides',
         kind: 'tragedy',
@@ -526,7 +530,7 @@ export const EURIPIDES_PLAYS = [
         greekTitle: 'Ῥῆσος',
         author: 'Euripides',
         year: null,
-        translator: null,
+        translator: 'Gilbert Murray',
         gutenbergId: 35170,
         collection: 'The Rhesus of Euripides',
         kind: 'tragedy',
@@ -536,35 +540,60 @@ export const EURIPIDES_PLAYS = [
             'Transmitted among Euripides\' plays but probably written by someone else in the fourth century. Read it as evidence of how the repertoire was assembled, and as a war play built entirely out of darkness and eavesdropping.',
         topics: ['Rhesus', 'Dolon', 'night raid', 'Iliad', 'authorship'],
     },
+    {
+        slug: 'iphigenia-at-aulis-euripides',
+        title: 'Iphigenia at Aulis',
+        greekTitle: 'Ἰφιγένεια ἡ ἐν Αὐλίδι',
+        author: 'Euripides',
+        year: -405,
+        translator: 'Theodore Alois Buckley',
+        gutenbergId: 15081,
+        collection: 'The Tragedies of Euripides, Volume I',
+        kind: 'tragedy',
+        synopsis:
+            'The Greek fleet sits wind-bound at Aulis. A prophet says the wind will come if Agamemnon sacrifices his daughter Iphigenia, and he sends for her on the promise of a marriage to Achilles. She learns the truth, begs for her life, and then changes her mind and goes to the altar willingly.',
+        context:
+            'Left unfinished at Euripides\' death and staged after it. The reversal in the last third — a girl choosing the death she had just been begging to escape — is the most argued-over scene in Greek tragedy, and the manuscript itself does not agree on how it ends.',
+        topics: ['Iphigenia', 'Agamemnon', 'Achilles', 'sacrifice', 'Aulis'],
+    },
+    {
+        slug: 'phoenician-women-euripides',
+        title: 'The Phoenician Women',
+        greekTitle: 'Φοίνισσαι',
+        author: 'Euripides',
+        year: -409,
+        translator: 'Theodore Alois Buckley',
+        gutenbergId: 15081,
+        collection: 'The Tragedies of Euripides, Volume I',
+        kind: 'tragedy',
+        synopsis:
+            'The war of the two brothers for Thebes, told with Jocasta still alive and trying to stop it. Eteocles refuses to share the throne, Polynices attacks the city, the brothers kill each other, and Creon\'s son dies to save Thebes before Oedipus is driven out.',
+        context:
+            'Euripides retelling the same siege Aeschylus staged in Seven Against Thebes, but from inside the palace and with the family in the room. Read the two together to see how far a fifth-century playwright could push a story his audience already knew line by line.',
+        topics: ['Thebes', 'Eteocles', 'Polynices', 'Jocasta', 'civil war'],
+    },
 ]
 
 /**
  * Euripides plays that survive in Greek but have no public-domain English
- * translation in the Gutenberg catalogue. Listed so a reader knows the whole
- * corpus exists and knows exactly why four cards are absent.
+ * translation in the Gutenberg catalogue. Two of the nineteen, so a reader knows
+ * the whole corpus exists and knows exactly why two cards are absent.
  */
-export const EURIPIDES_NOT_ON_GUTENBERG = [
+export const EURIPIDES_NOT_AVAILABLE = [
     {
         title: 'Ion',
         greekTitle: 'Ἴων',
-        note: 'Creusa is raped by Apollo and abandons the child; years later she nearly kills the temple servant who is her son. No free English translation on Project Gutenberg.',
+        note: 'Creusa is raped by Apollo and abandons the child; years later she nearly kills the temple servant who is her son. No public-domain English translation in the Gutenberg catalogue, so it is not on this shelf.',
     },
     {
         title: 'The Suppliants',
         greekTitle: 'Ἱκέτιδες',
-        note: 'The mothers of the Seven Against Thebes demand the right to bury their sons, and Theseus forces Thebes to allow it. No free English translation on Project Gutenberg.',
-    },
-    {
-        title: 'Iphigenia at Aulis',
-        greekTitle: 'Ἰφιγένεια ἡ ἐν Αὐλίδι',
-        note: 'Agamemnon is told he must sacrifice his daughter to get the fleet to Troy, and does. No free English translation on Project Gutenberg.',
-    },
-    {
-        title: 'The Phoenician Women',
-        greekTitle: 'Φοίνισσαι',
-        note: 'The war of the brothers at Thebes, with Jocasta still alive to watch it. No free English translation on Project Gutenberg.',
+        note: 'The mothers of the Seven Against Thebes demand the right to bury their sons, and Theseus forces Thebes to allow it. No public-domain English translation in the Gutenberg catalogue, so it is not on this shelf.',
     },
 ]
+
+/** Kept under its old name so older imports keep working. */
+export const EURIPIDES_NOT_ON_GUTENBERG = EURIPIDES_NOT_AVAILABLE
 
 export const DRAMA_PLAYS = [
     ...AESCHYLUS_PLAYS,
@@ -572,16 +601,29 @@ export const DRAMA_PLAYS = [
     ...EURIPIDES_PLAYS,
 ]
 
-/** The public page for a play, or the collection that contains it. */
-export function dramaUrl(play) {
+/** The Project Gutenberg edition this PDF was typeset from, for attribution. */
+export function sourceUrl(play) {
     return `${GUTENBERG}/${play.gutenbergId}`
 }
 
-/** Shape the library UI renders. These are links out, never hosted files. */
+/** The hosted PDF for a play, served by ZikShare like any other library file. */
+export function dramaDownloadPath(play) {
+    return `/library/drama/${play.slug}.pdf`
+}
+
+/**
+ * Shape the library UI renders. These are hosted files: the reader downloads a
+ * PDF from ZikShare, so nothing here sends them to another website.
+ */
 export function toDramaCard(play) {
-    const subtitle = play.translator
-        ? `Translated by ${play.translator} · free full text at Project Gutenberg`
-        : 'Free full text at Project Gutenberg'
+    const built = DRAMA_SHELF_BY_SLUG[play.slug]
+    if (!built) {
+        throw new Error(`${play.slug}: no PDF in the drama shelf - run npm run drama:build`)
+    }
+
+    const subtitle = built.translator
+        ? `Translated by ${built.translator} · PDF, ${built.pages} pages · free`
+        : `PDF, ${built.pages} pages · free`
 
     return {
         id: `play-${play.slug}`,
@@ -591,8 +633,10 @@ export function toDramaCard(play) {
         subtitle,
         author: play.author,
         greekTitle: play.greekTitle,
-        translator: play.translator,
-        gutenbergId: play.gutenbergId,
+        translator: built.translator,
+        sourceEdition: play.collection,
+        sourceUrl: sourceUrl(play),
+        gutenbergId: built.gutenbergId,
         collection: play.collection,
         year: play.year,
         kind: play.kind,
@@ -606,15 +650,14 @@ export function toDramaCard(play) {
         domain: DRAMA_DOMAIN,
         priceKobo: 0,
         is_free: true,
-        // No download_path: ZikShare does not host this text.
-        download_path: null,
-        external_url: dramaUrl(play),
-        page_count: null,
-        file_size_bytes: null,
+        download_path: built.download_path,
+        external_url: null,
+        page_count: built.pages,
+        file_size_bytes: built.bytes,
         description: play.synopsis,
         is_official: true,
         isDrama: true,
-        isExternal: true,
+        isExternal: false,
         isBook: false,
         isFresherPdf: false,
     }
@@ -623,3 +666,8 @@ export function toDramaCard(play) {
 export function findPlayBySlug(slug) {
     return DRAMA_PLAYS.find((play) => play.slug === slug) || null
 }
+
+/** The generated catalogue, keyed by play slug. */
+export const DRAMA_SHELF_BY_SLUG = Object.fromEntries(
+    DRAMA_SHELF.map((entry) => [entry.slug, entry])
+)

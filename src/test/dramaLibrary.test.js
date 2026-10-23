@@ -4,34 +4,38 @@ import {
     DRAMA_AUTHORS,
     DRAMA_DOMAIN,
     DRAMA_PLAYS,
-    EURIPIDES_NOT_ON_GUTENBERG,
+    EURIPIDES_NOT_AVAILABLE,
     EURIPIDES_PLAYS,
+    DRAMA_SHELF_BY_SLUG,
     SOPHOCLES_PLAYS,
     findPlayBySlug,
     toDramaCard,
 } from '../lib/dramaLibrary'
 import { mergeLibraryMaterials, libraryCounts } from '../lib/fresherLibrary'
+import fs from 'node:fs'
+import path from 'node:path'
+import crypto from 'node:crypto'
+
+const PUBLIC_DIR = path.join(process.cwd(), 'public')
 
 describe('Greek tragedy shelf - the corpus', () => {
     it('holds every surviving play of the three tragedians', () => {
         expect(AESCHYLUS_PLAYS).toHaveLength(7)
         expect(SOPHOCLES_PLAYS).toHaveLength(7)
-        expect(EURIPIDES_PLAYS).toHaveLength(15)
-        expect(DRAMA_PLAYS).toHaveLength(29)
+        expect(EURIPIDES_PLAYS).toHaveLength(17)
+        expect(DRAMA_PLAYS).toHaveLength(31)
         expect(DRAMA_AUTHORS.map((a) => a.name)).toEqual(['Aeschylus', 'Sophocles', 'Euripides'])
     })
 
-    it('accounts for the four Euripides plays it does not link', () => {
-        // 15 linked + 4 recorded without a link = the 19 plays that survive.
-        expect(EURIPIDES_PLAYS.length + EURIPIDES_NOT_ON_GUTENBERG.length).toBe(19)
-        expect(EURIPIDES_NOT_ON_GUTENBERG.map((p) => p.title)).toEqual([
+    it('accounts for the two Euripides plays it cannot host', () => {
+        // 17 hosted + 2 recorded without a PDF = the 19 plays that survive.
+        expect(EURIPIDES_PLAYS.length + EURIPIDES_NOT_AVAILABLE.length).toBe(19)
+        expect(EURIPIDES_NOT_AVAILABLE.map((p) => p.title)).toEqual([
             'Ion',
             'The Suppliants',
-            'Iphigenia at Aulis',
-            'The Phoenician Women',
         ])
-        for (const gap of EURIPIDES_NOT_ON_GUTENBERG) {
-            expect(gap.note).toMatch(/No free English translation/i)
+        for (const gap of EURIPIDES_NOT_AVAILABLE) {
+            expect(gap.note).toMatch(/No public-domain English translation/i)
         }
     })
 
@@ -54,21 +58,45 @@ describe('Greek tragedy shelf - the corpus', () => {
     })
 })
 
-describe('Greek tragedy shelf - every card is honest', () => {
-    it('links to a Project Gutenberg ebook and never to a hosted file', () => {
+describe('Greek tragedy shelf - every card is a real download', () => {
+    it('gives every card a hosted PDF that exists, with its own page count', () => {
         for (const play of DRAMA_PLAYS) {
-            expect(Number.isInteger(play.gutenbergId), `${play.slug} needs an ebook id`).toBe(true)
-            expect(play.gutenbergId).toBeGreaterThan(0)
-
             const card = toDramaCard(play)
-            expect(card.external_url).toBe(`https://www.gutenberg.org/ebooks/${play.gutenbergId}`)
-            // Nothing on this shelf is a ZikShare download.
-            expect(card.download_path).toBeNull()
-            expect(card.isExternal).toBe(true)
-            // No invented page count or file size for a file we do not hold.
-            expect(card.page_count).toBeNull()
-            expect(card.file_size_bytes).toBeNull()
+            const built = DRAMA_SHELF_BY_SLUG[play.slug]
+
+            expect(built, `${play.slug} has no PDF in the shelf`).toBeTruthy()
+            expect(card.download_path).toBe(`/library/drama/${play.slug}.pdf`)
+            // Hosted, not linked: nothing on this shelf opens another website.
+            expect(card.isExternal).toBe(false)
+            expect(card.external_url).toBeNull()
             expect(card.domain).toBe(DRAMA_DOMAIN)
+
+            const file = path.join(PUBLIC_DIR, card.download_path)
+            expect(fs.existsSync(file), `${play.slug} PDF is missing`).toBe(true)
+            const bytes = fs.readFileSync(file)
+            expect(bytes.subarray(0, 5).toString()).toBe('%PDF-')
+            expect(bytes.length).toBe(card.file_size_bytes)
+            expect(card.page_count).toBeGreaterThan(20)
+        }
+    })
+
+    it('records a checksum for every PDF, and the file on disk still matches it', () => {
+        for (const play of DRAMA_PLAYS) {
+            const built = DRAMA_SHELF_BY_SLUG[play.slug]
+            const bytes = fs.readFileSync(path.join(PUBLIC_DIR, built.download_path))
+            const digest = crypto.createHash('sha256').update(bytes).digest('hex')
+            expect(digest, `${play.slug} PDF has changed since it was catalogued`).toBe(built.sha256)
+        }
+    })
+
+    it('attributes each PDF to the translation and edition it was cut from', () => {
+        for (const play of DRAMA_PLAYS) {
+            const built = DRAMA_SHELF_BY_SLUG[play.slug]
+            expect(built.translator, `${play.slug} has no translator`).toBeTruthy()
+            expect(built.gutenbergId).toBe(play.gutenbergId)
+            expect(toDramaCard(play).subtitle).toContain(`Translated by ${built.translator}`)
+            expect(toDramaCard(play).subtitle).toContain(`${built.pages} pages`)
+            expect(play.collection).toBeTruthy()
         }
     })
 
@@ -84,20 +112,6 @@ describe('Greek tragedy shelf - every card is honest', () => {
         }
     })
 
-    it('credits a translator only where one is recorded, and names the collection', () => {
-        const credited = DRAMA_PLAYS.filter((play) => play.translator)
-        expect(credited.length).toBeGreaterThan(0)
-        for (const play of credited) {
-            expect(toDramaCard(play).subtitle).toContain(`Translated by ${play.translator}`)
-        }
-        for (const play of DRAMA_PLAYS.filter((p) => !p.translator)) {
-            expect(toDramaCard(play).subtitle).toBe('Free full text at Project Gutenberg')
-        }
-        for (const play of DRAMA_PLAYS) {
-            expect(play.collection).toBeTruthy()
-        }
-    })
-
     it('marks Cyclops as the only satyr play', () => {
         const satyr = DRAMA_PLAYS.filter((play) => play.kind === 'satyr')
         expect(satyr.map((play) => play.title)).toEqual(['Cyclops'])
@@ -110,7 +124,7 @@ describe('Greek tragedy shelf - every card is honest', () => {
             'The Libation Bearers',
             'The Eumenides',
         ])
-        // The trilogy is only complete as a trilogy: all three share one text.
+        // The trilogy is only complete as a trilogy: all three share one edition.
         expect(new Set(oresteia.map((play) => play.gutenbergId)).size).toBeLessThan(3)
     })
 })

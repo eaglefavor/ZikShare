@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Filter, Search, ShieldCheck, X } from 'lucide-react'
 import { getDigitalProducts } from '../lib/database'
 import { UNIZIK_FACULTIES, ACADEMIC_LEVELS, ACADEMIC_MATERIAL_TYPES } from '../lib/categories'
-import { EURIPIDES_NOT_ON_GUTENBERG } from '../lib/dramaLibrary'
+import { EURIPIDES_NOT_AVAILABLE } from '../lib/dramaLibrary'
 import {
     FRESHER_LIBRARY_DOMAINS,
     libraryCountLabel,
@@ -96,7 +96,7 @@ export default function LibraryPage() {
             navigate(`/library/books/${item.slug}`)
             return
         }
-        // Greek plays are read on Project Gutenberg; ZikShare holds no copy.
+        // Everything on the shelf is a file ZikShare hosts; open it in a new tab.
         window.open(item.external_url || item.download_path, '_blank', 'noopener,noreferrer')
     }
 
@@ -113,7 +113,7 @@ export default function LibraryPage() {
                     </>
                 }
                 title="UNIZIK Digital Library"
-                lead={`${COUNT_LABEL}. Everything is free — no sign-in, no payment step. Manuals and books download as PDF; the Greek plays open in full on Project Gutenberg.`}
+                lead={`${COUNT_LABEL}. Everything is free — no sign-in, no payment step. Manuals, books and Greek plays all download as PDF from this page.`}
             />
 
             {/* ── One toolbar, always in reach ──────────────────────────── */}
@@ -218,15 +218,15 @@ export default function LibraryPage() {
                 </section>
             )}
 
-            {/* ── The four plays that have no free English text ──────────── */}
+            {/* ── The two plays with no public-domain English text ───────── */}
             <section className="zs-section" aria-labelledby="missing-plays">
                 <SectionHeading
                     id="missing-plays"
-                    title="Four Euripides plays are not linked here"
-                    description="They survive in Greek, but no public-domain English translation of them is free to read — so they get no card rather than a dead link."
+                    title="Two Euripides plays are not on this shelf"
+                    description="All nineteen of his plays survive in Greek. No public-domain English translation of these two is free to reproduce, so they are named here instead of being given a card that opens nothing."
                 />
                 <div className="zs-grid">
-                    {EURIPIDES_NOT_ON_GUTENBERG.map((play) => (
+                    {EURIPIDES_NOT_AVAILABLE.map((play) => (
                         <div key={play.title} className="zs-panel" style={{ margin: 0 }}>
                             <strong style={{ display: 'block', fontSize: '0.9rem' }}>{play.title}</strong>
                             <span style={{ display: 'block', fontSize: '0.72rem', color: '#94A3B8', margin: '0.15rem 0 0.5rem' }}>
@@ -246,9 +246,10 @@ export default function LibraryPage() {
                     <strong>NOUN course manuals</strong> are published by the National Open University of
                     Nigeria and hosted here free of charge; NOUN permits educational use and prohibits
                     commercial use. <strong>Books</strong> are third-party works: copyright stays with the
-                    author and publisher. <strong>Greek plays</strong> leave this site — each card opens a
-                    public-domain translation on Project Gutenberg, which hosts the file. Always confirm
-                    your current outline with your department.
+                    author and publisher. <strong>Greek plays</strong> are public-domain English translations,
+                    typeset as PDFs and hosted here too; the edition each one came from is credited on the
+                    card and printed inside the file. Always confirm your current outline with your
+                    department.
                 </p>
             </div>
 

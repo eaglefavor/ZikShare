@@ -15,6 +15,7 @@ import { libraryCountLabel, libraryCounts, mergeLibraryMaterials } from '../lib/
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
+import { MODERN_PLAYS } from '../lib/modernLibrary'
 
 const PUBLIC_DIR = path.join(process.cwd(), 'public')
 
@@ -158,6 +159,7 @@ describe('Medieval theatre shelf - how it appears in the library', () => {
                 counts.roman +
                 counts.medieval +
                 counts.renaissance +
+                counts.modern +
                 counts.hosted
         )
         expect(libraryCountLabel(counts)).toContain(

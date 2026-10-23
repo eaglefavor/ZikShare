@@ -23,7 +23,8 @@
     "drama:build": "node scripts/build-drama-pdfs.mjs",
     "roman:build": "node scripts/build-roman-pdfs.mjs",
     "medieval:build": "node scripts/build-medieval-pdfs.mjs",
-    "renaissance:build": "node scripts/build-renaissance-pdfs.mjs"
+    "renaissance:build": "node scripts/build-renaissance-pdfs.mjs",
+    "modern:build": "node scripts/build-modern-pdfs.mjs"
   },
   "dependencies": {
     "@pdfsmaller/pdf-encrypt": "^1.2.0",

@@ -13,6 +13,7 @@ import { GST_SHELF } from '../lib/gstLibraryData'
 import LibraryPage from '../pages/LibraryPage'
 import BookDetailPage from '../pages/BookDetailPage'
 import * as database from '../lib/database'
+import { MODERN_PLAYS, MODERN_UNHOSTABLE } from '../lib/modernLibrary'
 
 vi.mock('../lib/database', () => ({
   getDigitalProducts: vi.fn(),
@@ -55,8 +56,9 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
         new RegExp(
           `^${CHRISTIAN_BOOKS.length} full-length books, ${GST_SHELF.length} NOUN course manuals to download, ` +
             `\\d+ Greek plays to download, ${ROMAN_PLAYS.length} Roman plays to download, ` +
-            `${MEDIEVAL_PLAYS.length} medieval plays to download and ` +
-            `${RENAISSANCE_PLAYS.length} Renaissance plays to download\\.`
+            `${MEDIEVAL_PLAYS.length} medieval plays to download, ` +
+            `${RENAISSANCE_PLAYS.length} Renaissance plays to download and ` +
+            `${MODERN_PLAYS.length} modern plays to download\\.`
         )
       )
     ).toBeInTheDocument()
@@ -146,6 +148,7 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
       ROMAN_PLAYS.length +
       MEDIEVAL_PLAYS.length +
       RENAISSANCE_PLAYS.length +
+      MODERN_PLAYS.length +
       GST_SHELF.length
 
     openFilters()
@@ -175,7 +178,8 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
         DRAMA_PLAYS.length +
         ROMAN_PLAYS.length +
         MEDIEVAL_PLAYS.length +
-        RENAISSANCE_PLAYS.length
+        RENAISSANCE_PLAYS.length +
+        MODERN_PLAYS.length
     )
     expect(screen.getAllByRole('link', { name: /Read book/i })).toHaveLength(CHRISTIAN_BOOKS.length)
 
@@ -197,7 +201,8 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
         DRAMA_PLAYS.length +
         ROMAN_PLAYS.length +
         MEDIEVAL_PLAYS.length +
-        RENAISSANCE_PLAYS.length
+        RENAISSANCE_PLAYS.length +
+        MODERN_PLAYS.length
     )
   })
 
@@ -299,10 +304,44 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
     expect(screen.getByText('Shakespeare: tragedies')).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /James Shirley/ })).toBeInTheDocument()
 
-    expect(await screen.findByText('What the Renaissance shelf leaves out')).toBeInTheDocument()
+    expect(await screen.findByText('What the play shelves leave out')).toBeInTheDocument()
     for (const gap of RENAISSANCE_NOT_AVAILABLE) {
       expect(
         screen.getByText(new RegExp(`^${gap.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`))
+      ).toBeInTheDocument()
+    }
+  })
+
+  it('offers every modern play as a download from this site, grouped by movement', async () => {
+    const { container } = render(
+      <MemoryRouter>
+        <LibraryPage />
+      </MemoryRouter>
+    )
+
+    const links = await screen.findAllByRole('link', { name: /Download Free PDF/i })
+    const modernHrefs = links
+      .map((link) => link.getAttribute('href'))
+      .filter((href) => href.includes('/library/modern/'))
+    expect(modernHrefs).toHaveLength(MODERN_PLAYS.length)
+    for (const href of modernHrefs) {
+      expect(href).toMatch(/^\/library\/modern\/[a-z0-9-]+\.pdf$/)
+    }
+
+    // No card sends a reader to Gutenberg to read the play it advertises.
+    expect(container.querySelector('a[href*="gutenberg.org"]')).toBeNull()
+    expect(screen.getByText('A Doll\'s House')).toBeInTheDocument()
+    expect(screen.getByText('Miss Julie')).toBeInTheDocument()
+    expect(screen.getByText('R.U.R. (Rossum\u2019s Universal Robots)')).toBeInTheDocument()
+
+    // The shelf is listed by movement, not as one wall of cards.
+    expect(screen.getByText('Realism')).toBeInTheDocument()
+    expect(screen.getByText('Symbolism')).toBeInTheDocument()
+
+    // The movements that cannot be hosted are named, with the reason.
+    for (const gap of MODERN_UNHOSTABLE) {
+      expect(
+        screen.getByText(`${gap.title} (${gap.movement}).`, { exact: false })
       ).toBeInTheDocument()
     }
   })

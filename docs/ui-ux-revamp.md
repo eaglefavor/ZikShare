@@ -492,3 +492,49 @@ a rough one; a stray `<` left by Perseus's transcriber is removed.
 **Plautus is prose here; Seneca is verse.** Riley translated Plautus into plain
 prose for readers who wanted the sense, and the PDF says so instead of implying a
 verse translation. Miller's Seneca is verse and keeps its line breaks.
+
+## Phase 12 — The medieval theatre shelf
+
+Seventeen plays, hosted at `/library/medieval/<slug>.pdf`, built by
+`scripts/build-medieval-pdfs.mjs` (`npm run medieval:build`). Nothing on the
+shelf links out.
+
+| Tradition | Plays | Text |
+| --- | --- | --- |
+| Morality | *Everyman*; Bale's *God's Promises* (1538) | Everyman's Library text, ed. Ernest Rhys (1909) |
+| Chester cycle | *Noah's Flood*; *Abraham, Melchisedec and Isaac* | same volume |
+| Wakefield cycle | *The Second Shepherds' Play*; *The Crucifixion*; *The Harrowing of Hell* | same volume |
+| Coventry cycle | *The Coventry Nativity Play* | same volume |
+| Cornish cycle | *The Three Maries*; *Mary Magdalene and the Apostles*; *St George and the Dragon* | same volume |
+| Hrotsvitha of Gandersheim | all six plays | Christopher St John (1923) |
+
+**Two volumes hold the whole shelf**, and both are on Gutenberg: #19481 for the
+English plays, #59770 for Hrotsvitha. A temporary workflow fetched them, because
+the sandbox cannot reach Gutenberg directly; it has been deleted, and the texts
+now sit in `library/medieval/source/`.
+
+**The glossary problem, solved rather than skipped.** #19481 prints one numbered
+word-list at the back of the book covering every play — 631 glosses, for words
+like *rade* ("quickly") and *take on loft* ("sing out"). Cutting a play out of
+the volume would have left its `[86]` markers pointing at nothing, so the builder
+reads the glossary once, works out which numbers appear in each play, and prints
+exactly those at the end of that play. A gloss is never orphaned and no play
+carries 600 notes it does not use.
+
+**Seven plays are named, not faked.** The York cycle, the N-Town plays, *The
+Castle of Perseverance*, *Mankind*, Hildegard's *Ordo Virtutum*, Adam de la
+Halle's *Robin et Marion* and Lydgate's *Disguising at Hertford* all belong on a
+medieval shelf and none of them can be hosted: they survive only in Middle
+English spelling or in modern editions still in copyright. They are listed on the
+library page with the reason under the heading "Seven medieval plays are not on
+this shelf".
+
+**Bale is labelled as Bale.** *God's Promises* was written in 1538, after the
+break with Rome, and is a Protestant interlude rather than a medieval pageant. It
+is on the shelf because it is in the volume and because it is where the morality
+tradition ends; its card says so rather than filing it under "medieval" and
+leaving the reader to find out.
+
+**St George is labelled as a survival.** The Cornish mummers' play was recorded
+in the nineteenth century, four hundred years after the cycles were suppressed.
+It is the only folk play in the library, and its card says what it is.

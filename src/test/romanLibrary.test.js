@@ -148,7 +148,12 @@ describe('Roman theatre shelf - how it appears in the library', () => {
         const counts = libraryCounts()
         expect(counts.roman).toBe(ROMAN_PLAYS.length)
         expect(counts.total).toBe(
-            counts.packs + counts.books + counts.plays + counts.roman + counts.hosted
+            counts.packs +
+                counts.books +
+                counts.plays +
+                counts.roman +
+                counts.medieval +
+                counts.hosted
         )
         expect(libraryCountLabel(counts)).toContain(`${ROMAN_PLAYS.length} Roman plays to download`)
     })

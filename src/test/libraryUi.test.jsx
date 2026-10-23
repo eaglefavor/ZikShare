@@ -7,6 +7,7 @@ import { FRESHER_LIBRARY_PACKS } from '../lib/fresherLibrary'
 import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
 import { DRAMA_PLAYS, EURIPIDES_NOT_AVAILABLE } from '../lib/dramaLibrary'
 import { ROMAN_PLAYS } from '../lib/romanLibrary'
+import { MEDIEVAL_NOT_AVAILABLE, MEDIEVAL_PLAYS } from '../lib/medievalLibrary'
 import { GST_SHELF } from '../lib/gstLibraryData'
 import LibraryPage from '../pages/LibraryPage'
 import BookDetailPage from '../pages/BookDetailPage'
@@ -52,7 +53,8 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
       await screen.findByText(
         new RegExp(
           `^${CHRISTIAN_BOOKS.length} full-length books, ${GST_SHELF.length} NOUN course manuals to download, ` +
-            `\\d+ Greek plays to download and ${ROMAN_PLAYS.length} Roman plays to download\\.`
+            `\\d+ Greek plays to download, ${ROMAN_PLAYS.length} Roman plays to download ` +
+            `and ${MEDIEVAL_PLAYS.length} medieval plays to download\\.`
         )
       )
     ).toBeInTheDocument()
@@ -140,6 +142,7 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
       CHRISTIAN_BOOKS.length +
       DRAMA_PLAYS.length +
       ROMAN_PLAYS.length +
+      MEDIEVAL_PLAYS.length +
       GST_SHELF.length
 
     openFilters()
@@ -164,7 +167,9 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
     const links = await screen.findAllByRole('link', { name: /Download Free PDF/i })
     // The plays are downloads now too, so they join the NOUN manuals. Books keep
     // their own "Read book" control, which opens the book page.
-    expect(links).toHaveLength(GST_SHELF.length + DRAMA_PLAYS.length + ROMAN_PLAYS.length)
+    expect(links).toHaveLength(
+      GST_SHELF.length + DRAMA_PLAYS.length + ROMAN_PLAYS.length + MEDIEVAL_PLAYS.length
+    )
     expect(screen.getAllByRole('link', { name: /Read book/i })).toHaveLength(CHRISTIAN_BOOKS.length)
 
     const playHrefs = links.map((link) => link.getAttribute('href')).filter((href) => href.includes('/library/drama/'))
@@ -180,7 +185,11 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
     // Every card states the page count of the file it hands over.
     expect(screen.getByText('Antigone')).toBeInTheDocument()
     expect(screen.getAllByText(/^\d+ pages$/)).toHaveLength(
-      CHRISTIAN_BOOKS.length + GST_SHELF.length + DRAMA_PLAYS.length + ROMAN_PLAYS.length
+      CHRISTIAN_BOOKS.length +
+        GST_SHELF.length +
+        DRAMA_PLAYS.length +
+        ROMAN_PLAYS.length +
+        MEDIEVAL_PLAYS.length
     )
   })
 
@@ -223,6 +232,35 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
     expect(container.querySelector('a[href*="gutenberg.org"]')).toBeNull()
     expect(container.querySelector('a[href*="perseus.tufts.edu"]')).toBeNull()
     expect(screen.getByText('Thyestes')).toBeInTheDocument()
+  })
+
+  it('offers every medieval play as a download from this site', async () => {
+    const { container } = render(
+      <MemoryRouter>
+        <LibraryPage />
+      </MemoryRouter>
+    )
+
+    const links = await screen.findAllByRole('link', { name: /Download Free PDF/i })
+    const medievalHrefs = links
+      .map((link) => link.getAttribute('href'))
+      .filter((href) => href.includes('/library/medieval/'))
+    expect(medievalHrefs).toHaveLength(MEDIEVAL_PLAYS.length)
+    for (const href of medievalHrefs) {
+      expect(href).toMatch(/^\/library\/medieval\/[a-z0-9-]+\.pdf$/)
+    }
+
+    expect(container.querySelector('a[href*="gutenberg.org"]')).toBeNull()
+    expect(screen.getByText('Everyman')).toBeInTheDocument()
+    expect(screen.getByText("The Second Shepherds' Play")).toBeInTheDocument()
+
+    // The plays that cannot be hosted are named, with the reason, not hidden.
+    expect(
+      await screen.findByText('Seven medieval plays are not on this shelf')
+    ).toBeInTheDocument()
+    for (const gap of MEDIEVAL_NOT_AVAILABLE) {
+      expect(screen.getByText(new RegExp(`^${gap.title.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`))).toBeInTheDocument()
+    }
   })
 
   it('finds a play by playwright and by its own title', async () => {

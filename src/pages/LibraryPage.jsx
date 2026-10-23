@@ -237,7 +237,14 @@ export default function LibraryPage() {
                                         {group.name}
                                         <span style={{ fontWeight: 500, letterSpacing: 0, textTransform: 'none' }}>
                                             {' '}
-                                            · {group.items.length} {group.items.length === 1 ? 'play' : 'plays'}
+                                            · {group.items.length}{' '}
+                                            {shelf.name === THEATRE_DOMAIN
+                                                ? group.items.length === 1
+                                                    ? 'title'
+                                                    : 'titles'
+                                                : group.items.length === 1
+                                                  ? 'play'
+                                                  : 'plays'}
                                         </span>
                                     </h3>
                                     <div className="zs-grid">

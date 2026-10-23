@@ -1215,11 +1215,6 @@ export const MODERN_UNHOSTABLE = [
         title: 'The German expressionists',
         note: 'Georg Kaiser (Gas), Ernst Toller (Mass Man), Reinhard Sorge and Walter Hasenclever are the playwrights who made expressionism a movement after Strindberg. Their plays are in copyright, and Gutenberg carries none of them in English.',
     },
-    {
-        movement: 'Symbolism',
-        title: 'Ibsen, Peer Gynt and Brand',
-        note: 'Both verse plays are on Gutenberg, in Archer\u2019s translation, but as volumes of the Collected Works whose text is broken up by running heads and introductory essays. They are not on this shelf yet rather than cut badly.',
-    },
 ]
 
 const BUILT = Object.fromEntries(MODERN_SHELF.map((entry) => [entry.slug, entry]))

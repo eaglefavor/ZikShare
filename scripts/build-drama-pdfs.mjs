@@ -21,7 +21,8 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
-import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { PDFDocument } from 'pdf-lib'
+import { ACCENTS, buildPlayPdf } from './lib/play-pdf.mjs'
 import { AESCHYLUS_PLAYS, SOPHOCLES_PLAYS, EURIPIDES_PLAYS } from '../src/lib/dramaLibrary.js'
 
 const ROOT = process.cwd()
@@ -204,135 +205,13 @@ function playRange(play, source) {
 
 /* ── PDF layout ───────────────────────────────────────────────────────────── */
 
-const INK = rgb(0.1, 0.1, 0.12)
-const MUTED = rgb(0.42, 0.45, 0.5)
-const ACCENT = rgb(0.42, 0.12, 0.24)
-
-function wrap(text, font, size, maxWidth) {
-    const out = []
-    for (const paragraph of text.split('\n')) {
-        const words = paragraph.trim().split(/\s+/).filter(Boolean)
-        if (words.length === 0) { out.push(''); continue }
-        let line = ''
-        for (const word of words) {
-            const candidate = line ? `${line} ${word}` : word
-            if (font.widthOfTextAtSize(candidate, size) <= maxWidth) line = candidate
-            else { if (line) out.push(line); line = word }
-            // A single word longer than the line: break it rather than overflow.
-            while (font.widthOfTextAtSize(line, size) > maxWidth && line.length > 1) {
-                let cut = line.length
-                while (cut > 1 && font.widthOfTextAtSize(line.slice(0, cut), size) > maxWidth) cut -= 1
-                out.push(line.slice(0, cut))
-                line = line.slice(cut)
-            }
-        }
-        if (line) out.push(line)
-    }
-    return out
-}
-
-async function buildPdf(play, source, bodyText) {
-    const doc = await PDFDocument.create()
-    const serif = await doc.embedFont(StandardFonts.TimesRoman)
-    const serifBold = await doc.embedFont(StandardFonts.TimesRomanBold)
-    const serifItalic = await doc.embedFont(StandardFonts.TimesRomanItalic)
-    const mono = await doc.embedFont(StandardFonts.Courier)
-
-    doc.setTitle(`${play.title} - ${play.author}`)
-    doc.setAuthor(play.author)
-    doc.setSubject(`Translated by ${play.translator || 'an unrecorded translator'}; public domain`)
-    doc.setProducer('ZikShare library')
-
-    /* Cover */
-    const cover = doc.addPage([A4.width, A4.height])
-    let y = A4.height - 120
-    cover.drawText('ZIKSHARE LIBRARY', { x: MARGIN, y, size: 9, font: serifBold, color: ACCENT })
-    cover.drawText('GREEK TRAGEDY', { x: MARGIN, y: y - 14, size: 8, font: serif, color: MUTED })
-    y -= 70
-    cover.drawText(play.author.toUpperCase(), { x: MARGIN, y, size: 12, font: serifBold, color: MUTED })
-    y -= 40
-
-    const titleLines = wrap(play.title, serifBold, 30, WIDTH)
-    for (const line of titleLines) {
-        cover.drawText(line, { x: MARGIN, y, size: 30, font: serifBold, color: INK })
-        y -= 38
-    }
-
-    if (play.year) {
-        y -= 6
-        cover.drawText(`${Math.abs(play.year)} BC`, { x: MARGIN, y, size: 11, font: serif, color: MUTED })
-        y -= 22
-    }
-
-    y -= 10
-    cover.drawLine({ start: { x: MARGIN, y }, end: { x: A4.width - MARGIN, y }, thickness: 1, color: ACCENT })
-    y -= 26
-
-    const meta = [
-        ['Playwright', play.author],
-        ['Translated by', play.translator || 'not recorded in this edition'],
-        ['Source text', `Project Gutenberg eBook #${source.spec.file}`],
-        ['Language', 'English'],
-        ['Rights', 'Public domain'],
-    ]
-    for (const [label, value] of meta) {
-        cover.drawText(label, { x: MARGIN, y, size: 9, font: serifBold, color: MUTED })
-        const valueLines = wrap(value, serif, 10.5, WIDTH - 110)
-        valueLines.forEach((line, index) => {
-            cover.drawText(line, { x: MARGIN + 110, y: y - index * 13, size: 10.5, font: serif, color: INK })
-        })
-        y -= 13 * Math.max(1, valueLines.length) + 8
-    }
-
-    y -= 14
-    const note = [
-        'This PDF was typeset by ZikShare from the Project Gutenberg plain-text edition named above.',
-        'The play is in the public domain and ZikShare charges nothing for it.',
-        '',
-        'Project Gutenberg\'s header and licence, and its closing notice, are reproduced unchanged',
-        'after this page, because their terms travel with the text.',
-        '',
-        play.context || '',
-    ].filter(Boolean)
-    for (const line of note) {
-        const wrapped = line ? wrap(line, serifItalic, 9.5, WIDTH) : ['']
-        for (const text of wrapped) {
-            cover.drawText(text, { x: MARGIN, y, size: 9.5, font: serifItalic, color: MUTED })
-            y -= 14
-        }
-    }
-
-    /* A page writer for the body */
-    let page = doc.addPage([A4.width, A4.height])
-    let cursor = A4.height - MARGIN
-    const addPage = () => {
-        page = doc.addPage([A4.width, A4.height])
-        cursor = A4.height - MARGIN
-        return page
-    }
-    const writeBlock = (text, { font, size, leading, gap = 6, colour = INK, indent = 0 }) => {
-        const lines = wrap(text, font, size, WIDTH - indent)
-        for (const line of lines) {
-            if (cursor < MARGIN + 40) addPage()
-            if (line) page.drawText(line, { x: MARGIN + indent, y: cursor, size, font, color: colour })
-            cursor -= leading
-        }
-        cursor -= gap
-    }
-
-    writeBlock(source.header.join('\n'), { font: mono, size: 7.5, leading: 9.5, colour: MUTED })
-    writeBlock(bodyText, { font: serif, size: 10.5, leading: 14.5, gap: 2 })
-    writeBlock(source.footer.join('\n'), { font: mono, size: 7.5, leading: 9.5, colour: MUTED })
-
-    /* Running footer on every page after the cover */
-    const pages = doc.getPages()
-    pages.slice(1).forEach((p, index) => {
-        const label = `ZikShare library  -  ${play.author}, ${play.title}  -  ${index + 2}`
-        p.drawText(clean(label), { x: MARGIN, y: 28, size: 7.5, font: serif, color: MUTED })
-    })
-
-    return doc.save()
-}
+const COVER_NOTE = [
+    'This PDF was typeset by ZikShare from the Project Gutenberg plain-text edition named above.',
+    'The play is in the public domain and ZikShare charges nothing for it.',
+    '',
+    "Project Gutenberg's header and licence, and its closing notice, are reproduced unchanged",
+    'after this page, because their terms travel with the text.',
+]
 
 /* ── Build ────────────────────────────────────────────────────────────────── */
 
@@ -358,7 +237,24 @@ for (const play of PLAYS) {
         throw new Error(`${play.slug}: only ${words} words extracted - the cut is wrong`)
     }
 
-    const bytes = await buildPdf(entry, source, text)
+    const bytes = await buildPlayPdf(
+        { ...entry, dateLabel: entry.year ? `${Math.abs(entry.year)} BC` : null },
+        {
+            shelfLabel: 'GREEK TRAGEDY',
+            accent: ACCENTS.greek,
+            meta: [
+                ['Playwright', entry.author],
+                ['Translated by', entry.translator || 'not recorded in this edition'],
+                ['Source text', `Project Gutenberg eBook #${spec.file}`],
+                ['Language', 'English'],
+                ['Rights', 'Public domain'],
+            ],
+            coverNote: [...COVER_NOTE, '', entry.context || ''].filter(Boolean),
+            headerText: source.header.join('\n'),
+            bodyText: text,
+            footerText: source.footer.join('\n'),
+        }
+    )
     const file = path.join(OUT_DIR, `${play.slug}.pdf`)
     fs.writeFileSync(file, bytes)
 

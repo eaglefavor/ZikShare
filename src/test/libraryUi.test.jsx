@@ -6,6 +6,7 @@ import { MemoryRouter, Routes, Route, useParams } from 'react-router-dom'
 import { FRESHER_LIBRARY_PACKS } from '../lib/fresherLibrary'
 import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
 import { DRAMA_PLAYS, EURIPIDES_NOT_AVAILABLE } from '../lib/dramaLibrary'
+import { ROMAN_PLAYS } from '../lib/romanLibrary'
 import { GST_SHELF } from '../lib/gstLibraryData'
 import LibraryPage from '../pages/LibraryPage'
 import BookDetailPage from '../pages/BookDetailPage'
@@ -50,7 +51,8 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
     expect(
       await screen.findByText(
         new RegExp(
-          `^${CHRISTIAN_BOOKS.length} full-length books, ${GST_SHELF.length} NOUN course manuals to download and \\d+ Greek plays to download\\.`
+          `^${CHRISTIAN_BOOKS.length} full-length books, ${GST_SHELF.length} NOUN course manuals to download, ` +
+            `\\d+ Greek plays to download and ${ROMAN_PLAYS.length} Roman plays to download\\.`
         )
       )
     ).toBeInTheDocument()
@@ -133,7 +135,12 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
 
   it('counts every document on the shelf, with or without database rows', async () => {
     renderLibrary()
-    const total = FRESHER_LIBRARY_PACKS.length + CHRISTIAN_BOOKS.length + DRAMA_PLAYS.length + GST_SHELF.length
+    const total =
+      FRESHER_LIBRARY_PACKS.length +
+      CHRISTIAN_BOOKS.length +
+      DRAMA_PLAYS.length +
+      ROMAN_PLAYS.length +
+      GST_SHELF.length
 
     openFilters()
     expect(screen.getByRole('button', { name: `All Domains (${total})` })).toBeInTheDocument()
@@ -157,7 +164,7 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
     const links = await screen.findAllByRole('link', { name: /Download Free PDF/i })
     // The plays are downloads now too, so they join the NOUN manuals. Books keep
     // their own "Read book" control, which opens the book page.
-    expect(links).toHaveLength(GST_SHELF.length + DRAMA_PLAYS.length)
+    expect(links).toHaveLength(GST_SHELF.length + DRAMA_PLAYS.length + ROMAN_PLAYS.length)
     expect(screen.getAllByRole('link', { name: /Read book/i })).toHaveLength(CHRISTIAN_BOOKS.length)
 
     const playHrefs = links.map((link) => link.getAttribute('href')).filter((href) => href.includes('/library/drama/'))
@@ -173,7 +180,7 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
     // Every card states the page count of the file it hands over.
     expect(screen.getByText('Antigone')).toBeInTheDocument()
     expect(screen.getAllByText(/^\d+ pages$/)).toHaveLength(
-      CHRISTIAN_BOOKS.length + GST_SHELF.length + DRAMA_PLAYS.length
+      CHRISTIAN_BOOKS.length + GST_SHELF.length + DRAMA_PLAYS.length + ROMAN_PLAYS.length
     )
   })
 
@@ -193,6 +200,29 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
     }
     // ...and does not pretend to offer them: nothing here links out.
     expect(document.querySelector('a[href*="gutenberg"]')).toBeNull()
+  })
+
+  it('opens every Roman play from this site, not from Perseus or Gutenberg', async () => {
+    const { container } = render(
+      <MemoryRouter>
+        <LibraryPage />
+      </MemoryRouter>
+    )
+
+    const links = await screen.findAllByRole('link', { name: /Download Free PDF/i })
+    const romanHrefs = links
+      .map((link) => link.getAttribute('href'))
+      .filter((href) => href.includes('/library/roman/'))
+    expect(romanHrefs).toHaveLength(ROMAN_PLAYS.length)
+    for (const href of romanHrefs) {
+      expect(href).toMatch(/^\/library\/roman\/[a-z0-9-]+\.pdf$/)
+    }
+
+    // The shelf is a shelf: no link leaves the site, and the Roman plays are
+    // badged as plays rather than as generic packs.
+    expect(container.querySelector('a[href*="gutenberg.org"]')).toBeNull()
+    expect(container.querySelector('a[href*="perseus.tufts.edu"]')).toBeNull()
+    expect(screen.getByText('Thyestes')).toBeInTheDocument()
   })
 
   it('finds a play by playwright and by its own title', async () => {

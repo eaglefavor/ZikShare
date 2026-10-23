@@ -113,7 +113,7 @@ export default function LibraryPage() {
                     </>
                 }
                 title="UNIZIK Digital Library"
-                lead={`${COUNT_LABEL}. Everything is free — no sign-in, no payment step. Manuals, books and Greek plays all download as PDF from this page.`}
+                lead={`${COUNT_LABEL}. Everything is free — no sign-in, no payment step. Manuals, books, Greek tragedies and Roman plays all download as PDF from this page.`}
             />
 
             {/* ── One toolbar, always in reach ──────────────────────────── */}
@@ -246,10 +246,10 @@ export default function LibraryPage() {
                     <strong>NOUN course manuals</strong> are published by the National Open University of
                     Nigeria and hosted here free of charge; NOUN permits educational use and prohibits
                     commercial use. <strong>Books</strong> are third-party works: copyright stays with the
-                    author and publisher. <strong>Greek plays</strong> are public-domain English translations,
-                    typeset as PDFs and hosted here too; the edition each one came from is credited on the
-                    card and printed inside the file. Always confirm your current outline with your
-                    department.
+                    author and publisher. <strong>Greek and Roman plays</strong> are public-domain English
+                    translations, typeset as PDFs and hosted here too; the edition and translator of each one
+                    is credited on the card and printed inside the file. Always confirm your current outline
+                    with your department.
                 </p>
             </div>
 

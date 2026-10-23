@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mergeLibraryMaterials, FRESHER_LIBRARY_PACKS } from '../lib/fresherLibrary'
 import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
 import { DRAMA_PLAYS } from '../lib/dramaLibrary'
+import { ROMAN_PLAYS } from '../lib/romanLibrary'
 import { GST_SHELF } from '../lib/gstLibraryData'
 import {
   activeFilterCount,
@@ -16,7 +17,11 @@ const all = mergeLibraryMaterials([])
 describe('library view', () => {
   it('counts every document exactly once', () => {
     expect(all).toHaveLength(
-      FRESHER_LIBRARY_PACKS.length + CHRISTIAN_BOOKS.length + DRAMA_PLAYS.length + GST_SHELF.length
+      FRESHER_LIBRARY_PACKS.length +
+        CHRISTIAN_BOOKS.length +
+        DRAMA_PLAYS.length +
+        ROMAN_PLAYS.length +
+        GST_SHELF.length
     )
   })
 
@@ -26,6 +31,7 @@ describe('library view', () => {
       'GST & Compulsory Courses',
       'Money & Career',
       'Greek Tragedy',
+      'Roman Theatre',
       'Christian Books',
     ])
     expect(shelves.reduce((total, shelf) => total + shelf.items.length, 0)).toBe(all.length)
@@ -47,8 +53,8 @@ describe('library view', () => {
     expect(filterLibrary(all, { domain: 'Study Skills' })).toEqual([])
     // The Greek plays are Theatre & Film Studies material inside Faculty of Arts.
     const arts = filterLibrary(all, { faculty: 'Faculty of Arts' })
-    expect(arts).toHaveLength(DRAMA_PLAYS.length)
-    expect(arts.every((item) => item.isDrama)).toBe(true)
+    expect(arts).toHaveLength(DRAMA_PLAYS.length + ROMAN_PLAYS.length)
+    expect(arts.every((item) => item.isDrama || item.isRoman)).toBe(true)
 
     // NOUN courseware sits under General Studies and can be filtered by level.
     const gst = filterLibrary(all, { faculty: 'General Studies (GST / CED)' })

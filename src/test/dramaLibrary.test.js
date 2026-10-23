@@ -116,14 +116,15 @@ describe('Greek tragedy shelf - every card is honest', () => {
 })
 
 describe('Greek tragedy shelf - how it appears in the library', () => {
-    it('is the first shelf and shows up in the counts', () => {
+    it('shows up in the counts alongside the hosted material', () => {
         const merged = mergeLibraryMaterials([])
         const plays = merged.filter((item) => item.isDrama)
         expect(plays).toHaveLength(DRAMA_PLAYS.length)
 
         const counts = libraryCounts()
         expect(counts.plays).toBe(DRAMA_PLAYS.length)
-        expect(counts.total).toBe(counts.packs + counts.books + counts.plays)
+        expect(counts.hosted).toBeGreaterThan(0)
+        expect(counts.total).toBe(counts.packs + counts.books + counts.plays + counts.hosted)
     })
 
     it('is findable by playwright, by title and by its Greek name', () => {

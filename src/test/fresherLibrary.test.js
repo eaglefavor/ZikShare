@@ -6,6 +6,7 @@ import { FRESHER_PACKS } from '../../library/content/index.mjs'
 import { validatePacks } from '../../scripts/lib/validate-packs.mjs'
 import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
 import { DRAMA_PLAYS } from '../lib/dramaLibrary'
+import { GST_SHELF } from '../lib/gstLibraryData'
 import {
     FRESHER_LIBRARY_PACKS,
     FRESHER_LIBRARY_DOMAINS,
@@ -79,7 +80,12 @@ describe('Library - the shelf state the operator asked for', () => {
 
     it('keeps the Christian Books shelf untouched and lists the Greek plays', () => {
         expect(CHRISTIAN_BOOKS.length).toBeGreaterThan(0)
-        expect(FRESHER_LIBRARY_DOMAINS.map((d) => d.name)).toEqual(['Greek Tragedy', 'Christian Books'])
+        expect(FRESHER_LIBRARY_DOMAINS.map((d) => d.name)).toEqual([
+            'GST & Compulsory Courses',
+            'Money & Career',
+            'Greek Tragedy',
+            'Christian Books',
+        ])
         expect(FRESHER_LIBRARY_DOMAINS.find((d) => d.name === 'Christian Books').count).toBe(CHRISTIAN_BOOKS.length)
         expect(FRESHER_LIBRARY_DOMAINS.find((d) => d.name === 'Greek Tragedy').count).toBe(DRAMA_PLAYS.length)
     })
@@ -90,10 +96,11 @@ describe('Library - the shelf state the operator asked for', () => {
             packs: 0,
             books: CHRISTIAN_BOOKS.length,
             plays: DRAMA_PLAYS.length,
-            total: CHRISTIAN_BOOKS.length + DRAMA_PLAYS.length,
+            hosted: GST_SHELF.length,
+            total: CHRISTIAN_BOOKS.length + DRAMA_PLAYS.length + GST_SHELF.length,
         })
         expect(libraryCountLabel(counts)).toBe(
-            `${CHRISTIAN_BOOKS.length} full-length books and ${DRAMA_PLAYS.length} Greek plays linked to free full texts`
+            `${CHRISTIAN_BOOKS.length} full-length books, ${GST_SHELF.length} NOUN course manuals to download and ${DRAMA_PLAYS.length} Greek plays linked to free full texts`
         )
     })
 
@@ -148,9 +155,11 @@ describe('Library - the shelf state the operator asked for', () => {
 describe('Library - the store merge when the pack shelf is empty', () => {
     it('returns the books and the linked plays, and no pack', () => {
         const merged = mergeLibraryMaterials([])
-        expect(merged).toHaveLength(CHRISTIAN_BOOKS.length + DRAMA_PLAYS.length)
-        expect(merged.every((m) => m.isBook || m.isDrama)).toBe(true)
+        expect(merged).toHaveLength(CHRISTIAN_BOOKS.length + DRAMA_PLAYS.length + GST_SHELF.length)
+        expect(merged.every((m) => m.isBook || m.isDrama || m.isGst)).toBe(true)
         expect(merged.filter((m) => m.isDrama).every((m) => m.external_url && !m.download_path)).toBe(true)
+        // The NOUN manuals are hosted by ZikShare, so they do have a download.
+        expect(merged.filter((m) => m.isGst).every((m) => m.download_path && !m.external_url)).toBe(true)
     })
 
     it('keeps a seeded book on its own shelf, once, with the row identity', () => {

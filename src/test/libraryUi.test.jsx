@@ -6,6 +6,7 @@ import { MemoryRouter, Routes, Route, useParams } from 'react-router-dom'
 import { FRESHER_LIBRARY_PACKS } from '../lib/fresherLibrary'
 import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
 import { DRAMA_PLAYS, EURIPIDES_NOT_ON_GUTENBERG } from '../lib/dramaLibrary'
+import { GST_SHELF } from '../lib/gstLibraryData'
 import LibraryPage from '../pages/LibraryPage'
 import BookDetailPage from '../pages/BookDetailPage'
 import * as database from '../lib/database'
@@ -48,7 +49,9 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
 
     expect(
       await screen.findByText(
-        new RegExp(`^${CHRISTIAN_BOOKS.length} full-length books and \\d+ Greek plays linked to free full texts\\.`)
+        new RegExp(
+          `^${CHRISTIAN_BOOKS.length} full-length books, ${GST_SHELF.length} NOUN course manuals to download and \\d+ Greek plays linked to free full texts\\.`
+        )
       )
     ).toBeInTheDocument()
     // No claim about course packs, because there are none to download.
@@ -62,7 +65,13 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
     fireEvent.change(searchInput, { target: { value: 'Watchman Nee' } })
     expect(await screen.findByText('The Spiritual Man')).toBeInTheDocument()
 
+    // A course code finds the hosted NOUN manual...
     fireEvent.change(searchInput, { target: { value: 'GST 101' } })
+    expect(await screen.findByText(/GST 101: Use of English and Communication Skills I/)).toBeInTheDocument()
+    expect(screen.queryByText('The Spiritual Man')).not.toBeInTheDocument()
+
+    // ...and a code with nothing behind it says so.
+    fireEvent.change(searchInput, { target: { value: 'LAW 401' } })
     expect(await screen.findByText(/Nothing matches that search/i)).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /Clear filters/i }))
@@ -112,17 +121,19 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
 
     expect(screen.getByRole('button', { name: /Christian Books \(\d+\)/ })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: /Study Skills \(\d+\)/ })).not.toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: /GST & Compulsory Courses \(\d+\)/ })).not.toBeInTheDocument()
+    // The GST shelf holds documents now, so it is offered; an empty shelf is not.
+    expect(screen.getByRole('button', { name: /GST & Compulsory Courses \(\d+\)/ })).toBeInTheDocument()
 
     fireEvent.click(screen.getByRole('button', { name: /Christian Books \(\d+\)/ }))
     fireEvent.click(screen.getByRole('button', { name: /^Show \d+ results?$/ }))
 
     expect(await screen.findByText('The Spiritual Man')).toBeInTheDocument()
+    expect(screen.queryByText(/GST 101: Use of English/)).not.toBeInTheDocument()
   })
 
   it('counts every document on the shelf, with or without database rows', async () => {
     renderLibrary()
-    const total = FRESHER_LIBRARY_PACKS.length + CHRISTIAN_BOOKS.length + DRAMA_PLAYS.length
+    const total = FRESHER_LIBRARY_PACKS.length + CHRISTIAN_BOOKS.length + DRAMA_PLAYS.length + GST_SHELF.length
 
     openFilters()
     expect(screen.getByRole('button', { name: `All Domains (${total})` })).toBeInTheDocument()
@@ -155,7 +166,7 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
     // A play opens on Gutenberg, so it never claims a page count it cannot know:
     // only the hosted books carry a page count on this page.
     expect(screen.getByText('Antigone')).toBeInTheDocument()
-    expect(screen.getAllByText(/^\d+ pages$/)).toHaveLength(CHRISTIAN_BOOKS.length)
+    expect(screen.getAllByText(/^\d+ pages$/)).toHaveLength(CHRISTIAN_BOOKS.length + GST_SHELF.length)
   })
 
   it('says plainly which four plays have no free English text', async () => {

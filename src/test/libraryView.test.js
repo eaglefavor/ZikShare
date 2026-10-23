@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { mergeLibraryMaterials, FRESHER_LIBRARY_PACKS } from '../lib/fresherLibrary'
 import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
 import { DRAMA_PLAYS } from '../lib/dramaLibrary'
+import { GST_SHELF } from '../lib/gstLibraryData'
 import {
   activeFilterCount,
   domainSummary,
@@ -14,12 +15,19 @@ const all = mergeLibraryMaterials([])
 
 describe('library view', () => {
   it('counts every document exactly once', () => {
-    expect(all).toHaveLength(FRESHER_LIBRARY_PACKS.length + CHRISTIAN_BOOKS.length + DRAMA_PLAYS.length)
+    expect(all).toHaveLength(
+      FRESHER_LIBRARY_PACKS.length + CHRISTIAN_BOOKS.length + DRAMA_PLAYS.length + GST_SHELF.length
+    )
   })
 
-  it('groups results into the two shelves that hold something', () => {
+  it('groups results into the shelves that hold something, in display order', () => {
     const shelves = groupByShelf(all)
-    expect(shelves.map((shelf) => shelf.name)).toEqual(['Greek Tragedy', 'Christian Books'])
+    expect(shelves.map((shelf) => shelf.name)).toEqual([
+      'GST & Compulsory Courses',
+      'Money & Career',
+      'Greek Tragedy',
+      'Christian Books',
+    ])
     expect(shelves.reduce((total, shelf) => total + shelf.items.length, 0)).toBe(all.length)
   })
 
@@ -41,6 +49,13 @@ describe('library view', () => {
     const arts = filterLibrary(all, { faculty: 'Faculty of Arts' })
     expect(arts).toHaveLength(DRAMA_PLAYS.length)
     expect(arts.every((item) => item.isDrama)).toBe(true)
+
+    // NOUN courseware sits under General Studies and can be filtered by level.
+    const gst = filterLibrary(all, { faculty: 'General Studies (GST / CED)' })
+    expect(gst).toHaveLength(GST_SHELF.length)
+    const gst200 = filterLibrary(all, { faculty: 'General Studies (GST / CED)', level: '200L' })
+    expect(gst200.length).toBeGreaterThan(0)
+    expect(gst200.every((item) => item.level === '200L')).toBe(true)
     expect(filterLibrary(all, { faculty: 'Faculty of Law' })).toEqual([])
   })
 

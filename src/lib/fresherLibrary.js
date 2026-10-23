@@ -1,6 +1,7 @@
 import { FRESHER_LIBRARY_PACKS } from './fresherLibraryData'
 import { CHRISTIAN_BOOKS, CHRISTIAN_BOOKS_DOMAIN, toBookCard, findBookByStoragePath } from './christianBooks'
 import { DRAMA_DOMAIN, DRAMA_PLAYS, toDramaCard } from './dramaLibrary'
+import { GST_CARDS, GST_DOMAIN, ENTREPRENEURSHIP_DOMAIN } from './gstLibrary'
 
 /**
  * Display order of the shelves a study pack can sit on.
@@ -11,14 +12,14 @@ import { DRAMA_DOMAIN, DRAMA_PLAYS, toDramaCard } from './dramaLibrary'
  * library itself holds only the Christian Books shelf.
  */
 export const FRESHER_LIBRARY_DOMAIN_ORDER = [
-    DRAMA_DOMAIN,
     'GST & Compulsory Courses',
+    'Money & Career',
+    DRAMA_DOMAIN,
     'Faculty Primer',
     'Theatre & Film Studies',
     'Departmental Archive',
     'Study Skills',
     'Campus Life',
-    'Money & Career',
     'Digital Skills',
     'Health & Wellbeing',
     CHRISTIAN_BOOKS_DOMAIN,
@@ -53,7 +54,9 @@ export function libraryCounts() {
     // Greek plays live on Project Gutenberg: they are listed and linked, not
     // hosted, so they are counted separately and never described as downloads.
     const plays = DRAMA_PLAYS.length
-    return { packs, books, plays, total: packs + books + plays }
+    // NOUN courseware is hosted on ZikShare: these download from us.
+    const hosted = GST_CARDS.length
+    return { packs, books, plays, hosted, total: packs + books + plays + hosted }
 }
 
 function countOf(n, one, many) {
@@ -61,10 +64,11 @@ function countOf(n, one, many) {
 }
 
 /** e.g. "8 full-length books" or "12 study packs and 8 full-length books". */
-export function libraryCountLabel({ packs, books, plays } = libraryCounts()) {
+export function libraryCountLabel({ packs, books, plays, hosted } = libraryCounts()) {
     const parts = []
     if (packs > 0) parts.push(countOf(packs, 'study pack', 'study packs'))
     if (books > 0) parts.push(countOf(books, 'full-length book', 'full-length books'))
+    if (hosted > 0) parts.push(`${hosted} NOUN course manuals to download`)
     if (plays > 0) parts.push(`${plays} Greek plays linked to free full texts`)
     if (parts.length === 0) return 'No documents yet'
     if (parts.length === 1) return parts[0]
@@ -81,7 +85,8 @@ export const FRESHER_LIBRARY_DOMAINS = FRESHER_LIBRARY_DOMAIN_ORDER
         count:
             FRESHER_LIBRARY_PACKS.filter((p) => p.domain === name).length +
             CHRISTIAN_BOOKS.filter((b) => b.domain === name).length +
-            DRAMA_PLAYS.filter(() => name === DRAMA_DOMAIN).length,
+            DRAMA_PLAYS.filter(() => name === DRAMA_DOMAIN).length +
+            GST_CARDS.filter((card) => card.domain === name).length,
     }))
     .filter((d) => d.count > 0)
 
@@ -197,5 +202,7 @@ export function mergeLibraryMaterials(dbMaterials = []) {
     // with, and ZikShare does not host the text.
     const plays = DRAMA_PLAYS.map(toDramaCard)
 
-    return [...fromDb, ...notYetSeeded, ...books, ...plays]
+    // NOUN courseware is hosted here, so it is a normal library document with a
+    // real download path. A database row never shadows it.
+    return [...fromDb, ...notYetSeeded, ...books, ...GST_CARDS, ...plays]
 }

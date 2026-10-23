@@ -113,7 +113,7 @@ export default function LibraryPage() {
                     </>
                 }
                 title="UNIZIK Digital Library"
-                lead={`${COUNT_LABEL}. Everything is free — no sign-in, no payment step. Books download as PDF; the plays open in full on Project Gutenberg.`}
+                lead={`${COUNT_LABEL}. Everything is free — no sign-in, no payment step. Manuals and books download as PDF; the Greek plays open in full on Project Gutenberg.`}
             />
 
             {/* ── One toolbar, always in reach ──────────────────────────── */}
@@ -243,11 +243,12 @@ export default function LibraryPage() {
             <div className="zs-panel" style={{ marginTop: '2.5rem', display: 'flex', gap: '0.85rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
                 <ShieldCheck size={18} color="var(--color-campus-green)" style={{ flexShrink: 0, marginTop: 2 }} />
                 <p style={{ margin: 0, fontSize: '0.8rem', lineHeight: 1.6, color: 'var(--color-text-secondary)', flex: '1 1 18rem' }}>
-                    <strong>Books</strong> are third-party works: copyright stays with the author and
-                    publisher, and they are hosted here for free reading only. <strong>Greek plays</strong>{' '}
-                    leave this site — each card opens a public-domain translation on Project Gutenberg,
-                    which hosts the file. Course material added later is written for ZikShare: always
-                    confirm the current outline with your department.
+                    <strong>NOUN course manuals</strong> are published by the National Open University of
+                    Nigeria and hosted here free of charge; NOUN permits educational use and prohibits
+                    commercial use. <strong>Books</strong> are third-party works: copyright stays with the
+                    author and publisher. <strong>Greek plays</strong> leave this site — each card opens a
+                    public-domain translation on Project Gutenberg, which hosts the file. Always confirm
+                    your current outline with your department.
                 </p>
             </div>
 

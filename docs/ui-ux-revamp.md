@@ -404,3 +404,36 @@ reads 29 and says "linked to free full texts" rather than implying downloads.
 title, a written-for-ZikShare plot synopsis, and a reading note that says what to
 watch for — its trilogy, its staging problem, or the argument it is having with
 another version of the same myth.
+
+## Phase 10 — The hosted NOUN courseware shelf
+
+The library gained its first **hosted** third-party material: 22 PDFs from the
+National Open University of Nigeria's public e-Courseware repository — GST 101,
+102, 103, 104, 105, 107, 201, 202, 203, 204, 301, 302, plus ten NEE
+entrepreneurship modules. They download from ZikShare (`/library/gst/<slug>.pdf`),
+not from another site.
+
+**How they got here.** Bash in this sandbox cannot reach any host except GitHub,
+npm and PyPI, and `fetch_page` cannot save binaries. A short workflow on a GitHub
+runner fetched the files and committed them to the branch; it has been deleted.
+Artifacts were not usable — they live on Azure blob storage, which the sandbox
+cannot reach either.
+
+**What the build refuses to guess.** `scripts/build-gst-shelf.mjs` takes the page
+count from the PDF, the size from disk, the checksum from the bytes, and checks
+the official title against the text inside the document. NOUN's own table has
+mislabelled rows (NEE011's link serves NEE010's book, NEE012's serves Business
+Canvas), so the document is the authority: a title that cannot be found in its
+PDF is marked unverified rather than shown. Three duplicate uploads
+(GST 707/807 copies of GST 107, and the mislabelled NEE 005/011/013) were dropped
+rather than listed twice.
+
+**What every card says.** Author and publisher: NOUN. The source page. The
+licence condition — educational use permitted, commercial use prohibited — which
+is why the library stays free and why the credit cannot be removed. And, where
+UNIZIK numbers the same course differently, the note that says so: Nigerian
+Peoples and Culture is GST 201 at NOUN and GST 107 at UNIZIK.
+
+**Coverage is 100L–300L and says so.** UNIZIK's General Studies programme has no
+400L or 500L course, so the shelf holds none and claims none; a test enforces
+that no 400L/500L item can appear.

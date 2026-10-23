@@ -312,3 +312,30 @@ Adding a book:
 1. add an entry to `library/content/books.mjs` with an accurate `rights` value;
 2. run `node scripts/import-books.mjs --from <folder>`;
 3. run `npx vitest run src/test/christianBooks.test.js` and `npm run build`.
+
+## NOUN courseware shelf (hosted)
+
+`public/library/gst/` holds 22 PDFs downloaded from the National Open University
+of Nigeria's public e-Courseware repository (`https://nou.edu.ng/ecourseware-degs/`):
+the twelve GST courses and ten NEE entrepreneurship modules. They are hosted by
+ZikShare and download from ZikShare — no card links out to NOUIN's site.
+
+```bash
+npm run gst:build     # rebuild src/lib/gstLibraryData.js from the PDFs
+```
+
+The build measures each PDF (page count from the file itself, byte size on disk,
+SHA-256) and checks the official course title against the text inside the
+document. If a title cannot be found in its PDF, the catalogue marks
+`titleVerified: false` instead of showing it — the website's own table has
+mislabelled rows (NEE011's link serves NEE010's book), so the document, not the
+table, is the authority. `library/gst/source-manifest.json` records where each
+file came from and what it hashed to at download time.
+
+**Rights.** NOUN publishes this courseware for educational use and prohibits
+commercial use. ZikShare charges nothing, credits NOUN on every card, and links
+back to the source page. Do not add paid access or relicense these files.
+
+**Numbering.** NOUN's GST codes are not UNIZIK's. Nigerian Peoples and Culture is
+GST 201 at NOUN and GST 107 at UNIZIK; History and Philosophy of Science is
+NOUN's GST 105 and UNIZIK's GST 104. Each card says so in `unizik`.

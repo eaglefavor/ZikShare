@@ -93,7 +93,7 @@ export const CYCLE_PLAYS = [
         synopsis:
             'God sends Death to fetch Everyman, who is not ready. Fellowship, Kindred, Cousin and Goods all promise to come with him and all find a reason not to. Knowledge takes him to Confession, and Good Deeds — who has been lying on the ground, too weak to stand — is the only companion who will go into the grave.',
         context:
-            'The most famous morality play in English and the shortest great play in the language. It is a close translation of the Dutch Elckerlijc, printed at Delft around 1470; the English text was printed by John Skot around 1525 and performed by travelling companies for a century afterwards.',
+            'The best known morality play in English, and one of the shortest plays in the language. It is a close translation of the Dutch Elckerlijc, printed at Delft around 1470; the English text was printed by John Skot around 1525 and performed by travelling companies for a century afterwards.',
         topics: ['Death', 'allegory', 'Good Deeds', 'morality', 'Dutch original'],
     },
     {
@@ -363,7 +363,7 @@ export const MEDIEVAL_NOT_AVAILABLE = [
     },
     {
         title: 'Mankind',
-        note: 'A short, savage morality about a farmer and the vices who ruin him, full of jokes that have aged well. Original spelling only, and no free modern version.',
+        note: 'A short, savage morality in which Mankind, a labouring man with a spade, is pulled apart by Mischief and three vices. Original spelling only, and no free modern version.',
     },
     {
         title: "Hildegard of Bingen, Ordo Virtutum",

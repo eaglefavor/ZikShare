@@ -131,7 +131,7 @@ export default function SearchPage() {
             navigate(`/library/books/${item.slug}`)
             return
         }
-        window.open(item.download_path, '_blank', 'noopener,noreferrer')
+        window.open(item.external_url || item.download_path, '_blank', 'noopener,noreferrer')
     }
 
     const contactStudent = async (studentId) => {
@@ -211,7 +211,7 @@ export default function SearchPage() {
                 <SectionHeading
                     id="search-library"
                     title={`Free study library (${libraryResults.length})`}
-                    description="Course packs and books — open or download, no sign-in."
+                    description="Greek plays, books and study material — all free, no sign-in."
                     action={
                         <button type="button" className="zs-link" onClick={() => navigate('/library')}>
                             Browse all <ChevronRight size={14} />
@@ -234,8 +234,8 @@ export default function SearchPage() {
                             </Button>
                         }
                     >
-                        Try a course code such as <strong>GST 112</strong> or an author such as{' '}
-                        <strong>Watchman Nee</strong>.
+                        Try an author such as <strong>Sophocles</strong>, a play such as{' '}
+                        <strong>Antigone</strong>, or a title such as <strong>Let Us Pray</strong>.
                     </EmptyState>
                 )}
             </section>

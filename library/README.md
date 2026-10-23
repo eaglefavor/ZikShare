@@ -1,7 +1,14 @@
-# ZikShare Fresher PDF Library
+# ZikShare Library - authored material
 
 This directory holds the authored, generated PDF study library, plus the content
 that produces it.
+
+**Current state: the authored pack shelf is empty.** The operator cleared every
+course pack and study pack; the only documents in the library are the eight
+full-length books on the Christian Books shelf (`library/content/books.mjs`,
+served from `public/library/books/`). The pipeline below is kept intact so new
+material — GST past questions, GST textbooks, Theatre Arts documents — can be
+added as packs without rebuilding anything.
 
 **The library is free.** Every pack has `priceKobo: 0`, no DRM, no watermark and
 no payment step. `scripts/lib/validate-packs.mjs` fails the build if any pack
@@ -10,17 +17,9 @@ carries a price, and `npm test` asserts the same thing.
 ```
 library/
   content/               authored pack content (the source of truth)
-    gst.mjs              GST compulsory courses
-    faculty-primers-a.mjs  engineering, law, environment, physical sciences
-    faculty-primers-b.mjs  medicine, basic medical / clinical sciences, pharmacy, health
-    faculty-primers-c.mjs  management, social sciences, arts, education, agriculture, TVET
-    study-and-campus.mjs   study skills + campus life
-    money-digital-health.mjs  money/career, digital skills, wellbeing
-    arts-departments.mjs   Faculty of Arts: one primer per sister department
-    theatre-film.mjs       Theatre & Film Studies: full THA ladder + the
-                           year-demarcated outline archive
-    domains.mjs          domain names used for filtering and cover styling
-    index.mjs            the assembled FRESHER_PACKS array
+    books.mjs            the Christian Books shelf catalogue (book PDFs)
+    domains.mjs          the shelf taxonomy used for filtering and validation
+    index.mjs            the assembled FRESHER_PACKS array (empty right now)
   source/                full PDFs (upload target for seeding)
   ../public/library/packs/     the same full PDFs, public, no payment required
   ../public/library/previews/  public 3-page previews
@@ -42,6 +41,12 @@ The build fails loudly if a pack is malformed (unknown faculty, a non-zero
 price, fewer than 3 sections, a "section" with only a heading, duplicate slug,
 missing practice questions, an archive band without a year or source, etc.). There are no placeholder or lorem-ipsum
 packs; every file is generated from the authored text.
+
+An empty shelf is a valid state, so the build succeeds with zero packs and
+writes an empty catalog. Any pack that *is* present must still clear every gate,
+including the 1,200-word depth minimum — the library never shows a skeleton.
+Page counts and totals shown in the app are derived from the catalog, never
+typed into a page, so a cleared shelf cannot keep advertising old documents.
 
 Each pack produces:
 

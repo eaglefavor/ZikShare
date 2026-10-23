@@ -12,6 +12,58 @@ import BookCover from './BookCover'
 export default function LibraryCard({ item, onOpen }) {
     const href = item.isBook ? `/library/books/${item.slug}` : item.download_path
 
+    // A Greek play is a link out to a free public-domain text on Project
+    // Gutenberg. ZikShare does not host the file, so the card says where it goes
+    // and never shows a page count or a download it cannot deliver.
+    if (item.isExternal && item.external_url) {
+        return (
+            <article className="zs-item-card" style={{ padding: 0, overflow: 'hidden' }}>
+                <div style={{ padding: '0.85rem', display: 'flex', flexDirection: 'column', gap: '0.4rem', flex: 1 }}>
+                    <div className="zs-item-card__top">
+                        <Tag tone="pack">{item.author}</Tag>
+                        <span className="zs-item-card__sub" style={{ marginLeft: 'auto' }}>
+                            {item.year ? `${Math.abs(item.year)} BC` : item.kind === 'satyr' ? 'Satyr play' : 'Date unknown'}
+                        </span>
+                    </div>
+
+                    <button
+                        type="button"
+                        onClick={() => onOpen(item)}
+                        style={{ background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', font: 'inherit' }}
+                    >
+                        <span className="zs-item-card__title" style={{ display: 'block' }}>
+                            {item.title}
+                        </span>
+                    </button>
+
+                    <p className="zs-item-card__sub">
+                        {item.greekTitle}
+                        {item.kind === 'satyr' && ' · the only surviving satyr play'}
+                    </p>
+
+                    <p className="zs-item-card__desc">{item.description}</p>
+
+                    <div className="zs-item-card__foot">
+                        <Tag tone="free">Free</Tag>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                            <span className="zs-item-card__sub" style={{ fontSize: '0.66rem' }}>
+                                Project Gutenberg
+                            </span>
+                            <a
+                                href={item.external_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="zs-btn zs-btn--primary zs-btn--sm"
+                            >
+                                <BookOpen size={13} /> Read the full text
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        )
+    }
+
     return (
         <article className="zs-item-card" style={{ padding: 0, overflow: 'hidden' }}>
             {item.isBook && (

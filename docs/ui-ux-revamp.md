@@ -342,3 +342,65 @@ student lives in, and they were the last ones outside the design system.
 | Item detail two-column layout | content left, sticky action card right on ≥980px |
 | Visual regression check | no browser in the sandbox; the first real look is the preview deploy |
 | Replace remaining hex literals in the restyled pages | tokens exist, adoption is partial |
+
+## Phase 8 — Clearing the shelves (library reset)
+
+The library is the product, so it must never describe documents it does not
+have. Every authored course pack and study pack was removed; the Christian Books
+shelf is untouched.
+
+What changed:
+
+- `library/content/` now holds `books.mjs`, `domains.mjs` and an empty `index.mjs`.
+  The 240 generated PDFs (packs, previews, source copies) and the generated
+  catalog were deleted with them.
+- **Counts are derived, not typed.** `libraryCounts()` / `libraryCountLabel()`
+  in `src/lib/fresherLibrary.js` read the shelf, and Home, Library, Search and the
+  empty states use them. A cleared shelf cannot keep advertising "80 course
+  packs", and no page has to be remembered when the shelf changes again.
+- **Empty shelves do not render.** `FRESHER_LIBRARY_DOMAINS` and
+  `groupByShelf()` drop any shelf with no documents, so the library now shows one
+  shelf — Christian Books — with no leftover chips, shelf headings or filter
+  options pointing at material that is gone.
+- **Empty states say what is true**: "Nothing matches that search" offers a book
+  author or title, not a course code that has no document.
+- **The build tolerates an empty shelf** (`validatePacks` no longer demands 50
+  packs globally) but still rejects a thin pack, so the shelf can be refilled
+  without weakening the quality gate.
+- Help copy no longer describes shelves that do not exist.
+
+Tests updated to match (`115` across 17 files), including a guard that no
+`/library/packs/*.pdf` link is ever rendered for a document that is no longer on
+the shelf.
+
+## Phase 9 — The Greek tragedy shelf
+
+The library's first new shelf after the clear-out: the complete surviving plays of
+Aeschylus, Sophocles and Euripides — 29 texts, each linked to a free
+public-domain English translation on Project Gutenberg.
+
+**What the shelf is.** These are not ZikShare files. Every card is an external
+link, the CTA says *Read the full text*, and the card shows no page count
+because we do not hold the document. `toDramaCard()` sets `download_path: null`
+and a test asserts it, so the download machinery cannot reach them by accident.
+
+**How the data was built.** Each `gutenbergId` was read off Project Gutenberg's
+own catalogue page for that text (author pages: Aeschylus 2825, Sophocles 26,
+Euripides 1680), so every link resolves to the edition its card describes. A
+translator is credited only where Gutenberg's ebook page names one (Wodhull,
+Buckley, Morshead); the rest say only *Free full text at Project Gutenberg*.
+
+**The four gaps, stated on the page.** *Ion*, *The Suppliants*, *Iphigenia at
+Aulis* and *The Phoenician Women* survive in Greek but have no public-domain
+English translation in the Gutenberg catalogue. They are listed in a dedicated
+panel with a one-line note each, and given no card and no link.
+
+**Why 29 and not 33.** The three playwrights have 32 surviving plays between
+them plus the transmitted *Rhesus*: 7 + 7 + 19 = 33, of which 29 have a free
+English text. The count in the library lead is derived from the shelf, so it
+reads 29 and says "linked to free full texts" rather than implying downloads.
+
+**What each card carries.** Playwright, date (BC) or "date unknown", the Greek
+title, a written-for-ZikShare plot synopsis, and a reading note that says what to
+watch for — its trilogy, its staging problem, or the argument it is having with
+another version of the same myth.

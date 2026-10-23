@@ -3,12 +3,13 @@ import { useNavigate, useSearchParams } from 'react-router-dom'
 import { Filter, Search, ShieldCheck, X } from 'lucide-react'
 import { getDigitalProducts } from '../lib/database'
 import { UNIZIK_FACULTIES, ACADEMIC_LEVELS, ACADEMIC_MATERIAL_TYPES } from '../lib/categories'
+import { EURIPIDES_NOT_ON_GUTENBERG } from '../lib/dramaLibrary'
 import {
-    FRESHER_LIBRARY_PACKS,
     FRESHER_LIBRARY_DOMAINS,
+    libraryCountLabel,
+    libraryCounts,
     mergeLibraryMaterials,
 } from '../lib/fresherLibrary'
-import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
 import {
     EMPTY_FILTERS,
     SORT_OPTIONS,
@@ -20,7 +21,9 @@ import {
 import { Button, Chip, EmptyState, PageHeader, SearchField, SectionHeading } from '../components/ui'
 import LibraryCard from '../components/LibraryCard'
 
-const TOTAL = FRESHER_LIBRARY_PACKS.length + CHRISTIAN_BOOKS.length
+const COUNTS = libraryCounts()
+const TOTAL = COUNTS.total
+const COUNT_LABEL = libraryCountLabel(COUNTS)
 
 function FilterGroup({ label, children }) {
     return (
@@ -93,7 +96,8 @@ export default function LibraryPage() {
             navigate(`/library/books/${item.slug}`)
             return
         }
-        window.open(item.download_path, '_blank', 'noopener,noreferrer')
+        // Greek plays are read on Project Gutenberg; ZikShare holds no copy.
+        window.open(item.external_url || item.download_path, '_blank', 'noopener,noreferrer')
     }
 
     const filterCount = activeFilterCount(filters)
@@ -109,7 +113,7 @@ export default function LibraryPage() {
                     </>
                 }
                 title="UNIZIK Digital Library"
-                lead={`${TOTAL} documents: ${FRESHER_LIBRARY_PACKS.length} student-written course packs and ${CHRISTIAN_BOOKS.length} full-length books. Everything opens and downloads for free.`}
+                lead={`${COUNT_LABEL}. Everything opens and downloads for free — no sign-in, no payment step.`}
             />
 
             {/* ── One toolbar, always in reach ──────────────────────────── */}
@@ -117,7 +121,7 @@ export default function LibraryPage() {
                 <SearchField
                     value={filters.query}
                     onChange={(value) => set({ query: value })}
-                    placeholder="Search a course code, book or author (e.g. GST 112, THA 151)"
+                    placeholder="Search by title, author or course code"
                 />
 
                 <Button variant="outline" size="sm" onClick={() => setShowFilters(true)}>
@@ -179,8 +183,9 @@ export default function LibraryPage() {
                             </Button>
                         }
                     >
-                        Try a course code such as <strong>GST 112</strong>, an author such as{' '}
-                        <strong>Watchman Nee</strong>, or clear your filters to browse the whole library.
+                        Try an author such as <strong>Watchman Nee</strong>, a title such as{' '}
+                        <strong>The Spiritual Man</strong>, or clear your filters to browse the whole
+                        library.
                     </EmptyState>
                 </div>
             ) : isBrowsing ? (
@@ -213,12 +218,36 @@ export default function LibraryPage() {
                 </section>
             )}
 
+            {/* ── The four plays that have no free English text ──────────── */}
+            <section className="zs-section" aria-labelledby="missing-plays">
+                <SectionHeading
+                    id="missing-plays"
+                    title="Four Euripides plays are not linked here"
+                    description="They survive in Greek, but no public-domain English translation of them is free to read — so they get no card rather than a dead link."
+                />
+                <div className="zs-grid">
+                    {EURIPIDES_NOT_ON_GUTENBERG.map((play) => (
+                        <div key={play.title} className="zs-panel" style={{ margin: 0 }}>
+                            <strong style={{ display: 'block', fontSize: '0.9rem' }}>{play.title}</strong>
+                            <span style={{ display: 'block', fontSize: '0.72rem', color: '#94A3B8', margin: '0.15rem 0 0.5rem' }}>
+                                {play.greekTitle}
+                            </span>
+                            <p style={{ margin: 0, fontSize: '0.8rem', lineHeight: 1.6, color: 'var(--color-text-secondary)' }}>
+                                {play.note}
+                            </p>
+                        </div>
+                    ))}
+                </div>
+            </section>
+
             <div className="zs-panel" style={{ marginTop: '2.5rem', display: 'flex', gap: '0.85rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
                 <ShieldCheck size={18} color="var(--color-campus-green)" style={{ flexShrink: 0, marginTop: 2 }} />
                 <p style={{ margin: 0, fontSize: '0.8rem', lineHeight: 1.6, color: 'var(--color-text-secondary)', flex: '1 1 18rem' }}>
-                    Packs are student-written and map to the syllabus — confirm the current outline with your
-                    department. Books are third-party works: copyright stays with the author and publisher, and
-                    they are hosted here for free reading only.
+                    <strong>Books</strong> are third-party works: copyright stays with the author and
+                    publisher, and they are hosted here for free reading only. <strong>Greek plays</strong>{' '}
+                    leave this site — each card opens a public-domain translation on Project Gutenberg,
+                    which hosts the file. Course material added later is written for ZikShare: always
+                    confirm the current outline with your department.
                 </p>
             </div>
 

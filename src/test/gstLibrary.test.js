@@ -126,7 +126,9 @@ describe('NOUN GST shelf - how it appears in the library', () => {
     it('adds its totals to the library counts', () => {
         const counts = libraryCounts()
         expect(counts.hosted).toBe(GST_SHELF.length)
-        expect(counts.total).toBe(counts.packs + counts.books + counts.plays + counts.hosted)
+        expect(counts.total).toBe(
+            counts.packs + counts.books + counts.plays + counts.roman + counts.hosted
+        )
     })
 
     it('reports real totals for the shelf summary', () => {

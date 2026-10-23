@@ -138,7 +138,9 @@ describe('Greek tragedy shelf - how it appears in the library', () => {
         const counts = libraryCounts()
         expect(counts.plays).toBe(DRAMA_PLAYS.length)
         expect(counts.hosted).toBeGreaterThan(0)
-        expect(counts.total).toBe(counts.packs + counts.books + counts.plays + counts.hosted)
+        expect(counts.total).toBe(
+            counts.packs + counts.books + counts.plays + counts.roman + counts.hosted
+        )
     })
 
     it('is findable by playwright, by title and by its Greek name', () => {

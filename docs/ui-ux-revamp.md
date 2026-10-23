@@ -445,3 +445,50 @@ Peoples and Culture is GST 201 at NOUN and GST 107 at UNIZIK.
 **Coverage is 100L–300L and says so.** UNIZIK's General Studies programme has no
 400L or 500L course, so the shelf holds none and claims none; a test enforces
 that no 400L/500L item can appear.
+
+## Phase 11 — The Roman theatre shelf
+
+The Greek shelf's counterpart: 36 plays hosted at `/library/roman/<slug>.pdf`,
+built by `scripts/build-roman-pdfs.mjs` (`npm run roman:build`). Nothing on the
+shelf links out.
+
+| Playwright | Plays | English text |
+| --- | --- | --- |
+| Plautus | 20 — every surviving comedy | Henry Thomas Riley, *The Comedies of Plautus* (Bohn; Bell, 1912) |
+| Terence | 6 — every surviving comedy | Henry Thomas Riley, *The Comedies of Terence* (Harper, 1859) |
+| Seneca | 10 — the tragedies transmitted under his name | Frank Justus Miller, *The Tragedies of Seneca* (1907) |
+
+**Two sources, one typesetter.** Terence and Seneca come from Project Gutenberg
+volumes (#22188, #57999) and are cut apart by their headings. Plautus comes from
+the Perseus Digital Library's TEI edition of Riley, one file per play, which is a
+much better text than the Internet Archive OCR that was tried first and thrown
+away. Both feeds end up in `scripts/lib/play-pdf.mjs`, the shared A4 typesetter
+the Greek shelf already uses, so a Roman play and a Greek play are the same object
+with a different spine colour.
+
+**Cutting a play out of a volume.** A play runs from its own title to the next
+play's title. A title is confirmed by the cast list a few lines below it, because
+a speaker's name in the dialogue looks exactly like a title. The end of the text
+is found by scanning a copy of the volume with the footnote blocks blanked, so a
+heading can never be mistaken for a line inside a note.
+
+**Notes are moved, not dropped.** Both Gutenberg volumes print a `FOOTNOTES`
+block at the end of every act; Miller's notes are single lines, Riley's run for
+pages. They are lifted out of the running text and printed after the play, and
+the Plautus footnotes come out of the TEI the same way — read mid-speech, a
+translator's parenthesis breaks the thing it explains.
+
+**Two of the ten are not Seneca's.** *Hercules Oetaeus* is a later imitation and
+*Octavia* is a *praetexta* about Nero written after Seneca died. Both are printed
+in Miller and both are here, labelled. *Phoenissae* survives in fragments and says
+so. Silence about any of this would be a false claim about the corpus.
+
+**What the build refuses.** A title that matches nothing, a play that comes out
+under 1,500 words, or a heading found inside another play's notes all stop the
+build. Greek quotations — Riley prints a few hundred — are transliterated rather than
+dropped, because Times cannot set Greek and a silently missing word is worse than
+a rough one; a stray `<` left by Perseus's transcriber is removed.
+
+**Plautus is prose here; Seneca is verse.** Riley translated Plautus into plain
+prose for readers who wanted the sense, and the PDF says so instead of implying a
+verse translation. Miller's Seneca is verse and keeps its line breaks.

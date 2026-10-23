@@ -211,7 +211,7 @@ export default function SearchPage() {
                 <SectionHeading
                     id="search-library"
                     title={`Free study library (${libraryResults.length})`}
-                    description="Greek plays, books and study material — all free, no sign-in."
+                    description="Greek and Roman plays, books and study material — all free, no sign-in."
                     action={
                         <button type="button" className="zs-link" onClick={() => navigate('/library')}>
                             Browse all <ChevronRight size={14} />

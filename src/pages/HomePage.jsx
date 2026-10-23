@@ -124,7 +124,7 @@ export default function HomePage() {
                     <p className="zs-item-card__title">Study library</p>
                     <p className="zs-item-card__desc">
                         {LIBRARY_LABEL}. Every document downloads as a PDF from this site,
-                        including the Greek plays.
+                        including the Greek and Roman plays.
                     </p>
                     <div className="zs-item-card__foot">
                         <span className="zs-item-card__sub">Open instantly</span>

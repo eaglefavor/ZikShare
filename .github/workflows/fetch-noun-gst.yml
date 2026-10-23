@@ -1,9 +1,10 @@
 name: fetch-noun-gst
 
-# One-off utility: download the NOUN General Studies e-courseware PDFs so they
-# can be reviewed and hosted. Triggered only by a change to this file or to the
-# trigger marker below — it is not part of the app's build or deploy pipeline,
-# and it is removed once the files are in place.
+# One-off utility: download the NOUN General Studies e-courseware PDFs and commit
+# them into public/library/gst/ so they can be reviewed, catalogued and served.
+# Triggered only by a change to this file or to the trigger marker — it is not
+# part of the app's build or deploy pipeline, and it is removed once the files
+# are in place.
 on:
   push:
     paths:
@@ -11,48 +12,98 @@ on:
       - 'scripts/fetch-noun-gst.trigger'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   fetch:
     runs-on: ubuntu-latest
     steps:
-      - name: Download the e-courseware index and every GST PDF
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Download every GST PDF listed on the e-courseware page
         run: |
           set -u
-          mkdir -p out
           UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
-          curl -fsSL -A "$UA" --max-time 120 'https://nou.edu.ng/ecourseware-degs/' -o index.html
-          echo "index bytes: $(wc -c < index.html)"
-          grep -oE 'https://nou\.edu\.ng/coursewarecontent/[^"]+\.pdf' index.html | sort -u > urls.txt
-          echo "found $(wc -l < urls.txt) pdf urls"
-          : > manifest.txt
-          n=0
-          while read -r u; do
-            n=$((n + 1))
-            f="out/$(printf '%03d' "$n").pdf"
-            if curl -fsSL -A "$UA" --max-time 180 "$u" -o "$f"; then
-              if head -c 5 "$f" | grep -q '%PDF-'; then
-                echo "$(printf '%03d' "$n")|$u|$(stat -c %s "$f")" >> manifest.txt
-              else
-                echo "not a pdf: $u"
-                rm -f "$f"
-              fi
-            else
-              echo "failed: $u"
-              rm -f "$f"
-            fi
-          done < urls.txt
-          echo '--- manifest'
-          cat manifest.txt
-          ls -la out
-        shell: bash
+          curl -fsSL -A "$UA" --max-time 120 'https://nou.edu.ng/ecourseware-degs/' -o /tmp/index.html
+          echo "index bytes: $(wc -c < /tmp/index.html)"
+          python3 - <<'PY'
+          import re, json, pathlib
 
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: noun-gst
-          path: |
-            out
-            manifest.txt
-            urls.txt
-            index.html
-          if-no-files-found: warn
+          html = pathlib.Path('/tmp/index.html').read_text(encoding='utf-8', errors='replace')
+          rows = re.findall(r'<tr[^>]*>(.*?)</tr>', html, re.S | re.I)
+          entries = []
+          for row in rows:
+              cells = re.findall(r'<td[^>]*>(.*?)</td>', row, re.S | re.I)
+              if len(cells) < 6:
+                  continue
+              text = lambda c: re.sub(r'<[^>]+>', '', c).replace('&amp;', '&').strip()
+              link = re.search(r'href="([^"]+\.pdf)"', row, re.I)
+              if not link:
+                  continue
+              entries.append({
+                  'code': text(cells[0]),
+                  'title': text(cells[1]),
+                  'credit': text(cells[2]),
+                  'level': text(cells[3]),
+                  'semester': text(cells[4]),
+                  'faculty': text(cells[5]),
+                  'url': link.group(1),
+              })
+          pathlib.Path('/tmp/entries.json').write_text(json.dumps(entries, indent=2))
+          print(f"parsed {len(entries)} entries")
+          for e in entries:
+              print(e['code'], '|', e['title'], '|', e['level'], e['semester'])
+          PY
+
+      - name: Fetch the PDFs into public/library/gst
+        run: |
+          set -u
+          UA="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36"
+          mkdir -p public/library/gst
+          python3 - <<'PY'
+          import json, pathlib, re, subprocess, hashlib
+
+          entries = json.loads(pathlib.Path('/tmp/entries.json').read_text())
+          out_dir = pathlib.Path('public/library/gst')
+          manifest = []
+          for e in entries:
+              slug = re.sub(r'[^a-z0-9]+', '-', f"{e['code']} {e['title']}".lower()).strip('-')
+              dest = out_dir / f"{slug}.pdf"
+              cmd = ['curl', '-fsSL', '-A',
+                     'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124 Safari/537.36',
+                     '--max-time', '240', e['url'], '-o', str(dest)]
+              done = subprocess.run(cmd).returncode == 0 and dest.exists()
+              if not done or dest.read_bytes()[:5] != b'%PDF-':
+                  print('FAILED', e['url'])
+                  dest.unlink(missing_ok=True)
+                  continue
+              data = dest.read_bytes()
+              e['slug'] = slug
+              e['file'] = f"/library/gst/{slug}.pdf"
+              e['bytes'] = len(data)
+              e['sha256'] = hashlib.sha256(data).hexdigest()
+              manifest.append(e)
+              print('ok', slug, len(data))
+          pathlib.Path('/tmp/manifest.json').write_text(json.dumps(manifest, indent=2))
+          print(f"{len(manifest)} files saved")
+          PY
+
+      - name: Record what was downloaded
+        run: |
+          mkdir -p library/gst
+          cp /tmp/manifest.json library/gst/source-manifest.json
+          du -sh public/library/gst || true
+          ls -la public/library/gst | head -40
+
+      - name: Commit the PDFs to this branch
+        run: |
+          if [ ! -f library/gst/source-manifest.json ]; then echo "nothing to commit"; exit 0; fi
+          git config user.name "zikshare-library-bot"
+          git config user.email "bot@zikshare.local"
+          git add public/library/gst library/gst/source-manifest.json
+          if git diff --cached --quiet; then echo "no changes"; exit 0; fi
+          git commit -m "Download the NOUN GST e-courseware into the library"
+          git push origin HEAD:${{ github.ref_name }}

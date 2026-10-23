@@ -148,12 +148,28 @@ export function findFresherPackByStoragePath(storagePath) {
  * never invent copy that the catalog does not contain, and a pack that has not
  * been seeded still appears with its free PDF.
  */
+/**
+ * True for a database row that belongs to a retired authored pack.
+ *
+ * The old shelves were cleared, but their `digital_products` rows are still in
+ * the database. A row like that points at `official-library/<slug>.pdf` and a
+ * preview under `/library/previews/`, both of which are gone. Rendering it
+ * would put a card in the library whose download 404s, so it is dropped until a
+ * pack with that storage path exists again.
+ */
+export function isRetiredPackRow(row) {
+    const path = row?.original_storage_path || row?.storage_path || ''
+    if (!path.startsWith('official-library/')) return false
+    return findFresherPackByStoragePath(path) === null
+}
+
 export function mergeLibraryMaterials(dbMaterials = []) {
+    const rows = dbMaterials.filter((row) => !isRetiredPackRow(row))
     const seededPaths = new Set(
-        dbMaterials.map((d) => d.original_storage_path || d.storage_path).filter(Boolean)
+        rows.map((d) => d.original_storage_path || d.storage_path).filter(Boolean)
     )
 
-    const fromDb = dbMaterials.map((d) => {
+    const fromDb = rows.map((d) => {
         const pack = findFresherPackByStoragePath(d.original_storage_path || d.storage_path)
         const book = pack ? null : findBookByStoragePath(d.original_storage_path || d.storage_path)
 

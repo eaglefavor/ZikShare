@@ -14,6 +14,7 @@ import {
     libraryCounts,
     mergeLibraryMaterials,
     findFresherPackByStoragePath,
+    isRetiredPackRow,
 } from '../lib/fresherLibrary'
 
 const ROOT = process.cwd()
@@ -254,5 +255,51 @@ describe('Library - validator still rejects bad packs', () => {
         const general = clone(goodPack())
         general.code = null
         expect(validatePacks([general])).toEqual([])
+    })
+})
+
+describe('Library - retired pack rows from the database', () => {
+    it('drops a row for a pack that is no longer on the shelf', () => {
+        // This is exactly what the old seeding left in digital_products.
+        const staleRows = [
+            {
+                id: '44444444-4444-4444-4444-444444444444',
+                title: 'GST 101: Use of English I - Grammar, Concord and Comprehension',
+                original_storage_path: 'official-library/gst-101-use-of-english.pdf',
+                preview_path: '/library/previews/gst-101-use-of-english.pdf',
+                page_count: 12,
+                price: 0,
+                is_free: true,
+            },
+            {
+                id: '55555555-5555-5555-5555-555555555555',
+                title: 'Side Hustles and Freelancing',
+                original_storage_path: 'official-library/side-hustles-and-freelancing.pdf',
+                price: 0,
+                is_free: true,
+            },
+        ]
+
+        expect(isRetiredPackRow(staleRows[0])).toBe(true)
+        expect(isRetiredPackRow(staleRows[1])).toBe(true)
+
+        const merged = mergeLibraryMaterials(staleRows)
+        expect(merged.some((item) => item.id === staleRows[0].id)).toBe(false)
+        expect(merged.some((item) => item.title.includes('Side Hustles'))).toBe(false)
+        // A dead link must never reach the page.
+        expect(merged.some((item) => String(item.download_path).includes('/library/packs/'))).toBe(false)
+        expect(merged.some((item) => String(item.preview_path).includes('/library/previews/'))).toBe(false)
+    })
+
+    it('leaves an ordinary marketplace listing alone', () => {
+        const listing = {
+            id: '66666666-6666-6666-6666-666666666666',
+            title: 'Standing fan, used one semester',
+            original_storage_path: 'listings/abc123.jpg',
+            price: 1500000,
+            is_free: false,
+        }
+        expect(isRetiredPackRow(listing)).toBe(false)
+        expect(mergeLibraryMaterials([listing]).some((item) => item.id === listing.id)).toBe(true)
     })
 })

@@ -6,11 +6,13 @@ that produces it.
 **Current state: the authored pack shelf is empty.** The operator cleared every
 course pack and study pack. The library now holds the eight full-length books on
 the Christian Books shelf (`library/content/books.mjs`, served from
-`public/library/books/`), the hosted NOUN GST manuals, and five typeset play
+`public/library/books/`), the hosted NOUN GST manuals, five typeset play
 shelves — Greek (`npm run drama:build`), Roman (`npm run roman:build`), medieval
 (`npm run medieval:build`), Renaissance (`npm run renaissance:build`) and modern
-(`npm run modern:build`), each built from the public-domain sources committed
-under `library/<shelf>/source/`.
+(`npm run modern:build`) — and the Theatre Arts shelf (`npm run theatre:build`),
+each built from the public-domain sources committed under `library/<shelf>/source/`.
+The Theatre Arts shelf also carries ZikShare's own teaching guides, which have no
+source file: they are written in `src/lib/theatreArtsLibrary.js`.
 The pack pipeline below is kept intact so new material — GST past questions, GST
 textbooks, Theatre Arts documents — can be added as packs without rebuilding
 anything.

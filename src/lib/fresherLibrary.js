@@ -6,6 +6,7 @@ import { ROMAN_DOMAIN, ROMAN_PLAYS, toRomanCard } from './romanLibrary'
 import { MEDIEVAL_DOMAIN, MEDIEVAL_PLAYS, toMedievalCard } from './medievalLibrary'
 import { RENAISSANCE_DOMAIN, RENAISSANCE_PLAYS, toRenaissanceCard } from './renaissanceLibrary'
 import { MODERN_DOMAIN, MODERN_PLAYS, toModernCard } from './modernLibrary'
+import { THEATRE_DOMAIN, THEATRE_TITLES, toTheatreCard } from './theatreArtsLibrary'
 
 /**
  * Display order of the shelves a study pack can sit on.
@@ -23,6 +24,7 @@ export const FRESHER_LIBRARY_DOMAIN_ORDER = [
     MEDIEVAL_DOMAIN,
     RENAISSANCE_DOMAIN,
     MODERN_DOMAIN,
+    THEATRE_DOMAIN,
     'Faculty Primer',
     'Theatre & Film Studies',
     'Departmental Archive',
@@ -39,6 +41,7 @@ export const FRESHER_DOMAIN_EMOJI = {
     [MEDIEVAL_DOMAIN]: '🕯️',
     [RENAISSANCE_DOMAIN]: '👑',
     [MODERN_DOMAIN]: '🌍',
+    [THEATRE_DOMAIN]: '🎬',
     'GST & Compulsory Courses': '🏛️',
     'Faculty Primer': '🎓',
     'Theatre & Film Studies': '🎭',
@@ -74,6 +77,8 @@ export function libraryCounts() {
     const renaissance = RENAISSANCE_PLAYS.length
     // Realism to the Absurd, in the editions Gutenberg publishes.
     const modern = MODERN_PLAYS.length
+    // Directing, design, history and criticism: classics plus ZikShare guides.
+    const theatre = THEATRE_TITLES.length
     // NOUN courseware is hosted on ZikShare: these download from us.
     const hosted = GST_CARDS.length
     return {
@@ -84,8 +89,9 @@ export function libraryCounts() {
         medieval,
         renaissance,
         modern,
+        theatre,
         hosted,
-        total: packs + books + plays + roman + medieval + renaissance + modern + hosted,
+        total: packs + books + plays + roman + medieval + renaissance + modern + theatre + hosted,
     }
 }
 
@@ -94,7 +100,7 @@ function countOf(n, one, many) {
 }
 
 /** e.g. "8 full-length books" or "12 study packs and 8 full-length books". */
-export function libraryCountLabel({ packs, books, plays, roman, medieval, renaissance, modern, hosted } = libraryCounts()) {
+export function libraryCountLabel({ packs, books, plays, roman, medieval, renaissance, modern, theatre, hosted } = libraryCounts()) {
     const parts = []
     if (packs > 0) parts.push(countOf(packs, 'study pack', 'study packs'))
     if (books > 0) parts.push(countOf(books, 'full-length book', 'full-length books'))
@@ -104,6 +110,7 @@ export function libraryCountLabel({ packs, books, plays, roman, medieval, renais
     if (medieval > 0) parts.push(`${medieval} medieval plays to download`)
     if (renaissance > 0) parts.push(`${renaissance} Renaissance plays to download`)
     if (modern > 0) parts.push(`${modern} modern plays to download`)
+    if (theatre > 0) parts.push(`${theatre} Theatre Arts titles to download`)
     if (parts.length === 0) return 'No documents yet'
     if (parts.length === 1) return parts[0]
     return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`
@@ -124,6 +131,7 @@ export const FRESHER_LIBRARY_DOMAINS = FRESHER_LIBRARY_DOMAIN_ORDER
             MEDIEVAL_PLAYS.filter(() => name === MEDIEVAL_DOMAIN).length +
             RENAISSANCE_PLAYS.filter(() => name === RENAISSANCE_DOMAIN).length +
             MODERN_PLAYS.filter(() => name === MODERN_DOMAIN).length +
+            THEATRE_TITLES.filter(() => name === THEATRE_DOMAIN).length +
             GST_CARDS.filter((card) => card.domain === name).length,
     }))
     .filter((d) => d.count > 0)
@@ -262,6 +270,8 @@ export function mergeLibraryMaterials(dbMaterials = []) {
     const renaissance = RENAISSANCE_PLAYS.map(toRenaissanceCard)
     // Modern plays are hosted PDFs too, under /library/modern.
     const modern = MODERN_PLAYS.map(toModernCard)
+    // Theatre Arts titles are hosted PDFs too, under /library/theatre.
+    const theatre = THEATRE_TITLES.map(toTheatreCard)
 
     // NOUN courseware is hosted here, so it is a normal library document with a
     // real download path. A database row never shadows it.
@@ -275,5 +285,6 @@ export function mergeLibraryMaterials(dbMaterials = []) {
         ...medieval,
         ...renaissance,
         ...modern,
+        ...theatre,
     ]
 }

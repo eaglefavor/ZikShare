@@ -14,6 +14,7 @@ import LibraryPage from '../pages/LibraryPage'
 import BookDetailPage from '../pages/BookDetailPage'
 import * as database from '../lib/database'
 import { MODERN_PLAYS, MODERN_UNHOSTABLE } from '../lib/modernLibrary'
+import { THEATRE_TITLES } from '../lib/theatreArtsLibrary'
 
 vi.mock('../lib/database', () => ({
   getDigitalProducts: vi.fn(),
@@ -57,8 +58,9 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
           `^${CHRISTIAN_BOOKS.length} full-length books, ${GST_SHELF.length} NOUN course manuals to download, ` +
             `\\d+ Greek plays to download, ${ROMAN_PLAYS.length} Roman plays to download, ` +
             `${MEDIEVAL_PLAYS.length} medieval plays to download, ` +
-            `${RENAISSANCE_PLAYS.length} Renaissance plays to download and ` +
-            `${MODERN_PLAYS.length} modern plays to download\\.`
+            `${RENAISSANCE_PLAYS.length} Renaissance plays to download, ` +
+            `${MODERN_PLAYS.length} modern plays to download and ` +
+            `${THEATRE_TITLES.length} Theatre Arts titles to download\\.`
         )
       )
     ).toBeInTheDocument()
@@ -149,6 +151,7 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
       MEDIEVAL_PLAYS.length +
       RENAISSANCE_PLAYS.length +
       MODERN_PLAYS.length +
+      THEATRE_TITLES.length +
       GST_SHELF.length
 
     openFilters()
@@ -179,7 +182,8 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
         ROMAN_PLAYS.length +
         MEDIEVAL_PLAYS.length +
         RENAISSANCE_PLAYS.length +
-        MODERN_PLAYS.length
+        MODERN_PLAYS.length +
+        THEATRE_TITLES.length
     )
     expect(screen.getAllByRole('link', { name: /Read book/i })).toHaveLength(CHRISTIAN_BOOKS.length)
 
@@ -202,7 +206,8 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
         ROMAN_PLAYS.length +
         MEDIEVAL_PLAYS.length +
         RENAISSANCE_PLAYS.length +
-        MODERN_PLAYS.length
+        MODERN_PLAYS.length +
+        THEATRE_TITLES.length
     )
   })
 
@@ -344,6 +349,34 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
         screen.getByText(`${gap.title} (${gap.movement}).`, { exact: false })
       ).toBeInTheDocument()
     }
+  })
+
+  it('offers the Theatre Arts shelf grouped by topic, classics and guides labelled', async () => {
+    const { container } = render(
+      <MemoryRouter>
+        <LibraryPage />
+      </MemoryRouter>
+    )
+
+    const links = await screen.findAllByRole('link', { name: /Download Free PDF/i })
+    const theatreHrefs = links
+      .map((link) => link.getAttribute('href'))
+      .filter((href) => href.includes('/library/theatre/'))
+    expect(theatreHrefs).toHaveLength(THEATRE_TITLES.length)
+    for (const href of theatreHrefs) {
+      expect(href).toMatch(/^\/library\/theatre\/[a-z0-9-]+\.pdf$/)
+    }
+
+    // Nothing on this shelf links out; every file is ours.
+    expect(container.querySelector('a[href*="gutenberg.org"]')).toBeNull()
+
+    // Both a public-domain classic and a ZikShare guide are on the page.
+    expect(await screen.findByText('The Poetics of Aristotle')).toBeInTheDocument()
+    expect(screen.getByText('How to Review a Play')).toBeInTheDocument()
+
+    // Listed by the department's topics, not as one wall of cards.
+    expect(screen.getByRole('heading', { name: /^Lighting/ })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /^Dramatic Criticism/ })).toBeInTheDocument()
   })
 
   it('finds a play by playwright and by its own title', async () => {

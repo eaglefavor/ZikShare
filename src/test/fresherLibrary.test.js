@@ -20,6 +20,7 @@ import {
     isRetiredPackRow,
 } from '../lib/fresherLibrary'
 import { MODERN_PLAYS } from '../lib/modernLibrary'
+import { THEATRE_TITLES } from '../lib/theatreArtsLibrary'
 
 const ROOT = process.cwd()
 const BOOKS_DIR = path.join(ROOT, 'public', 'library', 'books')
@@ -93,6 +94,7 @@ describe('Library - the shelf state the operator asked for', () => {
             'Medieval Theatre',
             'Renaissance Theatre',
             'Modern Theatre',
+            'Theatre Arts',
             'Christian Books',
         ])
         expect(FRESHER_LIBRARY_DOMAINS.find((d) => d.name === 'Christian Books').count).toBe(CHRISTIAN_BOOKS.length)
@@ -104,6 +106,9 @@ describe('Library - the shelf state the operator asked for', () => {
         )
         expect(FRESHER_LIBRARY_DOMAINS.find((d) => d.name === 'Modern Theatre').count).toBe(
             MODERN_PLAYS.length
+        )
+        expect(FRESHER_LIBRARY_DOMAINS.find((d) => d.name === 'Theatre Arts').count).toBe(
+            THEATRE_TITLES.length
         )
     })
 
@@ -117,6 +122,7 @@ describe('Library - the shelf state the operator asked for', () => {
             medieval: MEDIEVAL_PLAYS.length,
             renaissance: RENAISSANCE_PLAYS.length,
             modern: MODERN_PLAYS.length,
+            theatre: THEATRE_TITLES.length,
             hosted: GST_SHELF.length,
             total:
                 CHRISTIAN_BOOKS.length +
@@ -125,14 +131,16 @@ describe('Library - the shelf state the operator asked for', () => {
                 MEDIEVAL_PLAYS.length +
                 RENAISSANCE_PLAYS.length +
                 MODERN_PLAYS.length +
+                THEATRE_TITLES.length +
                 GST_SHELF.length,
         })
         expect(libraryCountLabel(counts)).toBe(
             `${CHRISTIAN_BOOKS.length} full-length books, ${GST_SHELF.length} NOUN course manuals to download, ` +
                 `${DRAMA_PLAYS.length} Greek plays to download, ${ROMAN_PLAYS.length} Roman plays to download, ` +
                 `${MEDIEVAL_PLAYS.length} medieval plays to download, ` +
-                `${RENAISSANCE_PLAYS.length} Renaissance plays to download and ` +
-                `${MODERN_PLAYS.length} modern plays to download`
+                `${RENAISSANCE_PLAYS.length} Renaissance plays to download, ` +
+                `${MODERN_PLAYS.length} modern plays to download and ` +
+                `${THEATRE_TITLES.length} Theatre Arts titles to download`
         )
     })
 
@@ -195,12 +203,13 @@ describe('Library - the store merge when the pack shelf is empty', () => {
                 MEDIEVAL_PLAYS.length +
                 RENAISSANCE_PLAYS.length +
                 MODERN_PLAYS.length +
+                THEATRE_TITLES.length +
                 GST_SHELF.length
         )
         expect(
             merged.every(
                 (m) =>
-                    m.isBook || m.isDrama || m.isRoman || m.isMedieval || m.isRenaissance || m.isModern || m.isGst
+                    m.isBook || m.isDrama || m.isRoman || m.isMedieval || m.isRenaissance || m.isModern || m.isTheatre || m.isGst
             )
         ).toBe(
             true

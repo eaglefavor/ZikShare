@@ -1,0 +1,138 @@
+/**
+ * Build the Theatre Arts shelf.
+ *
+ * Two kinds of document:
+ *
+ * - `classic`: a whole Project Gutenberg e-text, used from its start marker to
+ *   its end marker, with the author and edition credited on the cover.
+ * - `guide`: a ZikShare teaching unit written for this shelf and typeset from
+ *   the catalogue, with no external source at all.
+ *
+ * Usage: node scripts/build-theatre-pdfs.mjs
+ */
+import fs from 'node:fs'
+import path from 'node:path'
+import crypto from 'node:crypto'
+import { PDFDocument } from 'pdf-lib'
+import { ACCENTS, buildPlayPdf } from './lib/play-pdf.mjs'
+import { buildGuidePdf } from './lib/theatre-pdf.mjs'
+import { CLASSIC_TEXTS, GUIDES, THEATRE_TITLES } from '../src/lib/theatreArtsLibrary.js'
+
+const ROOT = process.cwd()
+const SOURCE = path.join(ROOT, 'library', 'theatre', 'source')
+const OUT_DIR = path.join(ROOT, 'public', 'library', 'theatre')
+const OUT_JSON = path.join(ROOT, 'library', 'theatre', 'shelf.generated.json')
+const OUT_JS = path.join(ROOT, 'src', 'lib', 'theatreArtsLibraryData.js')
+
+const START = /^\*\*\*\s*START OF (THE|THIS) PROJECT GUTENBERG/i
+const END = /^\*\*\*\s*END OF (THE|THIS) PROJECT GUTENBERG/i
+
+fs.mkdirSync(OUT_DIR, { recursive: true })
+
+const shelf = []
+
+function source(id) {
+    const file = path.join(SOURCE, `${id}.txt`)
+    if (!fs.existsSync(file)) throw new Error(`source ${id} is not in library/theatre/source`)
+    const raw = fs.readFileSync(file, 'utf8').replace(/\r\n/g, '\n')
+    const lines = raw.split('\n')
+    const start = lines.findIndex((line) => START.test(line))
+    const end = lines.findIndex((line) => END.test(line))
+    if (start === -1 || end === -1) throw new Error(`source ${id}: Gutenberg markers not found`)
+    return {
+        header: lines.slice(0, start + 1).join('\n'),
+        body: lines.slice(start + 1, end).join('\n'),
+        footer: lines.slice(end).join('\n'),
+    }
+}
+
+for (const item of THEATRE_TITLES) {
+    let bytes
+    let words
+
+    if (item.kind === 'guide') {
+        bytes = await buildGuidePdf(item, { accent: ACCENTS.theatre })
+        words = [
+            item.summary,
+            ...item.sections.flatMap((section) => [section.heading, ...section.paras]),
+            ...item.exercises,
+            ...item.reading,
+        ]
+            .join(' ')
+            .split(/\s+/)
+            .filter(Boolean).length
+        if (words < 450) throw new Error(`${item.slug}: only ${words} words - the unit is too thin`)
+    } else {
+        const src = source(item.sourceId)
+        words = src.body.split(/\s+/).filter(Boolean).length
+        if (words < 3000) throw new Error(`${item.slug}: only ${words} words extracted`)
+        bytes = await buildPlayPdf(
+            { title: item.title, author: item.author, translator: item.editor, dateLabel: item.dateLabel },
+            {
+                shelfLabel: 'THEATRE ARTS',
+                accent: ACCENTS.theatre,
+                meta: [
+                    ['Author', item.author],
+                    ['Topic', item.topic],
+                    ['Text', item.editor],
+                    ['Source text', `Project Gutenberg eBook #${item.sourceId}`],
+                    ['Edition', item.edition],
+                    ['Date', item.dateLabel],
+                    ['Language', 'English'],
+                    ['Rights', 'Public domain'],
+                ],
+                coverNote: [
+                    item.note,
+                    '',
+                    'This PDF was typeset by ZikShare from the edition named above. ZikShare',
+                    'charges nothing for it. Project Gutenberg\u2019s header and licence, and its',
+                    'closing notice, are reproduced unchanged inside this file, because their',
+                    'terms travel with the text.',
+                ],
+                headerText: src.header,
+                bodyText: src.body,
+                footerText: src.footer,
+            }
+        )
+    }
+
+    fs.writeFileSync(path.join(OUT_DIR, `${item.slug}.pdf`), bytes)
+    const pages = (await PDFDocument.load(bytes)).getPageCount()
+
+    shelf.push({
+        slug: item.slug,
+        title: item.title,
+        author: item.author,
+        topic: item.topic,
+        kind: item.kind,
+        sourceId: item.sourceId ?? null,
+        download_path: `/library/theatre/${item.slug}.pdf`,
+        pages,
+        words,
+        bytes: bytes.length,
+        sha256: crypto.createHash('sha256').update(bytes).digest('hex'),
+    })
+
+    console.log(
+        `${item.kind === 'guide' ? 'guide  ' : 'text   '} ${item.topic.slice(0, 22).padEnd(23)} ${item.title.slice(0, 40).padEnd(41)} ${String(pages).padStart(4)}p ${(bytes.length / 1024).toFixed(0).padStart(5)}kB`
+    )
+}
+
+fs.writeFileSync(
+    OUT_JSON,
+    JSON.stringify({ generatedAt: new Date().toISOString(), count: shelf.length, shelf }, null, 2)
+)
+fs.writeFileSync(
+    OUT_JS,
+    '// AUTO-GENERATED by scripts/build-theatre-pdfs.mjs - do not edit by hand.\n' +
+        '// Classics: Project Gutenberg, credited per title. Guides: ZikShare originals.\n' +
+        '// Rebuild with: npm run theatre:build\n\n' +
+        `export const THEATRE_SHELF = ${JSON.stringify(shelf, null, 4)}\n`
+)
+
+const pages = shelf.reduce((total, item) => total + item.pages, 0)
+const bytes = shelf.reduce((total, item) => total + item.bytes, 0)
+const guides = shelf.filter((item) => item.kind === 'guide').length
+console.log(
+    `\n[theatre] ${shelf.length} titles (${guides} guides, ${shelf.length - guides} public-domain texts) | ${pages} pages | ${(bytes / 1048576).toFixed(1)} MB`
+)

@@ -12,7 +12,9 @@ import BookCover from './BookCover'
  */
 export default function LibraryCard({ item, onOpen }) {
     const href = item.isBook ? `/library/books/${item.slug}` : item.download_path
-    const isPlay = Boolean(item.isDrama || item.isRoman || item.isMedieval || item.isRenaissance)
+    const isPlay = Boolean(
+        item.isDrama || item.isRoman || item.isMedieval || item.isRenaissance || item.isModern
+    )
 
     return (
         <article className="zs-item-card" style={{ padding: 0, overflow: 'hidden' }}>

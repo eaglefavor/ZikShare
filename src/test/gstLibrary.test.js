@@ -13,6 +13,7 @@ import {
     toGstCard,
 } from '../lib/gstLibrary'
 import { mergeLibraryMaterials, libraryCounts } from '../lib/fresherLibrary'
+import { MODERN_PLAYS } from '../lib/modernLibrary'
 
 const ROOT = process.cwd()
 
@@ -133,6 +134,7 @@ describe('NOUN GST shelf - how it appears in the library', () => {
                 counts.roman +
                 counts.medieval +
                 counts.renaissance +
+                counts.modern +
                 counts.hosted
         )
     })

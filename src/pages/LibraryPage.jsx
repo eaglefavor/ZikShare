@@ -6,6 +6,7 @@ import { UNIZIK_FACULTIES, ACADEMIC_LEVELS, ACADEMIC_MATERIAL_TYPES } from '../l
 import { EURIPIDES_NOT_AVAILABLE } from '../lib/dramaLibrary'
 import { MEDIEVAL_NOT_AVAILABLE } from '../lib/medievalLibrary'
 import { RENAISSANCE_DOMAIN, RENAISSANCE_NOT_AVAILABLE } from '../lib/renaissanceLibrary'
+import { MODERN_DOMAIN, MODERN_UNHOSTABLE } from '../lib/modernLibrary'
 import {
     FRESHER_LIBRARY_DOMAINS,
     libraryCountLabel,
@@ -28,9 +29,9 @@ const TOTAL = COUNTS.total
 const COUNT_LABEL = libraryCountLabel(COUNTS)
 
 /**
- * The Renaissance shelf holds sixty-nine plays, so it is listed by playwright
- * instead of as one undifferentiated wall of cards. The order is the order the
- * cards arrive in, which is the order the catalogue declares.
+ * A shelf with dozens of plays is listed by playwright or by movement instead of
+ * as one undifferentiated wall of cards. The order is the order the cards arrive
+ * in, which is the order the catalogue declares.
  */
 function groupPlays(items) {
     const groups = []
@@ -134,7 +135,7 @@ export default function LibraryPage() {
                     </>
                 }
                 title="UNIZIK Digital Library"
-                lead={`${COUNT_LABEL}. Everything is free — no sign-in, no payment step. Manuals, books, Greek tragedies, Roman plays, medieval plays and Renaissance plays all download as PDF from this page.`}
+                lead={`${COUNT_LABEL}. Everything is free — no sign-in, no payment step. Manuals, books, Greek tragedies, Roman plays, medieval plays, Renaissance plays and modern plays all download as PDF from this page.`}
             />
 
             {/* ── One toolbar, always in reach ──────────────────────────── */}
@@ -217,7 +218,7 @@ export default function LibraryPage() {
                             title={`${shelf.emoji} ${shelf.name}`}
                             description={`${shelf.items.length} ${shelf.items.length === 1 ? 'document' : 'documents'} · free`}
                         />
-                        {shelf.name === RENAISSANCE_DOMAIN ? (
+                        {shelf.name === RENAISSANCE_DOMAIN || shelf.name === MODERN_DOMAIN ? (
                             groupPlays(shelf.items).map((group) => (
                                 <div key={group.name}>
                                     <h3
@@ -319,11 +320,11 @@ export default function LibraryPage() {
             </section>
 
             {/* ── What the Renaissance shelf leaves out, and why ─────────── */}
-            <section className="zs-section" aria-labelledby="missing-renaissance-plays">
+            <section className="zs-section" aria-labelledby="missing-plays">
                 <SectionHeading
-                    id="missing-renaissance-plays"
-                    title="What the Renaissance shelf leaves out"
-                    description="Sixty-nine plays is not the whole of the English Renaissance stage. These are the largest gaps, named here rather than given a card that opens nothing."
+                    id="missing-plays"
+                    title="What the play shelves leave out"
+                    description="Six decades of modern drama is not the whole of the modern stage, and sixty-nine plays is not the whole of the English Renaissance. These are the largest gaps, named here rather than given a card that opens nothing."
                 />
                 <div className="zs-panel" style={{ margin: 0 }}>
                     <ul
@@ -343,6 +344,14 @@ export default function LibraryPage() {
                                 {play.note}
                             </li>
                         ))}
+                        {MODERN_UNHOSTABLE.map((play) => (
+                            <li key={play.title}>
+                                <strong style={{ color: 'var(--color-text)' }}>
+                                    {play.title} ({play.movement}).
+                                </strong>{' '}
+                                {play.note}
+                            </li>
+                        ))}
                     </ul>
                 </div>
             </section>
@@ -353,7 +362,7 @@ export default function LibraryPage() {
                     <strong>NOUN course manuals</strong> are published by the National Open University of
                     Nigeria and hosted here free of charge; NOUN permits educational use and prohibits
                     commercial use. <strong>Books</strong> are third-party works: copyright stays with the
-                    author and publisher. <strong>Greek, Roman, medieval and Renaissance plays</strong> are public-domain
+                    author and publisher. <strong>Greek, Roman, medieval, Renaissance and modern plays</strong> are public-domain
                     English texts, typeset as PDFs and hosted here too; the edition and translator of each one
                     is credited on the card and printed inside the file. Always confirm your current outline
                     with your department.

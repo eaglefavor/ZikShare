@@ -14,6 +14,7 @@ import {
     toRenaissanceCard,
 } from '../lib/renaissanceLibrary'
 import { libraryCountLabel, libraryCounts, mergeLibraryMaterials } from '../lib/fresherLibrary'
+import { MODERN_PLAYS } from '../lib/modernLibrary'
 
 const PUBLIC_DIR = path.join(process.cwd(), 'public')
 
@@ -177,6 +178,7 @@ describe('Renaissance theatre shelf - how it appears in the library', () => {
                 counts.roman +
                 counts.medieval +
                 counts.renaissance +
+                counts.modern +
                 counts.hosted
         )
         expect(libraryCountLabel(counts)).toContain(

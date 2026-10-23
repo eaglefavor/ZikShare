@@ -13,6 +13,7 @@ import {
   groupByShelf,
   sortLibrary,
 } from '../lib/libraryView'
+import { MODERN_PLAYS } from '../lib/modernLibrary'
 
 const all = mergeLibraryMaterials([])
 
@@ -25,6 +26,7 @@ describe('library view', () => {
         ROMAN_PLAYS.length +
         MEDIEVAL_PLAYS.length +
         RENAISSANCE_PLAYS.length +
+        MODERN_PLAYS.length +
         GST_SHELF.length
     )
   })
@@ -38,6 +40,7 @@ describe('library view', () => {
       'Roman Theatre',
       'Medieval Theatre',
       'Renaissance Theatre',
+      'Modern Theatre',
       'Christian Books',
     ])
     expect(shelves.reduce((total, shelf) => total + shelf.items.length, 0)).toBe(all.length)
@@ -60,10 +63,16 @@ describe('library view', () => {
     // The Greek plays are Theatre & Film Studies material inside Faculty of Arts.
     const arts = filterLibrary(all, { faculty: 'Faculty of Arts' })
     expect(arts).toHaveLength(
-      DRAMA_PLAYS.length + ROMAN_PLAYS.length + MEDIEVAL_PLAYS.length + RENAISSANCE_PLAYS.length
+      DRAMA_PLAYS.length +
+        ROMAN_PLAYS.length +
+        MEDIEVAL_PLAYS.length +
+        RENAISSANCE_PLAYS.length +
+        MODERN_PLAYS.length
     )
     expect(
-      arts.every((item) => item.isDrama || item.isRoman || item.isMedieval || item.isRenaissance)
+      arts.every(
+        (item) => item.isDrama || item.isRoman || item.isMedieval || item.isRenaissance || item.isModern
+      )
     ).toBe(true)
 
     // NOUN courseware sits under General Studies and can be filtered by level.

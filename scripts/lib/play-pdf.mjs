@@ -22,10 +22,17 @@ export const ACCENTS = {
     roman: rgb(0.13, 0.29, 0.45),
     medieval: rgb(0.44, 0.32, 0.11),
     renaissance: rgb(0.35, 0.2, 0.42),
+    modern: rgb(0.16, 0.36, 0.35),
 }
 
 const REPLACE = {
     'Œ': 'OE', 'œ': 'oe', 'Æ': 'AE', 'æ': 'ae', '—': '-', '–': '-',
+    // Central and Eastern European letters in playwrights' names (Čapek).
+    'Č': 'C', 'č': 'c', 'Ř': 'R', 'ř': 'r', 'Š': 'S', 'š': 's',
+    'Ž': 'Z', 'ž': 'z', 'Ł': 'L', 'ł': 'l', 'Ń': 'N', 'ń': 'n',
+    'Ą': 'A', 'ą': 'a', 'Ę': 'E', 'ę': 'e', 'Ő': 'O', 'ő': 'o',
+    'Ű': 'U', 'ű': 'u', 'Ď': 'D', 'ď': 'd', 'Ť': 'T', 'ť': 't',
+    'Ň': 'N', 'ň': 'n', 'Ŕ': 'R', 'ŕ': 'r',
     '‘': "'", '’': "'", '“': '"', '”': '"', '•': '-', '…': '...',
 }
 
@@ -41,7 +48,7 @@ export function clean(text) {
         // Only spaces are consumed: a line ending in a dash is an interrupted
         // speech, and the next line is the next speaker, not the same one.
         .replace(/[ \t]*—[ \t]*/g, ' - ')
-        .replace(/[ŒœÆæ–‘’“”•…]/g, (c) => REPLACE[c] ?? c)
+        .replace(/[ŒœÆæ–‘’“”•…ČčŘřŠšŽžŁłŃńĄąĘęŐőŰűĎďŤťŇňŔŕ]/g, (c) => REPLACE[c] ?? c)
         .replace(/[^\x09\x0A\x0D\x20-\x7E\xA0-\xFF]/g, '')
         .replace(/\r/g, '')
 }
@@ -110,17 +117,17 @@ export async function buildPlayPdf(play, options) {
     cover.drawText('ZIKSHARE LIBRARY', { x: MARGIN, y, size: 9, font: serifBold, color: accent })
     cover.drawText(shelfLabel, { x: MARGIN, y: y - 14, size: 8, font: serif, color: MUTED })
     y -= 70
-    cover.drawText(play.author.toUpperCase(), { x: MARGIN, y, size: 12, font: serifBold, color: MUTED })
+    cover.drawText(clean(play.author.toUpperCase()), { x: MARGIN, y, size: 12, font: serifBold, color: MUTED })
     y -= 40
 
-    for (const line of wrap(play.title, serifBold, 30, WIDTH)) {
+    for (const line of wrap(clean(play.title), serifBold, 30, WIDTH)) {
         cover.drawText(line, { x: MARGIN, y, size: 30, font: serifBold, color: INK })
         y -= 38
     }
 
     if (play.dateLabel) {
         y -= 6
-        cover.drawText(play.dateLabel, { x: MARGIN, y, size: 11, font: serif, color: MUTED })
+        cover.drawText(clean(play.dateLabel), { x: MARGIN, y, size: 11, font: serif, color: MUTED })
         y -= 22
     }
 
@@ -130,7 +137,7 @@ export async function buildPlayPdf(play, options) {
 
     for (const [label, value] of meta) {
         cover.drawText(label, { x: MARGIN, y, size: 9, font: serifBold, color: MUTED })
-        const valueLines = wrap(value, serif, 10.5, WIDTH - 110)
+        const valueLines = wrap(clean(value), serif, 10.5, WIDTH - 110)
         valueLines.forEach((line, index) => {
             cover.drawText(line, { x: MARGIN + 110, y: y - index * 13, size: 10.5, font: serif, color: INK })
         })
@@ -139,7 +146,7 @@ export async function buildPlayPdf(play, options) {
 
     y -= 14
     for (const paragraph of coverNote) {
-        const lines = paragraph ? wrap(paragraph, serifItalic, 9.5, WIDTH) : ['']
+        const lines = paragraph ? wrap(clean(paragraph), serifItalic, 9.5, WIDTH) : ['']
         for (const text of lines) {
             cover.drawText(text, { x: MARGIN, y, size: 9.5, font: serifItalic, color: MUTED })
             y -= 14

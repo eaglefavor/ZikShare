@@ -623,3 +623,80 @@ that does not exist.
 - 186 tests in 22 files. A new `renaissanceLibrary.test.js` asserts, among other
   things, that every card's PDF exists on disk, opens as `%PDF-`, matches its
   recorded checksum and never links out to Gutenberg.
+
+---
+
+## Phase 14 — The modern theatre shelf
+
+**What it is.** Seventy plays from the six movements the shelf is built around —
+Realism, Naturalism, Symbolism, Expressionism, Epic Theatre and Absurdism —
+typeset as PDFs and hosted on ZikShare, every one credited to the edition and
+translator it was set from, and not one card pointing off-site.
+
+### What each movement carries
+
+| Movement | Plays | Who |
+| --- | --- | --- |
+| Realism | 35 | Ibsen (10 prose plays), Chekhov (4), Shaw (9), Wilde (3), Synge (4), Gorky, Tolstoy |
+| Naturalism | 10 | Strindberg (5), Hauptmann (5) |
+| Symbolism | 18 | Maeterlinck (5), Ibsen's *Brand* and *Peer Gynt*, Wilde's *Salomé*, Yeats (10) |
+| Expressionism | 7 | Strindberg (5 late plays), Čapek (2) |
+| Epic Theatre | 0 | named as a gap — see below |
+| Absurdism | 0 | named as a gap — see below |
+
+**The two gaps are stated, not papered over.** Brecht (d. 1956) and Beckett
+(d. 1989), with Ionesco, Pinter and Genet, are in copyright everywhere; Jarry's
+*Ubu Roi* is out of copyright but Gutenberg holds it only in French; Kaiser and
+Toller are in copyright and absent from Gutenberg in English. That is the whole
+of the Epic and Absurd movements, so the shelf cannot carry them. The library
+page renders a "What the play shelves leave out" panel naming Brecht, Beckett,
+Ionesco, Pinter, Genet, Jarry, the German expressionists and the two Ibsen verse
+volumes, with the reason for each. A card that opens nothing would be a lie; a
+named gap is not.
+
+### How it was built
+
+**Sources.** Twenty-one Gutenberg e-texts, of two kinds. Single-play e-texts
+(Shaw, Wilde, Synge, Čapek, Gorky, Tolstoy, the prose Ibsen and most of
+Chekhov) are used whole. Multi-play volumes — Strindberg's four series,
+Hauptmann's two, the Hovey Maeterlinck, and Yeats's *Collected Works* volumes II
+to IV — are cut into their plays. A temporary GitHub Actions workflow downloaded
+the texts, because the sandbox cannot reach Gutenberg for downloads; it has been
+deleted, the workflow is gone from the repository, and the texts sit in
+`library/modern/source/`.
+
+**Cutting a play out of a volume.** Both kinds of front matter had to be beaten.
+A volume lists its contents at the front, so the first *occurrence* of a title is
+never the play; the builder scores every candidate heading by what follows it —
+a cast list, an opening act, an "English version by" line — and penalises a
+candidate followed by a sibling play's title. A play also ends at the next
+play's title, but only a heading sixty lines or more past the start counts,
+because a title repeats as a running head inside its own text. Three cuts caught
+by the audit after the first build: *Creditors* ran on into *Pariah*, *The Beaver
+Coat* into *The Conflagration*, and *Drayman Henschel* into *Rose Bernd*. Each
+now has an explicit `endHeading`. *The Golden Helmet* had swallowed sixty pages
+of Yeats's essays on the Irish Dramatic Movement, and *The Shadowy Waters* its
+volume appendix; both are cut at the essay or appendix heading.
+
+**Two verse plays the first pass lost.** *Brand* and *Peer Gynt* print their act
+headings indented and their titles centred, so the left-margin heading search
+finds nothing; but Gutenberg's #66238 and #66239 are single-work volumes, so
+they need no cut at all and are used whole, five acts each.
+
+**Typeface.** The shared typesetter only writes WinAnsi, which cannot encode
+Čapek's Č. The shared `clean()` now transliterates the Central and Eastern
+European letters (Č, Ř, Š, Ž, Ł, Ą, Ę and the rest) the way it already handled
+Œ and Æ, and every string that reaches `drawText` — cover, metadata and notes —
+goes through it. Without that the build dies at *R.U.R.*
+
+### Numbers, measured rather than written
+
+- 70 plays, 6,131 pages, 11.7 MB of PDF; SHA-256 recorded for every file.
+- Library total: 8 books + 22 NOUN manuals + 31 Greek + 36 Roman + 17 medieval +
+  69 Renaissance + 70 modern = **253 documents**, printed from `libraryCounts()`.
+- 202 tests in 23 files. `modernLibrary.test.js` asserts, among other things,
+  that every card's PDF exists on disk, opens as `%PDF-`, matches its recorded
+  checksum and never links out to Gutenberg; that every play sits in a declared
+  movement; that the four covered movements add up to the shelf; and that the
+  two gaps are still declared and still name Brecht, Beckett, Ionesco, Pinter,
+  Genet and Jarry.

@@ -1,25 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { Filter, Search, ShieldCheck, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Filter, Search, ShieldCheck, X } from 'lucide-react'
 import { getDigitalProducts } from '../lib/database'
 import { UNIZIK_FACULTIES, ACADEMIC_LEVELS, ACADEMIC_MATERIAL_TYPES } from '../lib/categories'
-import { EURIPIDES_NOT_AVAILABLE } from '../lib/dramaLibrary'
-import { MEDIEVAL_NOT_AVAILABLE } from '../lib/medievalLibrary'
-import { RENAISSANCE_DOMAIN, RENAISSANCE_NOT_AVAILABLE } from '../lib/renaissanceLibrary'
-import { MODERN_DOMAIN, MODERN_UNHOSTABLE } from '../lib/modernLibrary'
-import { THEATRE_DOMAIN } from '../lib/theatreArtsLibrary'
 import {
     FRESHER_LIBRARY_DOMAINS,
     libraryCountLabel,
     libraryCounts,
     mergeLibraryMaterials,
 } from '../lib/fresherLibrary'
+import { shelfGaps, shelfInfo } from '../lib/shelfGuide'
 import {
     EMPTY_FILTERS,
     SORT_OPTIONS,
     activeFilterCount,
     filterLibrary,
-    groupByShelf,
     sortLibrary,
 } from '../lib/libraryView'
 import { Button, Chip, EmptyState, PageHeader, SearchField, SectionHeading } from '../components/ui'
@@ -30,14 +25,13 @@ const TOTAL = COUNTS.total
 const COUNT_LABEL = libraryCountLabel(COUNTS)
 
 /**
- * A shelf with dozens of plays is listed by playwright or by movement instead of
- * as one undifferentiated wall of cards. The order is the order the cards arrive
- * in, which is the order the catalogue declares.
+ * Play shelves with dozens of titles are listed by playwright, movement or
+ * topic instead of as one undifferentiated wall of cards.
  */
-function groupPlays(items) {
+function groupItems(items) {
     const groups = []
     for (const item of items) {
-        const name = item.group || 'Plays'
+        const name = item.group || item.author || 'Other'
         let group = groups.find((entry) => entry.name === name)
         if (!group) {
             group = { name, items: [] }
@@ -54,6 +48,57 @@ function FilterGroup({ label, children }) {
             <div className="zs-filter-group__label">{label}</div>
             <div className="zs-filter-group__chips">{children}</div>
         </div>
+    )
+}
+
+/** The one line above a shelf's cards: "31 plays · free PDFs". */
+function shelfLine(name, count) {
+    const info = shelfInfo(name)
+    return `${count} ${count === 1 ? info.unit : info.unitPlural} · free PDFs`
+}
+
+function GapPanel({ name }) {
+    const gaps = shelfGaps(name)
+    if (!gaps) return null
+    return (
+        <details className="zs-details">
+            <summary>
+                {gaps.title} <span className="zs-details__hint">({gaps.items.length})</span>
+            </summary>
+            <p className="zs-details__lead">{gaps.description}</p>
+            <ul className="zs-details__list">
+                {gaps.items.map((item) => (
+                    <li key={item.label}>
+                        <strong>{item.label}</strong>
+                        {item.hint && (
+                            <>
+                                {' ('}
+                                <span className="zs-details__hint">{item.hint}</span>
+                                {')'}
+                            </>
+                        )}
+                        . <span className="zs-details__note">{item.note}</span>
+                    </li>
+                ))}
+            </ul>
+        </details>
+    )
+}
+
+function Licence({ compact = false }) {
+    return (
+        <details className="zs-details">
+            <summary>Where these documents come from</summary>
+            <p className="zs-details__lead">
+                <strong>NOUN course manuals</strong> are published by the National Open University of
+                Nigeria and hosted here free of charge; NOUN permits educational use and prohibits
+                commercial use. <strong>Books</strong> are third-party works: copyright stays with the
+                author and publisher. <strong>Plays and Theatre Arts titles</strong> are public-domain
+                English texts, typeset as PDFs and hosted here too; the edition and translator of each
+                one is credited on the card and printed inside the file.
+                {compact ? '' : ' Always confirm your current outline with your department.'}
+            </p>
+        </details>
     )
 }
 
@@ -107,12 +152,26 @@ export default function LibraryPage() {
         return UNIZIK_FACULTIES.find((f) => f.name === filters.faculty)?.departments || []
     }, [filters.faculty])
 
-    const isBrowsing = !filters.query && activeFilterCount(filters) === 0
-    const shelves = useMemo(() => (isBrowsing ? groupByShelf(results) : []), [isBrowsing, results])
+    const onShelf = filters.domain !== 'All'
+    // Every filter except the shelf itself: a shelf page is not "searching".
+    const extraFilters = activeFilterCount({ ...filters, domain: 'All' })
+    const isSearching = Boolean(filters.query) || extraFilters > 0
+    const info = shelfInfo(filters.domain)
+    const shelfCount = useMemo(
+        () => allMaterials.filter((item) => item.domain === filters.domain).length,
+        [allMaterials, filters.domain]
+    )
 
     const set = (patch) => setFilters((current) => ({ ...current, ...patch }))
     const setFaculty = (name) => set({ faculty: name, department: 'All' })
     const clearAll = () => setFilters({ ...EMPTY_FILTERS })
+    // Clearing filters on a shelf keeps the reader on that shelf; the back
+    // button beside the title is the way out of it.
+    const clearFilters = () => setFilters({ ...EMPTY_FILTERS, domain: filters.domain })
+    const openShelf = (name) => {
+        setFilters({ ...EMPTY_FILTERS, domain: name })
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+    }
 
     const openItem = (item) => {
         if (item.isBook) {
@@ -123,34 +182,63 @@ export default function LibraryPage() {
         window.open(item.external_url || item.download_path, '_blank', 'noopener,noreferrer')
     }
 
-    const filterCount = activeFilterCount(filters)
-    const headingLabel =
-        filters.domain === 'All' ? 'Library Materials' : filters.domain
-
     return (
         <div className="zs-container">
-            <PageHeader
-                eyebrow={
-                    <>
-                        <ShieldCheck size={13} /> Free · no sign-in · no payment step
-                    </>
-                }
-                title="UNIZIK Digital Library"
-                lead={`${COUNT_LABEL}. Everything is free — no sign-in, no payment step. Manuals, books, Greek tragedies, Roman plays, medieval plays, Renaissance plays, modern plays and Theatre Arts titles all download as PDF from this page.`}
-            />
+            {onShelf && (
+                <button type="button" className="zs-back" onClick={() => clearAll()}>
+                    <ChevronLeft size={16} /> All shelves
+                </button>
+            )}
+
+            {isSearching ? (
+                <PageHeader
+                    eyebrow={
+                        <>
+                            <ShieldCheck size={13} /> Free · no sign-in
+                        </>
+                    }
+                    title={filters.query ? `Results for “${filters.query}”` : filters.domain === 'All' ? 'Filtered library' : filters.domain}
+                    lead={`${results.length} of ${TOTAL} documents`}
+                />
+            ) : onShelf ? (
+                <PageHeader
+                    eyebrow={
+                        <>
+                            <ShieldCheck size={13} /> Free · no sign-in · no payment step
+                        </>
+                    }
+                    title={`${FRESHER_LIBRARY_DOMAINS.find((d) => d.name === filters.domain)?.emoji || '📚'} ${filters.domain}`}
+                    lead={`${shelfLine(filters.domain, shelfCount)}. ${info.blurb}`}
+                />
+            ) : (
+                <PageHeader
+                    eyebrow={
+                        <>
+                            <ShieldCheck size={13} /> Free · no sign-in · no payment step
+                        </>
+                    }
+                    title="Digital Library"
+                    lead={`${COUNT_LABEL}. Pick a shelf, or search by course code, title or author.`}
+                />
+            )}
 
             {/* ── One toolbar, always in reach ──────────────────────────── */}
             <div className="zs-toolbar">
                 <SearchField
                     value={filters.query}
                     onChange={(value) => set({ query: value })}
-                    placeholder="Search by title, author or course code"
+                    placeholder={
+                        onShelf && !isSearching
+                            ? `Search ${filters.domain.toLowerCase()}`
+                            : 'Search by title, author or course code'
+                    }
                 />
 
                 <Button variant="outline" size="sm" onClick={() => setShowFilters(true)}>
-                    <Filter size={14} /> Filters{filterCount > 0 ? ` · ${filterCount}` : ''}
+                    <Filter size={14} /> Filters{extraFilters > 0 ? ` · ${extraFilters}` : ''}
                 </Button>
 
+                {(onShelf || isSearching) && (
                 <label className="zs-select" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
                     <span style={{ fontSize: '0.68rem', color: '#94A3B8', fontWeight: 700 }}>SORT</span>
                     <select
@@ -166,13 +254,14 @@ export default function LibraryPage() {
                         ))}
                     </select>
                 </label>
+                )}
             </div>
 
             {/* ── Active filters, removable ─────────────────────────────── */}
-            {(filterCount > 0 || filters.query) && (
-                <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap', alignItems: 'center', padding: '0.75rem 0' }}>
-                    <span style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: 700 }}>Showing</span>
-                    {['domain', 'faculty', 'department', 'level', 'type']
+            {extraFilters > 0 && (
+                <div className="zs-filter-row">
+                    <span>Showing</span>
+                    {['faculty', 'department', 'level', 'type']
                         .filter((key) => filters[key] !== 'All')
                         .map((key) => (
                             <button
@@ -188,20 +277,64 @@ export default function LibraryPage() {
                                 {filters[key]} <X size={12} />
                             </button>
                         ))}
-                    <button type="button" className="zs-link" onClick={clearAll}>
-                        Clear all
+                    <button type="button" className="zs-link" onClick={clearFilters}>
+                        Clear filters
                     </button>
                 </div>
             )}
 
-            {/* ── Results ───────────────────────────────────────────────── */}
-            {results.length === 0 ? (
+            {/* ── The shelf index: the whole library in one screen ──────── */}
+            {!onShelf && !isSearching && (
+                <section className="zs-section" aria-labelledby="shelves-title">
+                    <SectionHeading
+                        id="shelves-title"
+                        title="Browse by shelf"
+                        description="Nine shelves. Every document is free and downloads as a PDF from this site."
+                    />
+                    <div className="zs-shelf-grid">
+                        {FRESHER_LIBRARY_DOMAINS.map((shelf) => {
+                            const meta = shelfInfo(shelf.name)
+                            return (
+                                <button
+                                    key={shelf.name}
+                                    type="button"
+                                    className="zs-shelf-card"
+                                    onClick={() => openShelf(shelf.name)}
+                                >
+                                    <span className="zs-shelf-card__emoji" aria-hidden="true">
+                                        {shelf.emoji}
+                                    </span>
+                                    <span className="zs-shelf-card__body">
+                                        <strong>{shelf.name}</strong>
+                                        <span className="zs-shelf-card__count">
+                                            {shelf.count} {shelf.count === 1 ? meta.unit : meta.unitPlural}
+                                        </span>
+                                        <span className="zs-shelf-card__blurb">{meta.blurb}</span>
+                                    </span>
+                                    <ChevronRight size={18} aria-hidden="true" />
+                                </button>
+                            )
+                        })}
+                    </div>
+
+                    <div style={{ marginTop: '1.5rem', display: 'grid', gap: '0.5rem' }}>
+                        <GapPanel name="Greek Tragedy" />
+                        <GapPanel name="Medieval Theatre" />
+                        <GapPanel name="Renaissance Theatre" />
+                        <GapPanel name="Modern Theatre" />
+                        <Licence />
+                    </div>
+                </section>
+            )}
+
+            {/* ── Results, or one shelf's documents ─────────────────────── */}
+            {results.length === 0 && (isSearching || onShelf) ? (
                 <div style={{ paddingTop: '1rem' }}>
                     <EmptyState
                         icon={Search}
                         title="Nothing matches that search"
                         action={
-                            <Button size="sm" variant="outline" onClick={clearAll}>
+                            <Button size="sm" variant="outline" onClick={onShelf ? clearFilters : clearAll}>
                                 Clear filters
                             </Button>
                         }
@@ -211,63 +344,11 @@ export default function LibraryPage() {
                         library.
                     </EmptyState>
                 </div>
-            ) : isBrowsing ? (
-                shelves.map((shelf) => (
-                    <section className="zs-section" key={shelf.name} aria-labelledby={`shelf-${shelf.name}`}>
-                        <SectionHeading
-                            id={`shelf-${shelf.name}`}
-                            title={`${shelf.emoji} ${shelf.name}`}
-                            description={`${shelf.items.length} ${shelf.items.length === 1 ? 'document' : 'documents'} · free`}
-                        />
-                        {shelf.name === RENAISSANCE_DOMAIN ||
-                        shelf.name === MODERN_DOMAIN ||
-                        shelf.name === THEATRE_DOMAIN ? (
-                            groupPlays(shelf.items).map((group) => (
-                                <div key={group.name}>
-                                    <h3
-                                        style={{
-                                            fontSize: '0.72rem',
-                                            fontWeight: 800,
-                                            letterSpacing: '0.09em',
-                                            textTransform: 'uppercase',
-                                            color: '#64748B',
-                                            margin: '1.4rem 0 0.6rem',
-                                        }}
-                                    >
-                                        {group.name}
-                                        <span style={{ fontWeight: 500, letterSpacing: 0, textTransform: 'none' }}>
-                                            {' '}
-                                            · {group.items.length}{' '}
-                                            {shelf.name === THEATRE_DOMAIN
-                                                ? group.items.length === 1
-                                                    ? 'title'
-                                                    : 'titles'
-                                                : group.items.length === 1
-                                                  ? 'play'
-                                                  : 'plays'}
-                                        </span>
-                                    </h3>
-                                    <div className="zs-grid">
-                                        {group.items.map((item) => (
-                                            <LibraryCard key={item.id} item={item} onOpen={openItem} />
-                                        ))}
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <div className="zs-grid">
-                                {shelf.items.map((item) => (
-                                    <LibraryCard key={item.id} item={item} onOpen={openItem} />
-                                ))}
-                            </div>
-                        )}
-                    </section>
-                ))
-            ) : (
+            ) : isSearching ? (
                 <section className="zs-section" aria-labelledby="results-title">
                     <SectionHeading
                         id="results-title"
-                        title={`${headingLabel} (${results.length})`}
+                        title={`${filters.domain === 'All' ? 'All shelves' : filters.domain} (${results.length})`}
                         description="Every document here is free to open and download."
                     />
                     <div className="zs-grid">
@@ -276,108 +357,51 @@ export default function LibraryPage() {
                         ))}
                     </div>
                 </section>
-            )}
-
-            {/* ── The two plays with no public-domain English text ───────── */}
-            <section className="zs-section" aria-labelledby="missing-plays">
-                <SectionHeading
-                    id="missing-plays"
-                    title="Two Euripides plays are not on this shelf"
-                    description="All nineteen of his plays survive in Greek. No public-domain English translation of these two is free to reproduce, so they are named here instead of being given a card that opens nothing."
-                />
-                <div className="zs-grid">
-                    {EURIPIDES_NOT_AVAILABLE.map((play) => (
-                        <div key={play.title} className="zs-panel" style={{ margin: 0 }}>
-                            <strong style={{ display: 'block', fontSize: '0.9rem' }}>{play.title}</strong>
-                            <span style={{ display: 'block', fontSize: '0.72rem', color: '#94A3B8', margin: '0.15rem 0 0.5rem' }}>
-                                {play.greekTitle}
-                            </span>
-                            <p style={{ margin: 0, fontSize: '0.8rem', lineHeight: 1.6, color: 'var(--color-text-secondary)' }}>
-                                {play.note}
-                            </p>
+            ) : onShelf ? (
+                <section className="zs-section" aria-labelledby="shelf-documents">
+                    {groupItems(results).map((group) => (
+                        <div key={group.name} className="zs-group">
+                            <h3 className="zs-group__title">
+                                {group.name}
+                                <span>
+                                    {' '}
+                                    · {group.items.length}{' '}
+                                    {group.items.length === 1 ? info.unit : info.unitPlural}
+                                </span>
+                            </h3>
+                            <div className="zs-grid">
+                                {group.items.map((item) => (
+                                    <LibraryCard key={item.id} item={item} onOpen={openItem} />
+                                ))}
+                            </div>
                         </div>
                     ))}
-                </div>
-            </section>
 
-            {/* ── Medieval plays with no modern public-domain text ──────── */}
-            <section className="zs-section" aria-labelledby="missing-medieval-plays">
-                <SectionHeading
-                    id="missing-medieval-plays"
-                    title="Seven medieval plays are not on this shelf"
-                    description="They survive, but only in Middle English spelling or in modern editions still in copyright. Naming them is more honest than giving them a card that opens nothing."
-                />
-                <div className="zs-panel" style={{ margin: 0 }}>
-                    <ul
-                        style={{
-                            margin: 0,
-                            paddingLeft: '1.1rem',
-                            display: 'grid',
-                            gap: '0.55rem',
-                            fontSize: '0.8rem',
-                            lineHeight: 1.6,
-                            color: 'var(--color-text-secondary)',
-                        }}
-                    >
-                        {MEDIEVAL_NOT_AVAILABLE.map((play) => (
-                            <li key={play.title}>
-                                <strong style={{ color: 'var(--color-text)' }}>{play.title}.</strong>{' '}
-                                {play.note}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            </section>
+                    <div style={{ marginTop: '1.5rem', display: 'grid', gap: '0.5rem' }}>
+                        <GapPanel name={filters.domain} />
+                        <Licence compact />
+                    </div>
 
-            {/* ── What the Renaissance shelf leaves out, and why ─────────── */}
-            <section className="zs-section" aria-labelledby="missing-plays">
-                <SectionHeading
-                    id="missing-plays"
-                    title="What the play shelves leave out"
-                    description="Six decades of modern drama is not the whole of the modern stage, and sixty-nine plays is not the whole of the English Renaissance. These are the largest gaps, named here rather than given a card that opens nothing."
-                />
-                <div className="zs-panel" style={{ margin: 0 }}>
-                    <ul
-                        style={{
-                            margin: 0,
-                            paddingLeft: '1.1rem',
-                            display: 'grid',
-                            gap: '0.55rem',
-                            fontSize: '0.8rem',
-                            lineHeight: 1.6,
-                            color: 'var(--color-text-secondary)',
-                        }}
-                    >
-                        {RENAISSANCE_NOT_AVAILABLE.map((play) => (
-                            <li key={play.title}>
-                                <strong style={{ color: 'var(--color-text)' }}>{play.title}.</strong>{' '}
-                                {play.note}
-                            </li>
-                        ))}
-                        {MODERN_UNHOSTABLE.map((play) => (
-                            <li key={play.title}>
-                                <strong style={{ color: 'var(--color-text)' }}>
-                                    {play.title} ({play.movement}).
-                                </strong>{' '}
-                                {play.note}
-                            </li>
-                        ))}
-                    </ul>
-                </div>
-            </section>
-
-            <div className="zs-panel" style={{ marginTop: '2.5rem', display: 'flex', gap: '0.85rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
-                <ShieldCheck size={18} color="var(--color-campus-green)" style={{ flexShrink: 0, marginTop: 2 }} />
-                <p style={{ margin: 0, fontSize: '0.8rem', lineHeight: 1.6, color: 'var(--color-text-secondary)', flex: '1 1 18rem' }}>
-                    <strong>NOUN course manuals</strong> are published by the National Open University of
-                    Nigeria and hosted here free of charge; NOUN permits educational use and prohibits
-                    commercial use. <strong>Books</strong> are third-party works: copyright stays with the
-                    author and publisher. <strong>Greek, Roman, medieval, Renaissance and modern plays</strong> are public-domain
-                    English texts, typeset as PDFs and hosted here too; the edition and translator of each one
-                    is credited on the card and printed inside the file. Always confirm your current outline
-                    with your department.
-                </p>
-            </div>
+                    <div className="zs-other-shelves">
+                        <span>Other shelves</span>
+                        <div className="zs-chip-row">
+                            {FRESHER_LIBRARY_DOMAINS.filter((shelf) => shelf.name !== filters.domain).map(
+                                (shelf) => (
+                                    <button
+                                        key={shelf.name}
+                                        type="button"
+                                        className="zs-chip"
+                                        onClick={() => openShelf(shelf.name)}
+                                    >
+                                        <span aria-hidden="true">{shelf.emoji}</span> {shelf.name}
+                                        <span className="zs-chip__count">{shelf.count}</span>
+                                    </button>
+                                )
+                            )}
+                        </div>
+                    </div>
+                </section>
+            ) : null}
 
             {/* ── Filter sheet ──────────────────────────────────────────── */}
             {showFilters && (
@@ -393,15 +417,15 @@ export default function LibraryPage() {
                         <div className="zs-sheet__body">
                             <FilterGroup label="Shelf">
                                 <Chip active={filters.domain === 'All'} onClick={() => set({ domain: 'All' })}>
-                                    All Domains ({TOTAL})
+                                    All shelves ({TOTAL})
                                 </Chip>
-                                {FRESHER_LIBRARY_DOMAINS.map((domain) => (
+                                {FRESHER_LIBRARY_DOMAINS.map((shelf) => (
                                     <Chip
-                                        key={domain.name}
-                                        active={filters.domain === domain.name}
-                                        onClick={() => set({ domain: domain.name })}
+                                        key={shelf.name}
+                                        active={filters.domain === shelf.name}
+                                        onClick={() => set({ domain: shelf.name })}
                                     >
-                                        {domain.emoji} {domain.name} ({domain.count})
+                                        {shelf.emoji} {shelf.name} ({shelf.count})
                                     </Chip>
                                 ))}
                             </FilterGroup>

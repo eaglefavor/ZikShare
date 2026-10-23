@@ -20,6 +20,14 @@ vi.mock('../lib/database', () => ({
   getDigitalProducts: vi.fn(),
 }))
 
+// A shelf has its own address, so a link can point at it directly.
+const renderShelf = (name) =>
+  render(
+    <MemoryRouter initialEntries={[`/library?domain=${encodeURIComponent(name)}`]}>
+      <LibraryPage />
+    </MemoryRouter>
+  )
+
 describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
   beforeEach(() => {
     vi.clearAllMocks()
@@ -37,16 +45,28 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
 
   const SEARCH = /Search by title, author or course code/i
 
-  it('opens with a title, one search field, and results already visible', async () => {
+  it('opens on an index of shelves, one search field, and nothing else', async () => {
     renderLibrary()
 
-    expect(await screen.findByText('UNIZIK Digital Library')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Digital Library' })).toBeInTheDocument()
     expect(screen.getByPlaceholderText(SEARCH)).toBeInTheDocument()
 
-    // The shelf is on the first screen: no wall of filters above it.
-    expect(await screen.findByText('The Spiritual Man')).toBeInTheDocument()
+    // The whole library is on one screen: shelves, not a wall of documents.
+    expect(screen.getByRole('button', { name: /Greek Tragedy/ })).toBeInTheDocument()
+    expect(screen.queryByText('The Spiritual Man')).not.toBeInTheDocument()
     // Filters are behind one control until the reader asks for them.
     expect(screen.queryByRole('button', { name: 'Faculty of Engineering' })).not.toBeInTheDocument()
+  })
+
+  it('reaches any shelf and its documents in one tap, and back again', async () => {
+    renderLibrary()
+
+    fireEvent.click(await screen.findByRole('button', { name: /Christian Books/ }))
+    expect(await screen.findByText('The Spiritual Man')).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: /Christian Books/ })).toBeInTheDocument()
+
+    fireEvent.click(screen.getByRole('button', { name: /All shelves/ }))
+    expect(await screen.findByRole('heading', { name: 'Digital Library' })).toBeInTheDocument()
   })
 
   it('advertises only the documents that are actually on the shelf', async () => {
@@ -84,8 +104,9 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
     fireEvent.change(searchInput, { target: { value: 'LAW 401' } })
     expect(await screen.findByText(/Nothing matches that search/i)).toBeInTheDocument()
 
+    // Clearing the search returns the shelf index, not a wall of results.
     fireEvent.click(screen.getByRole('button', { name: /Clear filters/i }))
-    expect(await screen.findByText('The Spiritual Man')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Digital Library' })).toBeInTheDocument()
   })
 
   it('reveals departments only after a faculty is chosen in the filter sheet', async () => {
@@ -122,7 +143,7 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
     fireEvent.click(screen.getByRole('button', { name: /^Show \d+ results?$/ }))
 
     expect(screen.queryByText(/Departments in Faculty of Law/i)).not.toBeInTheDocument()
-    expect(await screen.findByText('The Spiritual Man')).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Digital Library' })).toBeInTheDocument()
   })
 
   it('filters by shelf and never offers a shelf that holds nothing', async () => {
@@ -155,7 +176,7 @@ describe('Digital Library UI Component Tests', { timeout: 20000 }, () => {
       GST_SHELF.length
 
     openFilters()
-    expect(screen.getByRole('button', { name: `All Domains (${total})` })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: `All shelves (${total})` })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Greek Tragedy \(\d+\)/ })).toBeInTheDocument()
   })
 })
@@ -167,25 +188,13 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
   })
 
   it('offers every play as a PDF download from this site', async () => {
-    render(
-      <MemoryRouter>
-        <LibraryPage />
-      </MemoryRouter>
-    )
+    renderShelf('Greek Tragedy')
 
     const links = await screen.findAllByRole('link', { name: /Download Free PDF/i })
-    // The plays are downloads now too, so they join the NOUN manuals. Books keep
-    // their own "Read book" control, which opens the book page.
-    expect(links).toHaveLength(
-      GST_SHELF.length +
-        DRAMA_PLAYS.length +
-        ROMAN_PLAYS.length +
-        MEDIEVAL_PLAYS.length +
-        RENAISSANCE_PLAYS.length +
-        MODERN_PLAYS.length +
-        THEATRE_TITLES.length
-    )
-    expect(screen.getAllByRole('link', { name: /Read book/i })).toHaveLength(CHRISTIAN_BOOKS.length)
+    // Every document on the shelf is a file this site hands over; nothing on a
+    // play shelf opens a book page.
+    expect(links).toHaveLength(DRAMA_PLAYS.length)
+    expect(screen.queryAllByRole('link', { name: /Read book/i })).toHaveLength(0)
 
     const playHrefs = links.map((link) => link.getAttribute('href')).filter((href) => href.includes('/library/drama/'))
     expect(playHrefs).toHaveLength(DRAMA_PLAYS.length)
@@ -199,24 +208,11 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
 
     // Every card states the page count of the file it hands over.
     expect(screen.getByText('Antigone')).toBeInTheDocument()
-    expect(screen.getAllByText(/^\d+ pages$/)).toHaveLength(
-      CHRISTIAN_BOOKS.length +
-        GST_SHELF.length +
-        DRAMA_PLAYS.length +
-        ROMAN_PLAYS.length +
-        MEDIEVAL_PLAYS.length +
-        RENAISSANCE_PLAYS.length +
-        MODERN_PLAYS.length +
-        THEATRE_TITLES.length
-    )
+    expect(screen.getAllByText(/^\d+ pages$/)).toHaveLength(DRAMA_PLAYS.length)
   })
 
   it('says plainly which two plays have no public-domain English text', async () => {
-    render(
-      <MemoryRouter>
-        <LibraryPage />
-      </MemoryRouter>
-    )
+    renderShelf('Greek Tragedy')
 
     expect(await screen.findByText('Two Euripides plays are not on this shelf')).toBeInTheDocument()
     for (const play of EURIPIDES_NOT_AVAILABLE) {
@@ -230,11 +226,7 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
   })
 
   it('opens every Roman play from this site, not from Perseus or Gutenberg', async () => {
-    const { container } = render(
-      <MemoryRouter>
-        <LibraryPage />
-      </MemoryRouter>
-    )
+    const { container } = renderShelf('Roman Theatre')
 
     const links = await screen.findAllByRole('link', { name: /Download Free PDF/i })
     const romanHrefs = links
@@ -253,11 +245,7 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
   })
 
   it('offers every medieval play as a download from this site', async () => {
-    const { container } = render(
-      <MemoryRouter>
-        <LibraryPage />
-      </MemoryRouter>
-    )
+    const { container } = renderShelf('Medieval Theatre')
 
     const links = await screen.findAllByRole('link', { name: /Download Free PDF/i })
     const medievalHrefs = links
@@ -283,11 +271,7 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
 
 
   it('offers every Renaissance play as a download from this site', async () => {
-    const { container } = render(
-      <MemoryRouter>
-        <LibraryPage />
-      </MemoryRouter>
-    )
+    const { container } = renderShelf('Renaissance Theatre')
 
     const links = await screen.findAllByRole('link', { name: /Download Free PDF/i })
     const renaissanceHrefs = links
@@ -318,11 +302,7 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
   })
 
   it('offers every modern play as a download from this site, grouped by movement', async () => {
-    const { container } = render(
-      <MemoryRouter>
-        <LibraryPage />
-      </MemoryRouter>
-    )
+    const { container } = renderShelf('Modern Theatre')
 
     const links = await screen.findAllByRole('link', { name: /Download Free PDF/i })
     const modernHrefs = links
@@ -345,18 +325,15 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
 
     // The movements that cannot be hosted are named, with the reason.
     for (const gap of MODERN_UNHOSTABLE) {
+      const label = `${gap.title} (${gap.movement})`
       expect(
-        screen.getByText(`${gap.title} (${gap.movement}).`, { exact: false })
+        screen.getByText(new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`))
       ).toBeInTheDocument()
     }
   })
 
   it('offers the Theatre Arts shelf grouped by topic, classics and guides labelled', async () => {
-    const { container } = render(
-      <MemoryRouter>
-        <LibraryPage />
-      </MemoryRouter>
-    )
+    const { container } = renderShelf('Theatre Arts')
 
     const links = await screen.findAllByRole('link', { name: /Download Free PDF/i })
     const theatreHrefs = links
@@ -553,11 +530,7 @@ describe('Christian Books shelf UI', { timeout: 15000 }, () => {
   })
 
   it('puts a real link on every card, and every book PDF is on disk', async () => {
-    render(
-      <MemoryRouter>
-        <LibraryPage />
-      </MemoryRouter>
-    )
+    renderShelf('Christian Books')
 
     const links = await screen.findAllByRole('link', { name: /Read book/i })
     expect(links).toHaveLength(CHRISTIAN_BOOKS.length)

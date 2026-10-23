@@ -39,7 +39,8 @@ export default function LibraryCard({ item, onOpen }) {
                     <Tag tone={item.isBook ? 'book' : 'pack'}>
                         {item.isBook
                             ? 'BOOK'
-                            : item.code || (isPlay ? 'PLAY' : 'PACK')}
+                            : item.code ||
+                              (item.isGuide ? 'GUIDE' : item.isTheatre ? 'TEXT' : isPlay ? 'PLAY' : 'PACK')}
                     </Tag>
                     <span className="zs-item-card__sub" style={{ marginLeft: 'auto' }}>
                         {item.page_count} pages

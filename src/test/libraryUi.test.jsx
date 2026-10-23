@@ -377,6 +377,12 @@ describe('Greek tragedy shelf UI', { timeout: 15000 }, () => {
     // Listed by the department's topics, not as one wall of cards.
     expect(screen.getByRole('heading', { name: /^Lighting/ })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: /^Dramatic Criticism/ })).toBeInTheDocument()
+
+    // A guide, a public-domain text and a play carry three different badges.
+    expect(screen.getAllByText('GUIDE').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('TEXT').length).toBeGreaterThan(0)
+    const lightingHeading = screen.getByRole('heading', { name: /^Lighting/ })
+    expect(lightingHeading.textContent).toMatch(/2\s*titles/)
   })
 
   it('finds a play by playwright and by its own title', async () => {

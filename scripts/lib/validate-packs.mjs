@@ -37,9 +37,11 @@ export function countWords(pack) {
  * Deliberately independent of the PDF builder so a pack cannot "pass" simply
  * because the renderer happened not to crash on it.
  */
-export function validatePacks(packs, { minPacks = 50 } = {}) {
+export function validatePacks(packs, { minPacks = 0 } = {}) {
     const errors = []
     if (!Array.isArray(packs)) return ['packs is not an array']
+    // No global minimum: the shelf is allowed to be empty (it is, between a
+    // clear-out and a new intake). Quality is enforced per pack below.
     if (packs.length < minPacks) errors.push(`only ${packs.length} packs authored; at least ${minPacks} required`)
 
     const slugs = new Set()

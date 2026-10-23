@@ -1,20 +1,32 @@
 import { FRESHER_LIBRARY_PACKS } from './fresherLibraryData'
 import { CHRISTIAN_BOOKS, CHRISTIAN_BOOKS_DOMAIN, toBookCard, findBookByStoragePath } from './christianBooks'
+import { DRAMA_DOMAIN, DRAMA_PLAYS, toDramaCard } from './dramaLibrary'
+import { GST_CARDS, GST_DOMAIN, ENTREPRENEURSHIP_DOMAIN } from './gstLibrary'
 
+/**
+ * Display order of the shelves a study pack can sit on.
+ *
+ * This is the taxonomy, not the contents: after the old shelves were cleared no
+ * shelf is displayed until a document exists for it (`FRESHER_LIBRARY_DOMAINS`
+ * below filters empty shelves out), so the order can stay complete while the
+ * library itself holds only the Christian Books shelf.
+ */
 export const FRESHER_LIBRARY_DOMAIN_ORDER = [
     'GST & Compulsory Courses',
+    'Money & Career',
+    DRAMA_DOMAIN,
     'Faculty Primer',
     'Theatre & Film Studies',
     'Departmental Archive',
     'Study Skills',
     'Campus Life',
-    'Money & Career',
     'Digital Skills',
     'Health & Wellbeing',
     CHRISTIAN_BOOKS_DOMAIN,
 ]
 
 export const FRESHER_DOMAIN_EMOJI = {
+    [DRAMA_DOMAIN]: '🎭',
     'GST & Compulsory Courses': '🏛️',
     'Faculty Primer': '🎓',
     'Theatre & Film Studies': '🎭',
@@ -30,6 +42,40 @@ export const FRESHER_DOMAIN_EMOJI = {
 export { FRESHER_LIBRARY_PACKS }
 
 /**
+ * What the library actually contains, right now.
+ *
+ * Every count shown to a reader is derived here, never typed into a page, so a
+ * shelf that has been cleared says it is empty instead of advertising documents
+ * that are no longer there.
+ */
+export function libraryCounts() {
+    const packs = FRESHER_LIBRARY_PACKS.length
+    const books = CHRISTIAN_BOOKS.length
+    // Greek plays live on Project Gutenberg: they are listed and linked, not
+    // hosted, so they are counted separately and never described as downloads.
+    const plays = DRAMA_PLAYS.length
+    // NOUN courseware is hosted on ZikShare: these download from us.
+    const hosted = GST_CARDS.length
+    return { packs, books, plays, hosted, total: packs + books + plays + hosted }
+}
+
+function countOf(n, one, many) {
+    return `${n} ${n === 1 ? one : many}`
+}
+
+/** e.g. "8 full-length books" or "12 study packs and 8 full-length books". */
+export function libraryCountLabel({ packs, books, plays, hosted } = libraryCounts()) {
+    const parts = []
+    if (packs > 0) parts.push(countOf(packs, 'study pack', 'study packs'))
+    if (books > 0) parts.push(countOf(books, 'full-length book', 'full-length books'))
+    if (hosted > 0) parts.push(`${hosted} NOUN course manuals to download`)
+    if (plays > 0) parts.push(`${plays} Greek plays linked to free full texts`)
+    if (parts.length === 0) return 'No documents yet'
+    if (parts.length === 1) return parts[0]
+    return `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]}`
+}
+
+/**
  * Domain summary with counts, ordered for display.
  */
 export const FRESHER_LIBRARY_DOMAINS = FRESHER_LIBRARY_DOMAIN_ORDER
@@ -38,7 +84,9 @@ export const FRESHER_LIBRARY_DOMAINS = FRESHER_LIBRARY_DOMAIN_ORDER
         emoji: FRESHER_DOMAIN_EMOJI[name],
         count:
             FRESHER_LIBRARY_PACKS.filter((p) => p.domain === name).length +
-            CHRISTIAN_BOOKS.filter((b) => b.domain === name).length,
+            CHRISTIAN_BOOKS.filter((b) => b.domain === name).length +
+            DRAMA_PLAYS.filter(() => name === DRAMA_DOMAIN).length +
+            GST_CARDS.filter((card) => card.domain === name).length,
     }))
     .filter((d) => d.count > 0)
 
@@ -100,12 +148,28 @@ export function findFresherPackByStoragePath(storagePath) {
  * never invent copy that the catalog does not contain, and a pack that has not
  * been seeded still appears with its free PDF.
  */
+/**
+ * True for a database row that belongs to a retired authored pack.
+ *
+ * The old shelves were cleared, but their `digital_products` rows are still in
+ * the database. A row like that points at `official-library/<slug>.pdf` and a
+ * preview under `/library/previews/`, both of which are gone. Rendering it
+ * would put a card in the library whose download 404s, so it is dropped until a
+ * pack with that storage path exists again.
+ */
+export function isRetiredPackRow(row) {
+    const path = row?.original_storage_path || row?.storage_path || ''
+    if (!path.startsWith('official-library/')) return false
+    return findFresherPackByStoragePath(path) === null
+}
+
 export function mergeLibraryMaterials(dbMaterials = []) {
+    const rows = dbMaterials.filter((row) => !isRetiredPackRow(row))
     const seededPaths = new Set(
-        dbMaterials.map((d) => d.original_storage_path || d.storage_path).filter(Boolean)
+        rows.map((d) => d.original_storage_path || d.storage_path).filter(Boolean)
     )
 
-    const fromDb = dbMaterials.map((d) => {
+    const fromDb = rows.map((d) => {
         const pack = findFresherPackByStoragePath(d.original_storage_path || d.storage_path)
         const book = pack ? null : findBookByStoragePath(d.original_storage_path || d.storage_path)
 
@@ -149,5 +213,12 @@ export function mergeLibraryMaterials(dbMaterials = []) {
         .filter((b) => !seededPaths.has(b.storage_path || `christian-books/${b.slug}.pdf`))
         .map(toBookCard)
 
-    return [...fromDb, ...notYetSeeded, ...books]
+    // Greek plays are external links to Project Gutenberg. They are always
+    // listed: there is no database row or storage object for them to collide
+    // with, and ZikShare does not host the text.
+    const plays = DRAMA_PLAYS.map(toDramaCard)
+
+    // NOUN courseware is hosted here, so it is a normal library document with a
+    // real download path. A database row never shadows it.
+    return [...fromDb, ...notYetSeeded, ...books, ...GST_CARDS, ...plays]
 }

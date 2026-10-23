@@ -1,6 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import { mergeLibraryMaterials, FRESHER_LIBRARY_PACKS } from '../lib/fresherLibrary'
 import { CHRISTIAN_BOOKS } from '../lib/christianBooks'
+import { DRAMA_PLAYS } from '../lib/dramaLibrary'
+import { GST_SHELF } from '../lib/gstLibraryData'
 import {
   activeFilterCount,
   domainSummary,
@@ -13,27 +15,48 @@ const all = mergeLibraryMaterials([])
 
 describe('library view', () => {
   it('counts every document exactly once', () => {
-    expect(all).toHaveLength(FRESHER_LIBRARY_PACKS.length + CHRISTIAN_BOOKS.length)
+    expect(all).toHaveLength(
+      FRESHER_LIBRARY_PACKS.length + CHRISTIAN_BOOKS.length + DRAMA_PLAYS.length + GST_SHELF.length
+    )
   })
 
-  it('groups results into shelves in display order', () => {
+  it('groups results into the shelves that hold something, in display order', () => {
     const shelves = groupByShelf(all)
-    expect(shelves.length).toBeGreaterThan(3)
+    expect(shelves.map((shelf) => shelf.name)).toEqual([
+      'GST & Compulsory Courses',
+      'Money & Career',
+      'Greek Tragedy',
+      'Christian Books',
+    ])
     expect(shelves.reduce((total, shelf) => total + shelf.items.length, 0)).toBe(all.length)
-    expect(shelves[0].name).toBe('GST & Compulsory Courses')
   })
 
-  it('filters by faculty, level and shelf together', () => {
-    const arts = filterLibrary(all, { faculty: 'Faculty of Arts' })
-    expect(arts.length).toBeGreaterThan(0)
-    expect(arts.every((item) => item.faculty === 'Faculty of Arts')).toBe(true)
+  it('still shows a shelf for a domain that is not in the display order', () => {
+    // New GST and Theatre material arrives on its own shelf; it must not vanish
+    // just because the shelf is not listed in FRESHER_LIBRARY_DOMAIN_ORDER.
+    const stray = [{ ...all[0], id: 'stray', domain: 'GST & Compulsory Courses' }]
+    const shelves = groupByShelf(stray)
+    expect(shelves.map((shelf) => shelf.name)).toContain('GST & Compulsory Courses')
+  })
 
+  it('filters by shelf, and returns nothing for a shelf that no longer exists', () => {
     const books = filterLibrary(all, { domain: 'Christian Books' })
+    expect(books).toHaveLength(CHRISTIAN_BOOKS.length)
     expect(books.every((item) => item.isBook)).toBe(true)
 
-    const hundred = filterLibrary(all, { level: '100L' })
-    expect(hundred.length).toBeGreaterThan(0)
-    expect(hundred.every((item) => item.level === '100L')).toBe(true)
+    expect(filterLibrary(all, { domain: 'Study Skills' })).toEqual([])
+    // The Greek plays are Theatre & Film Studies material inside Faculty of Arts.
+    const arts = filterLibrary(all, { faculty: 'Faculty of Arts' })
+    expect(arts).toHaveLength(DRAMA_PLAYS.length)
+    expect(arts.every((item) => item.isDrama)).toBe(true)
+
+    // NOUN courseware sits under General Studies and can be filtered by level.
+    const gst = filterLibrary(all, { faculty: 'General Studies (GST / CED)' })
+    expect(gst).toHaveLength(GST_SHELF.length)
+    const gst200 = filterLibrary(all, { faculty: 'General Studies (GST / CED)', level: '200L' })
+    expect(gst200.length).toBeGreaterThan(0)
+    expect(gst200.every((item) => item.level === '200L')).toBe(true)
+    expect(filterLibrary(all, { faculty: 'Faculty of Law' })).toEqual([])
   })
 
   it('counts only the filters that are actually set', () => {

@@ -1,7 +1,14 @@
-# ZikShare Fresher PDF Library
+# ZikShare Library - authored material
 
 This directory holds the authored, generated PDF study library, plus the content
 that produces it.
+
+**Current state: the authored pack shelf is empty.** The operator cleared every
+course pack and study pack; the only documents in the library are the eight
+full-length books on the Christian Books shelf (`library/content/books.mjs`,
+served from `public/library/books/`). The pipeline below is kept intact so new
+material — GST past questions, GST textbooks, Theatre Arts documents — can be
+added as packs without rebuilding anything.
 
 **The library is free.** Every pack has `priceKobo: 0`, no DRM, no watermark and
 no payment step. `scripts/lib/validate-packs.mjs` fails the build if any pack
@@ -10,17 +17,9 @@ carries a price, and `npm test` asserts the same thing.
 ```
 library/
   content/               authored pack content (the source of truth)
-    gst.mjs              GST compulsory courses
-    faculty-primers-a.mjs  engineering, law, environment, physical sciences
-    faculty-primers-b.mjs  medicine, basic medical / clinical sciences, pharmacy, health
-    faculty-primers-c.mjs  management, social sciences, arts, education, agriculture, TVET
-    study-and-campus.mjs   study skills + campus life
-    money-digital-health.mjs  money/career, digital skills, wellbeing
-    arts-departments.mjs   Faculty of Arts: one primer per sister department
-    theatre-film.mjs       Theatre & Film Studies: full THA ladder + the
-                           year-demarcated outline archive
-    domains.mjs          domain names used for filtering and cover styling
-    index.mjs            the assembled FRESHER_PACKS array
+    books.mjs            the Christian Books shelf catalogue (book PDFs)
+    domains.mjs          the shelf taxonomy used for filtering and validation
+    index.mjs            the assembled FRESHER_PACKS array (empty right now)
   source/                full PDFs (upload target for seeding)
   ../public/library/packs/     the same full PDFs, public, no payment required
   ../public/library/previews/  public 3-page previews
@@ -42,6 +41,12 @@ The build fails loudly if a pack is malformed (unknown faculty, a non-zero
 price, fewer than 3 sections, a "section" with only a heading, duplicate slug,
 missing practice questions, an archive band without a year or source, etc.). There are no placeholder or lorem-ipsum
 packs; every file is generated from the authored text.
+
+An empty shelf is a valid state, so the build succeeds with zero packs and
+writes an empty catalog. Any pack that *is* present must still clear every gate,
+including the 1,200-word depth minimum — the library never shows a skeleton.
+Page counts and totals shown in the app are derived from the catalog, never
+typed into a page, so a cleared shelf cannot keep advertising old documents.
 
 Each pack produces:
 
@@ -307,3 +312,30 @@ Adding a book:
 1. add an entry to `library/content/books.mjs` with an accurate `rights` value;
 2. run `node scripts/import-books.mjs --from <folder>`;
 3. run `npx vitest run src/test/christianBooks.test.js` and `npm run build`.
+
+## NOUN courseware shelf (hosted)
+
+`public/library/gst/` holds 22 PDFs downloaded from the National Open University
+of Nigeria's public e-Courseware repository (`https://nou.edu.ng/ecourseware-degs/`):
+the twelve GST courses and ten NEE entrepreneurship modules. They are hosted by
+ZikShare and download from ZikShare — no card links out to NOUIN's site.
+
+```bash
+npm run gst:build     # rebuild src/lib/gstLibraryData.js from the PDFs
+```
+
+The build measures each PDF (page count from the file itself, byte size on disk,
+SHA-256) and checks the official course title against the text inside the
+document. If a title cannot be found in its PDF, the catalogue marks
+`titleVerified: false` instead of showing it — the website's own table has
+mislabelled rows (NEE011's link serves NEE010's book), so the document, not the
+table, is the authority. `library/gst/source-manifest.json` records where each
+file came from and what it hashed to at download time.
+
+**Rights.** NOUN publishes this courseware for educational use and prohibits
+commercial use. ZikShare charges nothing, credits NOUN on every card, and links
+back to the source page. Do not add paid access or relicense these files.
+
+**Numbering.** NOUN's GST codes are not UNIZIK's. Nigerian Peoples and Culture is
+GST 201 at NOUN and GST 107 at UNIZIK; History and Philosophy of Science is
+NOUN's GST 105 and UNIZIK's GST 104. Each card says so in `unizik`.

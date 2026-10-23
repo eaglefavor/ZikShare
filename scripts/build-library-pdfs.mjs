@@ -72,7 +72,10 @@ function toMeta(pack, stats) {
 }
 
 function validate(packs) {
-    const errors = validatePacks(packs, { minPacks: allowPartial ? 1 : 50 })
+    // An empty shelf is a legitimate state (it is exactly the state the operator
+    // asked for between clearing the old shelves and adding new material), so the
+    // build only requires a count when one is asked for explicitly.
+    const errors = validatePacks(packs, { minPacks: allowPartial ? 0 : 0 })
     if (errors.length) fail(`${errors.length} validation problem(s):\n  - ${errors.join('\n  - ')}`)
     return true
 }

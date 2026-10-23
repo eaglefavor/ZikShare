@@ -3,15 +3,17 @@ import { FRESHER_LIBRARY_PACKS } from '../lib/fresherLibrary'
 import { CHRISTIAN_BOOKS, toBookCard, findRelatedBooks } from '../lib/christianBooks'
 import { matchesLibraryQuery, searchLibrary, searchTokens } from '../lib/librarySearch'
 
-const packCards = FRESHER_LIBRARY_PACKS.map((p) => ({
-  title: p.title,
-  code: p.code,
-  description: p.description,
-  department: p.department,
-  faculty: p.faculty,
-  level: p.level,
-  domain: p.domain,
-}))
+// The authored pack shelf is empty, so search is exercised on the books plus
+// one hand-built course card (new GST material will look exactly like this).
+const packCards = [{
+  title: 'GST 101: Use of English for first-year students',
+  code: 'GST 101',
+  description: 'Grammar, concord and comprehension for the compulsory course.',
+  department: 'General Studies',
+  faculty: 'Faculty of Arts',
+  level: '100L',
+  domain: 'GST & Compulsory Courses',
+}]
 
 const bookCards = CHRISTIAN_BOOKS.map(toBookCard)
 
@@ -21,10 +23,15 @@ describe('library search', () => {
     expect(searchTokens('')).toEqual([])
   })
 
-  it('still finds packs by course code', () => {
+  it('finds a course card by course code', () => {
     const results = searchLibrary(packCards, 'GST 101')
-    expect(results.length).toBeGreaterThan(0)
+    expect(results).toHaveLength(1)
     expect(results.every((r) => /GST 101/i.test(r.title))).toBe(true)
+  })
+
+  it('has nothing to find on the cleared pack shelf', () => {
+    expect(FRESHER_LIBRARY_PACKS).toEqual([])
+    expect(searchLibrary(FRESHER_LIBRARY_PACKS, 'GST')).toEqual([])
   })
 
   it('finds books by author, where there is no course code to search', () => {

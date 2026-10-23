@@ -18,7 +18,8 @@
     "books:check": "node scripts/import-books.mjs --check",
     "books:covers": "python3 scripts/render-book-covers.py",
     "books:covers:check": "python3 scripts/render-book-covers.py --check",
-    "books:audit": "python3 scripts/audit-book-content.py"
+    "books:audit": "python3 scripts/audit-book-content.py",
+    "gst:build": "node scripts/build-gst-shelf.mjs"
   },
   "dependencies": {
     "@pdfsmaller/pdf-encrypt": "^1.2.0",
@@ -48,6 +49,7 @@
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
     "jsdom": "^30.0.1",
+    "pdfjs-dist": "^6.4.299",
     "vite": "^7.3.1",
     "vitest": "^4.1.11"
   }

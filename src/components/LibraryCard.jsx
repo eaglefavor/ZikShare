@@ -63,6 +63,17 @@ export default function LibraryCard({ item, onOpen }) {
 
                 <p className="zs-item-card__desc">{item.description}</p>
 
+                {!item.isBook && (
+                    <button
+                        type="button"
+                        className="zs-link"
+                        onClick={() => onOpen(item)}
+                        style={{ alignSelf: 'flex-start', background: 'none', border: 'none', padding: 0, cursor: 'pointer', font: 'inherit' }}
+                    >
+                        About this file
+                    </button>
+                )}
+
                 <div className="zs-item-card__foot">
                     <Tag tone="free">Free</Tag>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>

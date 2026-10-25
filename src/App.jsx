@@ -32,6 +32,7 @@ const MaintenancePage = lazy(() => import('./pages/MaintenancePage'))
 const LibraryPage = lazy(() => import('./pages/LibraryPage'))
 const BookDetailPage = lazy(() => import('./pages/BookDetailPage'))
 const BookReaderPage = lazy(() => import('./pages/BookReaderPage'))
+const LibraryDocumentPage = lazy(() => import('./pages/LibraryDocumentPage'))
 
 // Maintenance Mode Flag — Set to true to show maintenance screen to all standard visitors
 export const MAINTENANCE_MODE = false
@@ -76,6 +77,12 @@ function AppRoutes() {
                   <Route path="/" element={<HomePage />} />
                   <Route path="/library" element={<LibraryPage />} />
                   <Route path="/library/books/:slug" element={<BookDetailPage />} />
+                  {/* Every document on every shelf has its own page, so a play
+                      or a manual can be shared, cited and found by a search
+                      engine — not just the eight books. */}
+                  <Route path="/library/doc/:slug" element={<LibraryDocumentPage />} />
+                  {/* A readable shelf address; ?domain= keeps working too. */}
+                  <Route path="/library/shelf/:name" element={<LibraryPage />} />
                   <Route path="/search" element={<SearchPage />} />
                   <Route path="/post" element={<PostPage />} />
                   <Route path="/messages" element={<MessagesPage />} />

@@ -2,6 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeft, Download, BookOpen, ShieldAlert, ExternalLink } from 'lucide-react'
 import { findBookBySlug, findRelatedBooks, toBookCard, CHRISTIAN_BOOKS_DOMAIN } from '../lib/christianBooks'
 import BookCover from '../components/BookCover'
+import usePageMeta from '../hooks/usePageMeta'
 
 const RIGHTS_NOTE = {
     'publisher-copyright': 'The edition in this file carries a publisher copyright notice. Rights in the text and this edition remain with the publisher; ZikShare hosts it for reading and does not claim any licence over it.',
@@ -19,6 +20,15 @@ export default function BookDetailPage() {
     const { slug } = useParams()
     const navigate = useNavigate()
     const book = findBookBySlug(slug)
+
+    usePageMeta({
+        title: book ? book.title : 'Book not found',
+        description: book
+            ? `${book.title} by ${book.author} — ${book.page_count} pages, free to read or download as a PDF.`
+            : 'There is no book at this address.',
+        path: `/library/books/${slug}`,
+        type: 'book',
+    })
 
     if (!book) {
         return (

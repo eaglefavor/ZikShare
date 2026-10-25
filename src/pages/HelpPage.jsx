@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { ChevronDown, ChevronUp, Megaphone, Shield, Mail } from 'lucide-react'
+import { ChevronDown, ChevronUp, Megaphone, Shield, Mail, Flag, Search, MapPin, Handshake } from 'lucide-react'
 import { PageHeader, SectionHeading } from '../components/ui'
+import usePageMeta from '../hooks/usePageMeta'
 
 const faqs = [
     {
@@ -12,7 +13,17 @@ const faqs = [
     {
         question: 'How do I find material for my course?',
         answer:
-            'Search by title or by author (for example Watchman Nee). The library is organised into shelves, and only shelves that hold documents are shown — right now that is the Christian Books shelf. Every card shows the page count before you open it, and the count on the library page is taken from the shelf itself, so it is never out of date.',
+            'Open the library and pick a shelf, or type a course code, title or author into the search field. The library has nine shelves: GST and compulsory courses, money and career, the Greek, Roman, medieval, Renaissance and modern play shelves, Theatre Arts, and Christian books. Every count you see is taken from the shelf itself, so a shelf can never advertise a document that is not there.',
+    },
+    {
+        question: 'Is anything in the library ever paid for?',
+        answer:
+            'No. Every document downloads with no account, no checkout and no payment step. The marketplace is separate: physical items listed by students have prices, and the library never does.',
+    },
+    {
+        question: 'A listing looks like a scam. What do I do?',
+        answer:
+            'Open the listing and tap Report this listing at the bottom, choose the closest reason and send it. The team reads every report. Reporting is not automatic takedown: if money is involved, stop messaging the seller and do not send anything, and report the conversation too.',
     },
     {
         question: 'How do I post an item or study material?',
@@ -27,7 +38,7 @@ const faqs = [
     {
         question: 'Where should we meet to exchange an item?',
         answer:
-            'Agree on a public part of campus — Garba Square, Chisco Park or the Student Center are the usual spots. Inspect a physical item before paying, and never send money to someone before you have the item in hand.',
+            'Agree on a public part of campus — Garba Square, Chisco Park or the Student Center are the usual spots. Inspect a physical item before paying, and never send money to someone before you have the item in hand. When a trade is paid through ZikShare, the seller releases the item with a six-digit handshake PIN that only the buyer has, so the exchange is recorded on both sides.',
     },
     {
         question: 'Can I change or remove a listing?',
@@ -41,9 +52,38 @@ const faqs = [
     },
 ]
 
+const BUYING_STEPS = [
+    {
+        icon: Search,
+        title: 'Find the item',
+        body: 'Search or browse the marketplace. Every listing says what condition it is in, where it is, and who is selling it; a verified seller has signed up with a UNIZIK email.',
+    },
+    {
+        icon: MapPin,
+        title: 'Ask first',
+        body: 'Tap Contact seller to start a conversation inside ZikShare. Ask about condition, price and a place to meet. Your phone number is never shared unless you choose to call.',
+    },
+    {
+        icon: Shield,
+        title: 'Inspect before money moves',
+        body: 'Meet in public — Garba Square, Chisco Park, the Student Center — and look at the item before you pay anything. Paying through ZikShare holds the money until the handover is confirmed.',
+    },
+    {
+        icon: Handshake,
+        title: 'Confirm the handover',
+        body: 'When the item is paid for through ZikShare, the seller asks for the handshake PIN the buyer was given. Entering it marks the trade delivered, and the seller is paid.',
+    },
+]
+
 export default function HelpPage() {
     const navigate = useNavigate()
     const [openIndex, setOpenIndex] = useState(null)
+
+    usePageMeta({
+        title: 'Help, safety and how buying works',
+        description: 'How the free library works, how to buy safely on campus, and how to report a listing that is not what it claims.',
+        path: '/profile/help',
+    })
 
     return (
         <div className="zs-container">
@@ -55,6 +95,58 @@ export default function HelpPage() {
 
             <div style={{ maxWidth: '42rem' }}>
                 <section>
+                    <SectionHeading title="How buying works" description="Four steps, and none of them involves sending money to a stranger." />
+                    <ol style={{ listStyle: 'none', margin: 0, padding: 0, display: 'grid', gap: '0.5rem', counterReset: 'step' }}>
+                        {BUYING_STEPS.map((step, index) => {
+                            const Icon = step.icon
+                            return (
+                                <li key={step.title} className="zs-panel" style={{ display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
+                                    <span
+                                        aria-hidden="true"
+                                        style={{
+                                            flexShrink: 0,
+                                            width: '1.9rem',
+                                            height: '1.9rem',
+                                            borderRadius: '9999px',
+                                            backgroundColor: '#EFF6FF',
+                                            color: '#1D4ED8',
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontWeight: 800,
+                                            fontSize: '0.8rem',
+                                        }}
+                                    >
+                                        {index + 1}
+                                    </span>
+                                    <div style={{ flex: 1 }}>
+                                        <strong style={{ display: 'flex', alignItems: 'center', gap: '0.35rem', fontSize: 'var(--zs-fs-small)' }}>
+                                            <Icon size={14} color="var(--color-brand)" aria-hidden="true" /> {step.title}
+                                        </strong>
+                                        <p style={{ margin: '0.2rem 0 0', fontSize: 'var(--zs-fs-small)', lineHeight: 1.6, color: 'var(--color-text-secondary)' }}>
+                                            {step.body}
+                                        </p>
+                                    </div>
+                                </li>
+                            )
+                        })}
+                    </ol>
+
+                    <div
+                        className="zs-panel"
+                        style={{ marginTop: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.7rem' }}
+                    >
+                        <Flag size={16} color="#B91C1C" aria-hidden="true" />
+                        <span style={{ flex: 1 }}>
+                            <span style={{ display: 'block', fontSize: 'var(--zs-fs-small)', fontWeight: 600 }}>Something wrong with a listing?</span>
+                            <span style={{ display: 'block', fontSize: 'var(--zs-fs-meta)', color: 'var(--color-text-muted)' }}>
+                                Open the listing and tap Report this listing at the bottom of the page.
+                            </span>
+                        </span>
+                    </div>
+                </section>
+
+                <section style={{ marginTop: '1.75rem' }}>
                     <SectionHeading title="Common questions" />
                     <div style={{ display: 'grid', gap: '0.5rem' }}>
                         {faqs.map((faq, index) => {

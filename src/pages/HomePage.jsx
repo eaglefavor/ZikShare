@@ -6,6 +6,7 @@ import { FRESHER_LIBRARY_DOMAINS, libraryCounts, libraryCountLabel } from '../li
 import { shelfInfo } from '../lib/shelfGuide'
 import { Button, SectionHeading } from '../components/ui'
 import { HomeAnnouncementBanner } from '../components/AnnouncementModal'
+import usePageMeta from '../hooks/usePageMeta'
 
 const LIBRARY_COUNTS = libraryCounts()
 const LIBRARY_TOTAL = LIBRARY_COUNTS.total
@@ -59,6 +60,12 @@ function ListingCard({ listing, onOpen }) {
  */
 export default function HomePage() {
     const navigate = useNavigate()
+
+    usePageMeta({
+        title: 'Free study material for UNIZIK students',
+        description: `${LIBRARY_LABEL} — every document free to open, no sign-in and no payment step.`,
+        path: '/',
+    })
 
     // Only real, physical marketplace listings belong here. The library is not
     // a marketplace, and the two used to be mixed into one ₦0 feed.

@@ -70,6 +70,10 @@ export default function AppShell({ children }) {
 
     return (
         <div className="zs-shell">
+            {/* Keyboard and screen-reader readers can jump the header and nav. */}
+            <a href="#main-content" className="zs-skip-link">
+                Skip to the main content
+            </a>
             <header className="zs-header">
                 <div className="zs-container zs-header__inner">
                     <NavLink to="/" aria-label="ZikShare home" style={{ display: 'flex', alignItems: 'center', textDecoration: 'none' }}>
@@ -127,7 +131,9 @@ export default function AppShell({ children }) {
                 </div>
             </header>
 
-            <main className="zs-main">{children}</main>
+            <main className="zs-main" id="main-content" tabIndex={-1}>
+                {children}
+            </main>
 
             <footer className="zs-footer zs-desktop-only">
                 <div className="zs-container zs-footer__inner">

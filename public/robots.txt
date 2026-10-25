@@ -1,0 +1,8 @@
+# ZikShare — campus marketplace and free digital library.
+# Every shelf and every document has its own address; the sitemap lists them.
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /profile/settings
+
+Sitemap: https://zik-share.vercel.app/sitemap.xml

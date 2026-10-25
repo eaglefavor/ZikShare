@@ -6,14 +6,14 @@ import {
     Lock, Unlock, Download, ArrowLeft, TrendingUp, DollarSign, Database,
     FileText, UserCheck, UserX, ShieldAlert, Sparkles, Filter, Check, Copy,
     ChevronRight, Server, Zap, Megaphone, Pin, Send, Plus, Wrench, Info,
-    BookOpen, GraduationCap, Award
+    BookOpen, GraduationCap, Award, Flag
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import {
     getAdminStats, getAdminUsers, toggleUserBan, toggleUserVerification,
     getAdminListings, adminDeleteListing, adminUpdateListingStatus, getAdminOrders,
     getAnnouncements, createAnnouncement, deleteAnnouncement, togglePinAnnouncement, toggleAnnouncementStatus,
-    seedDigitalLibraryPacks
+    getListingReports, closeListingReport, seedDigitalLibraryPacks
 } from '../lib/database'
 import { FRESHER_LIBRARY_PACKS, FRESHER_LIBRARY_DOMAINS } from '../lib/fresherLibrary'
 import { useToast } from '../components/Toast'
@@ -89,6 +89,7 @@ export default function AdminPage() {
     const [listingsList, setListingsList] = useState([])
     const [ordersList, setOrdersList] = useState([])
     const [announcementsList, setAnnouncementsList] = useState([])
+    const [reportsList, setReportsList] = useState([])
 
     // Filter & Search States
     const [userSearch, setUserSearch] = useState('')
@@ -126,12 +127,13 @@ export default function AdminPage() {
 
         const startTime = performance.now()
         try {
-            const [st, uList, lList, oList, aList] = await Promise.all([
+            const [st, uList, lList, oList, aList, rList] = await Promise.all([
                 getAdminStats().catch(err => { console.error('Stats error:', err); return null }),
                 getAdminUsers({ limit: 150 }).catch(err => { console.error('Users error:', err); return [] }),
                 getAdminListings({ limit: 150 }).catch(err => { console.error('Listings error:', err); return [] }),
                 getAdminOrders({ limit: 150 }).catch(err => { console.error('Orders error:', err); return [] }),
                 getAnnouncements({ limit: 50, includeInactive: true }).catch(err => { console.error('Announcements error:', err); return [] }),
+                getListingReports({ status: 'open' }).catch(err => { console.error('Reports error:', err); return [] }),
             ])
 
             setDbLatency(Math.round(performance.now() - startTime))
@@ -140,6 +142,7 @@ export default function AdminPage() {
             setListingsList(lList || [])
             setOrdersList(oList || [])
             setAnnouncementsList(aList || [])
+            setReportsList(rList || [])
 
             if (isRefresh) toast.success('Admin data updated!')
         } catch (err) {
@@ -154,6 +157,18 @@ export default function AdminPage() {
     useEffect(() => {
         loadAllData()
     }, [loadAllData])
+
+    const resolveReport = useCallback(async (reportId, status) => {
+        setActionLoading(true)
+        const res = await closeListingReport({ reportId, status, adminId: user?.id || null })
+        setActionLoading(false)
+        if (res.success) {
+            setReportsList(list => list.filter(r => r.id !== reportId))
+            toast.success(status === 'resolved' ? 'Report resolved' : 'Report dismissed')
+        } else {
+            toast.error(res.error || 'Could not close the report')
+        }
+    }, [toast, user])
 
     // Filtered Users
     const filteredUsers = useMemo(() => {
@@ -534,6 +549,7 @@ export default function AdminPage() {
                         { id: 'users', label: 'Users', icon: Users, count: usersList.length },
                         { id: 'listings', label: 'Marketplace', icon: Package, count: listingsList.length },
                         { id: 'orders', label: 'Orders', icon: ShoppingCart, count: ordersList.length },
+                        { id: 'reports', label: 'Reports', icon: Flag, count: reportsList.length },
                         { id: 'system', label: 'System', icon: Database, count: null },
                     ].map(tab => {
                         const Icon = tab.icon
@@ -1495,6 +1511,77 @@ export default function AdminPage() {
                         )}
 
                         {/* ── TAB: DIGITAL LIBRARY & CATALOG SEEDER ── */}
+                        {activeTab === 'reports' && (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                <p style={{ margin: 0, fontSize: '0.75rem', color: '#94A3B8', lineHeight: 1.5 }}>
+                                    Reports filed by students from an item page. Nothing is removed automatically —
+                                    read the report, then open the listing, then resolve or dismiss it.
+                                </p>
+
+                                {reportsList.length === 0 ? (
+                                    <div style={{ padding: '2rem', textAlign: 'center', backgroundColor: '#1E293B', borderRadius: '0.75rem', border: '1px solid #334155' }}>
+                                        <Flag size={22} color="#475569" style={{ margin: '0 auto 0.5rem', display: 'block' }} />
+                                        <strong style={{ fontSize: '0.85rem', color: '#E2E8F0' }}>No open reports</strong>
+                                        <p style={{ margin: '0.35rem 0 0', fontSize: '0.72rem', color: '#94A3B8' }}>
+                                            When a student reports a listing it appears here.
+                                        </p>
+                                    </div>
+                                ) : (
+                                    reportsList.map(report => (
+                                        <div key={report.id} style={{ padding: '0.875rem', backgroundColor: '#1E293B', borderRadius: '0.75rem', border: '1px solid #334155', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                                                <span style={{ padding: '0.15rem 0.45rem', borderRadius: '9999px', backgroundColor: '#450A0A', color: '#FCA5A5', fontSize: '0.65rem', fontWeight: 800, textTransform: 'uppercase' }}>
+                                                    {report.reason}
+                                                </span>
+                                                <span style={{ fontSize: '0.7rem', color: '#64748B' }}>
+                                                    {new Date(report.created_at).toLocaleString('en-NG')}
+                                                </span>
+                                            </div>
+
+                                            <strong style={{ fontSize: '0.85rem', color: '#F1F5F9' }}>
+                                                {report.listing?.title || 'Listing removed'}
+                                            </strong>
+
+                                            {report.detail && (
+                                                <p style={{ margin: 0, fontSize: '0.75rem', color: '#CBD5E1', lineHeight: 1.5 }}>
+                                                    {report.detail}
+                                                </p>
+                                            )}
+
+                                            <span style={{ fontSize: '0.68rem', color: '#94A3B8' }}>
+                                                Reported by {report.reporter?.displayName || report.reporter?.email || 'a signed-out visitor'}
+                                            </span>
+
+                                            <div style={{ display: 'flex', gap: '0.375rem', flexWrap: 'wrap', marginTop: '0.25rem' }}>
+                                                {report.listing?.id && (
+                                                    <button
+                                                        onClick={() => navigate(`/item/${report.listing.id}`)}
+                                                        style={{ padding: '0.35rem 0.7rem', borderRadius: '0.5rem', border: '1px solid #334155', backgroundColor: '#0F172A', color: '#E2E8F0', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                                                    >
+                                                        <Eye size={12} /> Open listing
+                                                    </button>
+                                                )}
+                                                <button
+                                                    disabled={actionLoading}
+                                                    onClick={() => resolveReport(report.id, 'resolved')}
+                                                    style={{ padding: '0.35rem 0.7rem', borderRadius: '0.5rem', border: 'none', backgroundColor: '#065F46', color: '#ECFDF5', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}
+                                                >
+                                                    <CheckCircle2 size={12} /> Resolved
+                                                </button>
+                                                <button
+                                                    disabled={actionLoading}
+                                                    onClick={() => resolveReport(report.id, 'dismissed')}
+                                                    style={{ padding: '0.35rem 0.7rem', borderRadius: '0.5rem', border: '1px solid #334155', backgroundColor: 'transparent', color: '#94A3B8', fontSize: '0.7rem', fontWeight: 700, cursor: 'pointer' }}
+                                                >
+                                                    Dismiss
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </div>
+                        )}
+
                         {activeTab === 'library' && (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                 {/* Seeder Action Card */}

@@ -1340,6 +1340,78 @@ export async function createStudentRequest({ userId, title, description, categor
     return data
 }
 
+// ── Listing reports ──
+
+/**
+ * What a report can be about. Kept here so the sheet, the admin queue and the
+ * database all use the same words.
+ */
+export const REPORT_REASONS = [
+    'Scam or fraud',
+    'Fake or misleading listing',
+    'Prohibited or dangerous item',
+    'Offensive content',
+    'Wrong price or already sold',
+    'Harassment or abuse',
+    'Something else',
+]
+
+/**
+ * Files a report against a listing. Resolves to { success } and never throws:
+ * a reader who has just reported a scam should not see a stack trace.
+ */
+export async function reportListing({ listingId, reporterId = null, reason, detail = '' }) {
+    if (!listingId || !reason) return { success: false, error: 'A listing and a reason are required' }
+    try {
+        const { error } = await supabase.from('listing_reports').insert({
+            listing_id: listingId,
+            reporter_id: reporterId,
+            reason,
+            detail: detail.trim() || null,
+        })
+        if (error) throw error
+        return { success: true }
+    } catch (err) {
+        console.error('[DB] reportListing error:', err?.message)
+        return { success: false, error: err?.message || 'Could not send the report' }
+    }
+}
+
+/** The admin queue: open reports first, then the most recent. */
+export async function getListingReports({ status = 'open', limit = 100 } = {}) {
+    try {
+        let query = supabase
+            .from('listing_reports')
+            .select('*, listing:listings!listing_id(id, title, price, status, sellerId), reporter:users!reporter_id(displayName, email)')
+            .order('created_at', { ascending: false })
+            .limit(limit)
+
+        if (status && status !== 'all') query = query.eq('status', status)
+
+        const { data, error } = await query
+        if (error) throw error
+        return data || []
+    } catch (err) {
+        console.warn('[DB] getListingReports error:', err?.message)
+        return []
+    }
+}
+
+/** Closes a report. `status` is 'resolved' (acted on) or 'dismissed'. */
+export async function closeListingReport({ reportId, status = 'resolved', adminId = null }) {
+    try {
+        const { error } = await supabase
+            .from('listing_reports')
+            .update({ status, resolved_by: adminId, resolved_at: new Date().toISOString() })
+            .eq('id', reportId)
+        if (error) throw error
+        return { success: true }
+    } catch (err) {
+        console.error('[DB] closeListingReport error:', err?.message)
+        return { success: false, error: err?.message }
+    }
+}
+
 export async function getStudentRequests({ category = null, limit = 50 } = {}) {
     try {
         let query = supabase

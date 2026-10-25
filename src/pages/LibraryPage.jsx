@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useSearchParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Filter, Search, ShieldCheck, X } from 'lucide-react'
 import { getDigitalProducts } from '../lib/database'
 import { UNIZIK_FACULTIES, ACADEMIC_LEVELS, ACADEMIC_MATERIAL_TYPES } from '../lib/categories'
@@ -10,6 +10,7 @@ import {
     mergeLibraryMaterials,
 } from '../lib/fresherLibrary'
 import { shelfGaps, shelfInfo } from '../lib/shelfGuide'
+import { documentLink, shelfFromSlug, shelfPath } from '../lib/libraryRoutes'
 import {
     EMPTY_FILTERS,
     SORT_OPTIONS,
@@ -19,6 +20,7 @@ import {
 } from '../lib/libraryView'
 import { Button, Chip, EmptyState, PageHeader, SearchField, SectionHeading } from '../components/ui'
 import LibraryCard from '../components/LibraryCard'
+import usePageMeta from '../hooks/usePageMeta'
 
 const COUNTS = libraryCounts()
 const TOTAL = COUNTS.total
@@ -147,11 +149,16 @@ function Licence({ compact = false }) {
 export default function LibraryPage() {
     const navigate = useNavigate()
     const [searchParams, setSearchParams] = useSearchParams()
+    // A shelf has two addresses: /library/shelf/greek-tragedy for a link that
+    // can be shared or indexed, and ?domain=Greek Tragedy for the links that
+    // were already handed out. Both land on the same shelf.
+    const { name: shelfParam } = useParams()
+    const routeShelf = shelfFromSlug(shelfParam)
 
     const [filters, setFilters] = useState(() => ({
         ...EMPTY_FILTERS,
         query: searchParams.get('q') || '',
-        domain: searchParams.get('domain') || 'All',
+        domain: routeShelf || searchParams.get('domain') || 'All',
     }))
     const [sortBy, setSortBy] = useState('relevance')
     const [dbMaterials, setDbMaterials] = useState([])
@@ -171,22 +178,30 @@ export default function LibraryPage() {
         }
     }, [])
 
+    // The address wins: /library/shelf/greek-tragedy always shows that shelf,
+    // and the filter sheet can still switch shelves on /library itself.
+    const domain = routeShelf || filters.domain
+
     // Keep the URL in step with the two filters that can arrive by link.
     useEffect(() => {
         const next = new URLSearchParams(searchParams)
-        if (filters.domain !== 'All') next.set('domain', filters.domain)
+        // On a shelf's own address the shelf is already in the path; adding it
+        // to the query as well would make a shared link ugly for no reason.
+        if (routeShelf) next.delete('domain')
+        else if (domain !== 'All') next.set('domain', domain)
         else next.delete('domain')
         if (filters.query) next.set('q', filters.query)
         else next.delete('q')
         if (next.toString() !== searchParams.toString()) {
             setSearchParams(next, { replace: true })
         }
-    }, [filters.domain, filters.query, searchParams, setSearchParams])
+    }, [domain, routeShelf, filters.query, searchParams, setSearchParams])
 
     const allMaterials = useMemo(() => mergeLibraryMaterials(dbMaterials), [dbMaterials])
+    const effectiveFilters = useMemo(() => ({ ...filters, domain }), [filters, domain])
     const results = useMemo(
-        () => sortLibrary(filterLibrary(allMaterials, filters), sortBy),
-        [allMaterials, filters, sortBy]
+        () => sortLibrary(filterLibrary(allMaterials, effectiveFilters), sortBy),
+        [allMaterials, effectiveFilters, sortBy]
     )
 
     const availableDepartments = useMemo(() => {
@@ -194,14 +209,14 @@ export default function LibraryPage() {
         return UNIZIK_FACULTIES.find((f) => f.name === filters.faculty)?.departments || []
     }, [filters.faculty])
 
-    const onShelf = filters.domain !== 'All'
+    const onShelf = domain !== 'All'
     // Every filter except the shelf itself: a shelf page is not "searching".
     const extraFilters = activeFilterCount({ ...filters, domain: 'All' })
     const isSearching = Boolean(filters.query) || extraFilters > 0
-    const info = shelfInfo(filters.domain)
+    const info = shelfInfo(domain)
     const shelfCount = useMemo(
-        () => allMaterials.filter((item) => item.domain === filters.domain).length,
-        [allMaterials, filters.domain]
+        () => allMaterials.filter((item) => item.domain === domain).length,
+        [allMaterials, domain]
     )
 
     const set = (patch) => setFilters((current) => ({ ...current, ...patch }))
@@ -209,25 +224,42 @@ export default function LibraryPage() {
     const clearAll = () => setFilters({ ...EMPTY_FILTERS })
     // Clearing filters on a shelf keeps the reader on that shelf; the back
     // button beside the title is the way out of it.
-    const clearFilters = () => setFilters({ ...EMPTY_FILTERS, domain: filters.domain })
+    const clearFilters = () => setFilters({ ...EMPTY_FILTERS, domain })
+    const leaveShelf = () => {
+        if (routeShelf) navigate('/library')
+        clearAll()
+    }
     const openShelf = (name) => {
         setFilters({ ...EMPTY_FILTERS, domain: name })
+        // On a shelf's own address, moving to another shelf is a navigation, so
+        // the back button returns to the shelf the reader came from.
+        if (routeShelf) navigate(shelfPath(name))
         window.scrollTo({ top: 0, behavior: 'smooth' })
     }
 
+    // The title of a card opens the document's own page, where its edition,
+    // page count and rights note are stated before the file downloads. Books
+    // keep their richer page; everything else now has one too.
     const openItem = (item) => {
         if (item.isBook) {
             navigate(`/library/books/${item.slug}`)
             return
         }
-        // Everything on the shelf is a file ZikShare hosts; open it in a new tab.
-        window.open(item.external_url || item.download_path, '_blank', 'noopener,noreferrer')
+        navigate(documentLink(item))
     }
+
+    usePageMeta({
+        title: onShelf ? domain : 'Digital Library',
+        description: onShelf
+            ? `${shelfCount} ${info.unitPlural} on the ${domain} shelf — free PDFs, no sign-in and no payment step.`
+            : `${TOTAL} free study documents on nine shelves: NOUN course manuals, plays and books, all as PDFs.`,
+        path: onShelf ? shelfPath(domain) : '/library',
+    })
 
     return (
         <div className="zs-container">
             {onShelf && (
-                <button type="button" className="zs-back" onClick={() => clearAll()}>
+                <button type="button" className="zs-back" onClick={leaveShelf}>
                     <ChevronLeft size={16} /> All shelves
                 </button>
             )}
@@ -239,7 +271,7 @@ export default function LibraryPage() {
                             <ShieldCheck size={13} /> Free · no sign-in
                         </>
                     }
-                    title={filters.query ? `Results for “${filters.query}”` : filters.domain === 'All' ? 'Filtered library' : filters.domain}
+                    title={filters.query ? `Results for “${filters.query}”` : domain === 'All' ? 'Filtered library' : domain}
                     lead={`${results.length} of ${TOTAL} documents`}
                 />
             ) : onShelf ? (
@@ -249,8 +281,8 @@ export default function LibraryPage() {
                             <ShieldCheck size={13} /> Free · no sign-in · no payment step
                         </>
                     }
-                    title={`${FRESHER_LIBRARY_DOMAINS.find((d) => d.name === filters.domain)?.emoji || '📚'} ${filters.domain}`}
-                    lead={`${shelfLine(filters.domain, shelfCount)}. ${info.blurb}`}
+                    title={`${FRESHER_LIBRARY_DOMAINS.find((d) => d.name === domain)?.emoji || '📚'} ${domain}`}
+                    lead={`${shelfLine(domain, shelfCount)}. ${info.blurb}`}
                 />
             ) : (
                 <PageHeader
@@ -271,7 +303,7 @@ export default function LibraryPage() {
                     onChange={(value) => set({ query: value })}
                     placeholder={
                         onShelf && !isSearching
-                            ? `Search ${filters.domain.toLowerCase()}`
+                            ? `Search ${domain.toLowerCase()}`
                             : 'Search by title, author or course code'
                     }
                 />
@@ -371,6 +403,11 @@ export default function LibraryPage() {
             )}
 
             {/* ── Results, or one shelf's documents ─────────────────────── */}
+            <p className="zs-live" role="status" aria-live="polite">
+                {results.length} {results.length === 1 ? 'document' : 'documents'}
+                {domain !== 'All' ? ` on the ${domain} shelf` : ''}
+            </p>
+
             {results.length === 0 && (isSearching || onShelf) ? (
                 <div style={{ paddingTop: '1rem' }}>
                     <EmptyState
@@ -391,7 +428,7 @@ export default function LibraryPage() {
                 <section className="zs-section" aria-labelledby="results-title">
                     <SectionHeading
                         id="results-title"
-                        title={`${filters.domain === 'All' ? 'All shelves' : filters.domain} (${results.length})`}
+                        title={`${domain === 'All' ? 'All shelves' : domain} (${results.length})`}
                         description="Every document here is free to open and download."
                     />
                     <div className="zs-grid">
@@ -421,14 +458,14 @@ export default function LibraryPage() {
                     ))}
 
                     <div style={{ marginTop: '1.5rem', display: 'grid', gap: '0.5rem' }}>
-                        <GapPanel name={filters.domain} />
+                        <GapPanel name={domain} />
                         <Licence compact />
                     </div>
 
                     <div className="zs-other-shelves">
                         <span>Other shelves</span>
                         <div className="zs-chip-row">
-                            {FRESHER_LIBRARY_DOMAINS.filter((shelf) => shelf.name !== filters.domain).map(
+                            {FRESHER_LIBRARY_DOMAINS.filter((shelf) => shelf.name !== domain).map(
                                 (shelf) => (
                                     <button
                                         key={shelf.name}
@@ -459,13 +496,13 @@ export default function LibraryPage() {
 
                         <div className="zs-sheet__body">
                             <FilterGroup label="Shelf">
-                                <Chip active={filters.domain === 'All'} onClick={() => set({ domain: 'All' })}>
+                                <Chip active={domain === 'All'} onClick={() => set({ domain: 'All' })}>
                                     All shelves ({TOTAL})
                                 </Chip>
                                 {FRESHER_LIBRARY_DOMAINS.map((shelf) => (
                                     <Chip
                                         key={shelf.name}
-                                        active={filters.domain === shelf.name}
+                                        active={domain === shelf.name}
                                         onClick={() => set({ domain: shelf.name })}
                                     >
                                         {shelf.emoji} {shelf.name} ({shelf.count})

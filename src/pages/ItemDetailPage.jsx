@@ -1,5 +1,5 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, FileText, ShieldAlert, ChevronRight as ChevronRightIcon, CheckCircle2, Lock, Download, Sparkles, Eye, CheckCircle, Star, Tag, BookOpen, GraduationCap, Library } from 'lucide-react'
+import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, FileText, ShieldAlert, Flag, ChevronRight as ChevronRightIcon, CheckCircle2, Lock, Download, Sparkles, Eye, CheckCircle, Star, Tag, BookOpen, GraduationCap, Library } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListing, getUserPurchaseForProduct, createSignedDownloadUrl, getSellerReviews, getSellerRatingSummary } from '../lib/database'
@@ -13,6 +13,7 @@ import { findFresherPackBySlug, findFresherPackByStoragePath } from '../lib/fres
 import { findBookByStoragePath } from '../lib/christianBooks'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
+import ReportListingSheet from '../components/ReportListingSheet'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
@@ -50,6 +51,7 @@ export default function ItemDetailPage() {
     const [currentImage, setCurrentImage] = useState(0)
     const [isSaved, setIsSaved] = useState(() => checkSaved(id))
     const [showCallSheet, setShowCallSheet] = useState(false)
+    const [showReportSheet, setShowReportSheet] = useState(false)
     const [contacting, setContacting] = useState(false)
     const [existingOrder, setExistingOrder] = useState(null)
     const [downloadingExisting, setDownloadingExisting] = useState(false)
@@ -751,6 +753,39 @@ export default function ItemDetailPage() {
                     </div>
                 )}
             </div>
+
+            {/* Reporting: a listing that is a scam should not need an admin to
+                stumble on it. Hidden on your own listing, where it makes no sense. */}
+            {!isOwnListing && (
+                <div style={{ padding: '0 1rem 1rem', display: 'flex', justifyContent: 'center' }}>
+                    <button
+                        type="button"
+                        onClick={() => setShowReportSheet(true)}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            padding: '0.35rem 0.5rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '0.35rem',
+                            fontSize: '0.72rem',
+                            fontWeight: 700,
+                            color: '#94A3B8',
+                            cursor: 'pointer',
+                        }}
+                    >
+                        <Flag size={12} /> Report this listing
+                    </button>
+                </div>
+            )}
+
+            {showReportSheet && (
+                <ReportListingSheet
+                    listing={item}
+                    reporterId={user?.id || null}
+                    onClose={() => setShowReportSheet(false)}
+                />
+            )}
 
             {/* Sticky Bottom CTA */}
             {!isOwnListing && (

@@ -16,6 +16,7 @@ import { filterLibrary } from '../lib/libraryView'
 import { getOrCreateConversation } from '../lib/messaging'
 import { Button, EmptyState, PageHeader, SearchField, SectionHeading, Tag } from '../components/ui'
 import LibraryCard from '../components/LibraryCard'
+import usePageMeta from '../hooks/usePageMeta'
 
 function formatNaira(amount) {
     const n = Number(amount) || 0
@@ -74,6 +75,12 @@ export default function SearchPage() {
     const [submitting, setSubmitting] = useState(false)
 
     // The library is local data, so it can be searched on every keystroke.
+    usePageMeta({
+        title: 'Search',
+        description: 'Search every shelf of the ZikShare library and every listing on the campus marketplace at once.',
+        path: '/search',
+    })
+
     const libraryResults = useMemo(
         () => filterLibrary(mergeLibraryMaterials([]), { query }),
         [query]

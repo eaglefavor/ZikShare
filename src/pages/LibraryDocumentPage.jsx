@@ -135,7 +135,7 @@ export default function LibraryDocumentPage() {
         <div className="zs-container">
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', alignItems: 'center', marginTop: '0.5rem' }}>
                 <button type="button" className="zs-back" onClick={() => navigate(shelfPath(item.domain))} style={{ marginTop: 0 }}>
-                    <ArrowLeft size={15} /> {item.domain}
+                    <ArrowLeft size={15} /> {info.emoji} {item.domain}
                 </button>
             </div>
 
@@ -153,10 +153,6 @@ export default function LibraryDocumentPage() {
                     )}
 
                     <div className="zs-detail__body">
-                        <span className="zs-tag zs-tag--muted" style={{ alignSelf: 'flex-start' }}>
-                            {info.emoji} {item.domain}
-                        </span>
-
                         <h1 className="zs-detail__title">{item.title}</h1>
                         {item.subtitle && <p className="zs-detail__subtitle">{item.subtitle}</p>}
 

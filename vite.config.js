@@ -31,7 +31,8 @@ function librarySitemap() {
                 { loc: '/library', priority: '0.9' },
                 ...Object.keys(SHELF_INFO).map((name) => ({ loc: shelfPath(name), priority: '0.8' })),
                 ...mergeLibraryMaterials([]).map((item) => ({
-                    loc: documentPath(item),
+                    // Books are listed at their own page, which is canonical.
+                    loc: item.isBook ? `/library/books/${item.slug}` : documentPath(item),
                     priority: '0.6',
                 })),
                 { loc: '/search', priority: '0.5' },

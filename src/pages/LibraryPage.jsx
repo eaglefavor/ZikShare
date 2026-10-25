@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Filter, Search, ShieldCheck, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Filter, Search, ShieldCheck, WifiOff, X } from 'lucide-react'
 import { getDigitalProducts } from '../lib/database'
 import { UNIZIK_FACULTIES, ACADEMIC_LEVELS, ACADEMIC_MATERIAL_TYPES } from '../lib/categories'
 import {
@@ -392,6 +392,14 @@ export default function LibraryPage() {
                     </div>
 
                     <div style={{ marginTop: '1.5rem', display: 'grid', gap: '0.5rem' }}>
+                        <button
+                            type="button"
+                            className="zs-details zs-details--link"
+                            onClick={() => navigate('/library/offline')}
+                        >
+                            <WifiOff size={13} aria-hidden="true" /> Saved on this device
+                            <span className="zs-details__hint">Read with no data →</span>
+                        </button>
                         <details className="zs-details">
                             <summary>What the library holds</summary>
                             <p className="zs-details__lead">{COUNT_LABEL}.</p>

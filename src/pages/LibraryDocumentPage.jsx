@@ -4,6 +4,7 @@ import {
     ArrowLeft,
     BookOpen,
     Check,
+    Play,
     Download,
     ExternalLink,
     FileText,
@@ -15,11 +16,14 @@ import { shelfGaps, shelfInfo } from '../lib/shelfGuide'
 import {
     documentLink,
     documentPath,
+    documentSlug,
     findDocumentBySlug,
     relatedDocuments,
     shelfPath,
 } from '../lib/libraryRoutes'
 import { useToast } from '../components/Toast'
+import OfflineButton from '../components/OfflineButton'
+import { getProgress, progressPercent } from '../lib/readingProgress'
 import usePageMeta from '../hooks/usePageMeta'
 import { Tag } from '../components/ui'
 import BookCover from '../components/BookCover'
@@ -72,13 +76,18 @@ export default function LibraryDocumentPage() {
 
     const materials = useMemo(() => mergeLibraryMaterials([]), [])
     const item = useMemo(() => findDocumentBySlug(materials, slug), [materials, slug])
+    // Where this reader stopped last time, so they can pick it up rather than
+    // starting at page one and paging back to where they were.
+    const progress = useMemo(() => (item ? getProgress(documentSlug(item)) : null), [item])
 
     usePageMeta({
         title: item ? item.title : 'Document not found',
         description: item
             ? `${item.title}${item.author ? ` by ${item.author}` : ''} — free ${item.page_count || ''} page PDF, no sign-in, no payment.`.replace(/\s+/g, ' ')
             : 'There is no document at this address.',
-        path: item ? documentPath(item) : '/library',
+        // A book has a richer page of its own; that one is the canonical address
+        // for it, so the search engine does not see the same book twice.
+        path: item ? (item.isBook ? `/library/books/${item.slug}` : documentPath(item)) : '/library',
         type: 'book',
     })
 
@@ -178,27 +187,32 @@ export default function LibraryDocumentPage() {
                         </div>
 
                         <div className="zs-detail__actions">
-                            {item.isBook && (
-                                <button
-                                    type="button"
-                                    className="zs-btn zs-btn--primary"
-                                    onClick={() => navigate(`/library/books/${item.slug}/read`)}
-                                >
-                                    <BookOpen size={15} /> Start reading
-                                </button>
-                            )}
-                            <a
-                                href={downloadHref}
-                                download
-                                className={`zs-btn ${item.isBook ? 'zs-btn--green' : 'zs-btn--primary'}`}
+                            <button
+                                type="button"
+                                className="zs-btn zs-btn--primary"
+                                onClick={() => navigate(`${documentPath(item)}/read`)}
                             >
+                                {progress ? <Play size={15} /> : <BookOpen size={15} />}
+                                {progress
+                                    ? `Continue on page ${progress.page}${progress.total ? ` of ${progress.total}` : ''}`
+                                    : 'Read in the app'}
+                            </button>
+                            <a href={downloadHref} download className="zs-btn zs-btn--green">
                                 <Download size={15} /> Download the PDF
                             </a>
+                            <OfflineButton item={item} />
                             <button type="button" className="zs-btn zs-btn--outline" onClick={share}>
                                 {copied ? <Check size={15} /> : <Share2 size={15} />}
                                 {copied ? 'Link copied' : 'Share'}
                             </button>
                         </div>
+
+                        {progress && progress.total ? (
+                            <p className="zs-detail__fineprint">
+                                You are {progressPercent(progress)}% through this file — page {progress.page} of{' '}
+                                {progress.total}. Reading happens in the app, so it stays where you left it.
+                            </p>
+                        ) : null}
 
                         <p className="zs-detail__fineprint">
                             No account, no checkout, no payment — download it here or{' '}

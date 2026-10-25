@@ -33,6 +33,7 @@ const LibraryPage = lazy(() => import('./pages/LibraryPage'))
 const BookDetailPage = lazy(() => import('./pages/BookDetailPage'))
 const BookReaderPage = lazy(() => import('./pages/BookReaderPage'))
 const LibraryDocumentPage = lazy(() => import('./pages/LibraryDocumentPage'))
+const OfflineLibraryPage = lazy(() => import('./pages/OfflineLibraryPage'))
 
 // Maintenance Mode Flag — Set to true to show maintenance screen to all standard visitors
 export const MAINTENANCE_MODE = false
@@ -65,6 +66,8 @@ function AppRoutes() {
         {/* Two focused surfaces keep the whole screen, because their own controls sit
             exactly where the shell's bars would: the reader and a conversation. */}
         <Route path="/library/books/:slug/read" element={<BookReaderPage />} />
+        {/* Every document reads in the app, not in the phone's PDF viewer. */}
+        <Route path="/library/doc/:slug/read" element={<BookReaderPage />} />
         <Route path="/chat/:conversationId" element={<ChatPage />} />
 
         {/* Pages with bottom nav */}
@@ -83,6 +86,7 @@ function AppRoutes() {
                   <Route path="/library/doc/:slug" element={<LibraryDocumentPage />} />
                   {/* A readable shelf address; ?domain= keeps working too. */}
                   <Route path="/library/shelf/:name" element={<LibraryPage />} />
+                  <Route path="/library/offline" element={<OfflineLibraryPage />} />
                   <Route path="/search" element={<SearchPage />} />
                   <Route path="/post" element={<PostPage />} />
                   <Route path="/messages" element={<MessagesPage />} />

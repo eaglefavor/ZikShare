@@ -11,7 +11,6 @@ import {
 } from '../lib/librarySearch'
 import { mergeLibraryMaterials } from '../lib/fresherLibrary'
 import LibraryPage from '../pages/LibraryPage'
-import * as database from '../lib/database'
 import { vi } from 'vitest'
 
 vi.mock('../lib/database', () => ({

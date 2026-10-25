@@ -1,10 +1,9 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { render, screen, fireEvent } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { isoWeek, shelfOfTheWeek, weekStart } from '../lib/shelfOfTheWeek'
 import { mergeLibraryMaterials } from '../lib/fresherLibrary'
 import HomePage from '../pages/HomePage'
-import * as database from '../lib/database'
 
 vi.mock('../lib/database', () => ({
   getListings: vi.fn().mockResolvedValue([]),

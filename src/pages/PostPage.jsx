@@ -387,11 +387,11 @@ export default function PostPage() {
     if (success) {
         return (
             <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1rem' }}>
-                <div style={{ backgroundColor: 'white', padding: '2rem', borderRadius: '1.25rem', border: '1px solid var(--color-border)', maxWidth: '24rem', width: '100%', textAlign: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
-                    <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '9999px', backgroundColor: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: '#166534' }}>
+                <div style={{ backgroundColor: 'var(--color-surface)', padding: '2rem', borderRadius: '1.25rem', border: '1px solid var(--color-border)', maxWidth: '24rem', width: '100%', textAlign: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.05)' }}>
+                    <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '9999px', backgroundColor: '#DCFCE7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: 'var(--color-success-text)' }}>
                         <CheckCircle size={32} />
                     </div>
-                    <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.5rem', color: '#0F172A' }}>
+                    <h2 style={{ fontSize: '1.25rem', fontWeight: 800, margin: '0 0 0.5rem', color: 'var(--color-text-primary)' }}>
                         {postType === 'physical' ? 'Listing published' : 'Material uploaded'}
                     </h2>
                     <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', margin: '0 0 1.5rem' }}>
@@ -399,7 +399,7 @@ export default function PostPage() {
                     </p>
                     <button
                         onClick={() => navigate('/seller-hub')}
-                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'var(--color-surface)', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}
                     >
                         View in Seller Hub
                     </button>
@@ -430,7 +430,7 @@ export default function PostPage() {
                             padding: '0.625rem',
                             borderRadius: '0.625rem',
                             border: 'none',
-                            backgroundColor: postType === 'physical' ? '#FFFFFF' : 'transparent',
+                            backgroundColor: postType === 'physical' ? 'var(--color-surface)' : 'transparent',
                             color: postType === 'physical' ? '#0F172A' : '#64748B',
                             fontWeight: 700,
                             fontSize: '0.8125rem',
@@ -453,7 +453,7 @@ export default function PostPage() {
                             padding: '0.625rem',
                             borderRadius: '0.625rem',
                             border: 'none',
-                            backgroundColor: postType === 'digital' ? '#FFFFFF' : 'transparent',
+                            backgroundColor: postType === 'digital' ? 'var(--color-surface)' : 'transparent',
                             color: postType === 'digital' ? '#2563EB' : '#64748B',
                             fontWeight: 700,
                             fontSize: '0.8125rem',
@@ -478,7 +478,7 @@ export default function PostPage() {
                             {/* Photos */}
                             <div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.375rem' }}>
-                                    <label style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A' }}>
+                                    <label style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
                                         Item Photos <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>(Up to 5)</span>
                                     </label>
                                     <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', fontWeight: 600 }}>{physicalPhotos.length}/5</span>
@@ -498,7 +498,7 @@ export default function PostPage() {
                                     ))}
 
                                     {photoPreviews.length < 5 && (
-                                        <label style={{ height: '90px', borderRadius: '0.625rem', border: '1.5px dashed #CBD5E1', backgroundColor: '#F8FAFC', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', gap: '0.25rem' }}>
+                                        <label style={{ height: '90px', borderRadius: '0.625rem', border: '1.5px dashed #CBD5E1', backgroundColor: 'var(--color-background)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', gap: '0.25rem' }}>
                                             <Camera size={20} color="#94A3B8" />
                                             <span style={{ fontSize: '0.6875rem', fontWeight: 600, color: 'var(--color-text-secondary)' }}>Add Photo</span>
                                             <input type="file" accept="image/*" multiple onChange={handleAddPhysicalPhotos} style={{ display: 'none' }} />
@@ -509,8 +509,8 @@ export default function PostPage() {
 
                             {/* Condition */}
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A', marginBottom: '0.5rem' }}>
-                                    Condition <span style={{ color: '#DC2626' }}>*</span>
+                                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '0.5rem' }}>
+                                    Condition <span style={{ color: 'var(--color-danger)' }}>*</span>
                                 </label>
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem' }}>
                                     {conditions.map(c => (
@@ -522,7 +522,7 @@ export default function PostPage() {
                                                 padding: '0.5rem',
                                                 borderRadius: '0.5rem',
                                                 border: condition === c ? '2px solid var(--color-brand)' : '1px solid var(--color-border)',
-                                                backgroundColor: condition === c ? '#EFF6FF' : '#FFFFFF',
+                                                backgroundColor: condition === c ? '#EFF6FF' : 'var(--color-surface)',
                                                 color: condition === c ? 'var(--color-brand)' : '#334155',
                                                 fontSize: '0.75rem',
                                                 fontWeight: 700,
@@ -540,8 +540,8 @@ export default function PostPage() {
                         <>
                             {/* Document / Spreadsheet File Picker */}
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A', marginBottom: '0.375rem' }}>
-                                    Digital Document / Spreadsheet <span style={{ color: '#DC2626' }}>*</span>
+                                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '0.375rem' }}>
+                                    Digital Document / Spreadsheet <span style={{ color: 'var(--color-danger)' }}>*</span>
                                 </label>
                                 <label
                                     style={{
@@ -613,7 +613,7 @@ export default function PostPage() {
                                             padding: '0.375rem 0.625rem',
                                             borderRadius: '0.5rem',
                                             border: `1px solid ${drmEnabled ? '#60A5FA' : '#4ADE80'}`,
-                                            backgroundColor: 'white',
+                                            backgroundColor: 'var(--color-surface)',
                                             color: drmEnabled ? '#1E40AF' : '#166534',
                                             fontSize: '0.6875rem',
                                             fontWeight: 700,
@@ -628,7 +628,7 @@ export default function PostPage() {
 
                             {/* Cover Photo */}
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A', marginBottom: '0.375rem' }}>
+                                <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '0.375rem' }}>
                                     Cover Page Preview <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>(Optional)</span>
                                 </label>
                                 {coverPreview ? (
@@ -643,7 +643,7 @@ export default function PostPage() {
                                         </button>
                                     </div>
                                 ) : (
-                                    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '70px', borderRadius: '0.75rem', border: '1.5px dashed #CBD5E1', backgroundColor: '#F8FAFC', cursor: 'pointer', gap: '0.375rem' }}>
+                                    <label style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '70px', borderRadius: '0.75rem', border: '1.5px dashed #CBD5E1', backgroundColor: 'var(--color-background)', cursor: 'pointer', gap: '0.375rem' }}>
                                         <Camera size={18} color="#94A3B8" />
                                         <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--color-text-secondary)' }}>Add cover / title page preview</span>
                                         <input type="file" accept="image/*" onChange={handleCoverPhotoAdd} style={{ display: 'none' }} />
@@ -655,8 +655,8 @@ export default function PostPage() {
 
                     {/* Title */}
                     <div>
-                        <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A', marginBottom: '0.375rem' }}>
-                            {postType === 'physical' ? 'Item Title' : 'Material Title'} <span style={{ color: '#DC2626' }}>*</span>
+                        <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '0.375rem' }}>
+                            {postType === 'physical' ? 'Item Title' : 'Material Title'} <span style={{ color: 'var(--color-danger)' }}>*</span>
                         </label>
                         <input
                             type="text"
@@ -671,11 +671,11 @@ export default function PostPage() {
 
                     {/* Price */}
                     <div>
-                        <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A', marginBottom: '0.375rem' }}>
-                            Price (₦) <span style={{ color: '#DC2626' }}>*</span>
+                        <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '0.375rem' }}>
+                            Price (₦) <span style={{ color: 'var(--color-danger)' }}>*</span>
                         </label>
                         <div style={{ position: 'relative' }}>
-                            <span style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', fontWeight: 800, color: '#64748B', fontSize: '0.9375rem' }}>₦</span>
+                            <span style={{ position: 'absolute', left: '0.875rem', top: '50%', transform: 'translateY(-50%)', fontWeight: 800, color: 'var(--color-text-secondary)', fontSize: '0.9375rem' }}>₦</span>
                             <input
                                 type="number"
                                 placeholder="e.g. 3500"
@@ -690,8 +690,8 @@ export default function PostPage() {
 
                     {/* Category Selection */}
                     <div>
-                        <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A', marginBottom: '0.375rem' }}>
-                            Category Segment <span style={{ color: '#DC2626' }}>*</span>
+                        <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '0.375rem' }}>
+                            Category Segment <span style={{ color: 'var(--color-danger)' }}>*</span>
                         </label>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginBottom: '0.625rem' }}>
                             {MARKETPLACE_SEGMENTS.map(seg => (
@@ -706,7 +706,7 @@ export default function PostPage() {
                                         padding: '0.375rem 0.625rem',
                                         borderRadius: '0.5rem',
                                         border: category === seg.name ? `2px solid ${seg.color}` : '1px solid var(--color-border)',
-                                        backgroundColor: category === seg.name ? seg.bg : '#FFFFFF',
+                                        backgroundColor: category === seg.name ? seg.bg : 'var(--color-surface)',
                                         color: category === seg.name ? seg.color : '#334155',
                                         fontSize: '0.6875rem',
                                         fontWeight: 700,
@@ -722,7 +722,7 @@ export default function PostPage() {
                         {category && (
                             <div>
                                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
-                                    Specific Item Type (Subcategory) <span style={{ color: '#DC2626' }}>*</span>
+                                    Specific Item Type (Subcategory) <span style={{ color: 'var(--color-danger)' }}>*</span>
                                 </label>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3125rem' }}>
                                     {(MARKETPLACE_SEGMENTS.find(s => s.name === category)?.subcategories || []).map(sub => (
@@ -733,7 +733,7 @@ export default function PostPage() {
                                             style={{
                                                 padding: '0.3125rem 0.5rem',
                                                 borderRadius: '9999px',
-                                                border: subcategory === sub.name ? '1.5px solid var(--color-brand)' : '1px solid #E2E8F0',
+                                                border: subcategory === sub.name ? '1.5px solid var(--color-brand)' : '1px solid var(--color-border)',
                                                 backgroundColor: subcategory === sub.name ? '#EFF6FF' : '#F8FAFC',
                                                 color: subcategory === sub.name ? '#1D4ED8' : '#475569',
                                                 fontSize: '0.6875rem',
@@ -751,9 +751,9 @@ export default function PostPage() {
 
                     {/* Academic Course Code, Level & Faculty (If digital or books) */}
                     {(postType === 'digital' || category === 'Academic & Study Materials' || category === 'Books') && (
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', padding: '0.75rem', backgroundColor: '#F0FDF4', borderRadius: '0.625rem', border: '1px solid #BBF7D0' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.5rem', padding: '0.75rem', backgroundColor: 'var(--color-campus-green-soft)', borderRadius: '0.625rem', border: '1px solid #BBF7D0' }}>
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: '#166534', marginBottom: '0.25rem' }}>
+                                <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: 'var(--color-success-text)', marginBottom: '0.25rem' }}>
                                     Course Code
                                 </label>
                                 <input
@@ -765,25 +765,25 @@ export default function PostPage() {
                                 />
                             </div>
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: '#166534', marginBottom: '0.25rem' }}>
+                                <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: 'var(--color-success-text)', marginBottom: '0.25rem' }}>
                                     Level
                                 </label>
                                 <select
                                     value={academicLevel}
                                     onChange={e => setAcademicLevel(e.target.value)}
-                                    style={{ width: '100%', padding: '0.4375rem 0.25rem', borderRadius: '0.375rem', border: '1px solid #86EFAC', fontSize: '0.75rem', backgroundColor: 'white' }}
+                                    style={{ width: '100%', padding: '0.4375rem 0.25rem', borderRadius: '0.375rem', border: '1px solid #86EFAC', fontSize: '0.75rem', backgroundColor: 'var(--color-surface)' }}
                                 >
                                     {ACADEMIC_LEVELS.map(lvl => <option key={lvl} value={lvl}>{lvl}</option>)}
                                 </select>
                             </div>
                             <div>
-                                <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: '#166534', marginBottom: '0.25rem' }}>
+                                <label style={{ display: 'block', fontSize: '0.6875rem', fontWeight: 700, color: 'var(--color-success-text)', marginBottom: '0.25rem' }}>
                                     Faculty
                                 </label>
                                 <select
                                     value={faculty}
                                     onChange={e => setFaculty(e.target.value)}
-                                    style={{ width: '100%', padding: '0.4375rem 0.25rem', borderRadius: '0.375rem', border: '1px solid #86EFAC', fontSize: '0.75rem', backgroundColor: 'white' }}
+                                    style={{ width: '100%', padding: '0.4375rem 0.25rem', borderRadius: '0.375rem', border: '1px solid #86EFAC', fontSize: '0.75rem', backgroundColor: 'var(--color-surface)' }}
                                 >
                                     {UNIZIK_FACULTIES.map(fac => <option key={fac.name} value={fac.name}>{fac.name}</option>)}
                                 </select>
@@ -794,13 +794,13 @@ export default function PostPage() {
                     {/* Physical Meetup Spot Preference */}
                     {postType === 'physical' && (
                         <div>
-                            <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A', marginBottom: '0.25rem' }}>
+                            <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '0.25rem' }}>
                                 Preferred Campus Meetup / Pickup Spot
                             </label>
                             <select
                                 value={meetupSpot}
                                 onChange={e => setMeetupSpot(e.target.value)}
-                                style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem', backgroundColor: 'white' }}
+                                style={{ width: '100%', padding: '0.625rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem', backgroundColor: 'var(--color-surface)' }}
                             >
                                 {UNIZIK_LOCATIONS.map(loc => (
                                     <option key={loc.id} value={loc.name}>{loc.name} ({loc.zone})</option>
@@ -811,7 +811,7 @@ export default function PostPage() {
 
                     {/* Description */}
                     <div>
-                        <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A', marginBottom: '0.375rem' }}>
+                        <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '0.375rem' }}>
                             Description <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-muted)', fontWeight: 500 }}>(Optional)</span>
                         </label>
                         <textarea
@@ -828,14 +828,14 @@ export default function PostPage() {
                         {postType === 'physical' ? (
                             <>
                                 <MapPin size={18} color="#166534" style={{ flexShrink: 0 }} />
-                                <p style={{ margin: 0, fontSize: '0.6875rem', color: '#166534', lineHeight: 1.3 }}>
+                                <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-success-text)', lineHeight: 1.3 }}>
                                     <strong>Safe Meetup & Escrow:</strong> Arrange physical exchanges at Garba Square, Chisco Park, or Admin Block. Buyer confirms delivery via 4-digit Handshake PIN.
                                 </p>
                             </>
                         ) : (
                             <>
                                 <Sparkles size={18} color="#1E40AF" style={{ flexShrink: 0 }} />
-                                <p style={{ margin: 0, fontSize: '0.6875rem', color: '#1E40AF', lineHeight: 1.3 }}>
+                                <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-link)', lineHeight: 1.3 }}>
                                     <strong>Anti-Piracy DRM:</strong> {drmEnabled ? 'Buyer copy is stamped with verified UNIZIK matric number & locked with password.' : 'Document is delivered as standard open file without DRM.'}
                                 </p>
                             </>
@@ -844,7 +844,7 @@ export default function PostPage() {
 
                     {/* Error Banner */}
                     {error && (
-                        <div style={{ padding: '0.75rem 0.875rem', borderRadius: '0.625rem', backgroundColor: '#FEF2F2', border: '1.5px solid #FECACA', color: '#DC2626', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
+                        <div style={{ padding: '0.75rem 0.875rem', borderRadius: '0.625rem', backgroundColor: 'var(--color-danger-soft)', border: '1.5px solid #FECACA', color: 'var(--color-danger)', fontSize: '0.75rem', fontWeight: 600, display: 'flex', alignItems: 'flex-start', gap: '0.5rem' }}>
                             <ShieldAlert size={16} style={{ flexShrink: 0, marginTop: '0.125rem' }} />
                             <span>{error}</span>
                         </div>
@@ -852,9 +852,9 @@ export default function PostPage() {
 
                     {/* Progress Indicator */}
                     {loading && (
-                        <div style={{ padding: '0.75rem', borderRadius: '0.625rem', backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <div style={{ padding: '0.75rem', borderRadius: '0.625rem', backgroundColor: 'var(--color-brand-soft)', border: '1px solid #BFDBFE', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                             <Loader2 size={16} className="animate-spin" color="#2563EB" />
-                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#1E40AF' }}>{uploadStep}</span>
+                            <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-link)' }}>{uploadStep}</span>
                         </div>
                     )}
 
@@ -869,7 +869,7 @@ export default function PostPage() {
                             borderRadius: '0.875rem',
                             border: 'none',
                             background: (loading || !title.trim() || !price || (postType === 'digital' && !digitalFile)) ? '#94A3B8' : 'linear-gradient(135deg, #3B82F6, #2563EB)',
-                            color: '#FFFFFF',
+                            color: 'var(--color-surface)',
                             fontSize: '1rem',
                             fontWeight: 800,
                             fontFamily: 'inherit',
@@ -921,7 +921,7 @@ export default function PostPage() {
                             transform: 'translate(-50%, -50%)',
                             width: 'calc(100% - 2rem)',
                             maxWidth: '26rem',
-                            backgroundColor: 'white',
+                            backgroundColor: 'var(--color-surface)',
                             borderRadius: '1.25rem',
                             padding: '1.5rem',
                             zIndex: 101,
@@ -931,38 +931,38 @@ export default function PostPage() {
                     >
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.75rem', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#2563EB' }}>
+                                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.75rem', backgroundColor: 'var(--color-brand-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-link)' }}>
                                     <ShieldCheck size={22} />
                                 </div>
                                 <div>
-                                    <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0F172A' }}>Document Protection</h2>
+                                    <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: 'var(--color-text-primary)' }}>Document Protection</h2>
                                     <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-text-muted)' }}>Anti-Piracy & Watermarking</p>
                                 </div>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setShowDrmModal(false)}
-                                style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '0.25rem' }}
+                                style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', padding: '0.25rem' }}
                             >
                                 <X size={20} />
                             </button>
                         </div>
 
                         {digitalFile && (
-                            <div style={{ padding: '0.625rem 0.75rem', borderRadius: '0.625rem', backgroundColor: '#F8FAFC', border: '1px solid #E2E8F0', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                            <div style={{ padding: '0.625rem 0.75rem', borderRadius: '0.625rem', backgroundColor: 'var(--color-background)', border: '1px solid var(--color-border)', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 {getFileIcon(digitalFile.name)}
                                 <div style={{ minWidth: 0, flex: 1 }}>
                                     <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                         {digitalFile.name}
                                     </p>
-                                    <p style={{ margin: 0, fontSize: '0.625rem', color: '#64748B' }}>
+                                    <p style={{ margin: 0, fontSize: '0.625rem', color: 'var(--color-text-secondary)' }}>
                                         {(digitalFile.size / 1024 / 1024).toFixed(2)} MB
                                     </p>
                                 </div>
                             </div>
                         )}
 
-                        <p style={{ fontSize: '0.8125rem', color: '#334155', margin: '0 0 1rem', lineHeight: 1.4 }}>
+                        <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', margin: '0 0 1rem', lineHeight: 1.4 }}>
                             Choose how you would like your file to be delivered to buyers upon purchase:
                         </p>
 
@@ -973,7 +973,7 @@ export default function PostPage() {
                                 style={{
                                     padding: '1rem',
                                     borderRadius: '0.875rem',
-                                    border: `2px solid ${drmEnabled ? '#2563EB' : '#E2E8F0'}`,
+                                    border: `2px solid ${drmEnabled ? 'var(--color-brand)' : 'var(--color-border)'}`,
                                     backgroundColor: drmEnabled ? '#EFF6FF' : 'white',
                                     cursor: 'pointer',
                                     transition: 'all 0.15s',
@@ -983,14 +983,14 @@ export default function PostPage() {
                                 }}
                             >
                                 <div style={{ width: '1.25rem', height: '1.25rem', borderRadius: '9999px', border: `2px solid ${drmEnabled ? '#2563EB' : '#94A3B8'}`, backgroundColor: drmEnabled ? '#2563EB' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '0.125rem', flexShrink: 0 }}>
-                                    {drmEnabled && <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '9999px', backgroundColor: 'white' }} />}
+                                    {drmEnabled && <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '9999px', backgroundColor: 'var(--color-surface)' }} />}
                                 </div>
                                 <div style={{ flex: 1 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.25rem' }}>
                                         <span style={{ fontSize: '0.875rem', fontWeight: 800, color: drmEnabled ? '#1E3A8A' : '#0F172A' }}>
                                             🛡️ Watermark & Encrypt
                                         </span>
-                                        <span style={{ fontSize: '0.625rem', fontWeight: 700, backgroundColor: '#DBEAFE', color: '#1E40AF', padding: '0.125rem 0.375rem', borderRadius: '0.25rem' }}>
+                                        <span style={{ fontSize: '0.625rem', fontWeight: 700, backgroundColor: '#DBEAFE', color: 'var(--color-link)', padding: '0.125rem 0.375rem', borderRadius: '0.25rem' }}>
                                             Recommended
                                         </span>
                                     </div>
@@ -1006,7 +1006,7 @@ export default function PostPage() {
                                 style={{
                                     padding: '1rem',
                                     borderRadius: '0.875rem',
-                                    border: `2px solid ${!drmEnabled ? '#16A34A' : '#E2E8F0'}`,
+                                    border: `2px solid ${!drmEnabled ? 'var(--color-campus-green)' : 'var(--color-border)'}`,
                                     backgroundColor: !drmEnabled ? '#F0FDF4' : 'white',
                                     cursor: 'pointer',
                                     transition: 'all 0.15s',
@@ -1016,7 +1016,7 @@ export default function PostPage() {
                                 }}
                             >
                                 <div style={{ width: '1.25rem', height: '1.25rem', borderRadius: '9999px', border: `2px solid ${!drmEnabled ? '#16A34A' : '#94A3B8'}`, backgroundColor: !drmEnabled ? '#16A34A' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', marginTop: '0.125rem', flexShrink: 0 }}>
-                                    {!drmEnabled && <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '9999px', backgroundColor: 'white' }} />}
+                                    {!drmEnabled && <div style={{ width: '0.5rem', height: '0.5rem', borderRadius: '9999px', backgroundColor: 'var(--color-surface)' }} />}
                                 </div>
                                 <div style={{ flex: 1 }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginBottom: '0.25rem' }}>

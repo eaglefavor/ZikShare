@@ -35,7 +35,7 @@ export default function BookCover({ src, title, author, alt, style, width = '100
                 <div>
                     <div style={{ fontSize: '0.95rem', fontWeight: 800, lineHeight: 1.3 }}>{title}</div>
                     {author && (
-                        <div style={{ marginTop: '0.4rem', fontSize: '0.68rem', letterSpacing: '0.06em', textTransform: 'uppercase', color: '#CBD5E1' }}>
+                        <div style={{ marginTop: '0.4rem', fontSize: '0.68rem', letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--color-border-strong)' }}>
                             {author}
                         </div>
                     )}
@@ -56,8 +56,8 @@ export default function BookCover({ src, title, author, alt, style, width = '100
                 objectFit: 'cover',
                 objectPosition: 'top center',
                 borderRadius: '0.75rem',
-                border: '1px solid #E2E8F0',
-                backgroundColor: '#F8FAFC',
+                border: '1px solid var(--color-border)',
+                backgroundColor: 'var(--color-background)',
                 display: 'block',
                 ...style
             }}

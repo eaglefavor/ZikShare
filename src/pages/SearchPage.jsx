@@ -30,7 +30,7 @@ function ListingCard({ listing, onOpen }) {
         <article className="zs-item-card" style={{ padding: 0, overflow: 'hidden' }}>
             <div
                 onClick={() => onOpen(listing)}
-                style={{ cursor: 'pointer', aspectRatio: '4 / 3', backgroundColor: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ cursor: 'pointer', aspectRatio: '4 / 3', backgroundColor: 'var(--color-canvas)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
                 {image ? (
                     <img src={image} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -392,7 +392,7 @@ export default function SearchPage() {
                                 <select
                                     value={requestForm.category}
                                     onChange={(e) => setRequestForm((f) => ({ ...f, category: e.target.value }))}
-                                    style={{ padding: '0.6rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-border)', fontFamily: 'inherit', fontSize: '0.85rem', background: '#FFFFFF' }}
+                                    style={{ padding: '0.6rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-border)', fontFamily: 'inherit', fontSize: '0.85rem', background: 'var(--color-surface)' }}
                                 >
                                     {['Tech', 'Hostel', 'Books', 'Services', 'Other'].map((option) => (
                                         <option key={option} value={option}>{option}</option>

@@ -49,7 +49,7 @@ export class ErrorBoundary extends React.Component {
           padding: '2rem 1.5rem',
           textAlign: 'center',
           fontFamily: 'inherit',
-          backgroundColor: '#F8FAFC',
+          backgroundColor: 'var(--color-background)',
         }}>
           <div style={{
             width: '3.75rem',
@@ -65,10 +65,10 @@ export class ErrorBoundary extends React.Component {
             <AlertTriangle size={24} color="#D97706" />
           </div>
 
-          <h2 style={{ fontSize: '1.1875rem', fontWeight: 800, color: '#0F172A', margin: '0 0 0.375rem' }}>
+          <h2 style={{ fontSize: '1.1875rem', fontWeight: 800, color: 'var(--color-text-primary)', margin: '0 0 0.375rem' }}>
             {this.props.title || 'Something went wrong'}
           </h2>
-          <p style={{ fontSize: '0.8125rem', color: '#64748B', maxWidth: '22rem', margin: '0 0 1.25rem', lineHeight: 1.5 }}>
+          <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', maxWidth: '22rem', margin: '0 0 1.25rem', lineHeight: 1.5 }}>
             We encountered a temporary rendering issue. Please reload or return to the main campus page.
           </p>
 
@@ -98,8 +98,8 @@ export class ErrorBoundary extends React.Component {
               style={{
                 padding: '0.625rem 1.25rem',
                 borderRadius: '0.625rem',
-                backgroundColor: 'white',
-                color: '#334155',
+                backgroundColor: 'var(--color-surface)',
+                color: 'var(--color-text-secondary)',
                 border: '1px solid var(--color-border)',
                 fontSize: '0.8125rem',
                 fontWeight: 700,

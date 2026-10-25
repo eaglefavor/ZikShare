@@ -93,7 +93,7 @@ export function SearchField({ value, onChange, placeholder, onClear, autoFocus =
                     type="button"
                     onClick={() => (onClear ? onClear() : onChange(''))}
                     aria-label="Clear search"
-                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: '#94A3B8', display: 'flex' }}
+                    style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', color: 'var(--color-text-muted)', display: 'flex' }}
                 >
                     <X size={16} />
                 </button>

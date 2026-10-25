@@ -292,7 +292,7 @@ export default function ItemDetailPage() {
             </button>
 
             <div style={{ position: 'relative', marginTop: '0.65rem', borderRadius: '0.9rem', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
-                <div style={{ width: '100%', height: '260px', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem', overflow: 'hidden' }}>
+                <div style={{ width: '100%', height: '260px', backgroundColor: 'var(--color-brand-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem', overflow: 'hidden' }}>
                     {images[currentImage] ? (
                         <img src={images[currentImage]} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                     ) : item.isDigital ? '📄' : '📦'}
@@ -336,7 +336,7 @@ export default function ItemDetailPage() {
                 )}
             </div>
 
-            <div style={{ padding: '1rem', backgroundColor: 'white', borderRadius: '1rem 1rem 0 0', marginTop: '-0.75rem', position: 'relative' }}>
+            <div style={{ padding: '1rem', backgroundColor: 'var(--color-surface)', borderRadius: '1rem 1rem 0 0', marginTop: '-0.75rem', position: 'relative' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.6875rem', color: 'var(--color-text-muted)', marginBottom: '0.5rem' }}>
                     <MapPin size={12} />
                     <span>{item.lodge_location || 'UNIZIK Campus'}</span>
@@ -350,12 +350,12 @@ export default function ItemDetailPage() {
                 {/* Subcategory & Academic Tags */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap', marginBottom: '0.75rem' }}>
                     {item.subcategory && (
-                        <span style={{ fontSize: '0.6875rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '0.375rem', backgroundColor: '#EFF6FF', color: '#1D4ED8' }}>
+                        <span style={{ fontSize: '0.6875rem', fontWeight: 700, padding: '0.15rem 0.5rem', borderRadius: '0.375rem', backgroundColor: 'var(--color-brand-soft)', color: '#1D4ED8' }}>
                             🏷️ {item.subcategory}
                         </span>
                     )}
                     {item.course_code && (
-                        <span style={{ fontSize: '0.6875rem', fontWeight: 800, padding: '0.15rem 0.5rem', borderRadius: '0.375rem', backgroundColor: '#ECFDF5', color: '#047857' }}>
+                        <span style={{ fontSize: '0.6875rem', fontWeight: 800, padding: '0.15rem 0.5rem', borderRadius: '0.375rem', backgroundColor: 'var(--color-campus-green-soft)', color: '#047857' }}>
                             <BookOpen size={11} style={{ display: 'inline', marginRight: '3px' }} />
                             {item.course_code}
                         </span>
@@ -401,10 +401,10 @@ export default function ItemDetailPage() {
                     (isFreePdf || item.isDigital) ? (
                         <div style={{ marginBottom: '0.5rem' }}>
                             {isFreePdf ? (
-                                <div style={{ backgroundColor: '#F0FDF4', border: '1.5px solid #10B981', borderRadius: '0.875rem', padding: '1.125rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+                                <div style={{ backgroundColor: 'var(--color-campus-green-soft)', border: '1.5px solid #10B981', borderRadius: '0.875rem', padding: '1.125rem', display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                                         <CheckCircle2 size={18} color="#10B981" />
-                                        <span style={{ fontWeight: 800, fontSize: '0.875rem', color: '#065F46' }}>Free download. No payment, no sign-in.</span>
+                                        <span style={{ fontWeight: 800, fontSize: '0.875rem', color: 'var(--color-success-text)' }}>Free download. No payment, no sign-in.</span>
                                     </div>
                                     <p style={{ margin: 0, fontSize: '0.75rem', color: '#047857', lineHeight: 1.45 }}>
                                         {freeBook
@@ -419,23 +419,23 @@ export default function ItemDetailPage() {
                                         <Download size={16} />
                                         <span>Download the full {freeBook ? 'book' : 'PDF'} ({freePageCount} pages)</span>
                                     </a>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.6875rem', color: '#065F46' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.6875rem', color: 'var(--color-success-text)' }}>
                                         <Eye size={13} />
                                         <button
                                             type="button"
                                             onClick={handleOpenPreview}
-                                            style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', color: '#1E40AF', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
+                                            style={{ background: 'none', border: 'none', padding: 0, font: 'inherit', color: 'var(--color-link)', fontWeight: 700, cursor: 'pointer', textDecoration: 'underline' }}
                                         >
                                             Read the sample pages first
                                         </button>
                                     </div>
                                 </div>
                             ) : existingOrder ? (
-                                <div style={{ backgroundColor: '#F0FDF4', border: '1.5px solid #10B981', borderRadius: '0.875rem', padding: '1.125rem', boxShadow: '0 4px 12px rgba(16,185,129,0.1)' }}>
+                                <div style={{ backgroundColor: 'var(--color-campus-green-soft)', border: '1.5px solid #10B981', borderRadius: '0.875rem', padding: '1.125rem', boxShadow: '0 4px 12px rgba(16,185,129,0.1)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                                             <CheckCircle2 size={18} color="#10B981" />
-                                            <span style={{ fontWeight: 800, fontSize: '0.875rem', color: '#065F46' }}>You Already Own This Material!</span>
+                                            <span style={{ fontWeight: 800, fontSize: '0.875rem', color: 'var(--color-success-text)' }}>You Already Own This Material!</span>
                                         </div>
                                         <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#059669', backgroundColor: '#DCFCE7', padding: '0.125rem 0.5rem', borderRadius: '1rem' }}>
                                             Purchased
@@ -446,11 +446,11 @@ export default function ItemDetailPage() {
                                     </p>
 
                                     {item.drm_enabled !== false && (
-                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'white', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px dashed #10B981', marginBottom: '0.75rem' }}>
-                                            <span style={{ fontSize: '0.75rem', color: '#065F46', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--color-surface)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px dashed #10B981', marginBottom: '0.75rem' }}>
+                                            <span style={{ fontSize: '0.75rem', color: 'var(--color-success-text)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
                                                 <Lock size={13} color="#10B981" /> PDF Password:
                                             </span>
-                                            <code style={{ fontSize: '0.875rem', fontWeight: 800, color: '#1E40AF', fontFamily: 'monospace' }}>
+                                            <code style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--color-link)', fontFamily: 'monospace' }}>
                                                 {getDrmPassword(existingOrder, user)}
                                             </code>
                                         </div>
@@ -491,12 +491,12 @@ export default function ItemDetailPage() {
                             ) : (
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                                     {/* Free First-Page Sample Preview Card */}
-                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.625rem 0.875rem', backgroundColor: '#F8FAFC', borderRadius: '0.75rem', border: '1px solid #E2E8F0' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.625rem 0.875rem', backgroundColor: 'var(--color-background)', borderRadius: '0.75rem', border: '1px solid var(--color-border)' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                             <span style={{ fontSize: '1.25rem' }}>📄</span>
                                             <div>
-                                                <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, color: '#0F172A' }}>Want to check the questions?</p>
-                                                <p style={{ margin: 0, fontSize: '0.625rem', color: '#64748B' }}>Free {item.preview_page_count || 3}-page preview {isFreePdf ? 'of the full document' : 'before purchasing'}</p>
+                                                <p style={{ margin: 0, fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>Want to check the questions?</p>
+                                                <p style={{ margin: 0, fontSize: '0.625rem', color: 'var(--color-text-secondary)' }}>Free {item.preview_page_count || 3}-page preview {isFreePdf ? 'of the full document' : 'before purchasing'}</p>
                                             </div>
                                         </div>
                                         <button
@@ -506,8 +506,8 @@ export default function ItemDetailPage() {
                                                 padding: '0.4rem 0.75rem',
                                                 borderRadius: '0.5rem',
                                                 border: '1.5px solid #2563EB',
-                                                backgroundColor: '#EFF6FF',
-                                                color: '#1E40AF',
+                                                backgroundColor: 'var(--color-brand-soft)',
+                                                color: 'var(--color-link)',
                                                 fontSize: '0.6875rem',
                                                 fontWeight: 800,
                                                 cursor: 'pointer',
@@ -548,7 +548,7 @@ export default function ItemDetailPage() {
                         </div>
                     ) : (
                         <div style={{ display: 'flex', gap: '0.625rem', marginBottom: '0.5rem' }}>
-                            <button onClick={() => setShowCallSheet(true)} style={{ flex: 0, width: '3.5rem', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'white', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: 'var(--color-text-primary)' }}>
+                            <button onClick={() => setShowCallSheet(true)} style={{ flex: 0, width: '3.5rem', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: 'var(--color-text-primary)' }}>
                                 <Phone size={18} />
                             </button>
                             <button onClick={handleContactSeller} disabled={contacting} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #1E40AF, #1E3A8A)', color: 'white', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: contacting ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', boxShadow: '0 4px 12px rgba(30,64,175,0.3)', opacity: contacting ? 0.7 : 1 }}>
@@ -562,7 +562,7 @@ export default function ItemDetailPage() {
 
             {/* Preview Modal */}
             {showPreviewModal && (
-                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'white', zIndex: 1000, overflowY: 'auto' }}>
+                <div style={{ position: 'fixed', inset: 0, backgroundColor: 'var(--color-surface)', zIndex: 1000, overflowY: 'auto' }}>
                     <div style={{ padding: '1rem', display: 'flex', alignItems: 'center', borderBottom: '1px solid var(--color-border)' }}>
                         <button onClick={() => setShowPreviewModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}>
                             <X size={24} />
@@ -575,14 +575,14 @@ export default function ItemDetailPage() {
                             <p style={{ marginTop: '1rem', color: 'var(--color-text-secondary)' }}>Loading preview...</p>
                         </div>
                     ) : previewError ? (
-                        <div style={{ padding: '3rem', textAlign: 'center', color: '#DC2626' }}>{previewError}</div>
+                        <div style={{ padding: '3rem', textAlign: 'center', color: 'var(--color-danger)' }}>{previewError}</div>
                     ) : (
                         <div style={{ padding: '1rem' }}>
                             <canvas ref={previewCanvasRef} style={{ width: '100%', height: 'auto', boxShadow: '0 0 10px rgba(0,0,0,0.1)' }} />
                             <p style={{ textAlign: 'center', marginTop: '1rem', fontSize: '0.875rem' }}>Page 1 of {previewPageCount || '?'}</p>
                             {item?.preview_path && (
                                 <p style={{ textAlign: 'center', marginTop: '0.5rem', fontSize: '0.75rem' }}>
-                                    <a href={item.preview_path} target="_blank" rel="noopener noreferrer" style={{ color: '#2563EB', fontWeight: 700 }}>
+                                    <a href={item.preview_path} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--color-link)', fontWeight: 700 }}>
                                         Open the full free preview in a new tab
                                     </a>
                                 </p>
@@ -594,14 +594,14 @@ export default function ItemDetailPage() {
 
             {/* Description */}
             {item.description && (
-                <div style={{ margin: '0.5rem 0', padding: '1rem', backgroundColor: 'white' }}>
+                <div style={{ margin: '0.5rem 0', padding: '1rem', backgroundColor: 'var(--color-surface)' }}>
                     <h3 style={{ margin: '0 0 0.375rem', fontSize: '0.875rem', fontWeight: 700 }}>Description</h3>
                     <p style={{ margin: 0, fontSize: '0.8125rem', color: 'var(--color-text-secondary)', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{item.description}</p>
                 </div>
             )}
 
             {/* Item Details Grid */}
-            <div style={{ margin: '0.5rem 0', padding: '1rem', backgroundColor: 'white' }}>
+            <div style={{ margin: '0.5rem 0', padding: '1rem', backgroundColor: 'var(--color-surface)' }}>
                 <h3 style={{ margin: '0 0 0.75rem', fontSize: '0.875rem', fontWeight: 700 }}>Details</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem' }}>
                     <div>
@@ -674,7 +674,7 @@ export default function ItemDetailPage() {
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', marginTop: '0.125rem' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', color: '#F59E0B' }}>
                                         <Star size={12} fill="#F59E0B" />
-                                        <span style={{ fontSize: '0.75rem', fontWeight: 800, marginLeft: '0.25rem', color: '#0F172A' }}>
+                                        <span style={{ fontSize: '0.75rem', fontWeight: 800, marginLeft: '0.25rem', color: 'var(--color-text-primary)' }}>
                                             {isOfficial ? '5.0' : sellerRatingSummary.averageRating.toFixed(1)}
                                         </span>
                                     </div>
@@ -688,12 +688,12 @@ export default function ItemDetailPage() {
                         {/* Seller Reviews Preview */}
                         {sellerReviews.length > 0 && (
                             <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #F1F5F9' }}>
-                                <p style={{ margin: '0 0 0.5rem', fontSize: '0.6875rem', fontWeight: 700, color: '#64748B', textTransform: 'uppercase' }}>Recent Buyer Feedback</p>
+                                <p style={{ margin: '0 0 0.5rem', fontSize: '0.6875rem', fontWeight: 700, color: 'var(--color-text-secondary)', textTransform: 'uppercase' }}>Recent Buyer Feedback</p>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                     {sellerReviews.slice(0, 2).map(rev => (
-                                        <div key={rev.id} style={{ padding: '0.5rem', backgroundColor: '#F8FAFC', borderRadius: '0.5rem', border: '1px solid #E2E8F0' }}>
+                                        <div key={rev.id} style={{ padding: '0.5rem', backgroundColor: 'var(--color-background)', borderRadius: '0.5rem', border: '1px solid var(--color-border)' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.125rem' }}>
-                                                <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: '#1E293B' }}>{rev.users?.displayName || 'Campus Buyer'}</span>
+                                                <span style={{ fontSize: '0.6875rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>{rev.users?.displayName || 'Campus Buyer'}</span>
                                                 <div style={{ display: 'flex', color: '#F59E0B' }}>
                                                     {[...Array(rev.rating || 5)].map((_, i) => (
                                                         <Star key={i} size={10} fill="#F59E0B" />
@@ -711,33 +711,33 @@ export default function ItemDetailPage() {
             })()}
 
             {/* Safe Meetup (Physical Items) or Anti-Piracy Notice (Digital Items) */}
-            <div style={{ margin: '0.5rem 0 1rem', padding: '1rem', backgroundColor: 'white' }}>
+            <div style={{ margin: '0.5rem 0 1rem', padding: '1rem', backgroundColor: 'var(--color-surface)' }}>
                 {item.isDigital ? (
                     isFreePdf ? (
-                        <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: '#F0FDF4', border: '1.5px solid #BBF7D0', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                        <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: 'var(--color-campus-green-soft)', border: '1.5px solid #BBF7D0', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <CheckCircle size={18} color="#059669" />
-                                <strong style={{ fontSize: '0.75rem', color: '#065F46', textTransform: 'uppercase' }}>Always Free — No Fees</strong>
+                                <strong style={{ fontSize: '0.75rem', color: 'var(--color-success-text)', textTransform: 'uppercase' }}>Always Free — No Fees</strong>
                             </div>
                             <p style={{ margin: 0, fontSize: '0.6875rem', color: '#047857', lineHeight: 1.4 }}>
                                 This pack is free to download, with no payment step, no watermark and no account requirement. Share the ZikShare link rather than the file so your coursemates get the latest version.
                             </p>
                         </div>
                     ) : item.drm_enabled !== false ? (
-                        <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: '#FEF2F2', border: '1.5px solid #FECACA', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                        <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: 'var(--color-danger-soft)', border: '1.5px solid #FECACA', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <ShieldAlert size={18} color="#DC2626" />
-                                <strong style={{ fontSize: '0.75rem', color: '#991B1B', textTransform: 'uppercase' }}>Watermarked & Traceable Copy</strong>
+                                <strong style={{ fontSize: '0.75rem', color: 'var(--color-danger-text)', textTransform: 'uppercase' }}>Watermarked & Traceable Copy</strong>
                             </div>
                             <p style={{ margin: 0, fontSize: '0.6875rem', color: '#7F1D1D', lineHeight: 1.4 }}>
                                 This PDF is permanently stamped with your <strong>Full Name</strong> and <strong>UNIZIK Reg Number</strong> on every page upon purchase.
                             </p>
                         </div>
                     ) : (
-                        <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: '#EFF6FF', border: '1.5px solid #BFDBFE', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
+                        <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: 'var(--color-brand-soft)', border: '1.5px solid #BFDBFE', display: 'flex', flexDirection: 'column', gap: '0.375rem' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                 <CheckCircle size={18} color="#2563EB" />
-                                <strong style={{ fontSize: '0.75rem', color: '#1E40AF', textTransform: 'uppercase' }}>Direct PDF Access</strong>
+                                <strong style={{ fontSize: '0.75rem', color: 'var(--color-link)', textTransform: 'uppercase' }}>Direct PDF Access</strong>
                             </div>
                             <p style={{ margin: 0, fontSize: '0.6875rem', color: '#1E3A8A', lineHeight: 1.4 }}>
                                 Standard open document. Instant access & download in your library upon purchase.
@@ -745,9 +745,9 @@ export default function ItemDetailPage() {
                         </div>
                     )
                 ) : (
-                    <div style={{ padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: '#F0FDF4', border: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                    <div style={{ padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: 'var(--color-campus-green-soft)', border: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                         <MapPin size={16} color="#166534" />
-                        <p style={{ margin: 0, fontSize: '0.6875rem', color: '#166534', lineHeight: 1.3 }}>
+                        <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-success-text)', lineHeight: 1.3 }}>
                             <strong>Safe Meetup & Escrow:</strong> Arrange physical pickup at Garba Square, Chisco Park, or Admin Block.
                         </p>
                     </div>
@@ -770,7 +770,7 @@ export default function ItemDetailPage() {
                             gap: '0.35rem',
                             fontSize: '0.72rem',
                             fontWeight: 700,
-                            color: '#94A3B8',
+                            color: 'var(--color-text-muted)',
                             cursor: 'pointer',
                         }}
                     >
@@ -789,7 +789,7 @@ export default function ItemDetailPage() {
 
             {/* Sticky Bottom CTA */}
             {!isOwnListing && (
-                <div className="zs-mobile-only" style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '42rem', padding: '0.625rem 1rem', backgroundColor: 'white', borderTop: '1px solid var(--color-border)', display: 'flex', gap: '0.5rem', zIndex: 50, paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box' }}>
+                <div className="zs-mobile-only" style={{ position: 'fixed', bottom: 0, left: '50%', transform: 'translateX(-50%)', width: '100%', maxWidth: '42rem', padding: '0.625rem 1rem', backgroundColor: 'var(--color-surface)', borderTop: '1px solid var(--color-border)', display: 'flex', gap: '0.5rem', zIndex: 50, paddingBottom: 'calc(0.625rem + env(safe-area-inset-bottom, 0px))', boxSizing: 'border-box' }}>
                     {item.isDigital ? (
                         isFreePdf ? (
                             <a
@@ -817,12 +817,12 @@ export default function ItemDetailPage() {
                         )
                     ) : (
                         <>
-                            <button onClick={() => setShowCallSheet(true)} style={{ width: '3rem', height: '3rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-primary)', flexShrink: 0 }}>
+                            <button onClick={() => setShowCallSheet(true)} style={{ width: '3rem', height: '3rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'var(--color-text-primary)', flexShrink: 0 }}>
                                 <Phone size={18} />
                             </button>
                             <button
                                 onClick={handleContactSeller}
-                                style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: '1.5px solid #2563EB', backgroundColor: '#EFF6FF', color: '#1D4ED8', fontSize: '0.8125rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem' }}
+                                style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: '1.5px solid #2563EB', backgroundColor: 'var(--color-brand-soft)', color: '#1D4ED8', fontSize: '0.8125rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.375rem' }}
                             >
                                 <Tag size={15} /> Make Offer
                             </button>
@@ -839,7 +839,7 @@ export default function ItemDetailPage() {
             {showCallSheet && (
                 <>
                     <div onClick={() => setShowCallSheet(false)} style={{ position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 100 }} />
-                    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 101, backgroundColor: 'white', borderRadius: '1rem 1rem 0 0', padding: '1.25rem 1rem', paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom, 0px))', animation: 'slideUp 0.25s ease-out' }}>
+                    <div style={{ position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 101, backgroundColor: 'var(--color-surface)', borderRadius: '1rem 1rem 0 0', padding: '1.25rem 1rem', paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom, 0px))', animation: 'slideUp 0.25s ease-out' }}>
                         <style>{`@keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }`}</style>
 
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
@@ -869,9 +869,9 @@ export default function ItemDetailPage() {
                                 </a>
                             </div>
                         ) : (
-                            <div style={{ padding: '1rem', borderRadius: '0.75rem', backgroundColor: '#FEF2F2', border: '1px solid #FECACA', textAlign: 'center', marginBottom: '1rem' }}>
-                                <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600, color: '#DC2626' }}>Phone number not available</p>
-                                <p style={{ margin: '0.25rem 0 0', fontSize: '0.6875rem', color: '#DC2626' }}>Use the in-app chat to contact this seller.</p>
+                            <div style={{ padding: '1rem', borderRadius: '0.75rem', backgroundColor: 'var(--color-danger-soft)', border: '1px solid #FECACA', textAlign: 'center', marginBottom: '1rem' }}>
+                                <p style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 600, color: 'var(--color-danger)' }}>Phone number not available</p>
+                                <p style={{ margin: '0.25rem 0 0', fontSize: '0.6875rem', color: 'var(--color-danger)' }}>Use the in-app chat to contact this seller.</p>
                             </div>
                         )}
 

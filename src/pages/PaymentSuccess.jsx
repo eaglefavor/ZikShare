@@ -143,15 +143,15 @@ const PaymentSuccess = () => {
 
   if (status === 'processing') {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '1rem', backgroundColor: '#F8FAFC' }}>
-        <div style={{ textAlign: 'center', backgroundColor: 'white', padding: '2.5rem 1.5rem', borderRadius: '1.25rem', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.06)', maxWidth: '24rem', width: '100%', border: '1px solid var(--color-border)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '1rem', backgroundColor: 'var(--color-background)' }}>
+        <div style={{ textAlign: 'center', backgroundColor: 'var(--color-surface)', padding: '2.5rem 1.5rem', borderRadius: '1.25rem', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.06)', maxWidth: '24rem', width: '100%', border: '1px solid var(--color-border)' }}>
           <div style={{ margin: '0 auto 1.25rem', width: '3.5rem', height: '3.5rem', borderRadius: '50%', border: '4px solid #EFF6FF', borderTopColor: '#2563EB', animation: 'spin 1s linear infinite' }}></div>
           <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>🔐 Verifying Payment...</h2>
+          <h2 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--color-text-primary)', marginBottom: '0.5rem' }}>🔐 Verifying Payment...</h2>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.8125rem', marginBottom: '1.25rem', lineHeight: 1.5 }}>
             Connecting with Paystack & preparing your secure licensed PDF.
           </p>
-          <p style={{ color: '#64748B', fontSize: '0.6875rem', fontFamily: 'monospace' }}>Ref: {reference}</p>
+          <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.6875rem', fontFamily: 'monospace' }}>Ref: {reference}</p>
         </div>
       </div>
     );
@@ -159,16 +159,16 @@ const PaymentSuccess = () => {
 
   if (status === 'pending_manual' || status === 'error') {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '1rem', backgroundColor: '#F8FAFC' }}>
-        <div style={{ textAlign: 'center', backgroundColor: 'white', padding: '2rem 1.5rem', borderRadius: '1.25rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', maxWidth: '26rem', width: '100%', border: '1px solid var(--color-border)' }}>
-          <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '50%', backgroundColor: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: '#DC2626' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', padding: '1rem', backgroundColor: 'var(--color-background)' }}>
+        <div style={{ textAlign: 'center', backgroundColor: 'var(--color-surface)', padding: '2rem 1.5rem', borderRadius: '1.25rem', boxShadow: '0 4px 12px rgba(0,0,0,0.05)', maxWidth: '26rem', width: '100%', border: '1px solid var(--color-border)' }}>
+          <div style={{ width: '3.5rem', height: '3.5rem', borderRadius: '50%', backgroundColor: 'var(--color-danger-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: 'var(--color-danger)' }}>
             <AlertTriangle size={28} />
           </div>
-          <h2 style={{ fontSize: '1.1875rem', fontWeight: 800, color: '#0F172A', marginBottom: '0.5rem' }}>Verification Notice</h2>
+          <h2 style={{ fontSize: '1.1875rem', fontWeight: 800, color: 'var(--color-text-primary)', marginBottom: '0.5rem' }}>Verification Notice</h2>
           <p style={{ color: 'var(--color-text-secondary)', fontSize: '0.8125rem', marginBottom: '1rem', lineHeight: 1.4 }}>
             {errorMessage || `We are checking the payment confirmation from Paystack for reference: ${reference}`}
           </p>
-          <div style={{ backgroundColor: '#F1F5F9', padding: '0.625rem', borderRadius: '0.5rem', fontSize: '0.6875rem', fontFamily: 'monospace', color: '#334155', marginBottom: '1.25rem', wordBreak: 'break-all' }}>
+          <div style={{ backgroundColor: 'var(--color-canvas)', padding: '0.625rem', borderRadius: '0.5rem', fontSize: '0.6875rem', fontFamily: 'monospace', color: 'var(--color-text-secondary)', marginBottom: '1.25rem', wordBreak: 'break-all' }}>
             Reference: {reference}
           </div>
           <button
@@ -178,7 +178,7 @@ const PaymentSuccess = () => {
             <RefreshCw size={15} />
             <span>Re-Check Paystack Payment</span>
           </button>
-          <button onClick={() => navigate('/profile/purchases')} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.625rem', backgroundColor: 'white', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', fontWeight: 600, cursor: 'pointer' }}>
+          <button onClick={() => navigate('/profile/purchases')} style={{ width: '100%', padding: '0.75rem', borderRadius: '0.625rem', backgroundColor: 'var(--color-surface)', color: 'var(--color-text-primary)', border: '1px solid var(--color-border)', fontWeight: 600, cursor: 'pointer' }}>
             Go to My Purchases
           </button>
         </div>
@@ -190,12 +190,12 @@ const PaymentSuccess = () => {
   const regNumber = order?.watermark_text?.match(/REG NO: ([^|]+)/i)?.[1]?.trim() || 'STUDENT';
 
   return (
-    <div style={{ minHeight: '100vh', padding: '1.5rem 1rem', backgroundColor: '#F8FAFC', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-      <div style={{ backgroundColor: 'white', padding: '2rem 1.5rem', borderRadius: '1.25rem', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.08)', maxWidth: '30rem', width: '100%', border: '1px solid var(--color-border)' }}>
-        <div style={{ width: '4rem', height: '4rem', borderRadius: '9999px', backgroundColor: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: '#10B981' }}>
+    <div style={{ minHeight: '100vh', padding: '1.5rem 1rem', backgroundColor: 'var(--color-background)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+      <div style={{ backgroundColor: 'var(--color-surface)', padding: '2rem 1.5rem', borderRadius: '1.25rem', boxShadow: '0 10px 25px -5px rgba(0,0,0,0.08)', maxWidth: '30rem', width: '100%', border: '1px solid var(--color-border)' }}>
+        <div style={{ width: '4rem', height: '4rem', borderRadius: '9999px', backgroundColor: 'var(--color-campus-green-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1rem', color: '#10B981' }}>
           <CheckCircle2 size={36} />
         </div>
-        <h2 style={{ fontSize: '1.375rem', fontWeight: 800, textAlign: 'center', marginBottom: '0.25rem', color: '#0F172A' }}>Payment Verified! 🎉</h2>
+        <h2 style={{ fontSize: '1.375rem', fontWeight: 800, textAlign: 'center', marginBottom: '0.25rem', color: 'var(--color-text-primary)' }}>Payment Verified! 🎉</h2>
         <p style={{ textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: '0.8125rem', marginBottom: '1.25rem' }}>
           Your licensed study material is ready for download.
         </p>
@@ -229,7 +229,7 @@ const PaymentSuccess = () => {
                 <span>{copiedPassword ? 'Copied!' : 'Copy'}</span>
               </button>
             </div>
-            <div style={{ backgroundColor: 'white', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px dashed #F59E0B', textAlign: 'center', marginBottom: '0.5rem' }}>
+            <div style={{ backgroundColor: 'var(--color-surface)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', border: '1px dashed #F59E0B', textAlign: 'center', marginBottom: '0.5rem' }}>
               <span style={{ fontSize: '1.125rem', fontWeight: 900, fontFamily: 'monospace', color: '#B45309', letterSpacing: '0.08em' }}>
                 {drmPassword}
               </span>
@@ -241,30 +241,30 @@ const PaymentSuccess = () => {
         )}
 
         {/* BOLD ANTI-PIRACY & WATERMARK NOTICE */}
-        <div style={{ backgroundColor: '#FEF2F2', padding: '1.125rem', borderRadius: '0.875rem', border: '2px solid #DC2626', marginBottom: '1.25rem' }}>
+        <div style={{ backgroundColor: 'var(--color-danger-soft)', padding: '1.125rem', borderRadius: '0.875rem', border: '2px solid #DC2626', marginBottom: '1.25rem' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
             <ShieldAlert size={20} color="#DC2626" />
-            <h4 style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 900, color: '#991B1B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            <h4 style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 900, color: 'var(--color-danger-text)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
               ⚠️ LICENSED ACADEMIC COPY
             </h4>
           </div>
           <p style={{ margin: '0 0 0.5rem', fontSize: '0.75rem', color: '#7F1D1D', fontWeight: 600, lineHeight: 1.4 }}>
             Licensed to: <strong>{buyerName}</strong> (Reg No: <strong>{regNumber}</strong>).
           </p>
-          <p style={{ margin: 0, fontSize: '0.6875rem', color: '#991B1B', lineHeight: 1.4 }}>
+          <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-danger-text)', lineHeight: 1.4 }}>
             Every page of this PDF contains traceable identification ribbons. Sharing or re-uploading this material violates UNIZIK academic integrity rules.
           </p>
         </div>
 
         {/* Product Details & Download */}
-        <div style={{ backgroundColor: '#F8FAFC', padding: '1rem 1.25rem', borderRadius: '0.875rem', border: '1px solid var(--color-border)', marginBottom: '1.25rem' }}>
+        <div style={{ backgroundColor: 'var(--color-background)', padding: '1rem 1.25rem', borderRadius: '0.875rem', border: '1px solid var(--color-border)', marginBottom: '1.25rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Material:</span>
-            <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A' }}>{order?.product?.title || 'Study Material'}</span>
+            <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>{order?.product?.title || 'Study Material'}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Reference:</span>
-            <span style={{ fontSize: '0.6875rem', fontFamily: 'monospace', color: '#2563EB', fontWeight: 700 }}>{order?.paystack_reference || reference}</span>
+            <span style={{ fontSize: '0.6875rem', fontFamily: 'monospace', color: 'var(--color-link)', fontWeight: 700 }}>{order?.paystack_reference || reference}</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Security Mode:</span>
@@ -309,7 +309,7 @@ const PaymentSuccess = () => {
               padding: '0.75rem',
               borderRadius: '0.75rem',
               border: '1px solid var(--color-border)',
-              backgroundColor: 'white',
+              backgroundColor: 'var(--color-surface)',
               color: 'var(--color-text-primary)',
               fontSize: '0.8125rem',
               fontWeight: 700,

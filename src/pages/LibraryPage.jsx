@@ -20,6 +20,7 @@ import {
 } from '../lib/libraryView'
 import { Button, Chip, EmptyState, PageHeader, SearchField, SectionHeading } from '../components/ui'
 import LibraryCard from '../components/LibraryCard'
+import ThemeToggle from '../components/ThemeToggle'
 import usePageMeta from '../hooks/usePageMeta'
 
 const COUNTS = libraryCounts()
@@ -314,7 +315,7 @@ export default function LibraryPage() {
 
                 {(onShelf || isSearching) && (
                 <label className="zs-select" style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
-                    <span style={{ fontSize: '0.68rem', color: '#94A3B8', fontWeight: 700 }}>SORT</span>
+                    <span style={{ fontSize: '0.68rem', color: 'var(--color-text-muted)', fontWeight: 700 }}>SORT</span>
                     <select
                         value={sortBy}
                         onChange={(e) => setSortBy(e.target.value)}
@@ -405,6 +406,12 @@ export default function LibraryPage() {
                             <p className="zs-details__lead">{COUNT_LABEL}.</p>
                         </details>
                         <GapLibrary />
+                        <details className="zs-details">
+                            <summary>Appearance</summary>
+                            <div className="zs-details__lead">
+                                <ThemeToggle />
+                            </div>
+                        </details>
                         <Licence />
                     </div>
                 </section>

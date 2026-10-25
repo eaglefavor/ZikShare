@@ -5,8 +5,8 @@ import { getAnnouncements } from '../lib/database'
 import { markAnnouncementsAsRead } from '../lib/announcements'
 
 const categoryConfig = {
-    feature_update: { label: 'Feature Update', color: '#2563EB', bg: '#EFF6FF', border: '#BFDBFE', icon: Sparkles },
-    disciplinary_notice: { label: 'Disciplinary Notice', color: '#DC2626', bg: '#FEF2F2', border: '#FECACA', icon: ShieldAlert },
+    feature_update: { label: 'Feature Update', color: 'var(--color-link)', bg: '#EFF6FF', border: '#BFDBFE', icon: Sparkles },
+    disciplinary_notice: { label: 'Disciplinary Notice', color: 'var(--color-danger)', bg: '#FEF2F2', border: '#FECACA', icon: ShieldAlert },
     security_alert: { label: 'Safety & Policy', color: '#D97706', bg: '#FFFBEB', border: '#FDE68A', icon: AlertTriangle },
     marketplace_notice: { label: 'Marketplace Update', color: '#059669', bg: '#ECFDF5', border: '#A7F3D0', icon: Megaphone },
     maintenance: { label: 'System Notice', color: '#7C3AED', bg: '#F5F3FF', border: '#DDD6FE', icon: Shield },
@@ -83,7 +83,7 @@ export default function AnnouncementModal() {
                     transform: 'translate(-50%, -50%)',
                     width: 'calc(100% - 2rem)',
                     maxWidth: '24rem',
-                    backgroundColor: '#FFFFFF',
+                    backgroundColor: 'var(--color-surface)',
                     borderRadius: '1.25rem',
                     padding: '1.5rem',
                     zIndex: 101,
@@ -100,7 +100,7 @@ export default function AnnouncementModal() {
 
                     <button
                         onClick={handleDismiss}
-                        style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '0.25rem' }}
+                        style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', padding: '0.25rem' }}
                     >
                         <X size={18} />
                     </button>
@@ -111,14 +111,14 @@ export default function AnnouncementModal() {
                         <Shield size={14} />
                     </div>
                     <div>
-                        <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: '#0F172A', lineHeight: 1.3 }}>
+                        <h2 style={{ margin: 0, fontSize: '1rem', fontWeight: 800, color: 'var(--color-text-primary)', lineHeight: 1.3 }}>
                             {urgentAnnouncement.title}
                         </h2>
-                        <span style={{ fontSize: '0.625rem', color: '#64748B' }}>Official UNIZIK Broadcast</span>
+                        <span style={{ fontSize: '0.625rem', color: 'var(--color-text-secondary)' }}>Official UNIZIK Broadcast</span>
                     </div>
                 </div>
 
-                <p style={{ fontSize: '0.8125rem', color: '#334155', lineHeight: 1.45, margin: '0 0 1.25rem' }}>
+                <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', lineHeight: 1.45, margin: '0 0 1.25rem' }}>
                     {urgentAnnouncement.content}
                 </p>
 
@@ -152,9 +152,9 @@ export default function AnnouncementModal() {
                             width: '100%',
                             padding: '0.625rem',
                             borderRadius: '0.75rem',
-                            border: '1px solid #E2E8F0',
-                            backgroundColor: 'white',
-                            color: '#64748B',
+                            border: '1px solid var(--color-border)',
+                            backgroundColor: 'var(--color-surface)',
+                            color: 'var(--color-text-secondary)',
                             fontSize: '0.75rem',
                             fontWeight: 700,
                             cursor: 'pointer'
@@ -218,16 +218,16 @@ export function HomeAnnouncementBanner() {
                 onClick={() => navigate('/official-channel')}
                 style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', cursor: 'pointer', flex: 1, minWidth: 0 }}
             >
-                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.625rem', backgroundColor: '#E0EEFE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1E40AF', flexShrink: 0 }}>
+                <div style={{ width: '2.5rem', height: '2.5rem', borderRadius: '0.625rem', backgroundColor: '#E0EEFE', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--color-link)', flexShrink: 0 }}>
                     <Megaphone size={19} />
                 </div>
                 <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-                        <span style={{ fontSize: '0.625rem', fontWeight: 800, color: '#1E40AF', textTransform: 'uppercase', letterSpacing: '0.025em' }}>
+                        <span style={{ fontSize: '0.625rem', fontWeight: 800, color: 'var(--color-link)', textTransform: 'uppercase', letterSpacing: '0.025em' }}>
                             Official Broadcast
                         </span>
                     </div>
-                    <p style={{ margin: '0.125rem 0 0', fontSize: '0.8125rem', fontWeight: 700, color: '#1E293B', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    <p style={{ margin: '0.125rem 0 0', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-text-primary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {pinnedAnnouncement.title}
                     </p>
                 </div>
@@ -242,7 +242,7 @@ export function HomeAnnouncementBanner() {
                 </button>
                 <button
                     onClick={() => setDismissed(true)}
-                    style={{ background: 'none', border: 'none', color: '#94A3B8', cursor: 'pointer', padding: '0.2rem' }}
+                    style={{ background: 'none', border: 'none', color: 'var(--color-text-muted)', cursor: 'pointer', padding: '0.2rem' }}
                 >
                     <X size={14} />
                 </button>

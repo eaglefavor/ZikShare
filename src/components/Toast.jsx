@@ -90,7 +90,7 @@ export function ToastProvider({ children }) {
                             style={{
                                 background: 'none',
                                 border: 'none',
-                                color: '#94A3B8',
+                                color: 'var(--color-text-muted)',
                                 padding: '0.125rem',
                                 cursor: 'pointer',
                                 display: 'flex',

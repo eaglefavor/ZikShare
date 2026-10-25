@@ -114,9 +114,9 @@ export default function EditListingModal({ listing, onClose, onUpdated, onDelete
 
     return (
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)', padding: '1rem' }}>
-            <div style={{ backgroundColor: 'white', borderRadius: '1.25rem', width: '100%', maxWidth: '32rem', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid var(--color-border)' }}>
+            <div style={{ backgroundColor: 'var(--color-surface)', borderRadius: '1.25rem', width: '100%', maxWidth: '32rem', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', border: '1px solid var(--color-border)' }}>
                 {/* Header */}
-                <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, backgroundColor: 'white', zIndex: 10, borderTopLeftRadius: '1.25rem', borderTopRightRadius: '1.25rem' }}>
+                <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', position: 'sticky', top: 0, backgroundColor: 'var(--color-surface)', zIndex: 10, borderTopLeftRadius: '1.25rem', borderTopRightRadius: '1.25rem' }}>
                     <div>
                         <h2 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 700 }}>Edit {isDigital ? 'Digital Material' : 'Listing'}</h2>
                         <p style={{ margin: '0.125rem 0 0', fontSize: '0.75rem', color: 'var(--color-text-muted)' }}>Update details and manage availability</p>
@@ -133,7 +133,7 @@ export default function EditListingModal({ listing, onClose, onUpdated, onDelete
                             Cover Image
                         </label>
                         <div style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                            <div style={{ width: '5.5rem', height: '5.5rem', borderRadius: '0.75rem', overflow: 'hidden', backgroundColor: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--color-border)', flexShrink: 0 }}>
+                            <div style={{ width: '5.5rem', height: '5.5rem', borderRadius: '0.75rem', overflow: 'hidden', backgroundColor: 'var(--color-brand-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--color-border)', flexShrink: 0 }}>
                                 {preview ? (
                                     <img src={preview} alt="Cover" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                 ) : (
@@ -141,7 +141,7 @@ export default function EditListingModal({ listing, onClose, onUpdated, onDelete
                                 )}
                             </div>
                             <div>
-                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', backgroundColor: 'white', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>
+                                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 1rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', backgroundColor: 'var(--color-surface)', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}>
                                     <Camera size={16} />
                                     <span>Change Photo</span>
                                     <input type="file" accept="image/*" onChange={handlePhotoChange} style={{ display: 'none' }} />
@@ -181,7 +181,7 @@ export default function EditListingModal({ listing, onClose, onUpdated, onDelete
                             <select
                                 value={status}
                                 onChange={(e) => setStatus(e.target.value)}
-                                style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem', fontFamily: 'inherit', outline: 'none', backgroundColor: 'white', boxSizing: 'border-box' }}
+                                style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem', fontFamily: 'inherit', outline: 'none', backgroundColor: 'var(--color-surface)', boxSizing: 'border-box' }}
                             >
                                 <option value="active">Active (Selling)</option>
                                 <option value="Active">Active</option>
@@ -197,7 +197,7 @@ export default function EditListingModal({ listing, onClose, onUpdated, onDelete
                         <select
                             value={category}
                             onChange={(e) => setCategory(e.target.value)}
-                            style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem', fontFamily: 'inherit', outline: 'none', backgroundColor: 'white', boxSizing: 'border-box' }}
+                            style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', border: '1px solid var(--color-border)', fontSize: '0.8125rem', fontFamily: 'inherit', outline: 'none', backgroundColor: 'var(--color-surface)', boxSizing: 'border-box' }}
                         >
                             {categories.map(cat => (
                                 <option key={cat} value={cat}>{cat}</option>
@@ -219,7 +219,7 @@ export default function EditListingModal({ listing, onClose, onUpdated, onDelete
 
                     {/* Error Banner */}
                     {error && (
-                        <div style={{ padding: '0.75rem', borderRadius: '0.625rem', backgroundColor: '#FEF2F2', border: '1px solid #FECACA', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', color: '#DC2626', fontSize: '0.75rem', fontWeight: 600 }}>
+                        <div style={{ padding: '0.75rem', borderRadius: '0.625rem', backgroundColor: 'var(--color-danger-soft)', border: '1px solid #FECACA', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1.25rem', color: 'var(--color-danger)', fontSize: '0.75rem', fontWeight: 600 }}>
                             <AlertCircle size={16} />
                             <span>{error}</span>
                         </div>
@@ -231,7 +231,7 @@ export default function EditListingModal({ listing, onClose, onUpdated, onDelete
                             type="button"
                             onClick={handleDelete}
                             disabled={deleting || saving}
-                            style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', border: '1px solid #FECACA', backgroundColor: '#FEF2F2', color: '#DC2626', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.375rem' }}
+                            style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', border: '1px solid #FECACA', backgroundColor: 'var(--color-danger-soft)', color: 'var(--color-danger)', fontSize: '0.8125rem', fontWeight: 700, fontFamily: 'inherit', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.375rem' }}
                         >
                             {deleting ? <Loader2 size={16} className="animate-spin" /> : <Trash2 size={16} />}
                             <span>Delete</span>

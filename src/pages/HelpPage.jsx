@@ -108,7 +108,7 @@ export default function HelpPage() {
                                             width: '1.9rem',
                                             height: '1.9rem',
                                             borderRadius: '9999px',
-                                            backgroundColor: '#EFF6FF',
+                                            backgroundColor: 'var(--color-brand-soft)',
                                             color: '#1D4ED8',
                                             display: 'inline-flex',
                                             alignItems: 'center',
@@ -221,7 +221,7 @@ export default function HelpPage() {
                 </section>
 
                 <section style={{ marginTop: '1.5rem' }}>
-                    <div className="zs-notice" style={{ borderColor: '#BBF7D0', background: 'var(--color-campus-green-soft)', color: '#166534' }}>
+                    <div className="zs-notice" style={{ borderColor: '#BBF7D0', background: 'var(--color-campus-green-soft)', color: 'var(--color-success-text)' }}>
                         <Shield size={16} style={{ flexShrink: 0, marginTop: '0.1rem' }} aria-hidden="true" />
                         <div>
                             <p style={{ margin: '0 0 0.2rem', fontSize: 'var(--zs-fs-small)', fontWeight: 700 }}>Keeping yourself safe</p>

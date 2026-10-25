@@ -133,7 +133,7 @@ export default function SellerProfilePage() {
             </div>
 
             {/* Seller Header Banner */}
-            <div style={{ padding: '1.5rem 1rem 1rem', backgroundColor: 'white', borderBottom: '1px solid var(--color-border)' }}>
+            <div style={{ padding: '1.5rem 1rem 1rem', backgroundColor: 'var(--color-surface)', borderBottom: '1px solid var(--color-border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1rem' }}>
                     <div style={{ width: '4.5rem', height: '4.5rem', borderRadius: '9999px', background: 'linear-gradient(135deg, #1E40AF, #0F172A)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: '1.75rem', fontWeight: 800, flexShrink: 0, boxShadow: '0 4px 12px rgba(30,64,175,0.3)', border: '2px solid #BFDBFE' }}>
                         {(seller.displayName || 'S').charAt(0).toUpperCase()}
@@ -141,7 +141,7 @@ export default function SellerProfilePage() {
 
                     <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', flexWrap: 'wrap' }}>
-                            <h2 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 800, color: '#0F172A' }}>{seller.displayName || 'Student Seller'}</h2>
+                            <h2 style={{ margin: 0, fontSize: '1.125rem', fontWeight: 800, color: 'var(--color-text-primary)' }}>{seller.displayName || 'Student Seller'}</h2>
                             {seller.isVerified && <ShieldCheck size={18} color="var(--color-campus-green)" />}
                         </div>
                         {seller.department && (
@@ -149,7 +149,7 @@ export default function SellerProfilePage() {
                                 🎓 {seller.department}
                             </p>
                         )}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.6875rem', color: '#64748B' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginTop: '0.25rem', fontSize: '0.6875rem', color: 'var(--color-text-secondary)' }}>
                             <MapPin size={12} color="#D97706" />
                             <span>UNIZIK Campus</span>
                             <span>•</span>
@@ -158,14 +158,14 @@ export default function SellerProfilePage() {
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.375rem', padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: '#F8FAFC', border: '1px solid var(--color-border)', marginBottom: '1rem', textAlign: 'center' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.375rem', padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: 'var(--color-background)', border: '1px solid var(--color-border)', marginBottom: '1rem', textAlign: 'center' }}>
                     <div>
                         <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: 'var(--color-brand)' }}>{totalListings}</span>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: '#64748B', textTransform: 'uppercase', fontWeight: 700 }}>Listings</p>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 700 }}>Listings</p>
                     </div>
                     <div>
-                        <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#0F172A' }}>{digitalCount}</span>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: '#64748B', textTransform: 'uppercase', fontWeight: 700 }}>PDFs</p>
+                        <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: 'var(--color-text-primary)' }}>{digitalCount}</span>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 700 }}>PDFs</p>
                     </div>
                     <div>
                         <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#D97706', display: 'inline-flex', alignItems: 'center', gap: '0.125rem' }}>
@@ -177,13 +177,13 @@ export default function SellerProfilePage() {
                                 <span style={{ color: 'var(--color-text-muted)' }}>—</span>
                             )}
                         </span>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: '#64748B', textTransform: 'uppercase', fontWeight: 700 }}>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 700 }}>
                             {ratingSummary.totalReviews > 0 ? 'Rating' : 'No ratings'}
                         </p>
                     </div>
                     <div>
-                        <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: '#1E40AF' }}>{ratingSummary.totalReviews}</span>
-                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: '#64748B', textTransform: 'uppercase', fontWeight: 700 }}>Reviews</p>
+                        <span style={{ fontSize: '1.0625rem', fontWeight: 800, color: 'var(--color-link)' }}>{ratingSummary.totalReviews}</span>
+                        <p style={{ margin: '0.125rem 0 0', fontSize: '0.5625rem', color: 'var(--color-text-secondary)', textTransform: 'uppercase', fontWeight: 700 }}>Reviews</p>
                     </div>
                 </div>
 
@@ -222,8 +222,8 @@ export default function SellerProfilePage() {
                                 padding: '0.75rem 1.25rem',
                                 borderRadius: '0.75rem',
                                 border: '1px solid #BBF7D0',
-                                backgroundColor: '#F0FDF4',
-                                color: '#166534',
+                                backgroundColor: 'var(--color-campus-green-soft)',
+                                color: 'var(--color-success-text)',
                                 fontSize: '0.875rem',
                                 fontWeight: 700,
                                 textDecoration: 'none',
@@ -281,7 +281,7 @@ export default function SellerProfilePage() {
                                     style={{
                                         borderRadius: '0.75rem',
                                         overflow: 'hidden',
-                                        backgroundColor: 'white',
+                                        backgroundColor: 'var(--color-surface)',
                                         boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
                                         border: '1px solid var(--color-border)',
                                         cursor: 'pointer',
@@ -313,36 +313,36 @@ export default function SellerProfilePage() {
                 )}
 
                 {/* Verified Student Reviews Section */}
-                <div style={{ marginTop: '1.5rem', backgroundColor: 'white', borderRadius: '0.875rem', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
+                <div style={{ marginTop: '1.5rem', backgroundColor: 'var(--color-surface)', borderRadius: '0.875rem', border: '1px solid var(--color-border)', padding: '1.25rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
                         <h3 style={{ margin: 0, fontSize: '0.9375rem', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
                             <CheckCircle2 size={16} color="#10B981" /> Verified Buyer Reviews ({reviews.length})
                         </h3>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '0.25rem', color: '#F59E0B' }}>
                             <Star size={14} fill="#F59E0B" />
-                            <span style={{ fontSize: '0.875rem', fontWeight: 800, color: '#0F172A' }}>{ratingSummary.averageRating.toFixed(1)}</span>
+                            <span style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--color-text-primary)' }}>{ratingSummary.averageRating.toFixed(1)}</span>
                         </div>
                     </div>
 
                     {reviews.length > 0 ? (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
                             {reviews.map(rev => (
-                                <div key={rev.id} style={{ padding: '0.75rem', backgroundColor: '#F8FAFC', borderRadius: '0.625rem', border: '1px solid #E2E8F0' }}>
+                                <div key={rev.id} style={{ padding: '0.75rem', backgroundColor: 'var(--color-background)', borderRadius: '0.625rem', border: '1px solid var(--color-border)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
-                                        <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#0F172A' }}>{rev.users?.displayName || 'Campus Buyer'}</span>
+                                        <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>{rev.users?.displayName || 'Campus Buyer'}</span>
                                         <div style={{ display: 'flex', color: '#F59E0B' }}>
                                             {[...Array(rev.rating || 5)].map((_, i) => (
                                                 <Star key={i} size={11} fill="#F59E0B" />
                                             ))}
                                         </div>
                                     </div>
-                                    <p style={{ margin: 0, fontSize: '0.75rem', color: '#334155', lineHeight: 1.4 }}>{rev.comment}</p>
-                                    <span style={{ fontSize: '0.5625rem', color: '#94A3B8', marginTop: '0.25rem', display: 'block' }}>{formatDate(rev.created_at)}</span>
+                                    <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>{rev.comment}</p>
+                                    <span style={{ fontSize: '0.5625rem', color: 'var(--color-text-muted)', marginTop: '0.25rem', display: 'block' }}>{formatDate(rev.created_at)}</span>
                                 </div>
                             ))}
                         </div>
                     ) : (
-                        <p style={{ margin: 0, fontSize: '0.75rem', color: '#64748B', textAlign: 'center', padding: '1rem 0' }}>
+                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--color-text-secondary)', textAlign: 'center', padding: '1rem 0' }}>
                             No buyer reviews yet. Buyers can leave feedback after completing trades.
                         </p>
                     )}

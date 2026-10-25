@@ -95,7 +95,7 @@ export default function ZikShareLogo({
             style={{
               fontSize: textSize,
               fontWeight: 900,
-              color: '#0A2540', // Navy from reference
+              color: 'var(--color-text-primary)', // Navy from reference
               letterSpacing: '-0.03em',
               lineHeight: 1,
               fontFamily: 'var(--font-family-sans, inherit)',
@@ -122,7 +122,7 @@ export default function ZikShareLogo({
         <span
           style={{
             fontSize: '0.6875rem',
-            color: '#556987',
+            color: 'var(--color-text-secondary)',
             fontWeight: 600,
             marginTop: '0.15rem',
             letterSpacing: '0.01em',
@@ -143,7 +143,7 @@ export default function ZikShareLogo({
             padding: '0.2rem 0.6rem',
             borderRadius: '9999px',
             backgroundColor: '#FA5A00',
-            color: '#FFFFFF',
+            color: 'var(--color-surface)',
             fontSize: '0.6875rem',
             fontWeight: 700,
           }}

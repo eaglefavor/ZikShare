@@ -706,11 +706,11 @@ export default function ChatPage() {
                                 </>
                             ) : (
                                 <div className="zs-pin">
-                                    <p style={{ margin: 0, fontSize: 'var(--zs-fs-meta)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: '#166534' }}>
+                                    <p style={{ margin: 0, fontSize: 'var(--zs-fs-meta)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--color-success-text)' }}>
                                         Your handshake PIN
                                     </p>
                                     <p className="zs-pin__value">{escrowTrades[0]?.handshake_pin || '••••'}</p>
-                                    <p style={{ margin: 0, fontSize: 'var(--zs-fs-meta)', color: '#065F46' }}>
+                                    <p style={{ margin: 0, fontSize: 'var(--zs-fs-meta)', color: 'var(--color-success-text)' }}>
                                         Share it with {otherName} at the meetup, after you check the item.
                                     </p>
                                 </div>

@@ -195,10 +195,10 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
       {/* Reg Number & Anti-Piracy Watermark Modal */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(15, 23, 42, 0.75)', backdropFilter: 'blur(5px)', padding: '1rem' }}>
-          <div style={{ backgroundColor: 'white', borderRadius: '1.25rem', width: '100%', maxWidth: '30rem', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)', border: '1px solid var(--color-border)' }}>
+          <div style={{ backgroundColor: 'var(--color-surface)', borderRadius: '1.25rem', width: '100%', maxWidth: '30rem', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.3)', border: '1px solid var(--color-border)' }}>
             
             {/* Modal Header */}
-            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: '#F8FAFC', borderTopLeftRadius: '1.25rem', borderTopRightRadius: '1.25rem' }}>
+            <div style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid var(--color-border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', backgroundColor: 'var(--color-background)', borderTopLeftRadius: '1.25rem', borderTopRightRadius: '1.25rem' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <FileText size={20} color="#2563EB" />
                 <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: 800 }}>License & Watermark Verification</h3>
@@ -215,19 +215,19 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
             <form onSubmit={handleConfirmAndPay} style={{ padding: '1.25rem 1.5rem' }}>
               
               {/* Product summary card */}
-              <div style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', backgroundColor: '#EFF6FF', border: '1px solid #BFDBFE', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ padding: '0.75rem 1rem', borderRadius: '0.75rem', backgroundColor: 'var(--color-brand-soft)', border: '1px solid #BFDBFE', marginBottom: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
-                  <h4 style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 700, color: '#1E40AF' }}>{product.title}</h4>
+                  <h4 style={{ margin: 0, fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-link)' }}>{product.title}</h4>
                   <p style={{ margin: '0.125rem 0 0', fontSize: '0.6875rem', color: '#3B82F6' }}>Category: {product.category || 'Notes'}</p>
                 </div>
-                <span style={{ fontSize: '1rem', fontWeight: 800, color: '#1E40AF' }}>
+                <span style={{ fontSize: '1rem', fontWeight: 800, color: 'var(--color-link)' }}>
                   {formatNaira(totalToCharge / 100)}
                 </span>
               </div>
 
               {/* Missing Key Warning for Admin/Dev */}
               {!PAYSTACK_PUBLIC_KEY && (
-                <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: '#FEF2F2', border: '1.5px solid #F87171', color: '#991B1B', marginBottom: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+                <div style={{ padding: '0.875rem', borderRadius: '0.75rem', backgroundColor: 'var(--color-danger-soft)', border: '1.5px solid #F87171', color: 'var(--color-danger-text)', marginBottom: '1rem', display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
                   <AlertCircle size={18} color="#DC2626" style={{ flexShrink: 0, marginTop: '2px' }} />
                   <div style={{ fontSize: '0.75rem', lineHeight: 1.4 }}>
                     <strong>Paystack Public Key Missing:</strong><br />
@@ -237,17 +237,17 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
               )}
 
               {/* BOLD ANTI-PIRACY WATERMARK NOTICE */}
-              <div style={{ padding: '1rem', borderRadius: '0.875rem', backgroundColor: '#FEF2F2', border: '2px solid #DC2626', marginBottom: '1.25rem' }}>
+              <div style={{ padding: '1rem', borderRadius: '0.875rem', backgroundColor: 'var(--color-danger-soft)', border: '2px solid #DC2626', marginBottom: '1.25rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                   <ShieldAlert size={22} color="#DC2626" />
-                  <h4 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 900, color: '#991B1B', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
+                  <h4 style={{ margin: 0, fontSize: '0.875rem', fontWeight: 900, color: 'var(--color-danger-text)', textTransform: 'uppercase', letterSpacing: '0.02em' }}>
                     ⚠️ BOLD ANTI-PIRACY NOTICE
                   </h4>
                 </div>
                 <p style={{ margin: 0, fontSize: '0.75rem', color: '#7F1D1D', lineHeight: 1.5, fontWeight: 600 }}>
                   Every page of this encrypted PDF will be <strong>permanently watermarked</strong> with your <strong>Full Name ({buyerName})</strong> and <strong>Registration Number</strong>.
                 </p>
-                <p style={{ margin: '0.5rem 0 0', fontSize: '0.6875rem', color: '#991B1B', lineHeight: 1.4 }}>
+                <p style={{ margin: '0.5rem 0 0', fontSize: '0.6875rem', color: 'var(--color-danger-text)', lineHeight: 1.4 }}>
                   Distributing, sharing on WhatsApp/Telegram, or re-uploading this document anywhere will expose your identity and Registration Number, resulting in academic disciplinary actions.
                 </p>
               </div>
@@ -255,18 +255,18 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
               {/* Verified Account Name (Auto-Populated from Google / Account Profile) */}
               <div style={{ marginBottom: '1rem' }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.375rem' }}>
-                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: '#0F172A' }}>
+                  <label style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--color-text-primary)' }}>
                     Buyer Name (Watermark Stamp)
                   </label>
-                  <span style={{ fontSize: '0.625rem', color: '#059669', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem', backgroundColor: '#ECFDF5', padding: '0.125rem 0.375rem', borderRadius: '0.25rem' }}>
+                  <span style={{ fontSize: '0.625rem', color: '#059669', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.25rem', backgroundColor: 'var(--color-campus-green-soft)', padding: '0.125rem 0.375rem', borderRadius: '0.25rem' }}>
                     <Lock size={10} /> Verified Account Name
                   </span>
                 </div>
-                <div style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', backgroundColor: '#F1F5F9', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxSizing: 'border-box' }}>
-                  <span style={{ fontSize: '0.875rem', fontWeight: 800, color: '#0F172A' }}>
+                <div style={{ width: '100%', padding: '0.625rem 0.875rem', borderRadius: '0.625rem', backgroundColor: 'var(--color-canvas)', border: '1px solid #CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'space-between', boxSizing: 'border-box' }}>
+                  <span style={{ fontSize: '0.875rem', fontWeight: 800, color: 'var(--color-text-primary)' }}>
                     {buyerName}
                   </span>
-                  <span style={{ fontSize: '0.6875rem', color: '#64748B', fontFamily: 'monospace' }}>
+                  <span style={{ fontSize: '0.6875rem', color: 'var(--color-text-secondary)', fontFamily: 'monospace' }}>
                     {user?.email}
                   </span>
                 </div>
@@ -277,7 +277,7 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
 
               {/* Registration Number Input */}
               <div style={{ marginBottom: '1.25rem' }}>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.375rem', color: '#0F172A' }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, marginBottom: '0.375rem', color: 'var(--color-text-primary)' }}>
                   UNIZIK Registration Number *
                 </label>
                 <input
@@ -294,9 +294,9 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
 
               {/* Watermark Live Preview */}
               {regNumber.trim() && (
-                <div style={{ padding: '0.625rem 0.75rem', borderRadius: '0.5rem', backgroundColor: '#F1F5F9', border: '1px dashed #94A3B8', marginBottom: '1.25rem' }}>
+                <div style={{ padding: '0.625rem 0.75rem', borderRadius: '0.5rem', backgroundColor: 'var(--color-canvas)', border: '1px dashed #94A3B8', marginBottom: '1.25rem' }}>
                   <span style={{ fontSize: '0.625rem', fontWeight: 700, color: 'var(--color-text-muted)', textTransform: 'uppercase' }}>Watermark Stamp Preview:</span>
-                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.6875rem', fontFamily: 'monospace', color: '#0F172A', wordBreak: 'break-all' }}>
+                  <p style={{ margin: '0.25rem 0 0', fontSize: '0.6875rem', fontFamily: 'monospace', color: 'var(--color-text-primary)', wordBreak: 'break-all' }}>
                     {watermarkText}
                   </p>
                 </div>
@@ -317,14 +317,14 @@ const PaystackCheckout = ({ product, user, onSuccess }) => {
               </label>
 
               {inputError && (
-                <div style={{ padding: '0.625rem 0.75rem', borderRadius: '0.5rem', backgroundColor: '#FEF2F2', border: '1px solid #FECACA', color: '#DC2626', fontSize: '0.75rem', fontWeight: 600, marginBottom: '1rem' }}>
+                <div style={{ padding: '0.625rem 0.75rem', borderRadius: '0.5rem', backgroundColor: 'var(--color-danger-soft)', border: '1px solid #FECACA', color: 'var(--color-danger)', fontSize: '0.75rem', fontWeight: 600, marginBottom: '1rem' }}>
                   {inputError}
                 </div>
               )}
 
               {/* Status indicator when opening */}
               {creatingOrder && (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', backgroundColor: '#EFF6FF', borderRadius: '0.5rem', border: '1px solid #BFDBFE', color: '#1E40AF', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '1rem' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', padding: '0.75rem', backgroundColor: 'var(--color-brand-soft)', borderRadius: '0.5rem', border: '1px solid #BFDBFE', color: 'var(--color-link)', fontSize: '0.8125rem', fontWeight: 600, marginBottom: '1rem' }}>
                   <Loader2 size={16} className="animate-spin" />
                   <span>{statusMessage || 'Preparing secure payment...'}</span>
                 </div>

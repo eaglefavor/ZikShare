@@ -17,6 +17,7 @@ import { getOrCreateConversation } from '../lib/messaging'
 import { Button, EmptyState, PageHeader, SearchField, SectionHeading, Tag } from '../components/ui'
 import LibraryCard from '../components/LibraryCard'
 import usePageMeta from '../hooks/usePageMeta'
+import FirstListingGuide from '../components/FirstListingGuide'
 
 function formatNaira(amount) {
     const n = Number(amount) || 0
@@ -30,7 +31,7 @@ function ListingCard({ listing, onOpen }) {
         <article className="zs-item-card" style={{ padding: 0, overflow: 'hidden' }}>
             <div
                 onClick={() => onOpen(listing)}
-                style={{ cursor: 'pointer', aspectRatio: '4 / 3', backgroundColor: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                style={{ cursor: 'pointer', aspectRatio: '4 / 3', backgroundColor: 'var(--color-canvas)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
                 {image ? (
                     <img src={image} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -271,23 +272,19 @@ export default function SearchPage() {
                             <ListingCard key={listing.id} listing={listing} onOpen={(item) => navigate(`/item/${item.id}`)} />
                         ))}
                     </div>
+                ) : listings.length === 0 ? (
+                    <FirstListingGuide title="The marketplace is empty" compact />
                 ) : (
                     <EmptyState
                         icon={Package}
-                        title={
-                            listings.length === 0
-                                ? 'The marketplace is empty'
-                                : 'No items match that search'
-                        }
+                        title="No items match that search"
                         action={
                             <Button size="sm" onClick={() => navigate('/post')}>
-                                <Plus size={14} /> {listings.length === 0 ? 'Post the first item' : 'Sell something'}
+                                <Plus size={14} /> Sell something
                             </Button>
                         }
                     >
-                        {listings.length === 0
-                            ? 'Listings appear here as students post them. Nothing is listed yet.'
-                            : `There are ${listings.length} item${listings.length === 1 ? '' : 's'} on the marketplace, but none match “${query.trim()}”. Try a shorter word.`}
+                        {`There are ${listings.length} item${listings.length === 1 ? '' : 's'} on the marketplace, but none match “${query.trim()}”. Try a shorter word.`}
                     </EmptyState>
                 )}
             </section>
@@ -392,7 +389,7 @@ export default function SearchPage() {
                                 <select
                                     value={requestForm.category}
                                     onChange={(e) => setRequestForm((f) => ({ ...f, category: e.target.value }))}
-                                    style={{ padding: '0.6rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-border)', fontFamily: 'inherit', fontSize: '0.85rem', background: '#FFFFFF' }}
+                                    style={{ padding: '0.6rem 0.75rem', borderRadius: '0.5rem', border: '1px solid var(--color-border)', fontFamily: 'inherit', fontSize: '0.85rem', background: 'var(--color-surface)' }}
                                 >
                                     {['Tech', 'Hostel', 'Books', 'Services', 'Other'].map((option) => (
                                         <option key={option} value={option}>{option}</option>

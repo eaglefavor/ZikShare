@@ -2598,3 +2598,105 @@ button {
   color: var(--color-text);
   overflow-wrap: anywhere;
 }
+
+/* ── Continue reading ───────────────────────────────────────────────────── */
+
+.zs-continue-row {
+  display: grid;
+  gap: var(--zs-space-2);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+}
+
+.zs-continue {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  width: 100%;
+  padding: 0.7rem 0.85rem;
+  background-color: #FFFFFF;
+  border: 1px solid var(--color-border);
+  border-radius: var(--zs-radius-md);
+  text-align: left;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.zs-continue:hover {
+  border-color: #BFDBFE;
+  box-shadow: var(--zs-shadow-md);
+}
+
+.zs-continue__icon {
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background-color: #EFF6FF;
+  color: var(--color-brand);
+}
+
+.zs-continue__body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 0.15rem;
+}
+
+.zs-continue__body strong {
+  font-size: 0.85rem;
+  line-height: 1.3;
+  color: var(--color-brand-dark);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.zs-continue__body > span:not(.zs-continue__bar) {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+
+.zs-continue__bar {
+  display: block;
+  height: 3px;
+  margin-top: 0.2rem;
+  border-radius: 9999px;
+  background-color: #E2E8F0;
+  overflow: hidden;
+}
+
+.zs-continue__bar > span {
+  display: block;
+  height: 100%;
+  background-color: var(--color-brand);
+  border-radius: 9999px;
+}
+
+/* A details panel that is really a link: same look, no disclosure triangle. */
+.zs-details--link {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: 100%;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-brand-dark);
+  cursor: pointer;
+  text-align: left;
+}
+
+.zs-details--link:hover {
+  border-color: #BFDBFE;
+}
+
+.zs-details--link .zs-details__hint {
+  margin-left: auto;
+  font-size: 0.75rem;
+}

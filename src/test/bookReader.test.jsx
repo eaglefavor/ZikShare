@@ -16,12 +16,14 @@ vi.mock('../lib/pdfReader', async () => {
   }
 })
 
-function renderReader(slug = BOOK_SLUG) {
+function renderReader(slug = BOOK_SLUG, base = '/library/books', docSlug = slug) {
   return render(
-    <MemoryRouter initialEntries={[`/library/books/${slug}/read`]}>
+    <MemoryRouter initialEntries={[`${base}/${docSlug}/read`]}>
       <Routes>
         <Route path="/library/books/:slug/read" element={<BookReaderPage />} />
+        <Route path="/library/doc/:slug/read" element={<BookReaderPage />} />
         <Route path="/library/books/:slug" element={<div>BOOK PAGE</div>} />
+        <Route path="/library/doc/:slug" element={<div>DOCUMENT PAGE</div>} />
         <Route path="/library" element={<div>LIBRARY</div>} />
       </Routes>
     </MemoryRouter>
@@ -104,7 +106,7 @@ describe('Book reader', { timeout: 20000 }, () => {
 
     renderReader()
 
-    expect(await screen.findByText(/The reader could not draw this book/)).toBeInTheDocument()
+    expect(await screen.findByText(/The reader could not draw this file/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Open the PDF/ })).toHaveAttribute(
       'href',
       '/library/books/let-us-pray-watchman-nee.pdf'
@@ -117,8 +119,17 @@ describe('Book reader', { timeout: 20000 }, () => {
     }
   })
 
-  it('says plainly when the address is not a book', async () => {
+  it("opens a play in the app, not in the phone's PDF viewer", async () => {
+    pdfReader.openPdfDocument.mockResolvedValue({ numPages: 71 })
+    renderReader('antigone-sophocles', '/library/doc')
+
+    await waitFor(() => expect(screen.getByLabelText('Page number')).toBeInTheDocument())
+    expect(pdfReader.openPdfDocument).toHaveBeenCalledWith('/library/drama/antigone-sophocles.pdf')
+    expect(screen.getByText(/Sophocles/)).toBeInTheDocument()
+  })
+
+  it('says plainly when the address is not a document', async () => {
     renderReader('not-a-real-book')
-    expect(await screen.findByText('Book not found')).toBeInTheDocument()
+    expect(await screen.findByText('Document not found')).toBeInTheDocument()
   })
 })

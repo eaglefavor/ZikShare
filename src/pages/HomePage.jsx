@@ -1,9 +1,11 @@
-import { ChevronRight, GraduationCap, Library, Plus, ShieldCheck, Store } from 'lucide-react'
+import { useState } from 'react'
+import { ChevronRight, GraduationCap, Library, Play, Plus, ShieldCheck, Store } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListings } from '../lib/database'
 import { FRESHER_LIBRARY_DOMAINS, libraryCounts, libraryCountLabel } from '../lib/fresherLibrary'
 import { shelfInfo } from '../lib/shelfGuide'
+import { listProgress, progressPercent } from '../lib/readingProgress'
 import { Button, SectionHeading } from '../components/ui'
 import { HomeAnnouncementBanner } from '../components/AnnouncementModal'
 import usePageMeta from '../hooks/usePageMeta'
@@ -61,6 +63,8 @@ function ListingCard({ listing, onOpen }) {
 export default function HomePage() {
     const navigate = useNavigate()
 
+    const [inProgress] = useState(() => listProgress({ limit: 4, excludeFinished: true }))
+
     usePageMeta({
         title: 'Free study material for UNIZIK students',
         description: `${LIBRARY_LABEL} — every document free to open, no sign-in and no payment step.`,
@@ -102,6 +106,44 @@ export default function HomePage() {
                     </Button>
                 </div>
             </section>
+
+            {/* ── Continue reading: only when it is this reader's own ───── */}
+            {inProgress.length > 0 && (
+                <section className="zs-section" aria-labelledby="continue-title">
+                    <SectionHeading id="continue-title" title="Continue reading" />
+                    <div className="zs-continue-row">
+                        {inProgress.map((entry) => {
+                            const percent = progressPercent(entry)
+                            return (
+                                <button
+                                    key={entry.slug}
+                                    type="button"
+                                    className="zs-continue"
+                                    onClick={() => navigate(`/library/doc/${entry.slug}/read`)}
+                                >
+                                    <span className="zs-continue__icon" aria-hidden="true">
+                                        <Play size={15} />
+                                    </span>
+                                    <span className="zs-continue__body">
+                                        <strong>{entry.title || entry.slug}</strong>
+                                        <span>
+                                            Page {entry.page}
+                                            {entry.total ? ` of ${entry.total}` : ''}
+                                            {percent ? ` · ${percent}%` : ''}
+                                        </span>
+                                        {percent && (
+                                            <span className="zs-continue__bar" aria-hidden="true">
+                                                <span style={{ width: `${percent}%` }} />
+                                            </span>
+                                        )}
+                                    </span>
+                                    <ChevronRight size={16} aria-hidden="true" />
+                                </button>
+                            )
+                        })}
+                    </div>
+                </section>
+            )}
 
             {/* ── The nine shelves, each one tap away ───────────────────── */}
             <section className="zs-section" aria-labelledby="home-shelves">

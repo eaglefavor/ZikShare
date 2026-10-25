@@ -11,6 +11,7 @@ import {
 } from '../lib/fresherLibrary'
 import { shelfGaps, shelfInfo } from '../lib/shelfGuide'
 import { documentLink, shelfFromSlug, shelfPath } from '../lib/libraryRoutes'
+import { suggestCorrections } from '../lib/librarySearch'
 import {
     EMPTY_FILTERS,
     SORT_OPTIONS,
@@ -215,6 +216,16 @@ export default function LibraryPage() {
     const extraFilters = activeFilterCount({ ...filters, domain: 'All' })
     const isSearching = Boolean(filters.query) || extraFilters > 0
     const info = shelfInfo(domain)
+    // When a search finds nothing, say what it might have meant instead of
+    // showing a blank page. Only computed for an empty result set.
+    const suggestions = useMemo(
+        () =>
+            results.length === 0 && filters.query
+                ? suggestCorrections(allMaterials, filters.query, 3)
+                : [],
+        [results.length, allMaterials, filters.query]
+    )
+
     const shelfCount = useMemo(
         () => allMaterials.filter((item) => item.domain === domain).length,
         [allMaterials, domain]
@@ -434,9 +445,33 @@ export default function LibraryPage() {
                             </Button>
                         }
                     >
-                        Try an author such as <strong>Watchman Nee</strong>, a title such as{' '}
-                        <strong>The Spiritual Man</strong>, or clear your filters to browse the whole
-                        library.
+                        {suggestions.length > 0 ? (
+                            <>
+                                <p style={{ margin: '0 0 0.5rem' }}>Perhaps you meant:</p>
+                                <div className="zs-chip-row" style={{ justifyContent: 'center' }}>
+                                    {suggestions.map((suggestion) => (
+                                        <button
+                                            key={`${suggestion.item.id}-${suggestion.label}`}
+                                            type="button"
+                                            className="zs-chip"
+                                            onClick={() =>
+                                                set({
+                                                    query: suggestion.field === 'author' ? suggestion.label : suggestion.item.title,
+                                                })
+                                            }
+                                        >
+                                            {suggestion.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </>
+                        ) : (
+                            <>
+                                Try an author such as <strong>Watchman Nee</strong>, a title such as{' '}
+                                <strong>The Spiritual Man</strong>, or clear your filters to browse the
+                                whole library.
+                            </>
+                        )}
                     </EmptyState>
                 </div>
             ) : isSearching ? (

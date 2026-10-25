@@ -1,11 +1,14 @@
 import { useState } from 'react'
-import { ChevronRight, GraduationCap, Library, Play, Plus, ShieldCheck, Store } from 'lucide-react'
+import { BookOpen, ChevronRight, GraduationCap, Library, Play, Plus, ShieldCheck, Sparkles, Store } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListings } from '../lib/database'
 import { FRESHER_LIBRARY_DOMAINS, libraryCounts, libraryCountLabel } from '../lib/fresherLibrary'
 import { shelfInfo } from '../lib/shelfGuide'
 import { listProgress, progressPercent } from '../lib/readingProgress'
+import { shelfOfTheWeek } from '../lib/shelfOfTheWeek'
+import { mergeLibraryMaterials } from '../lib/fresherLibrary'
+import { documentLink, shelfPath } from '../lib/libraryRoutes'
 import { Button, SectionHeading } from '../components/ui'
 import { HomeAnnouncementBanner } from '../components/AnnouncementModal'
 import usePageMeta from '../hooks/usePageMeta'
@@ -64,6 +67,8 @@ export default function HomePage() {
     const navigate = useNavigate()
 
     const [inProgress] = useState(() => listProgress({ limit: 4, excludeFinished: true }))
+    // One shelf and one document each week, taken from the catalogue itself.
+    const [weekly] = useState(() => shelfOfTheWeek(mergeLibraryMaterials([])))
 
     usePageMeta({
         title: 'Free study material for UNIZIK students',
@@ -106,6 +111,45 @@ export default function HomePage() {
                     </Button>
                 </div>
             </section>
+
+            {/* ── This week on the shelf ────────────────────────────────── */}
+            {weekly && (
+                <section className="zs-section" aria-labelledby="weekly-title">
+                    <div className="zs-weekly">
+                        <div className="zs-weekly__head">
+                            <span className="zs-eyebrow">
+                                <Sparkles size={13} aria-hidden="true" /> {weekly.label} on the shelf
+                            </span>
+                            <strong className="zs-weekly__shelf">
+                                {weekly.emoji} {weekly.shelf}
+                            </strong>
+                        </div>
+
+                        <div className="zs-weekly__body">
+                            <div>
+                                <h2 id="weekly-title" className="zs-weekly__title">
+                                    {weekly.item.title}
+                                </h2>
+                                <p className="zs-weekly__byline">
+                                    {[weekly.item.author, weekly.item.page_count ? `${weekly.item.page_count} pages` : null]
+                                        .filter(Boolean)
+                                        .join(' · ')}
+                                </p>
+                                <p className="zs-weekly__desc">{weekly.item.description}</p>
+                            </div>
+
+                            <div className="zs-weekly__actions">
+                                <Button size="sm" onClick={() => navigate(`${documentLink(weekly.item)}/read`)}>
+                                    <BookOpen size={15} /> Read it
+                                </Button>
+                                <Button size="sm" variant="outline" onClick={() => navigate(shelfPath(weekly.shelf))}>
+                                    The whole shelf <ChevronRight size={14} />
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            )}
 
             {/* ── Continue reading: only when it is this reader's own ───── */}
             {inProgress.length > 0 && (

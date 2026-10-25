@@ -2829,3 +2829,73 @@ button {
   font-size: 0.72rem;
   padding: 0.3rem 0.55rem;
 }
+
+/* ── This week on the shelf ─────────────────────────────────────────────── */
+
+.zs-weekly {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--zs-radius-lg, 1rem);
+  background:
+    linear-gradient(135deg, var(--color-brand-soft) 0%, var(--color-surface) 70%);
+  box-shadow: var(--zs-shadow-sm);
+}
+
+.zs-weekly__head {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.zs-weekly__shelf {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+}
+
+.zs-weekly__body {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+
+.zs-weekly__body > div:first-child {
+  flex: 1 1 18rem;
+  min-width: 0;
+}
+
+.zs-weekly__title {
+  margin: 0 0 0.15rem;
+  font-size: var(--zs-fs-section, 1.05rem);
+  line-height: 1.25;
+  color: var(--color-text-primary);
+}
+
+.zs-weekly__byline {
+  margin: 0 0 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+}
+
+.zs-weekly__desc {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: var(--color-text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.zs-weekly__actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  align-items: center;
+}

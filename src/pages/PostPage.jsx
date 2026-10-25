@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Camera, X, FileText, Loader2, CheckCircle, UploadCloud, ArrowLeft, ShieldAlert, ShieldCheck, Package, MapPin, Sparkles, FileSpreadsheet, FileArchive, Lock, Unlock, HelpCircle } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Camera, X, FileText, Loader2, CheckCircle, UploadCloud, ArrowLeft, ShieldAlert, ShieldCheck, Package, MapPin, Sparkles, FileSpreadsheet, FileArchive, Lock, Unlock, HelpCircle, Share2 } from 'lucide-react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 import { createListing, createDigitalProduct, upsertUser } from '../lib/database'
 import supabase from '../lib/supabase'
@@ -59,7 +59,12 @@ export default function PostPage() {
     const { user, session, isAuthenticated, loading: authLoading } = useAuth()
 
     // Mode: 'physical' or 'digital'
-    const [postType, setPostType] = useState('physical')
+    const [searchParams] = useSearchParams()
+    // A link can say what it is for: /post?type=physical from an empty marketplace.
+    const [postType, setPostType] = useState(() =>
+        searchParams.get('type') === 'digital' ? 'digital' : 'physical'
+    )
+    const [createdListing, setCreatedListing] = useState(null)
 
     // Common fields
     const [title, setTitle] = useState('')
@@ -187,6 +192,26 @@ export default function PostPage() {
         }
     }
 
+    const shareListing = async () => {
+        if (!createdListing?.id) return
+        const url = `${window.location.origin}/item/${createdListing.id}`
+        const price = createdListing.price ? `₦${Number(createdListing.price).toLocaleString('en-NG')}` : ''
+        const text = `${createdListing.title}${price ? ` — ${price}` : ''} on ZikShare`
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: createdListing.title, text, url })
+                return
+            } catch (err) {
+                if (err.name === 'AbortError') return
+            }
+        }
+        try {
+            await navigator.clipboard.writeText(`${text}\n${url}`)
+        } catch {
+            // no clipboard: the link is still on screen in the browser bar
+        }
+    }
+
     const handleSubmit = async (e) => {
         e.preventDefault()
 
@@ -244,7 +269,7 @@ export default function PostPage() {
 
                 setCurrentStepIndex(3)
                 setUploadStep('Publishing listing to campus feed...')
-                await withTimeout(
+                const created = await withTimeout(
                     createListing({
                         sellerId: currentUserId,
                         title: title.trim(),
@@ -263,6 +288,7 @@ export default function PostPage() {
                     15000,
                     'Listing creation timed out. Please try again.'
                 )
+                if (created?.id) setCreatedListing(created)
             } else {
                 // ── DIGITAL MATERIAL POSTING ──
                 if (!digitalFile) {
@@ -397,9 +423,23 @@ export default function PostPage() {
                     <p style={{ fontSize: '0.8125rem', color: 'var(--color-text-secondary)', margin: '0 0 1.5rem' }}>
                         {postType === 'physical' ? 'Your item is now live in the UNIZIK marketplace.' : 'Your study material is now listed. Students can preview the sample pages before they buy.'}
                     </p>
+                    {createdListing?.id && (
+                        <>
+                            <button
+                                onClick={shareListing}
+                                style={{ width: '100%', padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #10B981, #059669)', color: '#FFFFFF', fontSize: '0.875rem', fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.45rem', marginBottom: '0.5rem' }}
+                            >
+                                <Share2 size={16} /> Share it in a group
+                            </button>
+                            <p style={{ fontSize: '0.72rem', color: 'var(--color-text-muted)', margin: '0 0 1rem', lineHeight: 1.5 }}>
+                                A listing nobody sees does not sell. Send the link to the group where the
+                                people who need it already are.
+                            </p>
+                        </>
+                    )}
                     <button
                         onClick={() => navigate('/seller-hub')}
-                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.75rem', border: 'none', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'var(--color-surface)', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}
+                        style={{ width: '100%', padding: '0.75rem', borderRadius: '0.75rem', border: '1px solid var(--color-border)', background: 'var(--color-surface)', color: 'var(--color-text-primary)', fontSize: '0.875rem', fontWeight: 700, cursor: 'pointer' }}
                     >
                         View in Seller Hub
                     </button>
@@ -416,7 +456,8 @@ export default function PostPage() {
                 </button>
                 <h1 style={{ margin: '0.5rem 0 0.35rem', fontSize: 'var(--zs-fs-title)', letterSpacing: '-0.02em' }}>New listing</h1>
                 <p className="zs-lead" style={{ margin: 0 }}>
-                    Sell something physical, or upload material you wrote yourself.
+                    A title and a price is enough to post. Everything else has a default you can
+                    change later from Seller Hub.
                 </p>
             </div>
 
@@ -688,10 +729,21 @@ export default function PostPage() {
                         </div>
                     </div>
 
+                    {/* Everything below is a default the seller can leave alone:
+                        an item posts on a title and a price, and the rest can be
+                        changed later from Seller Hub. */}
+                    <details className="zs-post-extras">
+                        <summary>
+                            <span>More details (optional)</span>
+                            <span className="zs-post-extras__hint">
+                                Category, course code, meetup spot, description
+                            </span>
+                        </summary>
+
                     {/* Category Selection */}
                     <div>
                         <label style={{ display: 'block', fontSize: '0.8125rem', fontWeight: 700, color: 'var(--color-text-primary)', marginBottom: '0.375rem' }}>
-                            Category Segment <span style={{ color: 'var(--color-danger)' }}>*</span>
+                            Category Segment
                         </label>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.375rem', marginBottom: '0.625rem' }}>
                             {MARKETPLACE_SEGMENTS.map(seg => (
@@ -722,7 +774,7 @@ export default function PostPage() {
                         {category && (
                             <div>
                                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: '0.25rem' }}>
-                                    Specific Item Type (Subcategory) <span style={{ color: 'var(--color-danger)' }}>*</span>
+                                    Specific Item Type (Subcategory)
                                 </label>
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.3125rem' }}>
                                     {(MARKETPLACE_SEGMENTS.find(s => s.name === category)?.subcategories || []).map(sub => (
@@ -823,6 +875,8 @@ export default function PostPage() {
                         />
                     </div>
 
+                    </details>
+
                     {/* Trust & Safety Banner */}
                     <div style={{ padding: '0.75rem 0.875rem', borderRadius: '0.75rem', backgroundColor: postType === 'physical' ? '#F0FDF4' : '#EFF6FF', border: `1px solid ${postType === 'physical' ? '#BBF7D0' : '#BFDBFE'}`, display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
                         {postType === 'physical' ? (
@@ -889,10 +943,20 @@ export default function PostPage() {
                         ) : (
                             <>
                                 <UploadCloud size={18} />
-                                <span>{postType === 'physical' ? 'Post Physical Item' : 'Upload Study Material'}</span>
+                                <span>{postType === 'physical' ? 'Post it' : 'Upload it'}</span>
                             </>
                         )}
                     </button>
+
+                    {!loading && (!title.trim() || !price || (postType === 'digital' && !digitalFile)) && (
+                        <p className="zs-post-extras__hint" style={{ margin: 0, textAlign: 'center' }}>
+                            {!title.trim()
+                                ? 'Add a title to post.'
+                                : postType === 'digital' && !digitalFile
+                                  ? 'Attach the file to upload.'
+                                  : 'Add a price to post.'}
+                        </p>
+                    )}
                 </form>
             </div>
 

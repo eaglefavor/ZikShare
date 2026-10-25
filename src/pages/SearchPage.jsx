@@ -17,6 +17,7 @@ import { getOrCreateConversation } from '../lib/messaging'
 import { Button, EmptyState, PageHeader, SearchField, SectionHeading, Tag } from '../components/ui'
 import LibraryCard from '../components/LibraryCard'
 import usePageMeta from '../hooks/usePageMeta'
+import FirstListingGuide from '../components/FirstListingGuide'
 
 function formatNaira(amount) {
     const n = Number(amount) || 0
@@ -271,23 +272,19 @@ export default function SearchPage() {
                             <ListingCard key={listing.id} listing={listing} onOpen={(item) => navigate(`/item/${item.id}`)} />
                         ))}
                     </div>
+                ) : listings.length === 0 ? (
+                    <FirstListingGuide title="The marketplace is empty" compact />
                 ) : (
                     <EmptyState
                         icon={Package}
-                        title={
-                            listings.length === 0
-                                ? 'The marketplace is empty'
-                                : 'No items match that search'
-                        }
+                        title="No items match that search"
                         action={
                             <Button size="sm" onClick={() => navigate('/post')}>
-                                <Plus size={14} /> {listings.length === 0 ? 'Post the first item' : 'Sell something'}
+                                <Plus size={14} /> Sell something
                             </Button>
                         }
                     >
-                        {listings.length === 0
-                            ? 'Listings appear here as students post them. Nothing is listed yet.'
-                            : `There are ${listings.length} item${listings.length === 1 ? '' : 's'} on the marketplace, but none match “${query.trim()}”. Try a shorter word.`}
+                        {`There are ${listings.length} item${listings.length === 1 ? '' : 's'} on the marketplace, but none match “${query.trim()}”. Try a shorter word.`}
                     </EmptyState>
                 )}
             </section>

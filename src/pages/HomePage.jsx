@@ -11,6 +11,7 @@ import { mergeLibraryMaterials } from '../lib/fresherLibrary'
 import { documentLink, shelfPath } from '../lib/libraryRoutes'
 import { Button, SectionHeading } from '../components/ui'
 import { HomeAnnouncementBanner } from '../components/AnnouncementModal'
+import FirstListingGuide from '../components/FirstListingGuide'
 import usePageMeta from '../hooks/usePageMeta'
 
 const LIBRARY_COUNTS = libraryCounts()
@@ -254,13 +255,7 @@ export default function HomePage() {
                         ))}
                     </div>
                 ) : (
-                    <div className="zs-empty">
-                        <strong>Nothing listed yet</strong>
-                        <p>The marketplace is new. Post the first thing you want to sell.</p>
-                        <Button size="sm" onClick={() => navigate('/post')}>
-                            <Plus size={15} /> Post an item
-                        </Button>
-                    </div>
+                    <FirstListingGuide title="Nothing listed yet" />
                 )}
             </section>
 

@@ -14,6 +14,7 @@ import { findBookByStoragePath } from '../lib/christianBooks'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 import ReportListingSheet from '../components/ReportListingSheet'
+import usePageMeta from '../hooks/usePageMeta'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
@@ -79,7 +80,9 @@ export default function ItemDetailPage() {
 
     const handleShare = async () => {
         const shareUrl = window.location.href
-        const shareText = `Check out "${item?.title || 'this item'}" on ZikShare (UNIZIK Campus Marketplace):`
+        // The price and the meetup spot are what a reader forwards to a group.
+        const price = item?.price ? `₦${Number(item.price).toLocaleString('en-NG')}` : 'Free'
+        const shareText = `${item?.title || 'This item'} — ${price}${item?.lodge_location ? ` · ${item.lodge_location}` : ''} on ZikShare (UNIZIK campus marketplace):`
         
         if (navigator.share) {
             try {
@@ -109,6 +112,21 @@ export default function ItemDetailPage() {
         () => getListing(id),
         { ttl: 5 * 60 * 1000 }
     )
+
+    usePageMeta({
+        title: item?.title || 'Listing',
+        description: item
+            ? [
+                  item.price ? `₦${Number(item.price).toLocaleString('en-NG')}` : 'Free',
+                  item.isDigital ? 'Digital' : item.condition || 'Campus item',
+                  item.lodge_location || 'UNIZIK campus',
+                  'on the ZikShare marketplace',
+              ].join(' · ')
+            : 'A listing on the ZikShare campus marketplace.',
+        path: item ? `/item/${id}` : '/search',
+        image: item?.images?.[0],
+    })
+
 
     // Library packs are free: match the row back to its authored pack and use the
     // public copy of the PDF. Nothing here depends on an order or a session.

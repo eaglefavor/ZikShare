@@ -1,0 +1,52 @@
+name: Library health
+
+# The library is the product. This runs on every push and pull request so a
+# card can never point at a file that is not there, a count can never drift
+# from what is on the shelf, and a shelf can never quietly link away from us.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  quality:
+    name: Lint, tests, build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Library health checks
+        # Every document on 9 shelves: real file on disk, unique address,
+        # page count, named gaps with reasons, no links to other sites.
+        run: npx vitest run src/test/libraryHealth.test.js
+      - name: Full test suite
+        run: npm test
+      - name: Lint
+        run: npm run lint
+      - name: Production build
+        run: npm run build
+
+  files:
+    name: Every card has a file
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      # Authored packs (digital-originals/official-library) have full + preview PDFs.
+      - name: Authored library packs
+        run: npm run library:check
+      # The 8 canonical books ship a real PDF each with their metadata.
+      - name: Canonical books
+        run: npm run books:check
+      # `npm run library:verify` is deliberately not here: it talks to Supabase
+      # with a service-role key, which must never be handed to a workflow that
+      # runs on pull requests from forks. Run it locally after seeding.

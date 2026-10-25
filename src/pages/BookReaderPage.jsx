@@ -20,6 +20,7 @@ import {
     relatedDocuments,
 } from '../lib/libraryRoutes'
 import { getProgress, recordProgress } from '../lib/readingProgress'
+import usePageMeta from '../hooks/usePageMeta'
 import {
     openPdfDocument,
     renderPdfPage,
@@ -291,6 +292,13 @@ export default function BookReaderPage() {
     const book = findBookBySlug(slug)
     const materials = book ? [] : mergeLibraryMaterials([])
     const doc = book ? null : findDocumentBySlug(materials, slug)
+
+    // The reader is a view of the document, so the document's page stays the
+    // canonical address and the tab still says which file is open.
+    usePageMeta({
+        title: book ? `Reading ${book.title}` : doc ? `Reading ${doc.title}` : 'Document not found',
+        path: book ? `/library/books/${book.slug}` : doc ? documentPath(doc) : '/library',
+    })
 
     if (!book && !doc) {
         return (

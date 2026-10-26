@@ -8,6 +8,7 @@ import process from 'node:process'
 import { mergeLibraryMaterials } from './src/lib/fresherLibrary.js'
 import { documentPath, shelfPath } from './src/lib/libraryRoutes.js'
 import { SHELF_INFO } from './src/lib/shelfGuide.js'
+import { FILE_REQUEST_PATTERN } from './src/lib/offlineFiles.js'
 
 const SITE_URL = 'https://zik-share.vercel.app'
 
@@ -121,6 +122,11 @@ export default defineConfig({
         skipWaiting: true,
         clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // A download is a navigation too. Without this the worker answers
+        // "Download the PDF" with index.html, and the reader saves an app shell
+        // called index.html instead of a book. Every path that ends in a file
+        // extension is left to the network; only real app routes fall back.
+        navigateFallbackDenylist: [/^\/api\//, FILE_REQUEST_PATTERN],
         runtimeCaching: [
           {
             // Supabase API calls — network first, fallback to cache
@@ -161,7 +167,9 @@ export default defineConfig({
             urlPattern: /\/library\/[a-z]+\/[a-z0-9-]+\.pdf$/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'library-pdfs',
+              // v2: the old cache name may hold index.html saved against PDF
+              // addresses by the bug above. Those entries are never read again.
+              cacheName: 'library-pdfs-v2',
               rangeRequests: true,
               expiration: {
                 maxEntries: 40,
@@ -169,7 +177,10 @@ export default defineConfig({
                 purgeOnQuotaError: true
               },
               cacheableResponse: {
-                statuses: [0, 200]
+                statuses: [0, 200],
+                // Only a real PDF is ever cached. If a server ever answers a
+                // .pdf address with a page, that page is not stored.
+                headers: { 'content-type': 'application/pdf' }
               }
             }
           },

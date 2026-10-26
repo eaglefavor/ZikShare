@@ -70,6 +70,16 @@ export async function saveOffline({ slug, path, title, author, pages }) {
         const cache = await window.caches.open(CACHE_NAME)
         const response = await window.fetch(path, { cache: 'no-store' })
         if (!response.ok) throw new Error(`The file returned ${response.status}`)
+
+        // A reader asked for the book, so anything that is not a PDF is refused
+        // rather than saved. This is how a saved "index.html" is caught: if the
+        // server or the offline worker ever answers a .pdf address with a page,
+        // the shelf says so instead of keeping the wrong file.
+        const type = (response.headers.get('content-type') || '').toLowerCase()
+        if (type && !type.includes('pdf') && !type.includes('octet-stream')) {
+            throw new Error('That address returned a web page, not the document')
+        }
+
         await cache.put(path, response.clone())
 
         const manifest = readManifest()

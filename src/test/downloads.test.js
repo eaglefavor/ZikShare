@@ -10,6 +10,7 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
+import { NavigationRoute } from 'workbox-routing'
 import { FILE_REQUEST_PATTERN, isFileRequest } from '../lib/offlineFiles'
 import { mergeLibraryMaterials } from '../lib/fresherLibrary'
 
@@ -45,6 +46,30 @@ describe('Downloads are never answered with the app shell', () => {
         expect(config).toContain('FILE_REQUEST_PATTERN')
         // It has to be imported from the shared rule, not retyped.
         expect(config).toMatch(/from '\.\/src\/lib\/offlineFiles\.js'/)
+    })
+
+    it('asks the real router: a PDF navigation is not a page navigation', () => {
+        // Workbox's own NavigationRoute, built the way the worker builds it.
+        // If this ever matches a PDF again, readers get index.html again.
+        const route = new NavigationRoute(() => {}, {
+            denylist: [/^\/api\//, FILE_REQUEST_PATTERN],
+        })
+        const navigate = (pathname) => ({
+            url: new URL(pathname, 'https://zik-share.vercel.app'),
+            request: { mode: 'navigate' },
+        })
+
+        for (const file of [
+            '/library/modern/hedda-gabler.pdf',
+            '/library/books/let-us-pray-watchman-nee.pdf',
+            '/library/gst/gst-101.pdf',
+        ]) {
+            expect(route.match(navigate(file)), file).toBeFalsy()
+        }
+
+        for (const page of ['/library/doc/hedda-gabler', '/library', '/settings']) {
+            expect(route.match(navigate(page)), page).toBeTruthy()
+        }
     })
 
     it('never caches a page under a PDF address', () => {

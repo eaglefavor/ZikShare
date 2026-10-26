@@ -21,7 +21,6 @@ import {
 } from '../lib/libraryView'
 import { Button, Chip, EmptyState, PageHeader, SearchField, SectionHeading } from '../components/ui'
 import LibraryCard from '../components/LibraryCard'
-import ThemeToggle from '../components/ThemeToggle'
 import usePageMeta from '../hooks/usePageMeta'
 
 const COUNTS = libraryCounts()
@@ -417,12 +416,6 @@ export default function LibraryPage() {
                             <p className="zs-details__lead">{COUNT_LABEL}.</p>
                         </details>
                         <GapLibrary />
-                        <details className="zs-details">
-                            <summary>Appearance</summary>
-                            <div className="zs-details__lead">
-                                <ThemeToggle />
-                            </div>
-                        </details>
                         <Licence />
                     </div>
                 </section>

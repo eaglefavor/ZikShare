@@ -89,7 +89,10 @@ describe('Offline shelf', () => {
     window.fetch = vi.fn(async () => ({
       ok: true,
       status: 200,
-      headers: { get: () => '204800' },
+      headers: {
+        get: (name) =>
+          String(name).toLowerCase() === 'content-type' ? 'application/pdf' : '204800',
+      },
       clone() {
         return this
       },
@@ -129,6 +132,25 @@ describe('Offline shelf', () => {
     expect(listOffline()).toHaveLength(0)
   })
 
+  it('refuses to save a web page that came back where a PDF should be', async () => {
+    window.fetch = vi.fn(async () => ({
+      ok: true,
+      status: 200,
+      headers: {
+        get: (name) => (String(name).toLowerCase() === 'content-type' ? 'text/html' : null),
+      },
+      clone() {
+        return this
+      },
+    }))
+
+    const result = await saveOffline({ slug: 'index', path: '/library/modern/index.pdf' })
+    expect(result.success).toBe(false)
+    expect(result.error).toMatch(/web page, not the document/i)
+    expect(isSavedOffline('index')).toBe(false)
+    expect(cache.has('/library/modern/index.pdf')).toBe(false)
+  })
+
   it('says so when the file cannot be fetched instead of pretending', async () => {
     window.fetch = vi.fn(async () => ({ ok: false, status: 404, headers: { get: () => null } }))
     const result = await saveOffline({ slug: 'x', path: '/library/x.pdf' })
@@ -153,7 +175,10 @@ describe('The offline page', { timeout: 15000 }, () => {
     window.fetch = vi.fn(async () => ({
       ok: true,
       status: 200,
-      headers: { get: () => '1024' },
+      headers: {
+        get: (name) =>
+          String(name).toLowerCase() === 'content-type' ? 'application/pdf' : '1024',
+      },
       clone() {
         return this
       },

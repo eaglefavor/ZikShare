@@ -1,6 +1,10 @@
 -- 08_listing_reports.sql
 -- A way for a student to report a listing or a seller.
 --
+-- Applied to the live project on 2026-10-26 (migration name "listing_reports").
+-- The user table in this project keys on `users.uid`, not `users.id`, and the
+-- admin allow-list is one email rather than an array.
+--
 -- Until now moderation existed only inside the admin page: a bad listing stayed
 -- up until an admin happened to see it. Anyone signed in (or not) can now file a
 -- report; only admins can read the queue.
@@ -10,11 +14,11 @@
 CREATE TABLE IF NOT EXISTS public.listing_reports (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     listing_id UUID REFERENCES public.listings(id) ON DELETE CASCADE,
-    reporter_id UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    reporter_id UUID REFERENCES public.users(uid) ON DELETE SET NULL,
     reason TEXT NOT NULL,
     detail TEXT,
     status TEXT NOT NULL DEFAULT 'open', -- 'open' | 'resolved' | 'dismissed'
-    resolved_by UUID REFERENCES public.users(id) ON DELETE SET NULL,
+    resolved_by UUID REFERENCES public.users(uid) ON DELETE SET NULL,
     resolved_at TIMESTAMPTZ,
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -44,10 +48,8 @@ CREATE POLICY "admins read reports"
         EXISTS (
             SELECT 1
             FROM public.users u
-            WHERE u.id = auth.uid()
-              AND lower(u.email) = ANY (
-                  ARRAY['rc5632250@gmail.com']
-              )
+            WHERE u.uid = auth.uid()
+              AND lower(u.email) = 'rc5632250@gmail.com'
         )
     );
 
@@ -61,10 +63,8 @@ CREATE POLICY "admins resolve reports"
         EXISTS (
             SELECT 1
             FROM public.users u
-            WHERE u.id = auth.uid()
-              AND lower(u.email) = ANY (
-                  ARRAY['rc5632250@gmail.com']
-              )
+            WHERE u.uid = auth.uid()
+              AND lower(u.email) = 'rc5632250@gmail.com'
         )
     );
 

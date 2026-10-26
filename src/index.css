@@ -49,78 +49,14 @@
 }
 
 :root {
+  /* One look, in light: a phone in dark mode still gets this page as designed. */
+  color-scheme: light;
+
   --academic-shadow-sm: 0 8px 22px rgba(10, 37, 64, 0.06);
   --academic-shadow-md: 0 18px 45px rgba(10, 37, 64, 0.10);
   --academic-shadow-blue: 0 18px 45px rgba(0, 102, 255, 0.14);
   --academic-radius-lg: 1.25rem;
   --academic-radius-xl: 1.75rem;
-}
-
-/*
- * Dark. Every page reads these tokens rather than a hex value, so turning the
- * page dark is one block of variable values — including the ones the pages set
- * inline, which is why the surface/border/text tokens exist at all.
- */
-html[data-theme='dark'] {
-  --color-brand: #4C8DFF;
-  --color-brand-light: #7FB0FF;
-  --color-brand-dark: #E6EEFC;
-  --color-brand-soft: #16233B;
-
-  --color-orange: #FF8A3D;
-  --color-orange-light: #FFA366;
-  --color-orange-dark: #FFB27A;
-  --color-orange-soft: #2A1B12;
-  --color-orange-border: #4A2E1D;
-
-  --color-gold: #FF8A3D;
-  --color-gold-light: #FFA366;
-  --color-gold-dark: #FFB27A;
-  --color-gold-soft: #2A1B12;
-  --color-gold-border: #4A2E1D;
-
-  --color-campus-green: #34D399;
-  --color-campus-green-light: #6EE7B7;
-  --color-campus-green-soft: #10241D;
-
-  --color-surface: #131C2E;
-  --color-surface-2: #172136;
-  --color-background: #0B1220;
-  --color-canvas: #0E1626;
-
-  --color-text-primary: #E8EEF8;
-  --color-text-secondary: #A9B7CC;
-  --color-text-muted: #8496AE;
-  --color-border: #243149;
-  --color-border-subtle: #1B2537;
-  --color-border-strong: #33445F;
-  --color-link: #8CB6FF;
-  --color-on-brand: #FFFFFF;
-  --color-veil: rgba(0, 0, 0, 0.6);
-
-  --color-danger: #F87171;
-  --color-danger-soft: #2A1416;
-  --color-danger-text: #FCA5A5;
-
-  --zs-page-glow: rgba(76, 141, 255, 0.10);
-  --zs-shadow-md: 0 10px 24px -8px rgba(0, 0, 0, 0.6);
-  --zs-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.35);
-
-  --academic-shadow-sm: 0 8px 22px rgba(0, 0, 0, 0.45);
-  --academic-shadow-md: 0 18px 45px rgba(0, 0, 0, 0.55);
-  --academic-shadow-blue: 0 18px 45px rgba(0, 0, 0, 0.5);
-
-  color-scheme: dark;
-}
-
-html[data-theme='dark'] .skeleton {
-  background: linear-gradient(90deg, #1B2537 25%, #243149 37%, #1B2537 63%);
-  background-size: 200% 100%;
-}
-
-html[data-theme='dark'] img {
-  /* Photos and covers are not inverted; only the chrome around them changes. */
-  color-scheme: light;
 }
 
 /* ── Base Styles ── */
@@ -2779,56 +2715,6 @@ button {
 }
 
 /* ── Appearance ─────────────────────────────────────────────────────────── */
-
-.zs-theme {
-  display: grid;
-  gap: 0.5rem;
-}
-
-.zs-theme__row {
-  display: flex;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-}
-
-.zs-theme__option {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.4rem 0.7rem;
-  border-radius: 9999px;
-  border: 1px solid var(--color-border);
-  background-color: var(--color-surface);
-  color: var(--color-text-secondary);
-  font: inherit;
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
-}
-
-.zs-theme__option:hover {
-  border-color: var(--color-brand);
-  color: var(--color-text-primary);
-}
-
-.zs-theme__option.is-active {
-  background-color: var(--color-brand-soft);
-  border-color: var(--color-brand);
-  color: var(--color-brand-dark);
-}
-
-.zs-theme__hint {
-  margin: 0;
-  font-size: 0.75rem;
-  line-height: 1.5;
-  color: var(--color-text-muted);
-}
-
-.zs-theme--compact .zs-theme__option {
-  font-size: 0.72rem;
-  padding: 0.3rem 0.55rem;
-}
 
 /* ── This week on the shelf ─────────────────────────────────────────────── */
 

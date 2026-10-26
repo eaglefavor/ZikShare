@@ -6,10 +6,6 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
 import './index.css'
 import App from './App.jsx'
-import { applyTheme } from './lib/theme'
-
-// Before the first paint, so a dark-mode reader never sees a white flash.
-applyTheme()
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>

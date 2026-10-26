@@ -5,7 +5,6 @@ import { useAuth } from '../contexts/AuthContext'
 import { upsertUser } from '../lib/database'
 import { UNIZIK_LOCATIONS, UNIZIK_FACULTIES, ACADEMIC_LEVELS } from '../lib/categories'
 import { PageHeader } from '../components/ui'
-import ThemeToggle from '../components/ThemeToggle'
 
 export default function SettingsPage() {
     const navigate = useNavigate()
@@ -122,13 +121,6 @@ export default function SettingsPage() {
             />
 
             <div style={{ maxWidth: '34rem', display: 'grid', gap: '1rem' }}>
-                <section className="zs-panel" aria-labelledby="settings-appearance">
-                    <h2 id="settings-appearance" style={{ margin: '0 0 0.6rem', fontSize: 'var(--zs-fs-small)' }}>
-                        Appearance
-                    </h2>
-                    <ThemeToggle />
-                </section>
-
                 <div className="zs-panel" style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
                     <span
                         aria-hidden="true"

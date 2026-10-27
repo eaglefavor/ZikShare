@@ -1510,26 +1510,6 @@ export async function arrangeMeetup({ listingId, itemTitle, buyerId, sellerId, m
     return data
 }
 
-/** The meetup this buyer already arranged for a listing, if there is one. */
-export async function getMeetupForListing(listingId, buyerId) {
-    if (!listingId || !buyerId) return null
-    try {
-        const { data, error } = await supabase
-            .from('escrow_trades')
-            .select('*')
-            .eq('listing_id', String(listingId))
-            .eq('buyer_id', buyerId)
-            .order('created_at', { ascending: false })
-            .limit(1)
-            .maybeSingle()
-        if (error) throw error
-        return data || null
-    } catch (err) {
-        console.warn('[DB] getMeetupForListing error:', err?.message)
-        return null
-    }
-}
-
 export async function verifyHandshakePin(tradeId, enteredPin) {
     if (!tradeId || !enteredPin) {
         return { success: false, error: 'Trade ID and 4-digit PIN are required' }

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import BookReaderPage from '../pages/BookReaderPage'
 import * as pdfReader from '../lib/pdfReader'
@@ -47,6 +47,57 @@ describe('Book reader', { timeout: 20000 }, () => {
     expect(pdfReader.openPdfDocument).toHaveBeenCalledWith('/library/books/let-us-pray-watchman-nee.pdf')
     expect(screen.getByText(/71 pages/)).toBeInTheDocument()
     expect(screen.getByLabelText('Page number')).toHaveValue(1)
+  })
+
+  it('says the file is taking longer instead of spinning forever on a slow link', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    // A request that never answers: the old reader showed "Opening the
+    // document…" for as long as the tab stayed open.
+    pdfReader.openPdfDocument.mockReturnValue(new Promise(() => {}))
+
+    try {
+      renderReader()
+      expect(screen.getByText('Opening the document…')).toBeInTheDocument()
+
+      await act(async () => {
+        vi.advanceTimersByTime(13000)
+      })
+
+      expect(screen.getByText('This is taking longer than usual')).toBeInTheDocument()
+      // It offers a way out that does not depend on the reader at all.
+      const downloads = screen
+        .getAllByRole('link', { name: /Download/ })
+        .filter((link) => link.hasAttribute('download'))
+      expect(downloads.length).toBeGreaterThan(0)
+      for (const link of downloads) {
+        expect(link).toHaveAttribute('href', '/library/books/let-us-pray-watchman-nee.pdf')
+      }
+      expect(screen.getByRole('button', { name: /Try again/ })).toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('asks again when the reader presses Try again', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true })
+    pdfReader.openPdfDocument.mockReturnValue(new Promise(() => {}))
+
+    try {
+      renderReader()
+      await act(async () => {
+        vi.advanceTimersByTime(13000)
+      })
+
+      const callsBefore = pdfReader.openPdfDocument.mock.calls.length
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: /Try again/ }))
+      })
+
+      expect(pdfReader.openPdfDocument.mock.calls.length).toBe(callsBefore + 1)
+      expect(screen.queryByText('This is taking longer than usual')).not.toBeInTheDocument()
+    } finally {
+      vi.useRealTimers()
+    }
   })
 
   it('pages forward and back, and stops at the last page', async () => {

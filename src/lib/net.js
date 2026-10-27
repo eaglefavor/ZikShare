@@ -78,5 +78,23 @@ export async function withRetry(task, options = {}) {
 }
 
 /** Milliseconds a request may take before we call it a timeout. */
-export const SLOW_CONNECTION_NOTE =
-    'This is taking longer than usual — the connection may be slow.'
+export const REQUEST_TIMEOUT_MS = 8000
+
+/**
+ * Gives up on `promise` after `ms`.
+ *
+ * A request that never answers is the worst case on a campus link: the browser
+ * will wait for minutes, and a screen that waits with it looks frozen. The
+ * promise is not cancelled — nothing here can cancel a fetch — but the caller
+ * stops waiting and can say the true thing instead.
+ */
+export function withTimeout(promise, ms = REQUEST_TIMEOUT_MS, message) {
+    let timer
+    const timeout = new Promise((_, reject) => {
+        timer = setTimeout(
+            () => reject(new TimeoutError(message || `The request took longer than ${ms}ms`)),
+            ms
+        )
+    })
+    return Promise.race([Promise.resolve(promise), timeout]).finally(() => clearTimeout(timer))
+}

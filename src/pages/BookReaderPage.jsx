@@ -8,6 +8,7 @@ import {
     ExternalLink,
     Loader2,
     AlertTriangle,
+    RotateCw,
     ZoomIn,
     ZoomOut,
 } from 'lucide-react'
@@ -32,6 +33,23 @@ const MAX_SCALE = 3
 const SCALE_STEP = 0.2
 
 /**
+ * How long "Opening the document…" is allowed to just spin.
+ *
+ * On campus data a first page can genuinely take half a minute, so the reader
+ * keeps trying — but after this it also says what is happening and offers a way
+ * out (download it, or ask again) instead of an endless spinner that looks like
+ * a frozen app.
+ */
+const SLOW_OPEN_MS = 12000
+
+/** The file size, when the catalogue knows it. */
+function formatSize(bytes) {
+    if (!bytes) return null
+    const mb = bytes / (1024 * 1024)
+    return mb >= 1 ? `${mb.toFixed(1)} MB` : `${Math.max(1, Math.round(bytes / 1024))} KB`
+}
+
+/**
  * The reader itself. It used to be book-only, which meant 301 of the 309
  * documents opened in the phone's PDF viewer instead — leaving the app, and
  * losing the page you were on. It now takes any document: a title, a file, the
@@ -50,12 +68,22 @@ function BookReader({ doc, pdfPath, backPath, backLabel, nextDoc, nextPath, isBo
     const [numPages, setNumPages] = useState(0)
     const [page, setPage] = useState(1)
     const [scale, setScale] = useState(1.4)
+    // True when the file has not opened yet and is taking longer than usual.
+    const [slowOpen, setSlowOpen] = useState(false)
+    // Bumped by "Try again", which re-runs the open below.
+    const [attempt, setAttempt] = useState(0)
+
+    const size = formatSize(doc?.file_size_bytes)
 
     // Load the document once per book. This component is remounted per slug, so
     // the initial state already means "loading": nothing is reset synchronously.
     useEffect(() => {
         let cancelled = false
         docRef.current = null
+
+        const slowTimer = setTimeout(() => {
+            if (!cancelled) setSlowOpen(true)
+        }, SLOW_OPEN_MS)
 
         openPdfDocument(pdfPath)
             .then((pdf) => {
@@ -86,11 +114,13 @@ function BookReader({ doc, pdfPath, backPath, backLabel, nextDoc, nextPath, isBo
                 setError(err?.message || 'The reader could not open this file')
                 setStatus('error')
             })
+            .finally(() => clearTimeout(slowTimer))
 
         return () => {
             cancelled = true
+            clearTimeout(slowTimer)
         }
-    }, [doc, pdfPath])
+    }, [doc, pdfPath, attempt])
 
     // Draw the current page. Renders are serialised so a fast page flip cannot
     // draw two pages into the same canvas at once.
@@ -191,6 +221,38 @@ function BookReader({ doc, pdfPath, backPath, backLabel, nextDoc, nextPath, isBo
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem', padding: '4rem 1rem', color: '#CBD5E1' }}>
                     <Loader2 size={26} className="animate-spin" />
                     <span style={{ fontSize: '0.82rem' }}>Opening the document…</span>
+                    {slowOpen && (
+                        <div role="status" style={{ marginTop: '0.75rem', maxWidth: '420px', textAlign: 'center', backgroundColor: '#1E293B', border: '1px solid #334155', borderRadius: '0.75rem', padding: '1rem', color: '#E2E8F0' }}>
+                            <p style={{ margin: '0 0 0.35rem', fontSize: '0.82rem', fontWeight: 700 }}>
+                                This is taking longer than usual
+                            </p>
+                            <p style={{ margin: '0 0 0.8rem', fontSize: '0.78rem', color: '#94A3B8', lineHeight: 1.5 }}>
+                                {size
+                                    ? `The file is ${size}. On a slow connection it can take a while to reach the first page.`
+                                    : 'On a slow connection it can take a while to reach the first page.'}{' '}
+                                You can keep waiting, keep the whole file instead, or ask again.
+                            </p>
+                            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }}>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        // Asking again is an event, not a render: it
+                                        // puts the screen back to "loading" itself.
+                                        setSlowOpen(false)
+                                        setError('')
+                                        setStatus('loading')
+                                        setAttempt((count) => count + 1)
+                                    }}
+                                    style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#1E40AF', color: '#FFFFFF', border: 'none', padding: '0.55rem 0.9rem', borderRadius: '0.5rem', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}
+                                >
+                                    <RotateCw size={14} /> Try again
+                                </button>
+                                <a href={pdfPath} download style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', backgroundColor: '#F0FDF4', color: '#065F46', border: '1.5px solid #10B981', padding: '0.55rem 0.9rem', borderRadius: '0.5rem', fontSize: '0.8rem', fontWeight: 700, textDecoration: 'none' }}>
+                                    <Download size={14} /> Download{size ? ` (${size})` : ''}
+                                </a>
+                            </div>
+                        </div>
+                    )}
                 </div>
             )}
 

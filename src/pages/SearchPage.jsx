@@ -10,6 +10,7 @@ import {
     X,
 } from 'lucide-react'
 import { getListings, getStudentRequests, createStudentRequest } from '../lib/database'
+import { withRetry, withTimeout } from '../lib/net'
 import { useAuth } from '../contexts/AuthContext'
 import { mergeLibraryMaterials } from '../lib/fresherLibrary'
 import { filterLibrary } from '../lib/libraryView'
@@ -20,6 +21,9 @@ import usePageMeta from '../hooks/usePageMeta'
 import FirstListingGuide from '../components/FirstListingGuide'
 import ConnectionNotice from '../components/ConnectionNotice'
 import { photoAtWidth } from '../lib/cloudinary'
+
+/** How long the marketplace listing request may take before we say so. */
+const SEARCH_TIMEOUT_MS = 8000
 
 function formatNaira(amount) {
     const n = Number(amount) || 0
@@ -114,19 +118,22 @@ export default function SearchPage() {
         let mounted = true
         setLoading(true)
         setLoadFailed(false)
+        // Both requests get a budget. A listing request that never answers
+        // used to leave the spinner up for as long as the tab stayed open.
         Promise.all([
-            getListings({ limit: 60 }).catch((err) => {
-                throw err
+            withRetry(() => withTimeout(getListings({ limit: 60 }), SEARCH_TIMEOUT_MS), {
+                attempts: 2,
             }),
-            getStudentRequests().catch(() => []),
+            withTimeout(getStudentRequests(), SEARCH_TIMEOUT_MS).catch(() => []),
         ])
             .then(([rows, wants]) => {
                 if (!mounted) return
                 setListings((rows || []).filter((row) => row.isDigital !== true))
                 setRequests(wants || [])
             })
-            .catch(() => {
+            .catch((err) => {
                 // A dropped request is not an empty marketplace.
+                if (err) console.warn('Marketplace search failed:', err.message)
                 if (mounted) setLoadFailed(true)
             })
             .finally(() => {

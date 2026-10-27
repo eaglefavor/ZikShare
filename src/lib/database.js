@@ -1287,6 +1287,22 @@ export async function getSellerReviews(sellerId) {
     }
 }
 
+/** Which of this reader's purchases they have already rated. */
+export async function getMyReviewedOrderIds(reviewerId) {
+    if (!reviewerId) return []
+    try {
+        const { data, error } = await supabase
+            .from('reviews')
+            .select('order_id')
+            .eq('reviewer_id', reviewerId)
+        if (error) throw error
+        return (data || []).map((row) => row.order_id).filter(Boolean)
+    } catch (err) {
+        console.warn('[DB] getMyReviewedOrderIds error:', err?.message)
+        return []
+    }
+}
+
 export async function getSellerRatingSummary(sellerId) {
     if (!sellerId) return { averageRating: 5.0, totalReviews: 0, breakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 } }
     const reviews = await getSellerReviews(sellerId)
@@ -1449,36 +1465,69 @@ export async function updateStudentRequestStatus(requestId, status) {
 // Physical Escrow & Handshake PIN Exchange
 // ============================================
 
-export async function createEscrowTrade({ listingId, itemTitle, buyerId, sellerId, amountNaira, meetupLocation, paystackReference }) {
-    if (!listingId || !buyerId || !sellerId || !amountNaira) {
-        throw new Error('Missing escrow trade parameters')
+/**
+ * Arranging an in-person handover.
+ *
+ * ZikShare holds no money for a campus meetup and never did: the buyer pays the
+ * seller directly when they meet. What the app does provide is a record and a
+ * 4-digit handshake PIN — the buyer shows it, the seller types it in, and the
+ * item is marked handed over. The agreed price is stored only so both sides
+ * remember what they settled on.
+ */
+export async function arrangeMeetup({ listingId, itemTitle, buyerId, sellerId, meetupLocation, priceNaira }) {
+    if (!listingId || !buyerId || !sellerId) {
+        throw new Error('A listing, a buyer and a seller are needed to arrange a meetup')
+    }
+    if (buyerId === sellerId) {
+        throw new Error('You cannot arrange a meetup for your own listing')
     }
 
     // Generate random 4-digit PIN for the buyer
     const pin = Math.floor(1000 + Math.random() * 9000).toString()
+    const price = Number(priceNaira) || 0
 
     const { data, error } = await supabase
         .from('escrow_trades')
         .insert({
             listing_id: String(listingId),
-            item_title: itemTitle || 'Physical Marketplace Item',
+            item_title: itemTitle || 'Campus Marketplace Item',
             buyer_id: buyerId,
             seller_id: sellerId,
-            amount_naira: Number(amountNaira),
-            amount_kobo: Math.round(Number(amountNaira) * 100),
+            amount_naira: price,
+            amount_kobo: Math.round(price * 100),
             meetup_location: meetupLocation || 'Garba Square (Perm Site)',
             handshake_pin: pin,
-            paystack_reference: paystackReference || null,
-            status: 'escrow_held',
+            paystack_reference: null,
+            status: 'meetup_arranged',
         })
         .select('*')
         .single()
 
     if (error) {
-        console.error('[DB] createEscrowTrade error:', error)
+        console.error('[DB] arrangeMeetup error:', error)
         throw error
     }
     return data
+}
+
+/** The meetup this buyer already arranged for a listing, if there is one. */
+export async function getMeetupForListing(listingId, buyerId) {
+    if (!listingId || !buyerId) return null
+    try {
+        const { data, error } = await supabase
+            .from('escrow_trades')
+            .select('*')
+            .eq('listing_id', String(listingId))
+            .eq('buyer_id', buyerId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        if (error) throw error
+        return data || null
+    } catch (err) {
+        console.warn('[DB] getMeetupForListing error:', err?.message)
+        return null
+    }
 }
 
 export async function verifyHandshakePin(tradeId, enteredPin) {
@@ -1497,14 +1546,14 @@ export async function verifyHandshakePin(tradeId, enteredPin) {
     }
 
     if (trade.status === 'delivered') {
-        return { success: false, error: 'This trade has already been completed and funds released.' }
+        return { success: false, error: 'This handover is already marked complete.' }
     }
 
-    if (trade.handshake_pin.trim() !== String(enteredPin).trim()) {
-        return { success: false, error: 'Incorrect Handshake PIN. Please verify with the buyer after inspecting the item.' }
+    if (String(trade.handshake_pin).trim() !== String(enteredPin).trim()) {
+        return { success: false, error: 'That PIN does not match. Ask the buyer to read it out again.' }
     }
 
-    // PIN match! Release escrow trade
+    // PIN match: the item has changed hands.
     const { data: updated, error: updateError } = await supabase
         .from('escrow_trades')
         .update({

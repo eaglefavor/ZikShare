@@ -883,7 +883,7 @@ export default function PostPage() {
                             <>
                                 <MapPin size={18} color="#166534" style={{ flexShrink: 0 }} />
                                 <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-success-text)', lineHeight: 1.3 }}>
-                                    <strong>Safe Meetup & Escrow:</strong> Arrange physical exchanges at Garba Square, Chisco Park, or Admin Block. Buyer confirms delivery via 4-digit Handshake PIN.
+                                    <strong>Safe meetup:</strong> arrange the exchange at Garba Square, Chisco Park or Admin Block. The buyer gets a 4-digit handshake PIN and reads it out at handover. No money passes through ZikShare.
                                 </p>
                             </>
                         ) : (

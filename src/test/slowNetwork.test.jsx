@@ -6,14 +6,17 @@
  * marketplace, which is a claim about the world the app cannot support.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import { render, screen, fireEvent, waitFor } from '@testing-library/react'
+import { act, render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import HomePage from '../pages/HomePage'
+import SearchPage from '../pages/SearchPage'
 import AppShell from '../components/AppShell'
 import * as database from '../lib/database'
 
 vi.mock('../lib/database', () => ({
     getListings: vi.fn(),
+    getStudentRequests: vi.fn().mockResolvedValue([]),
+    createStudentRequest: vi.fn(),
     getAnnouncements: vi.fn().mockResolvedValue([]),
     getUnreadAnnouncementsCount: vi.fn().mockResolvedValue(0),
     getConversations: vi.fn().mockResolvedValue([]),
@@ -36,6 +39,14 @@ vi.mock('../lib/readStatus', () => ({
 vi.mock('../lib/messaging', () => ({
     getConversations: vi.fn().mockResolvedValue([]),
 }))
+
+function renderSearch() {
+    return render(
+        <MemoryRouter initialEntries={['/search']}>
+            <SearchPage />
+        </MemoryRouter>
+    )
+}
 
 function renderHome() {
     return render(
@@ -136,5 +147,46 @@ describe('The shell when the phone is offline', () => {
 
         await waitFor(() => expect(screen.getByText(/You are offline/i)).toBeInTheDocument())
         expect(screen.getByText(/saved to this device/i)).toBeInTheDocument()
+    })
+
+})
+
+describe('The search page on a bad connection', () => {
+    beforeEach(() => {
+        vi.clearAllMocks()
+        localStorage.clear()
+        database.getStudentRequests.mockResolvedValue([])
+    })
+
+    it('stops waiting on a request that never answers, and says so', async () => {
+        vi.useFakeTimers({ shouldAdvanceTime: true })
+        // A request that hangs: no error, no answer. Before this the search
+        // screen spun for as long as the tab stayed open.
+        database.getListings.mockReturnValue(new Promise(() => {}))
+
+        try {
+            renderSearch()
+            // Three skeletons, so the reader sees the page rather than nothing.
+            expect(document.querySelectorAll('.skeleton').length).toBeGreaterThan(0)
+
+            await act(async () => {
+                await vi.advanceTimersByTimeAsync(25000)
+            })
+
+            expect(await screen.findByText(/Could not reach ZikShare/i)).toBeInTheDocument()
+        } finally {
+            vi.useRealTimers()
+        }
+    })
+
+    it('shows the listings when the request does come back', async () => {
+        database.getListings.mockResolvedValue([
+            { id: '1', title: 'Oxford standing fan', price: 12000, isDigital: false, condition: 'Used' },
+        ])
+
+        renderSearch()
+
+        expect(await screen.findByText('Oxford standing fan')).toBeInTheDocument()
+        expect(screen.queryByText(/Could not reach ZikShare/i)).not.toBeInTheDocument()
     })
 })

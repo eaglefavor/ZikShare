@@ -7,7 +7,7 @@
  * result.
  */
 import { describe, it, expect, vi } from 'vitest'
-import { TimeoutError, isTransientError, retryDelay, withRetry } from '../lib/net'
+import { TimeoutError, isTransientError, retryDelay, withRetry, withTimeout } from '../lib/net'
 
 describe('Telling a dropped connection from an answer', () => {
     it('knows a timeout', () => {
@@ -65,5 +65,27 @@ describe('withRetry', () => {
         const task = vi.fn().mockRejectedValueOnce(new Error('bad request')).mockResolvedValue('x')
         await expect(withRetry(task, { attempts: 2 })).rejects.toThrow(/bad request/)
         expect(Date.now() - started).toBeLessThan(300)
+    })
+})
+
+describe('Giving up on a request that never answers', () => {
+    it('rejects with a timeout the screen can act on', async () => {
+        const never = new Promise(() => {})
+        await expect(withTimeout(never, 20)).rejects.toBeInstanceOf(TimeoutError)
+    })
+
+    it('lets a real answer through, and keeps the size of the answer', async () => {
+        await expect(withTimeout(Promise.resolve(['a listing']), 50)).resolves.toEqual(['a listing'])
+    })
+
+    it('passes a real failure on unchanged, not as a timeout', async () => {
+        const failed = Promise.reject(new TypeError('Failed to fetch'))
+        await expect(withTimeout(failed, 50)).rejects.toThrow(/Failed to fetch/)
+    })
+
+    it('does not hold the event loop open after a quick answer', async () => {
+        const started = Date.now()
+        await withTimeout(Promise.resolve('ok'), 5000)
+        expect(Date.now() - started).toBeLessThan(200)
     })
 })

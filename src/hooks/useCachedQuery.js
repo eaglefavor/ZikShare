@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { getCached, setCache, CACHE_TTL } from '../lib/cache'
-import { isTransientError, withRetry, TimeoutError } from '../lib/net'
+import { isTransientError, withRetry, withTimeout } from '../lib/net'
 
 /**
  * Custom hook that wraps async data fetching with a SWR-style cache.
@@ -54,17 +54,12 @@ export function useCachedQuery(cacheKey, fetcher, options = {}) {
     const revalidate = useCallback(async () => {
         if (!enabled) return
 
-        const attemptOnce = async () => {
-            let timeoutId
-            const timeoutPromise = new Promise((_, reject) => {
-                timeoutId = setTimeout(() => reject(new TimeoutError(`Query [${cacheKey}] took longer than ${timeoutMs}ms`)), timeoutMs)
-            })
-            try {
-                return await Promise.race([Promise.resolve(fetcherRef.current()), timeoutPromise])
-            } finally {
-                clearTimeout(timeoutId)
-            }
-        }
+        const attemptOnce = () =>
+            withTimeout(
+                fetcherRef.current(),
+                timeoutMs,
+                `Query [${cacheKey}] took longer than ${timeoutMs}ms`
+            )
 
         const myRun = (runId.current += 1)
         const isCurrent = () => myRun === runId.current

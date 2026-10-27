@@ -1,8 +1,8 @@
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, FileText, ShieldAlert, Flag, ChevronRight as ChevronRightIcon, CheckCircle2, Lock, Download, Sparkles, Eye, CheckCircle, Star, Tag, BookOpen, GraduationCap, Library } from 'lucide-react'
+import { ArrowLeft, Heart, Share2, MapPin, ShieldCheck, MessageCircle, Phone, ChevronLeft, ChevronRight, Loader2, Clock, X, FileText, ShieldAlert, Flag, ChevronRight as ChevronRightIcon, CheckCircle2, Lock, Download, Sparkles, Eye, CheckCircle, Star, Tag, BookOpen, GraduationCap, Library, Handshake } from 'lucide-react'
 import { useState, useEffect, useRef } from 'react'
 import { useCachedQuery } from '../hooks/useCachedQuery'
-import { getListing, getUserPurchaseForProduct, createSignedDownloadUrl, getSellerReviews, getSellerRatingSummary } from '../lib/database'
+import { getListing, getUserPurchaseForProduct, createSignedDownloadUrl, getSellerReviews, getSellerRatingSummary, arrangeMeetup } from '../lib/database'
 import { downloadWatermarkedPdf, getDrmPassword } from '../lib/pdfWatermark'
 import { renderPdfSampleCanvas } from '../lib/pdfPreview'
 import PaystackCheckout from '../components/PaystackCheckout'
@@ -53,6 +53,7 @@ export default function ItemDetailPage() {
     const [isSaved, setIsSaved] = useState(() => checkSaved(id))
     const [showCallSheet, setShowCallSheet] = useState(false)
     const [showReportSheet, setShowReportSheet] = useState(false)
+    const [arrangingMeetup, setArrangingMeetup] = useState(false)
     const [contacting, setContacting] = useState(false)
     const [existingOrder, setExistingOrder] = useState(null)
     const [downloadingExisting, setDownloadingExisting] = useState(false)
@@ -240,6 +241,35 @@ export default function ItemDetailPage() {
         'Like New': 'condition-like-new',
         'Fairly Used': 'condition-used',
         'Digital PDF': 'condition-like-new',
+    }
+
+    // Arranging the handover without a payment step: ZikShare records the
+    // meetup and gives the buyer a 4-digit PIN. Money changes hands in person.
+    const handleArrangeMeetup = async () => {
+        if (!isAuthenticated) {
+            navigate('/login')
+            return
+        }
+        if (arrangingMeetup) return
+        setArrangingMeetup(true)
+        try {
+            const sellerUid = item.sellerId || item.seller_id
+            const conv = await getOrCreateConversation(id, session.user.id, sellerUid)
+            await arrangeMeetup({
+                listingId: id,
+                itemTitle: item.title,
+                buyerId: session.user.id,
+                sellerId: sellerUid,
+                meetupLocation: item.lodge_location || 'Garba Square (Perm Site)',
+                priceNaira: item.price,
+            })
+            navigate(`/chat/${conv.id}`)
+        } catch (err) {
+            console.error('Arrange meetup failed:', err)
+            alert(err?.message || 'Could not arrange the meetup. Try again.')
+        } finally {
+            setArrangingMeetup(false)
+        }
     }
 
     const handleContactSeller = async () => {
@@ -763,11 +793,24 @@ export default function ItemDetailPage() {
                         </div>
                     )
                 ) : (
-                    <div style={{ padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: 'var(--color-campus-green-soft)', border: '1px solid #BBF7D0', display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
-                        <MapPin size={16} color="#166534" />
-                        <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-success-text)', lineHeight: 1.3 }}>
-                            <strong>Safe Meetup & Escrow:</strong> Arrange physical pickup at Garba Square, Chisco Park, or Admin Block.
-                        </p>
+                    <div style={{ padding: '0.75rem', borderRadius: '0.75rem', backgroundColor: 'var(--color-campus-green-soft)', border: '1px solid #BBF7D0', display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                            <MapPin size={16} color="#166534" />
+                            <p style={{ margin: 0, fontSize: '0.6875rem', color: 'var(--color-success-text)', lineHeight: 1.3 }}>
+                                <strong>Safe meetup:</strong> arrange pickup at Garba Square, Chisco Park or Admin Block, and use the handshake PIN at handover. ZikShare holds no money for campus sales — pay the seller yourself, after you check the item.
+                            </p>
+                        </div>
+                        {!isOwnListing && (
+                            <button
+                                type="button"
+                                className="zs-btn zs-btn--outline zs-btn--block"
+                                onClick={handleArrangeMeetup}
+                                disabled={arrangingMeetup}
+                            >
+                                {arrangingMeetup ? <Loader2 size={15} className="animate-spin" /> : <Handshake size={15} />}
+                                {arrangingMeetup ? 'Arranging…' : 'Arrange a meetup'}
+                            </button>
+                        )}
                     </div>
                 )}
             </div>

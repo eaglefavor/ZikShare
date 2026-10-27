@@ -28,7 +28,7 @@ const faqs = [
     {
         question: 'How do I post an item or study material?',
         answer:
-            'Sign in with your UNIZIK email, tap Sell, choose whether you are listing a physical item or uploading a document, then fill in the title, price, category and description. Photos are optional but listings with a photo are easier to trust.',
+            'Sign in with your UNIZIK email, tap Sell, choose whether you are listing a physical item or uploading a document, then give it a title and a price — that is all it needs. Category, condition, meetup spot and description sit under “More details” and are optional, though a photo is what makes a stranger trust the listing.',
     },
     {
         question: 'How do I contact a seller?',
@@ -38,7 +38,7 @@ const faqs = [
     {
         question: 'Where should we meet to exchange an item?',
         answer:
-            'Agree on a public part of campus — Garba Square, Chisco Park or the Student Center are the usual spots. Inspect a physical item before paying, and never send money to someone before you have the item in hand. When a trade is paid through ZikShare, the seller releases the item with a six-digit handshake PIN that only the buyer has, so the exchange is recorded on both sides.',
+            'Agree on a public part of campus — Garba Square, Chisco Park or the Student Center are the usual spots. Inspect the item before you pay, and never send money to someone before you have it in hand. In the chat, tap the key to arrange the meetup: the buyer gets a four-digit handshake PIN, and at handover the seller types it in so both sides have a record that the item changed hands. ZikShare never holds the money for a campus sale.',
     },
     {
         question: 'Can I change or remove a listing?',
@@ -66,12 +66,12 @@ const BUYING_STEPS = [
     {
         icon: Shield,
         title: 'Inspect before money moves',
-        body: 'Meet in public — Garba Square, Chisco Park, the Student Center — and look at the item before you pay anything. Paying through ZikShare holds the money until the handover is confirmed.',
+        body: 'Meet in public — Garba Square, Chisco Park, the Student Center — and look at the item before you pay anything. You pay the seller yourself; ZikShare does not hold or move money for a campus sale.',
     },
     {
         icon: Handshake,
         title: 'Confirm the handover',
-        body: 'When the item is paid for through ZikShare, the seller asks for the handshake PIN the buyer was given. Entering it marks the trade delivered, and the seller is paid.',
+        body: 'The buyer arranges the meetup in chat and gets a four-digit handshake PIN. At the exchange, the seller types that PIN in and the item is marked handed over on both sides.',
     },
 ]
 

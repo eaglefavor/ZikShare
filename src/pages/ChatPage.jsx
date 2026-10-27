@@ -3,7 +3,7 @@ import { useNavigate, useParams, Link } from 'react-router-dom'
 import { ArrowLeft, Send, Phone, Loader2, AlertTriangle, X, Image as ImageIcon, CheckCheck, ExternalLink, ShieldCheck, Tag, Key, DollarSign, FileText, Package } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import { getConversation, getMessages, sendMessage, subscribeToMessages, uploadChatAttachment } from '../lib/messaging'
-import { getUser, createOffer, getOffersForConversation, respondToOffer, verifyHandshakePin, getEscrowTradesForUser } from '../lib/database'
+import { getUser, createOffer, getOffersForConversation, respondToOffer, verifyHandshakePin, getEscrowTradesForUser, arrangeMeetup } from '../lib/database'
 import { markConversationRead } from '../lib/readStatus'
 import { useToast } from '../components/Toast'
 import PaystackCheckout from '../components/PaystackCheckout'
@@ -70,6 +70,7 @@ export default function ChatPage() {
     // Escrow & Handshake State
     const [escrowTrades, setEscrowTrades] = useState([])
     const [showHandshakeModal, setShowHandshakeModal] = useState(false)
+    const [arrangingMeetup, setArrangingMeetup] = useState(false)
     const [enteredPin, setEnteredPin] = useState('')
     const [verifyingPin, setVerifyingPin] = useState(false)
     const [pinResult, setPinResult] = useState(null)
@@ -279,9 +280,9 @@ export default function ChatPage() {
         try {
             const res = await verifyHandshakePin(tradeId, enteredPin)
             if (res.success) {
-                setPinResult({ success: true, message: 'Handshake PIN verified! Funds released to your seller balance.' })
+                setPinResult({ success: true, message: 'PIN verified — the item is marked handed over.' })
                 setEscrowTrades(prev => prev.map(t => t.id === tradeId ? res.trade : t))
-                handleSend(`🎉 Handshake PIN verified! Item successfully delivered and payment released.`)
+                handleSend(`🤝 Handshake PIN verified. ${item?.title || 'The item'} is marked handed over.`)
                 toast.success('Trade completed!')
             } else {
                 setPinResult({ success: false, message: res.error || 'Invalid Handshake PIN.' })
@@ -327,6 +328,43 @@ export default function ChatPage() {
     const otherPhone = otherUser?.phoneNumber || ''
     const itemImage = item?.images?.[0] || null
     const isBuyer = conversation?.buyerId === myId
+    // The meetup for this thread: this listing, these two people. Picking the
+    // reader's most recent trade instead (as this page used to) showed a PIN
+    // from an unrelated conversation.
+    const meetup = escrowTrades.find(
+        (trade) =>
+            String(trade.listing_id) === String(item?.id || '') &&
+            (trade.buyer_id === myId || trade.seller_id === myId)
+    ) || null
+
+    const openHandshake = async () => {
+        if (meetup) {
+            setShowHandshakeModal(true)
+            return
+        }
+        if (!isBuyer || !item?.id) return
+        setArrangingMeetup(true)
+        try {
+            const trade = await arrangeMeetup({
+                listingId: item.id,
+                itemTitle: item.title,
+                buyerId: myId,
+                sellerId: conversation?.sellerId || otherUser?.uid || otherUser?.id,
+                meetupLocation: item.lodge_location || 'Garba Square (Perm Site)',
+                priceNaira: item.price,
+            })
+            setEscrowTrades((prev) => [trade, ...prev])
+            setShowHandshakeModal(true)
+            handleSend(`📍 Meetup arranged at ${trade.meetup_location}. I have the handshake PIN for handover.`)
+            toast.success('Meetup arranged — your PIN is ready')
+        } catch (err) {
+            console.error('Arrange meetup error:', err)
+            toast.error(err?.message || 'Could not arrange the meetup')
+        } finally {
+            setArrangingMeetup(false)
+        }
+    }
+
     const activeOffer = offers[0] || null
     const offerTone = activeOffer?.status === 'accepted' ? 'is-accepted' : activeOffer?.status === 'declined' ? 'is-declined' : ''
 
@@ -362,14 +400,17 @@ export default function ChatPage() {
                             <Tag size={13} /> Offer
                         </button>
                     )}
-                    <button
-                        type="button"
-                        className="zs-icon-btn"
-                        onClick={() => setShowHandshakeModal(true)}
-                        aria-label="Campus handshake PIN"
-                    >
-                        <Key size={16} />
-                    </button>
+                    {(isBuyer || meetup) && !item?.isDigital && (
+                        <button
+                            type="button"
+                            className="zs-icon-btn"
+                            onClick={openHandshake}
+                            disabled={arrangingMeetup}
+                            aria-label={meetup ? `Campus handshake PIN for ${meetup.item_title}` : 'Arrange a meetup and get the handshake PIN'}
+                        >
+                            {arrangingMeetup ? <Loader2 size={16} className="animate-spin" /> : <Key size={16} />}
+                        </button>
+                    )}
                     <button
                         type="button"
                         className="zs-icon-btn"
@@ -454,6 +495,34 @@ export default function ChatPage() {
                         )}
                     </div>
                 </div>
+            )}
+
+            {/* Meetup already arranged: say whose turn it is */}
+            {meetup && (
+                <button
+                    type="button"
+                    className="zs-chat__offer is-accepted"
+                    style={{ textAlign: 'left', cursor: 'pointer', font: 'inherit', width: '100%' }}
+                    onClick={() => setShowHandshakeModal(true)}
+                >
+                    <div style={{ minWidth: 0 }}>
+                        <span className="zs-chat__offer-label">
+                            <Key size={13} aria-hidden="true" />
+                            {meetup.status === 'delivered' ? 'Handed over' : 'Meetup arranged'}
+                            <span className="zs-tag zs-tag--muted">{meetup.meetup_location}</span>
+                        </span>
+                        <p style={{ margin: '0.1rem 0 0', fontSize: 'var(--zs-fs-meta)', color: 'var(--color-text-secondary)' }}>
+                            {meetup.status === 'delivered'
+                                ? `${meetup.item_title} changed hands. No money moved through ZikShare.`
+                                : isBuyer
+                                  ? 'Your handshake PIN is ready. Pay the seller in person, then give them the PIN.'
+                                  : 'Ask the buyer for their 4-digit PIN once you have handed the item over.'}
+                        </p>
+                    </div>
+                    <span className="zs-btn zs-btn--soft zs-btn--sm" style={{ flexShrink: 0 }}>
+                        {meetup.status === 'delivered' ? 'Details' : isBuyer ? 'Show PIN' : 'Enter PIN'}
+                    </span>
+                </button>
             )}
 
             {/* Messages */}
@@ -669,9 +738,11 @@ export default function ChatPage() {
                         </div>
                         <div className="zs-sheet__body">
                             <p style={{ margin: 0, fontSize: 'var(--zs-fs-small)', lineHeight: 1.5, color: 'var(--color-text-secondary)' }}>
-                                {isBuyer
-                                    ? 'Give this PIN to the seller only after you have physically inspected the item on campus.'
-                                    : 'Enter the buyer’s PIN when you hand over the item. That releases the held payment to you.'}
+                                {!meetup
+                                    ? 'Arrange the meetup first, then this PIN appears. ZikShare never holds your money — you pay the seller yourself when you meet.'
+                                    : isBuyer
+                                      ? 'Pay the seller in person, check the item, then read this PIN out. It marks the item as handed over. ZikShare holds no money at any point.'
+                                      : 'Enter the buyer’s 4-digit PIN once you have handed the item over and been paid. It marks the meetup complete.'}
                             </p>
 
                             {!isBuyer ? (
@@ -697,11 +768,11 @@ export default function ChatPage() {
                                     <button
                                         type="button"
                                         className="zs-btn zs-btn--green zs-btn--block"
-                                        onClick={() => handleVerifyPin(escrowTrades[0]?.id)}
+                                        onClick={() => handleVerifyPin(meetup?.id)}
                                         disabled={verifyingPin || enteredPin.length !== 4}
                                     >
                                         {verifyingPin ? <Loader2 size={15} className="animate-spin" /> : <ShieldCheck size={15} />}
-                                        {verifyingPin ? 'Verifying…' : 'Verify and release payment'}
+                                        {verifyingPin ? 'Checking…' : 'Mark as handed over'}
                                     </button>
                                 </>
                             ) : (
@@ -709,9 +780,11 @@ export default function ChatPage() {
                                     <p style={{ margin: 0, fontSize: 'var(--zs-fs-meta)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--color-success-text)' }}>
                                         Your handshake PIN
                                     </p>
-                                    <p className="zs-pin__value">{escrowTrades[0]?.handshake_pin || '••••'}</p>
+                                    <p className="zs-pin__value">{meetup?.handshake_pin || '••••'}</p>
                                     <p style={{ margin: 0, fontSize: 'var(--zs-fs-meta)', color: 'var(--color-success-text)' }}>
-                                        Share it with {otherName} at the meetup, after you check the item.
+                                        {meetup
+                                            ? `Pay ${otherName} in person, check the item, then read this out.`
+                                            : 'It appears here once the meetup is arranged.'}
                                     </p>
                                 </div>
                             )}

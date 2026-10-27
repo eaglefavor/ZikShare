@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { FileText, Download, Loader2, Search, X, Check, Copy, Sparkles, AlertCircle, Key } from 'lucide-react'
+import { FileText, Download, Loader2, Search, X, Check, Copy, Sparkles, AlertCircle, Key, Star } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
-import { getBuyerOrders, createSignedDownloadUrl } from '../lib/database'
+import { getBuyerOrders, createSignedDownloadUrl, getMyReviewedOrderIds } from '../lib/database'
 import { claimPurchaseByReference } from '../lib/paystack'
 import { downloadWatermarkedPdf, getDrmPassword } from '../lib/pdfWatermark'
 import { useToast } from '../components/Toast'
 import { Button, EmptyState } from '../components/ui'
+import RateSellerSheet from '../components/RateSellerSheet'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount || 0)
@@ -26,6 +27,8 @@ export default function PurchasedItemsPage() {
     const [downloadingId, setDownloadingId] = useState(null)
     const [copiedId, setCopiedId] = useState(null)
     const [searchQuery, setSearchQuery] = useState('')
+    const [reviewedOrders, setReviewedOrders] = useState([])
+    const [ratingOrder, setRatingOrder] = useState(null)
 
     // Self-Service Dispute / Purchase Claim Modal
     const [showClaimModal, setShowClaimModal] = useState(false)
@@ -40,6 +43,8 @@ export default function PurchasedItemsPage() {
         try {
             const data = await getBuyerOrders(currentUserId)
             setOrders(data || [])
+            const reviewed = await getMyReviewedOrderIds(currentUserId)
+            setReviewedOrders(reviewed)
         } catch (err) {
             console.error('Failed to load purchases:', err)
         } finally {
@@ -282,10 +287,37 @@ export default function PurchasedItemsPage() {
                                     {downloadingId === order.id ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
                                     {downloadingId === order.id ? 'Preparing your watermarked PDF…' : 'Download PDF'}
                                 </button>
+
+                                {(order.seller_id || order.seller?.id) && order.seller_id !== currentUserId && (
+                                    reviewedOrders.includes(order.id) ? (
+                                        <p className="zs-rate__label" style={{ display: 'flex', alignItems: 'center', gap: '0.3rem', margin: 0 }}>
+                                            <Star size={12} color="var(--color-orange)" aria-hidden="true" />
+                                            You rated {order.seller?.displayName || 'this seller'}
+                                        </p>
+                                    ) : (
+                                        <button
+                                            type="button"
+                                            className="zs-btn zs-btn--outline zs-btn--block"
+                                            onClick={() => setRatingOrder(order)}
+                                        >
+                                            <Star size={15} /> Rate the seller
+                                        </button>
+                                    )
+                                )}
                             </article>
                         )
                     })}
                 </div>
+            )}
+
+            {ratingOrder && (
+                <RateSellerSheet
+                    open
+                    order={ratingOrder}
+                    sellerName={ratingOrder.seller?.displayName}
+                    onClose={() => setRatingOrder(null)}
+                    onSaved={() => setReviewedOrders((prev) => [...prev, ratingOrder.id])}
+                />
             )}
 
             {showClaimModal && (

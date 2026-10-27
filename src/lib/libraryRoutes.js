@@ -14,7 +14,9 @@
  * Shelves also get a readable address, `/library/shelf/<shelf-slug>`, and the
  * old `?domain=` form keeps working so no link that has been shared breaks.
  */
-import { SHELF_INFO } from './shelfGuide'
+// shelf names only: importing `shelfGuide` here would pull the whole catalogue
+// (and its gap notes) into any page that needs one address.
+import { SHELF_ORDER } from './shelves'
 
 /** "Greek Tragedy" -> "greek-tragedy" */
 export function slugify(value) {
@@ -27,7 +29,7 @@ export function slugify(value) {
 }
 
 export const SHELF_SLUGS = Object.fromEntries(
-    Object.keys(SHELF_INFO).map((name) => [slugify(name), name])
+    SHELF_ORDER.map((name) => [slugify(name), name])
 )
 
 /** The shelf a readable address names, or null when nothing matches. */

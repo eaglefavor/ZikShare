@@ -15,6 +15,7 @@ import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../components/Toast'
 import ReportListingSheet from '../components/ReportListingSheet'
 import usePageMeta from '../hooks/usePageMeta'
+import { photoAtWidth } from '../lib/cloudinary'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount)
@@ -342,7 +343,12 @@ export default function ItemDetailPage() {
             <div style={{ position: 'relative', marginTop: '0.65rem', borderRadius: '0.9rem', overflow: 'hidden', border: '1px solid var(--color-border)' }}>
                 <div style={{ width: '100%', height: '260px', backgroundColor: 'var(--color-brand-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem', overflow: 'hidden' }}>
                     {images[currentImage] ? (
-                        <img src={images[currentImage]} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        <img
+                            src={photoAtWidth(images[currentImage], 900)}
+                            alt={item.title}
+                            decoding="async"
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                        />
                     ) : item.isDigital ? '📄' : '📦'}
                 </div>
 

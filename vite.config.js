@@ -89,7 +89,9 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'icons/*.svg', 'cover_photo.jpg', 'og-image.jpg', 'og-cover.jpg'],
+      // Social preview images are fetched by WhatsApp and Twitter scrapers, not
+      // by the app: they are 430 kB of the install and belong on demand.
+      includeAssets: ['favicon.svg', 'icons/*.svg'],
       manifest: {
         name: 'ZikShare - Campus Marketplace',
         short_name: 'ZikShare',
@@ -121,13 +123,46 @@ export default defineConfig({
       workbox: {
         skipWaiting: true,
         clientsClaim: true,
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        // Install downloads exactly this: the shell a reader needs to open the
+        // app. It used to precache every route, the admin page, the PDF
+        // watermaker and a mobile debug console — 2.3 MB before anything
+        // appeared on a campus connection. Route chunks are now kept the first
+        // time they are actually used (see the /assets/ rule below), so the
+        // app still works offline for what a reader has opened.
+        globPatterns: [
+          'index.html',
+          'manifest.webmanifest',
+          'favicon.svg',
+          'icons/*.svg',
+          'assets/index-*.js',
+          'assets/index-*.css',
+          'assets/vendor-*.js',
+          'assets/ui-*.js',
+          'assets/supabase-*.js',
+        ],
+        globIgnores: ['**/eruda-*.js', '**/pdfWatermark-*.js', '**/AdminPage-*.js'],
         // A download is a navigation too. Without this the worker answers
         // "Download the PDF" with index.html, and the reader saves an app shell
         // called index.html instead of a book. Every path that ends in a file
         // extension is left to the network; only real app routes fall back.
         navigateFallbackDenylist: [/^\/api\//, FILE_REQUEST_PATTERN],
         runtimeCaching: [
+          {
+            // Every hashed build asset a reader has actually opened stays on
+            // the device. The file name changes when the file changes, so a
+            // cached copy is never out of date.
+            urlPattern: /\/assets\/[^/]+\.(?:js|css)$/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'app-chunks-v1',
+              expiration: {
+                maxEntries: 80,
+                maxAgeSeconds: 60 * 60 * 24 * 180,
+                purgeOnQuotaError: true,
+              },
+              cacheableResponse: { statuses: [0, 200] },
+            },
+          },
           {
             // Supabase API calls — network first, fallback to cache
             urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/.*/i,
@@ -185,27 +220,22 @@ export default defineConfig({
             }
           },
           {
-            // Google Fonts stylesheets
-            urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
-            handler: 'StaleWhileRevalidate',
-            options: {
-              cacheName: 'google-fonts-stylesheets'
-            }
-          },
-          {
-            // Google Fonts webfonts
-            urlPattern: /^https:\/\/fonts\.gstatic\.com\/.*/i,
+            // The typeface is served from this site now, so it can be kept
+            // like any other asset. (The two Google Fonts rules that used to
+            // live here are gone: nothing is fetched from Google any more.)
+            urlPattern: /\.(?:woff2?|ttf)$/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'google-fonts-webfonts',
+              cacheName: 'fonts-v1',
               expiration: {
-                maxEntries: 30,
+                maxEntries: 12,
                 maxAgeSeconds: 60 * 60 * 24 * 365 // 1 year
-              }
+              },
+              cacheableResponse: { statuses: [0, 200] }
             }
           }
         ]
       }
-    })
+    }),
   ]
 })

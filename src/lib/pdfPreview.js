@@ -4,50 +4,9 @@
  * 2. Renders interactive first-page sample previews with watermarks before purchase.
  */
 
-let pdfJsPromise = null;
+import { loadPdfJs } from './pdfEngine'
 
-export async function loadPdfJs() {
-  if (window.pdfjsLib) return window.pdfjsLib;
-  if (pdfJsPromise) return pdfJsPromise;
-
-  pdfJsPromise = new Promise((resolve, reject) => {
-    if (window.pdfjsLib) {
-      resolve(window.pdfjsLib);
-      return;
-    }
-
-    const script = document.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
-    script.crossOrigin = 'anonymous';
-
-    script.onload = () => {
-      if (window.pdfjsLib) {
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-          'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
-        resolve(window.pdfjsLib);
-      } else {
-        reject(new Error('PDF.js failed to initialize'));
-      }
-    };
-
-    script.onerror = () => {
-      // Fallback to unpkg
-      const fallback = document.createElement('script');
-      fallback.src = 'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.min.js';
-      fallback.onload = () => {
-        window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-          'https://unpkg.com/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
-        resolve(window.pdfjsLib);
-      };
-      fallback.onerror = () => reject(new Error('Failed to load PDF.js library'));
-      document.head.appendChild(fallback);
-    };
-
-    document.head.appendChild(script);
-  });
-
-  return pdfJsPromise;
-}
+export { loadPdfJs }
 
 /**
  * Extracts page 1 from a PDF File/ArrayBuffer as a JPEG Blob for automatic cover thumbnails.

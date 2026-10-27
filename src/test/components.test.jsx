@@ -86,9 +86,10 @@ describe('Components & ErrorBoundary Resilience', () => {
     // The promise comes first, then the way in.
     expect(screen.getByText(/Free study material, on your phone, right now/i)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /Browse the library/i })).toBeInTheDocument()
-    // The opening line counts what is really on the shelf, and never claims
-    // course packs that were cleared.
-    expect(screen.getAllByText(/Greek plays to download/i).length).toBeGreaterThan(0)
+    // The shelf cards are on the page before the catalogue loads — that is the
+    // point of the split — and the counts arrive afterwards, counted from it.
+    const greekPlays = await screen.findAllByText(/Greek plays to download/i)
+    expect(greekPlays.length).toBeGreaterThan(0)
     expect(screen.queryByText(/student-written course packs/i)).not.toBeInTheDocument()
   })
 })

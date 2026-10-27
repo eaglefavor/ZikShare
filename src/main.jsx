@@ -1,4 +1,13 @@
-if (typeof window !== 'undefined' && (import.meta.env.DEV || (window.location.search.includes('debug=1') && /^(localhost|127\.0\.0\.1)/.test(window.location.hostname)))) {
+// eruda is a mobile dev console. It is only ever downloaded when a developer
+// asks for it on their own machine — never by a student on a campus connection,
+// where its half-megabyte used to be precached on install.
+const WANTS_ERUDA =
+  import.meta.env.DEV ||
+  (typeof window !== 'undefined' &&
+    window.location.search.includes('debug=1') &&
+    /^(localhost|127\.0\.0\.1)$/.test(window.location.hostname))
+
+if (WANTS_ERUDA) {
   import('eruda').then(({ default: eruda }) => eruda.init()).catch(() => {})
 }
 import { StrictMode } from 'react'

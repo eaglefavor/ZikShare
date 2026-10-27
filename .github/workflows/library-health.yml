@@ -20,16 +20,24 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Lint
+        run: npm run lint
+      # The build runs before the tests so the performance test can measure a
+      # real dist/ instead of returning early.
+      - name: Production build (includes the performance budget)
+        # `npm run build` = vite build && node scripts/perf-check.mjs: the build
+        # fails if the landing download, the offline install or the entry
+        # script grows past scripts/lib/perf-budget.mjs, or if the library
+        # catalogue creeps back into the landing bundle.
+        run: npm run build
+      - name: Perf budget, measured from the real build
+        run: npm run perf:check
       - name: Library health checks
         # Every document on 9 shelves: real file on disk, unique address,
         # page count, named gaps with reasons, no links to other sites.
         run: npx vitest run src/test/libraryHealth.test.js
       - name: Full test suite
         run: npm test
-      - name: Lint
-        run: npm run lint
-      - name: Production build
-        run: npm run build
 
   files:
     name: Every card has a file

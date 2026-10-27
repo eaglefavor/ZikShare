@@ -13,7 +13,12 @@ import fs from 'node:fs'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { PDFDocument } from 'pdf-lib'
-import { getDocument } from 'pdfjs-dist/legacy/build/pdf.mjs'
+// PDF.js 3 (the version the browser app ships, see src/lib/pdfEngine.js).
+// The legacy build is the one that runs in Node; it is CommonJS, so it arrives
+// as the default export.
+import pdfjs from 'pdfjs-dist/legacy/build/pdf.js'
+
+const { getDocument } = pdfjs
 
 const ROOT = process.cwd()
 const DIR = path.join(ROOT, 'public', 'library', 'gst')
@@ -201,9 +206,34 @@ async function readDocument(file) {
 const manifest = JSON.parse(fs.readFileSync(MANIFEST, 'utf8'))
 const shelf = []
 
+/**
+ * The PDF for a manifest row.
+ *
+ * The manifest keeps the file name NOUN's table linked to, but the copies on
+ * disk have been renamed for readers since (`gst301-entrepreneurship-studies-i`
+ * rather than `…-studies-1`). Matching the manifest path alone silently left
+ * the shelf short by six documents. The course code is the thing that is
+ * stable, so the code prefix is what is matched; the manifest name is tried
+ * first in case the two ever disagree.
+ */
+const shelfFiles = fs.readdirSync(DIR).filter((name) => name.toLowerCase().endsWith('.pdf'))
+
+function fileForEntry(entry) {
+    const exact = path.join(ROOT, 'public', entry.file.replace(/^\//, ''))
+    if (fs.existsSync(exact)) return exact
+    const prefix = `${entry.code.replace(/\s/g, '').toLowerCase()}-`
+    const match = shelfFiles.find((name) => name.toLowerCase().startsWith(prefix))
+    return match ? path.join(DIR, match) : null
+}
+
 for (const entry of manifest) {
-    const file = path.join(ROOT, 'public', entry.file.replace(/^\//, ''))
-    if (!fs.existsSync(file)) continue
+    const file = fileForEntry(entry)
+    if (!file) {
+        // A row with no document on disk is not shelf material; say so instead
+        // of quietly shrinking the shelf.
+        console.log(`skip ${entry.code} (no PDF on disk)`)
+        continue
+    }
 
     const info = await readDocument(file)
     // The catalogue key comes from the e-courseware table; the document's own

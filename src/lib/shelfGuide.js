@@ -10,54 +10,12 @@ import { EURIPIDES_NOT_AVAILABLE } from './dramaLibrary'
 import { MEDIEVAL_NOT_AVAILABLE } from './medievalLibrary'
 import { RENAISSANCE_NOT_AVAILABLE } from './renaissanceLibrary'
 import { MODERN_UNHOSTABLE } from './modernLibrary'
+import { SHELF_META } from './shelves'
 
-export const SHELF_INFO = {
-    'GST & Compulsory Courses': {
-        blurb: 'NOUN course manuals for the GST courses every UNIZIK student takes.',
-        unit: 'manual',
-        unitPlural: 'manuals',
-    },
-    'Money & Career': {
-        blurb: 'Entrepreneurship and business manuals for the NEE courses.',
-        unit: 'manual',
-        unitPlural: 'manuals',
-    },
-    'Greek Tragedy': {
-        blurb: 'Aeschylus, Sophocles and Euripides in public-domain English translations.',
-        unit: 'play',
-        unitPlural: 'plays',
-    },
-    'Roman Theatre': {
-        blurb: 'Plautus, Terence and Seneca: comedy and tragedy from the Roman stage.',
-        unit: 'play',
-        unitPlural: 'plays',
-    },
-    'Medieval Theatre': {
-        blurb: 'Cycle plays, moralities, and the first named playwright of the West.',
-        unit: 'play',
-        unitPlural: 'plays',
-    },
-    'Renaissance Theatre': {
-        blurb: 'Shakespeare and his contemporaries, from Lyly to Shirley.',
-        unit: 'play',
-        unitPlural: 'plays',
-    },
-    'Modern Theatre': {
-        blurb: 'Ibsen to Čapek: realism, naturalism, symbolism and expressionism.',
-        unit: 'play',
-        unitPlural: 'plays',
-    },
-    'Theatre Arts': {
-        blurb: 'Directing, design, stagecraft, Nigerian theatre history and criticism.',
-        unit: 'title',
-        unitPlural: 'titles',
-    },
-    'Christian Books': {
-        blurb: 'Full-length books, read in the browser or downloaded as a PDF.',
-        unit: 'book',
-        unitPlural: 'books',
-    },
-}
+// The nine shelves' descriptions live in `shelves.js`, which imports nothing
+// from the catalogue, so a page that only needs the labels (the landing page)
+// does not download three hundred book records to render them.
+export const SHELF_INFO = SHELF_META
 
 const DEFAULT_INFO = { blurb: '', unit: 'document', unitPlural: 'documents' }
 

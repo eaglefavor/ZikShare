@@ -3,20 +3,21 @@ import { BookOpen, ChevronRight, GraduationCap, Library, Play, Plus, ShieldCheck
 import { useNavigate } from 'react-router-dom'
 import { useCachedQuery } from '../hooks/useCachedQuery'
 import { getListings } from '../lib/database'
-import { FRESHER_LIBRARY_DOMAINS, libraryCounts, libraryCountLabel } from '../lib/fresherLibrary'
-import { shelfInfo } from '../lib/shelfGuide'
+import { SHELF_EMOJI, SHELF_META, SHELF_ORDER } from '../lib/shelves'
 import { listProgress, progressPercent } from '../lib/readingProgress'
-import { shelfOfTheWeek } from '../lib/shelfOfTheWeek'
-import { mergeLibraryMaterials } from '../lib/fresherLibrary'
 import { documentLink, shelfPath } from '../lib/libraryRoutes'
+import useLibraryDigest from '../hooks/useLibraryDigest'
 import { Button, SectionHeading } from '../components/ui'
 import { HomeAnnouncementBanner } from '../components/AnnouncementModal'
 import FirstListingGuide from '../components/FirstListingGuide'
+import ConnectionNotice from '../components/ConnectionNotice'
 import usePageMeta from '../hooks/usePageMeta'
+import { photoAtWidth } from '../lib/cloudinary'
 
-const LIBRARY_COUNTS = libraryCounts()
-const LIBRARY_TOTAL = LIBRARY_COUNTS.total
-const LIBRARY_LABEL = libraryCountLabel(LIBRARY_COUNTS)
+// What the page can say without the catalogue: the shelves themselves. The
+// counts arrive in their own chunk (see useLibraryDigest) and are never typed
+// here, so this file cannot drift from what the library actually holds.
+const SHELVES = SHELF_ORDER.map((name) => ({ name, emoji: SHELF_EMOJI[name], ...SHELF_META[name] }))
 
 function formatNaira(amount) {
     const n = Number(amount) || 0
@@ -34,9 +35,14 @@ function ListingCard({ listing, onOpen }) {
         <button type="button" className="zs-item-card" onClick={() => onOpen(listing)}>
             {image && (
                 <img
-                    src={image}
+                    // Drawn about 180 px wide on a phone: ask for 360 px, not the
+                    // full upload, so a grid of listings is kilobytes not megabytes.
+                    src={photoAtWidth(image, 360)}
                     alt=""
                     loading="lazy"
+                    decoding="async"
+                    width={360}
+                    height={270}
                     style={{ width: '100%', aspectRatio: '4 / 3', objectFit: 'cover', borderRadius: '0.5rem' }}
                 />
             )}
@@ -68,21 +74,33 @@ export default function HomePage() {
     const navigate = useNavigate()
 
     const [inProgress] = useState(() => listProgress({ limit: 4, excludeFinished: true }))
-    // One shelf and one document each week, taken from the catalogue itself.
-    const [weekly] = useState(() => shelfOfTheWeek(mergeLibraryMaterials([])))
+    // Counts and the shelf of the week come from the catalogue in its own
+    // chunk; until it lands the page says what it knows and nothing more.
+    const digest = useLibraryDigest()
+    const weekly = digest?.weekly || null
 
     usePageMeta({
         title: 'Free study material for UNIZIK students',
-        description: `${LIBRARY_LABEL} — every document free to open, no sign-in and no payment step.`,
+        description: digest
+            ? `${digest.label} — every document free to open, no sign-in and no payment step.`
+            : 'Every document in the library is free to open — no sign-in and no payment step.',
         path: '/',
     })
 
     // Only real, physical marketplace listings belong here. The library is not
     // a marketplace, and the two used to be mixed into one ₦0 feed.
-    const { data: listings, isLoading } = useCachedQuery(
+    const {
+        data: listings,
+        isLoading,
+        error: listingsError,
+        refetch: retryListings,
+    } = useCachedQuery(
         'home-marketplace',
         async () => {
-            const rows = await getListings({ limit: 8 }).catch(() => [])
+            // No silent `catch(() => [])`: an empty array has to mean the
+            // marketplace answered, so that "nothing listed" is never shown
+            // because a request timed out.
+            const rows = await getListings({ limit: 8 })
             return (rows || []).filter((row) => row.isDigital !== true).slice(0, 4)
         },
         { ttl: 5 * 60 * 1000 }
@@ -99,8 +117,8 @@ export default function HomePage() {
                 </div>
                 <h1 id="home-title">Free study material, on your phone, right now.</h1>
                 <p className="zs-lead">
-                    {LIBRARY_LABEL}, free to open. No fee, no sign-in, no payment step — pick a
-                    shelf below or search the whole library.
+                    {digest ? `${digest.label}, free to open.` : 'Every document free to open.'} No fee,
+                    no sign-in, no payment step — pick a shelf below or search the whole library.
                 </p>
 
                 <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginTop: '1rem' }}>
@@ -197,32 +215,37 @@ export default function HomePage() {
                     title="Browse by shelf"
                     action={
                         <button type="button" className="zs-link" onClick={() => navigate('/library')}>
-                            All {LIBRARY_TOTAL} <ChevronRight size={14} />
+                            {digest ? `All ${digest.total}` : 'All titles'} <ChevronRight size={14} />
                         </button>
                     }
                 />
 
                 <div className="zs-shelf-grid">
-                    {LIBRARY_SHELVES.map((shelf) => (
-                        <button
-                            key={shelf.name}
-                            type="button"
-                            className="zs-shelf-card"
-                            onClick={() => navigate(`/library?domain=${encodeURIComponent(shelf.name)}`)}
-                        >
-                            <span className="zs-shelf-card__emoji" aria-hidden="true">
-                                {shelf.emoji}
-                            </span>
-                            <span className="zs-shelf-card__body">
-                                <strong>{shelf.name}</strong>
-                                <span className="zs-shelf-card__count">
-                                    {shelf.count} {shelf.count === 1 ? shelf.unit : shelf.unitPlural}
+                    {SHELVES.map((shelf) => {
+                        const count = digest?.shelves.find((entry) => entry.name === shelf.name)?.count
+                        return (
+                            <button
+                                key={shelf.name}
+                                type="button"
+                                className="zs-shelf-card"
+                                onClick={() => navigate(`/library?domain=${encodeURIComponent(shelf.name)}`)}
+                            >
+                                <span className="zs-shelf-card__emoji" aria-hidden="true">
+                                    {shelf.emoji}
                                 </span>
-                                <span className="zs-shelf-card__blurb">{shelf.blurb}</span>
-                            </span>
-                            <ChevronRight size={18} aria-hidden="true" />
-                        </button>
-                    ))}
+                                <span className="zs-shelf-card__body">
+                                    <strong>{shelf.name}</strong>
+                                    <span className="zs-shelf-card__count">
+                                        {count == null
+                                            ? '\u00a0'
+                                            : `${count} ${count === 1 ? shelf.unit : shelf.unitPlural}`}
+                                    </span>
+                                    <span className="zs-shelf-card__blurb">{shelf.blurb}</span>
+                                </span>
+                                <ChevronRight size={18} aria-hidden="true" />
+                            </button>
+                        )
+                    })}
                 </div>
             </section>
 
@@ -238,12 +261,18 @@ export default function HomePage() {
                     }
                 />
 
-                {isLoading ? (
+                {isLoading && !listings ? (
                     <div className="zs-grid">
                         {[0, 1, 2].map((i) => (
                             <div key={i} className="skeleton" style={{ height: '9rem', borderRadius: '0.75rem' }} />
                         ))}
                     </div>
+                ) : listingsError && !listings?.length ? (
+                    <ConnectionNotice
+                        what="the marketplace"
+                        onRetry={retryListings}
+                        retrying={isLoading}
+                    />
                 ) : listings?.length > 0 ? (
                     <div className="zs-grid">
                         {listings.map((listing) => (
@@ -269,15 +298,3 @@ export default function HomePage() {
     )
 }
 
-/** The shelves, in the library's order, with their real counts. */
-const LIBRARY_SHELVES = FRESHER_LIBRARY_DOMAINS.map((shelf) => {
-    const info = shelfInfo(shelf.name)
-    return {
-        name: shelf.name,
-        emoji: shelf.emoji,
-        count: shelf.count,
-        blurb: info.blurb,
-        unit: info.unit,
-        unitPlural: info.unitPlural,
-    }
-})

@@ -4,7 +4,6 @@ import { AuthProvider, useAuth } from './contexts/AuthContext'
 import { ToastProvider } from './components/Toast'
 import ErrorBoundary from './components/ErrorBoundary'
 import AppShell from './components/AppShell'
-import DebugConsole from './components/DebugConsole'
 import HomePage from './pages/HomePage'
 import AdminRoute, { isUserAdmin } from './components/AdminRoute'
 import AnnouncementModal from './components/AnnouncementModal'
@@ -34,6 +33,16 @@ const BookDetailPage = lazy(() => import('./pages/BookDetailPage'))
 const BookReaderPage = lazy(() => import('./pages/BookReaderPage'))
 const LibraryDocumentPage = lazy(() => import('./pages/LibraryDocumentPage'))
 const OfflineLibraryPage = lazy(() => import('./pages/OfflineLibraryPage'))
+
+// The debug console is a development tool: it drags the payment and upload
+// libraries into the bundle for a panel that renders nothing in production.
+// It now loads on request — `?debug=1` on localhost, or any Vite dev build.
+const DEBUG_ENABLED =
+  import.meta.env.DEV ||
+  (typeof window !== 'undefined' &&
+    /^(localhost|127\.0\.0\.1)/.test(window.location.hostname) &&
+    window.location.search.includes('debug=1'))
+const DebugConsole = DEBUG_ENABLED ? lazy(() => import('./components/DebugConsole')) : null
 
 // Maintenance Mode Flag — Set to true to show maintenance screen to all standard visitors
 export const MAINTENANCE_MODE = false
@@ -125,7 +134,11 @@ function App() {
             }>
               <AppRoutes />
             </Suspense>
-            <DebugConsole />
+            {DebugConsole && (
+              <Suspense fallback={null}>
+                <DebugConsole />
+              </Suspense>
+            )}
           </div>
         </ToastProvider>
       </AuthProvider>

@@ -95,3 +95,27 @@ export async function uploadImages(files, onProgress) {
     }
     return urls
 }
+
+/**
+ * A listing photo at the size the page will actually draw it.
+ *
+ * Every photo is uploaded at up to 1024 px, and the marketplace grid drew it
+ * full width in a phone-width card: a handful of listings meant a megabyte of
+ * images on a 3G connection. Cloudinary can resize and re-encode on delivery,
+ * so the same photo is asked for at the width it is shown. Any URL that is not
+ * a Cloudinary delivery URL is returned untouched — nothing is rewritten that
+ * would then 404.
+ *
+ * @param {string} url - the stored secure_url
+ * @param {number} width - the CSS width the image is drawn at, in px
+ * @returns {string} a URL that asks for that width, or the original URL
+ */
+export function photoAtWidth(url, width = 480) {
+    if (!url || typeof url !== 'string') return url
+    if (!url.includes('res.cloudinary.com') || !url.includes('/image/upload/')) return url
+    // Already transformed: leave the caller's choice alone.
+    if (/\/image\/upload\/[^/]*(?:w_|c_|q_|f_)/.test(url)) return url
+
+    const [base, rest] = url.split('/image/upload/')
+    return `${base}/image/upload/w_${Math.round(width)},c_limit,q_auto,f_auto/${rest}`
+}

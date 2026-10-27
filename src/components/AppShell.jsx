@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
-import { Home, Library, Store, Search, Plus, User, MessageCircle } from 'lucide-react'
+import { Home, Library, Store, Search, Plus, User, MessageCircle, WifiOff } from 'lucide-react'
 import ZikShareLogo from './ZikShareLogo'
 import { useAuth } from '../contexts/AuthContext'
 import { getConversations } from '../lib/messaging'
 import { countUnread } from '../lib/readStatus'
 import { getAnnouncements } from '../lib/database'
 import { getUnreadAnnouncementsCount } from '../lib/announcements'
+import useOnline from '../hooks/useOnline'
 
 const primaryNav = [
     { path: '/', label: 'Home', icon: Home, end: true },
@@ -33,6 +34,7 @@ export default function AppShell({ children }) {
     const { isAuthenticated, session } = useAuth()
     const [query, setQuery] = useState('')
     const [unread, setUnread] = useState(0)
+    const online = useOnline()
 
     const submit = (event) => {
         event.preventDefault()
@@ -130,6 +132,18 @@ export default function AppShell({ children }) {
                     </div>
                 </div>
             </header>
+
+            {/* Stated, not guessed: when the phone reports no connection, say so
+                and point at what still works without one. */}
+            {!online && (
+                <div className="zs-offline-bar" role="status" aria-live="polite">
+                    <WifiOff size={14} aria-hidden="true" />
+                    <span>
+                        You are offline. The library you have opened before still works, and anything
+                        saved to this device opens here.
+                    </span>
+                </div>
+            )}
 
             <main className="zs-main" id="main-content" tabIndex={-1}>
                 {children}

@@ -7,6 +7,7 @@ import {
 import { getSellerPublicProfile, getSellerReviews, getSellerRatingSummary } from '../lib/database'
 import { getOrCreateConversation } from '../lib/messaging'
 import { useAuth } from '../contexts/AuthContext'
+import { photoAtWidth } from '../lib/cloudinary'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount || 0)
@@ -292,7 +293,13 @@ export default function SellerProfilePage() {
                                 >
                                     <div style={{ width: '100%', height: '120px', backgroundColor: bgColor, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '2rem', position: 'relative', overflow: 'hidden' }}>
                                         {imageUrl ? (
-                                            <img src={imageUrl} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                            <img
+                                                src={photoAtWidth(imageUrl, 360)}
+                                                alt={item.title}
+                                                loading="lazy"
+                                                decoding="async"
+                                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                            />
                                         ) : (
                                             item.isDigital ? '📄' : '📦'
                                         )}

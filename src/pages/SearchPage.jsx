@@ -18,6 +18,8 @@ import { Button, EmptyState, PageHeader, SearchField, SectionHeading, Tag } from
 import LibraryCard from '../components/LibraryCard'
 import usePageMeta from '../hooks/usePageMeta'
 import FirstListingGuide from '../components/FirstListingGuide'
+import ConnectionNotice from '../components/ConnectionNotice'
+import { photoAtWidth } from '../lib/cloudinary'
 
 function formatNaira(amount) {
     const n = Number(amount) || 0
@@ -34,7 +36,13 @@ function ListingCard({ listing, onOpen }) {
                 style={{ cursor: 'pointer', aspectRatio: '4 / 3', backgroundColor: 'var(--color-canvas)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             >
                 {image ? (
-                    <img src={image} alt="" loading="lazy" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img
+                        src={photoAtWidth(image, 360)}
+                        alt=""
+                        loading="lazy"
+                        decoding="async"
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
                 ) : (
                     <Package size={26} color="#94A3B8" aria-hidden="true" />
                 )}
@@ -99,11 +107,17 @@ export default function SearchPage() {
 
     // Marketplace and student demands come from the database, so they are
     // fetched once and searched in memory.
+    const [loadFailed, setLoadFailed] = useState(false)
+    const [reloadToken, setReloadToken] = useState(0)
+
     useEffect(() => {
         let mounted = true
         setLoading(true)
+        setLoadFailed(false)
         Promise.all([
-            getListings({ limit: 60 }).catch(() => []),
+            getListings({ limit: 60 }).catch((err) => {
+                throw err
+            }),
             getStudentRequests().catch(() => []),
         ])
             .then(([rows, wants]) => {
@@ -111,13 +125,17 @@ export default function SearchPage() {
                 setListings((rows || []).filter((row) => row.isDigital !== true))
                 setRequests(wants || [])
             })
+            .catch(() => {
+                // A dropped request is not an empty marketplace.
+                if (mounted) setLoadFailed(true)
+            })
             .finally(() => {
                 if (mounted) setLoading(false)
             })
         return () => {
             mounted = false
         }
-    }, [])
+    }, [reloadToken])
 
     const term = query.trim().toLowerCase()
     const matches = (text) => !term || String(text || '').toLowerCase().includes(term)
@@ -272,6 +290,13 @@ export default function SearchPage() {
                             <ListingCard key={listing.id} listing={listing} onOpen={(item) => navigate(`/item/${item.id}`)} />
                         ))}
                     </div>
+                ) : loadFailed ? (
+                    <ConnectionNotice
+                        what="the marketplace"
+                        onRetry={() => setReloadToken((n) => n + 1)}
+                        retrying={loading}
+                        compact
+                    />
                 ) : listings.length === 0 ? (
                     <FirstListingGuide title="The marketplace is empty" compact />
                 ) : (

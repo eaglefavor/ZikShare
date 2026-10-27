@@ -49,6 +49,18 @@ describe('NOUN GST shelf - the files are real and hosted here', () => {
         }
     })
 
+    it('catalogues every GST PDF on disk, so a rebuild cannot quietly drop one', () => {
+        const dir = path.join(ROOT, 'public', 'library', 'gst')
+        const onDisk = fs.readdirSync(dir).filter((name) => name.endsWith('.pdf')).sort()
+        const catalogued = GST_SHELF.map((item) => item.download_path.replace('/library/gst/', '')).sort()
+
+        // `npm run gst:build` reads library/gst/source-manifest.json, whose file
+        // names are older than the copies on disk. Matching the manifest path
+        // alone once produced a shelf six documents short — silently, because
+        // every remaining card was still real. This is the direction that fails.
+        expect(catalogued).toEqual(onDisk)
+    })
+
     it('keeps the checksum that was measured when the file was downloaded', () => {
         for (const item of GST_SHELF) {
             expect(item.sha256).toMatch(/^[a-f0-9]{64}$/)

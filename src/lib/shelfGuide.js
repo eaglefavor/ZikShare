@@ -60,6 +60,26 @@ export function shelfGaps(name) {
                     note: play.note,
                 })),
             }
+        case 'Theatre Arts':
+            return {
+                title: 'What the dance shelf cannot hold',
+                description:
+                    'The eight books on dancing are the public-domain ones. These are the gaps, named rather than filled with a card that opens nothing.',
+                items: [
+                    {
+                        label: 'Orchesography (Feuillet, translated by John Weaver, 1706)',
+                        note: 'In the public domain, but it survives as engraved notation plates, not as prose. There is no text of it to typeset, and a scan would be a photograph of a book rather than a book.',
+                    },
+                    {
+                        label: 'Nigerian and African dance scholarship',
+                        note: 'The studies of Yoruba, Igbo and Hausa dance, masquerade and festival performance are all in copyright. Nothing free to reproduce exists, and this shelf will not carry a summary standing in for one.',
+                    },
+                    {
+                        label: 'Laban, Graham, Cunningham, Balanchine',
+                        note: 'The writings of the twentieth-century choreographers, and the notation systems they invented, are still in copyright.',
+                    },
+                ],
+            }
         case 'Modern Theatre':
             return {
                 title: 'The two movements this shelf cannot carry',

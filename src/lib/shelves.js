@@ -76,7 +76,7 @@ export const SHELF_META = {
         unitPlural: 'plays',
     },
     'Theatre Arts': {
-        blurb: 'Directing, design, stagecraft, Nigerian theatre history and criticism.',
+        blurb: 'Directing, design, stagecraft, dancing, Nigerian theatre history and criticism.',
         unit: 'title',
         unitPlural: 'titles',
     },

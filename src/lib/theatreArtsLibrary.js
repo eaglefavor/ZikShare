@@ -86,6 +86,10 @@ export const THEATRE_TOPICS = [
         name: 'Film Analysis',
         note: 'Shot, cut, sound and story: how to read a film, including the films Nigeria actually makes.',
     },
+    {
+        name: 'Dance & Choreography',
+        note: 'The dancing body on stage: how a dance was made, notated, taught and reviewed, from the court ballet and the morris side to the modern stage.',
+    },
 ]
 
 
@@ -435,6 +439,134 @@ export const CLASSIC_TEXTS = [
         note:
             'Clark wrote for amateur companies, which is exactly the condition of most departmental productions. Every technical department on this shelf appears here in a few practical pages: how to build a flat, how to hang a border, how to light a scene with the equipment a hall already has, how to run a dress rehearsal. It is the best single introduction to putting a play on stage.',
         covers: ['choosing the play', 'casting', 'rehearsal', 'scenery', 'lighting', 'costume', 'makeup'],
+    }),
+
+    /* ── Dance ─────────────────────────────────────────────────────────────
+     * The dancing body is a whole area of the curriculum, and these are the
+     * books about it that are free to reproduce. Everything here is a whole
+     * book, uncut: no extracts, no summaries standing in for a text. What the
+     * shelf cannot hold is named in `src/lib/shelfGuide.js`.
+     */
+
+    classic({
+        slug: 'gallini-treatise-on-the-art-of-dancing',
+        title: 'A Treatise on the Art of Dancing',
+        author: 'Giovanni-Andrea Gallini',
+        topic: 'Dance & Choreography',
+        dateLabel: '1772',
+        sourceId: 24643,
+        editor: 'Third edition, printed for the author',
+        edition: 'London, 1772 \u00b7 Project Gutenberg #24643',
+        summary:
+            'A dancing master of the King\u2019s Theatre argues, in 1772, that dance is an art of expression rather than a display of steps \u2014 the argument that produced the ballet d\u2019action.',
+        note:
+            'Gallini danced at the King\u2019s Theatre in the Haymarket and taught the children of George III, and he wrote this to persuade London that a ballet should tell a story and move an audience, not simply show off technique. The first half is a history of dancing among the Greeks, Romans, Egyptians and the European courts; the second is practical: the positions, the steps, the carriage of the arms, and how a dancer is trained. Read it beside the modern histories on this shelf to see where the idea of dance as drama came from.',
+        covers: ['dance as expression', 'the ballet d\u2019action', 'history of the art', 'training', 'carriage and arms'],
+    }),
+    classic({
+        slug: 'kemp-kemps-nine-daies-wonder',
+        title: 'Kemps Nine Daies Wonder',
+        author: 'William Kemp',
+        topic: 'Dance & Choreography',
+        dateLabel: '1600',
+        sourceId: 21984,
+        editor: 'Edited, with introduction and notes, by Rev. Alexander Dyce (Camden Society, 1840)',
+        edition: 'Camden Society, London, 1840 \u00b7 Project Gutenberg #21984',
+        summary:
+            'The actor who played Dogberry in Shakespeare\u2019s company danced the morris from London to Norwich in nine days in 1600, and wrote this account of it himself.',
+        note:
+            'Kemp left the Lord Chamberlain\u2019s Men in 1599 and, to prove something to the public, danced a morris from London to Norwich \u2014 about a hundred miles in nine days \u2014 collecting crowds, bets and a good deal of mockery on the way. His own pamphlet is the earliest first-hand account in English of a dance performed as a public event, and Dyce\u2019s 1840 edition adds the notes and the contemporary replies that make it readable. It is short, funny, and the primary document behind the revival of morris dancing described in the later books on this shelf.',
+        covers: ['morris dancing', 'the public performance', 'Elizabethan popular theatre', 'the dance as event'],
+    }),
+    classic({
+        slug: 'wayburn-art-of-stage-dancing',
+        title: 'The Art of Stage Dancing',
+        author: 'Ned Wayburn',
+        topic: 'Dance & Choreography',
+        dateLabel: '1925',
+        sourceId: 27367,
+        editor: 'Author\u2019s text',
+        edition: 'Ned Wayburn Studios of Stage Dancing, New York, 1925 \u00b7 Project Gutenberg #27367',
+        summary:
+            'A Broadway choreographer\u2019s manual of the musical stage: tap, acrobatic dancing, ballet technique, stage makeup, costumes and the running of a company.',
+        note:
+            'Wayburn staged the dances of the Ziegfeld Follies and ran a school that trained chorus dancers for the New York stage, and this book is his course written down: foundation technique, musical comedy dancing, tap and step dancing, acrobatic dancing, his \u201cAmericanised ballet\u201d, toe work and exhibition dancing, each followed by the talk he gave the class. It also contains whole chapters on stage makeup and on costumes, which is why it sits usefully beside the makeup and costume titles on this shelf.',
+        covers: ['foundation technique', 'tap and step dancing', 'acrobatic dancing', 'ballet technique', 'stage makeup', 'costumes'],
+    }),
+    classic({
+        slug: 'sharp-the-morris-book',
+        title: 'The Morris Book: A History of Morris Dancing, with a Description of Eleven Dances',
+        author: 'Cecil J. Sharp and Herbert C. MacIlwaine',
+        topic: 'Dance & Choreography',
+        dateLabel: '1907',
+        sourceId: 12926,
+        editor: 'Author\u2019s text, Part I',
+        edition: 'Novello and Company, London, 1907 \u00b7 Project Gutenberg #12926',
+        summary:
+            'How eleven English morris dances were collected from the last dancers who knew them, written out step by step, with the history of the form.',
+        note:
+            'Sharp went out to the villages of Oxfordshire and the Cotswolds to record dances that were dying with the men who danced them, and Part I is both the history and the notation: each dance is set down step by step, with the figures, the sticks and the tunes named. It is the clearest surviving example in English of how an oral dance tradition is written down at all \u2014 the same problem anyone faces recording a Nigerian dance for the stage \u2014 and it is the source of the twentieth-century morris revival.',
+        covers: ['morris dancing', 'field collection', 'dance notation', 'the oral tradition', 'the revival'],
+    }),
+    classic({
+        slug: 'johnson-the-russian-ballet',
+        title: 'The Russian Ballet',
+        author: 'A. E. Johnson',
+        topic: 'Dance & Choreography',
+        dateLabel: '1913',
+        sourceId: 62600,
+        editor: 'Author\u2019s text, illustrated by Ren\u00e9 Bull',
+        edition: 'Houghton Mifflin, Boston and New York, 1913 \u00b7 Project Gutenberg #62600',
+        summary:
+            'A scene-by-scene account of the Diaghilev company\u2019s ballets \u2014 P\u00e9trouchka, Thamar, Le Carnaval, Cl\u00e9op\u00e2tre, Les Sylphides \u2014 written while they were still new.',
+        note:
+            'Johnson describes the Ballets Russes repertoire one ballet at a time: the story, the music, the decor and the dancing, with Ren\u00e9 Bull\u2019s drawings of the company. It is a record of the moment the ballet became a modern art \u2014 Nijinsky and Karsavina, Bakst and Stravinsky, Fokine\u2019s choreography \u2014 written for an English reader who had not seen it. Short enough to read in an evening, and the best first-hand account of the repertoire that changed stage dancing everywhere, including in Lagos.',
+        covers: ['Ballets Russes', 'P\u00e9trouchka', 'Le Carnaval', 'Cl\u00e9op\u00e2tre', 'Fokine', 'Bakst'],
+    }),
+    classic({
+        slug: 'flitch-modern-dancing-and-dancers',
+        title: 'Modern Dancing and Dancers',
+        author: 'J. E. Crawford Flitch',
+        topic: 'Dance & Choreography',
+        dateLabel: '1912',
+        sourceId: 66449,
+        editor: 'Author\u2019s text',
+        edition: 'Grant Richards, London \u00b7 J. B. Lippincott, Philadelphia, 1912 \u00b7 Project Gutenberg #66449',
+        summary:
+            'How stage dancing was remade between 1890 and 1912: the skirt dance, Loie Fuller\u2019s serpentine, the high kickers, Isadora Duncan, and the Russian ballet.',
+        note:
+            'Flitch writes the history of the dance as a history of changing taste, and the chapters read like a season programme: the rise, the heyday and the decline of the ballet, the skirt dance, the serpentine dance of Loie Fuller, the high kickers of the music hall, the revival of classical dancing, the Imperial Russian Ballet, the English ballet, oriental and Spanish dancing, the revival of the morris, and a closing chapter on where the art was going. It is the clearest account of the transition from the nineteenth-century stage to the modern dance, and it is written for readers who had seen these dancers themselves.',
+        covers: ['the skirt dance', 'the serpentine dance', 'Isadora Duncan', 'the Imperial Russian Ballet', 'the music hall', 'the future of the dance'],
+    }),
+    classic({
+        slug: 'narodny-the-dance',
+        title: 'The Dance',
+        author: 'Ivan Narodny',
+        topic: 'Dance & Choreography',
+        dateLabel: '1916',
+        sourceId: 59104,
+        editor: 'The Art of Music, Volume X \u00b7 editor Daniel Gregory Mason \u00b7 introduction by Anna Pavlova',
+        edition: 'The National Society of Music, New York, 1916 \u00b7 Project Gutenberg #59104',
+        summary:
+            'A world history of dancing \u2014 Egypt, India, China, Japan, Greece, Rome, Spain, France, England, Russia \u2014 introduced by Anna Pavlova.',
+        note:
+            'Volume ten of a fourteen-volume library of music, and the one that treats dancing as a subject in its own right: the psychology of dancing, the dance of ancient Egypt, of India, of China and Japan, of the American Indians, of Greece and Rome, the dances of the Renaissance courts, Spain, France and England, and the Russian ballet, with a chapter on dance in music and on the profession of dancing. Pavlova\u2019s introduction is short and worth the visit. The comparisons run outward from Europe, which is the book\u2019s limitation as well as its period: read it with the African material in mind and the gap is obvious.',
+        covers: ['psychology of dancing', 'dance in Egypt and India', 'the courts of Europe', 'Russia', 'the profession of dancing'],
+    }),
+    classic({
+        slug: 'kinney-the-dance',
+        title: 'The Dance: Its Place in Art and Life',
+        author: 'Troy Kinney and Margaret West Kinney',
+        topic: 'Dance & Choreography',
+        dateLabel: '1914',
+        sourceId: 50056,
+        editor: 'Author\u2019s text',
+        edition: 'Frederick A. Stokes, New York, 1914 \u00b7 Project Gutenberg #50056',
+        summary:
+            'The fullest of the early studies: the whole history of the dance, its technique, and its place among the arts, by two dancers who drew their own diagrams.',
+        note:
+            'The Kinneys were dancers and illustrators, and their book covers the ground: dancing in ancient Egypt and Greece, in Rome, through the Middle Ages and the Renaissance, the French court ballet and its academy, the great eighteenth-century dancers, the Romantic ballet and the technique it needed, and the Russian and modern dance of their own day, followed by chapters on the dance as an art and on dancing in social life. The hundred and seventy-six line drawings are the authors\u2019 own, which means the positions and the figures can actually be followed on the page. The longest and most complete history on this shelf.',
+        covers: ['ancient and Greek dancing', 'the court ballet', 'the Romantic ballet', 'technique', 'the art of the dance'],
     }),
 ]
 

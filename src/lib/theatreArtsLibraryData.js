@@ -13,8 +13,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/archer-play-making.pdf",
         "pages": 206,
         "words": 100045,
-        "bytes": 623071,
-        "sha256": "6370691d19474a13fdd203be21c96e7e1daae7eb18b033a1ff854d1197ababa8"
+        "bytes": 623073,
+        "sha256": "b0f70c394fd3434e92c8e75bf0bbb2aeb82bb4d577f9a870f751c328a9474fc8"
     },
     {
         "slug": "baker-dramatic-technique",
@@ -27,7 +27,7 @@ export const THEATRE_SHELF = [
         "pages": 468,
         "words": 170598,
         "bytes": 1136119,
-        "sha256": "27eb28ace11412b179230cf3439d1a3097e31e55cf2132231a0b0b02e30f6890"
+        "sha256": "738bf7cf271b0c48349b8ca5b3b63a887baf0d6ff692b422f42af92722eeff20"
     },
     {
         "slug": "howard-autobiography-of-a-play",
@@ -40,7 +40,7 @@ export const THEATRE_SHELF = [
         "pages": 28,
         "words": 10168,
         "bytes": 79657,
-        "sha256": "142771187d4c1e691c97e5da92eb3c13a99e862b5dc6fe53a60654ac4e56837a"
+        "sha256": "cb2f193d86c106d28c3f5792549b2613d049779da459f891b94e6f71cb6bb90b"
     },
     {
         "slug": "lope-de-vega-new-art-of-writing-plays",
@@ -52,8 +52,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/lope-de-vega-new-art-of-writing-plays.pdf",
         "pages": 32,
         "words": 10806,
-        "bytes": 89430,
-        "sha256": "a197ecbe9d5793c257ad7a8d86d3c310b11e4660d9d5f6dd9a4b72fcc5dc02fc"
+        "bytes": 89431,
+        "sha256": "f917465badf28828a7fcbf329e6351e4a75cb642b8924a6af3aec650e0862900"
     },
     {
         "slug": "how-to-write-a-play-1909",
@@ -66,7 +66,7 @@ export const THEATRE_SHELF = [
         "pages": 27,
         "words": 7406,
         "bytes": 67536,
-        "sha256": "cad981ac9dcb765899719adde218fdc248684cc5c4e74911a351183b656e8d0a"
+        "sha256": "01fadd91ca11c91f3452a1426c4f1c8da5679f32d327ee936f201c31782c96e8"
     },
     {
         "slug": "aristotle-poetics",
@@ -78,8 +78,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/aristotle-poetics.pdf",
         "pages": 40,
         "words": 15188,
-        "bytes": 108451,
-        "sha256": "d2abf39d33737be67100e97eabc1ad5abf8c3d2f9ba74a8e7e2474873d7d39d9"
+        "bytes": 108454,
+        "sha256": "776e20da9cfddd00823c42ae81a699ec34821fc1d0ea04b553e9f280448ab8c8"
     },
     {
         "slug": "schlegel-lectures-on-dramatic-art",
@@ -91,8 +91,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/schlegel-lectures-on-dramatic-art.pdf",
         "pages": 409,
         "words": 211258,
-        "bytes": 1298526,
-        "sha256": "bb9837ab5b86b8dc4d782c13ba92c8cb6b67020eacbfe6bd34dea3f9987efa70"
+        "bytes": 1298523,
+        "sha256": "00ea1a18750734d2038b8ac53e226226749c5ecbe7527d177f87891aa0ac776c"
     },
     {
         "slug": "hamilton-theory-of-the-theatre",
@@ -104,8 +104,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/hamilton-theory-of-the-theatre.pdf",
         "pages": 137,
         "words": 57341,
-        "bytes": 373016,
-        "sha256": "ad7e8f664ce2ef6d582aeeb6fcbf2deb229fc0a231d38d3f4f28e89e3bbabffd"
+        "bytes": 373017,
+        "sha256": "ae4ee877e029a8cbfb53d9e9d9b9db9b3880e0b1dad1e4cf2d1a08af7674aa39"
     },
     {
         "slug": "matthews-a-book-about-the-theater",
@@ -117,8 +117,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/matthews-a-book-about-the-theater.pdf",
         "pages": 160,
         "words": 74223,
-        "bytes": 467080,
-        "sha256": "b24bca275551a3e62c6a4ff7d188ff8103c3235458de8a1632b51da590c3a41c"
+        "bytes": 467081,
+        "sha256": "bb4a8f42ebc82b688196bb742951761b0bc2c56c059b7a8d99a21d00f1dfde15"
     },
     {
         "slug": "nathan-the-critic-and-the-drama",
@@ -131,7 +131,7 @@ export const THEATRE_SHELF = [
         "pages": 57,
         "words": 24322,
         "bytes": 166625,
-        "sha256": "b17c56c47495f296cf45a595618d77be71c1b8f49dfdc5ef8a01a3533d51bc67"
+        "sha256": "b0b75e1c1f41683e415541b959f4900c6ae0a10c59e20e544b22483f77e2c549"
     },
     {
         "slug": "symons-dramatis-personae",
@@ -143,8 +143,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/symons-dramatis-personae.pdf",
         "pages": 168,
         "words": 73646,
-        "bytes": 472910,
-        "sha256": "989461e2f228b9ccc9e9df9aaf60109b4e7ab96b37aa96ce37a143996c429d49"
+        "bytes": 472915,
+        "sha256": "d8b74547be2ec6510f5e65cc932d632749be120312033b2a030f8120329e2730"
     },
     {
         "slug": "huneker-iconoclasts",
@@ -157,7 +157,7 @@ export const THEATRE_SHELF = [
         "pages": 221,
         "words": 101939,
         "bytes": 665929,
-        "sha256": "b3c69524becccf0870699ab775ddc8143cbe3be6d7670a08fcc8fb09514fb405"
+        "sha256": "209c6f3bc62a9010a5d30549db7ca1c0d1f02e68dbaf196ee56b88872ee85782"
     },
     {
         "slug": "moulton-shakespeare-dramatic-artist",
@@ -169,8 +169,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/moulton-shakespeare-dramatic-artist.pdf",
         "pages": 276,
         "words": 108815,
-        "bytes": 716483,
-        "sha256": "b3cc0f9a46493e8e8605cd318d612fee28269b635136f9296e4dfe401d7272af"
+        "bytes": 716482,
+        "sha256": "72eb421d90a3c101c603e9064f8deae0f516d27b03a4077be5ecf4e30ca4de34"
     },
     {
         "slug": "flickinger-greek-theater",
@@ -182,8 +182,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/flickinger-greek-theater.pdf",
         "pages": 302,
         "words": 129413,
-        "bytes": 840789,
-        "sha256": "f2f333e910d78ce84512ad613f95dffb049a608d89ffa1e81d059e574fa9556d"
+        "bytes": 840791,
+        "sha256": "16a29c83ded95def907864486b3368db82992aacc277922229ecca70c3c6ac00"
     },
     {
         "slug": "cibber-apology-volume-1",
@@ -195,8 +195,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/cibber-apology-volume-1.pdf",
         "pages": 295,
         "words": 123630,
-        "bytes": 794879,
-        "sha256": "132024affc2b1da9641441431960ce3e38c8ac4981597e548b5eb943d41ef69a"
+        "bytes": 794880,
+        "sha256": "d9b5434cf66c53aaee24166a9217e215baadf8698545e82a5118a2b0f0f82442"
     },
     {
         "slug": "cibber-apology-volume-2",
@@ -208,8 +208,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/cibber-apology-volume-2.pdf",
         "pages": 284,
         "words": 118424,
-        "bytes": 767370,
-        "sha256": "87e3de4137e349bcfbe5dda831ae3d97862dc83fa8d25d28c6d351a7cb94df68"
+        "bytes": 767373,
+        "sha256": "6bf1fbf4a9263a37aa6bb7bf94e7bde2dbc83644a815f4a7254f26f8bf34c618"
     },
     {
         "slug": "aria-costume",
@@ -222,7 +222,7 @@ export const THEATRE_SHELF = [
         "pages": 139,
         "words": 59748,
         "bytes": 390908,
-        "sha256": "fdb60003dfa797b4d78ece785808b02b946f929186e5b8ca1bfed9dad0d6623e"
+        "sha256": "ecb718575df9f25f4d2b2e2dfc5d71f4932c4c1e26f860d53e9e4a66a025e7b3"
     },
     {
         "slug": "winter-public-speaking",
@@ -235,7 +235,7 @@ export const THEATRE_SHELF = [
         "pages": 275,
         "words": 116728,
         "bytes": 740458,
-        "sha256": "6ef9a7cfc199f332e1977413131be907368da19a9944ebba249a5287399ac4ab"
+        "sha256": "f3f6d9fe821d6232a31229163b9b8f59dc837c518494cc865ce86ee1b554242a"
     },
     {
         "slug": "lindsay-art-of-the-moving-picture",
@@ -248,7 +248,7 @@ export const THEATRE_SHELF = [
         "pages": 138,
         "words": 63050,
         "bytes": 401009,
-        "sha256": "f9eb6d3d9549ac4ad943b0925441c670bcf3c8ba19ac712bdbf1229e595ca4b5"
+        "sha256": "844d0cb61815288e90f18a6ea11f2d4562826139a797ef280137c7b8b89004d8"
     },
     {
         "slug": "talbot-moving-pictures",
@@ -260,8 +260,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/talbot-moving-pictures.pdf",
         "pages": 286,
         "words": 115980,
-        "bytes": 766053,
-        "sha256": "d1e3ede7a55f7b27f704d1924792ab19a11f947ecf688f3603e62ab5cbee69f5"
+        "bytes": 766052,
+        "sha256": "c65ebb91cc04511c09e800eb1e684d9c3c1cdd467e893cda768ec8ec5b7f5526"
     },
     {
         "slug": "phillips-the-photodrama",
@@ -274,7 +274,7 @@ export const THEATRE_SHELF = [
         "pages": 108,
         "words": 38488,
         "bytes": 282094,
-        "sha256": "db70073ada24acd00cdb655bcbf5e4276422203a5db465c28d76c39e4e8af88f"
+        "sha256": "0cf8b4e955afb368d915b90fa0c69be0ba01dd571d9f63a274c22f4d3dd01ef6"
     },
     {
         "slug": "clark-how-to-produce-amateur-plays",
@@ -287,7 +287,111 @@ export const THEATRE_SHELF = [
         "pages": 86,
         "words": 24937,
         "bytes": 194134,
-        "sha256": "80190527b075c996a2756015fbe7a4c0d51424947fbdf09f364286abbc8b743f"
+        "sha256": "352aba2aaddc3afa12ecfe6aeb527f824130bdf5e6ead238601a0a3a313435c3"
+    },
+    {
+        "slug": "gallini-treatise-on-the-art-of-dancing",
+        "title": "A Treatise on the Art of Dancing",
+        "author": "Giovanni-Andrea Gallini",
+        "topic": "Dance & Choreography",
+        "kind": "classic",
+        "sourceId": 24643,
+        "download_path": "/library/theatre/gallini-treatise-on-the-art-of-dancing.pdf",
+        "pages": 91,
+        "words": 34862,
+        "bytes": 243583,
+        "sha256": "5c9f8466da97cc4d43ac6c864c77cb5f468c9138f2be8647611d0095d968b3ab"
+    },
+    {
+        "slug": "kemp-kemps-nine-daies-wonder",
+        "title": "Kemps Nine Daies Wonder",
+        "author": "William Kemp",
+        "topic": "Dance & Choreography",
+        "kind": "classic",
+        "sourceId": 21984,
+        "download_path": "/library/theatre/kemp-kemps-nine-daies-wonder.pdf",
+        "pages": 52,
+        "words": 17037,
+        "bytes": 133709,
+        "sha256": "db75fda7adf914a0ea5b7aa9ea49a40231dcb07a667c0ef03ae4131b09faf52d"
+    },
+    {
+        "slug": "wayburn-art-of-stage-dancing",
+        "title": "The Art of Stage Dancing",
+        "author": "Ned Wayburn",
+        "topic": "Dance & Choreography",
+        "kind": "classic",
+        "sourceId": 27367,
+        "download_path": "/library/theatre/wayburn-art-of-stage-dancing.pdf",
+        "pages": 282,
+        "words": 111273,
+        "bytes": 693450,
+        "sha256": "f0949706f454d53c82a7d27a84a26c90a76dacd6b2923bd4bb5afdb9fc367386"
+    },
+    {
+        "slug": "sharp-the-morris-book",
+        "title": "The Morris Book: A History of Morris Dancing, with a Description of Eleven Dances",
+        "author": "Cecil J. Sharp and Herbert C. MacIlwaine",
+        "topic": "Dance & Choreography",
+        "kind": "classic",
+        "sourceId": 12926,
+        "download_path": "/library/theatre/sharp-the-morris-book.pdf",
+        "pages": 65,
+        "words": 19876,
+        "bytes": 151170,
+        "sha256": "9a22ccaa32e05f9a6500f4728f45782d7993a7d4dee5b67c2c210b6eb684246e"
+    },
+    {
+        "slug": "johnson-the-russian-ballet",
+        "title": "The Russian Ballet",
+        "author": "A. E. Johnson",
+        "topic": "Dance & Choreography",
+        "kind": "classic",
+        "sourceId": 62600,
+        "download_path": "/library/theatre/johnson-the-russian-ballet.pdf",
+        "pages": 100,
+        "words": 40399,
+        "bytes": 279961,
+        "sha256": "457a9399ba89466bd1fd692a29f6b9118c11fd7b93087d4d9ef56131159803ee"
+    },
+    {
+        "slug": "flitch-modern-dancing-and-dancers",
+        "title": "Modern Dancing and Dancers",
+        "author": "J. E. Crawford Flitch",
+        "topic": "Dance & Choreography",
+        "kind": "classic",
+        "sourceId": 66449,
+        "download_path": "/library/theatre/flitch-modern-dancing-and-dancers.pdf",
+        "pages": 157,
+        "words": 66267,
+        "bytes": 434772,
+        "sha256": "1a71b90709b028d0aa0eececb316542e6730ed449a072d111c2d2cb46c71ea6b"
+    },
+    {
+        "slug": "narodny-the-dance",
+        "title": "The Dance",
+        "author": "Ivan Narodny",
+        "topic": "Dance & Choreography",
+        "kind": "classic",
+        "sourceId": 59104,
+        "download_path": "/library/theatre/narodny-the-dance.pdf",
+        "pages": 240,
+        "words": 89487,
+        "bytes": 608145,
+        "sha256": "44127757013135c8be49a0db22f3f4c2918cb5bc1d1a6e4c205654face506c4c"
+    },
+    {
+        "slug": "kinney-the-dance",
+        "title": "The Dance: Its Place in Art and Life",
+        "author": "Troy Kinney and Margaret West Kinney",
+        "topic": "Dance & Choreography",
+        "kind": "classic",
+        "sourceId": 50056,
+        "download_path": "/library/theatre/kinney-the-dance.pdf",
+        "pages": 245,
+        "words": 92138,
+        "bytes": 644540,
+        "sha256": "0e7aafe490145e47fbcb321fe939a16fe491c887698a6d46eff7aa00896fb8d9"
     },
     {
         "slug": "directing-the-directors-craft",
@@ -299,8 +403,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/directing-the-directors-craft.pdf",
         "pages": 3,
         "words": 1005,
-        "bytes": 7852,
-        "sha256": "398250363da25b29332e2f19ec5b95154d1c8130affab63372b4a9ab6f08cbdf"
+        "bytes": 7853,
+        "sha256": "e988114aebb02c4cf5ab89a6be878f8f6a55e611c4a1569e694b8beb8c5f9687"
     },
     {
         "slug": "directing-blocking-and-stage-pictures",
@@ -312,8 +416,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/directing-blocking-and-stage-pictures.pdf",
         "pages": 3,
         "words": 802,
-        "bytes": 6880,
-        "sha256": "90cfee4871cfa65244979f4b0aa2ac641f3bc0ff4351d5a77298b34a34fb0db1"
+        "bytes": 6881,
+        "sha256": "1ed742ed4e8b814e0b76b3e4939c0918323484182eaff49ba44607b262c9183b"
     },
     {
         "slug": "scriptwriting-the-one-act-play",
@@ -325,8 +429,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/scriptwriting-the-one-act-play.pdf",
         "pages": 3,
         "words": 851,
-        "bytes": 7031,
-        "sha256": "10922d24dad1fcc5ce64a02999c161124325f0c37a60639ee1e8aeb41b697bd1"
+        "bytes": 7032,
+        "sha256": "f1f1fbce7889bef47e193fa8718937886cd8acc4b603325be31099c5a5881c98"
     },
     {
         "slug": "scriptwriting-structure-and-scene",
@@ -338,8 +442,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/scriptwriting-structure-and-scene.pdf",
         "pages": 3,
         "words": 781,
-        "bytes": 6838,
-        "sha256": "7ee01bd4769d1d2d3364f5b67851807a6d2acd6e8c6e6dcde8df3a3f46ad93ad"
+        "bytes": 6840,
+        "sha256": "f96710977d5e567cda8d3a38a949305b2ad56911e8390222b09f486b98871fad"
     },
     {
         "slug": "lighting-lanterns-angles-colour",
@@ -351,8 +455,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/lighting-lanterns-angles-colour.pdf",
         "pages": 3,
         "words": 875,
-        "bytes": 7280,
-        "sha256": "188c3b35cb55cccec6fe08dd70757d12f32cf4b1808107d779f9806c02090efc"
+        "bytes": 7282,
+        "sha256": "4903f46c2742cbcc3953177ab3ba0c85065f9a7197397adfe34e6252507671ed"
     },
     {
         "slug": "lighting-the-plot-and-the-cue-sheet",
@@ -364,8 +468,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/lighting-the-plot-and-the-cue-sheet.pdf",
         "pages": 3,
         "words": 769,
-        "bytes": 6547,
-        "sha256": "a4dbe3083b849c23807bde0d35c202c76a6e50db474abadbdac5b2f148924c7c"
+        "bytes": 6549,
+        "sha256": "4ce089407d28f8c58af0a96231c5eda0f0a4b40b5195a9c3bd5900881d7ee59a"
     },
     {
         "slug": "set-design-reading-the-script-for-space",
@@ -378,7 +482,7 @@ export const THEATRE_SHELF = [
         "pages": 3,
         "words": 761,
         "bytes": 6726,
-        "sha256": "37a37bf93777512fc3a8ad1cc54bd6f16936f52e97b174b51e6e9385ffe80c31"
+        "sha256": "7ee6410b80e2eb596b6c3ab9af82c33a1d5b4fa582577fb781714062e8727f0e"
     },
     {
         "slug": "set-design-the-model-box-and-the-build",
@@ -391,7 +495,7 @@ export const THEATRE_SHELF = [
         "pages": 3,
         "words": 754,
         "bytes": 6518,
-        "sha256": "864f8765a2915f6273d054c8a0377b36f4d4192e9ed6a574778e189462cf3d8e"
+        "sha256": "70b1a1cc2ef0cdf0a2fe12be3e0b56834c3e7df2aded3b97004d6b33e145d3f3"
     },
     {
         "slug": "props-sourcing-making-and-running",
@@ -404,7 +508,7 @@ export const THEATRE_SHELF = [
         "pages": 3,
         "words": 664,
         "bytes": 6250,
-        "sha256": "80d416ab960516788e59c2cbe552f14c88cab7eda3357d33d15109cd254558c6"
+        "sha256": "bfbf7f72f0b1bbbe2699a11ace1c231976cfbc92c3ddd81054a1ff9f8c00fee9"
     },
     {
         "slug": "props-period-function-and-symbol",
@@ -416,8 +520,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/props-period-function-and-symbol.pdf",
         "pages": 3,
         "words": 664,
-        "bytes": 6376,
-        "sha256": "8bb3ca32abd3f81f8d340dae2a6ec1cec6f61b835804d2d9d66e3fd7e050b00e"
+        "bytes": 6375,
+        "sha256": "5815612bd8d12483fb16c9d057c6274c9cda0e4b600068b796a0bfc92f0b10ae"
     },
     {
         "slug": "makeup-stage-straight-character-age",
@@ -430,7 +534,7 @@ export const THEATRE_SHELF = [
         "pages": 3,
         "words": 696,
         "bytes": 6499,
-        "sha256": "1022f3f8ffef21a27516600f84295d09a17b5e7667f41ff2312f20d5c289a8e9"
+        "sha256": "1b978c08f0a2a11fef204dbdc6cb01c8da9484167ddc40ccfafbfc0b52d5ce71"
     },
     {
         "slug": "makeup-for-film-and-television",
@@ -442,8 +546,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/makeup-for-film-and-television.pdf",
         "pages": 3,
         "words": 731,
-        "bytes": 6732,
-        "sha256": "b800063788238212e5a0c6a900ed111b0807437c328a5426365d7c893b357fb7"
+        "bytes": 6733,
+        "sha256": "e680d94352a9b09c2b833436afbff863e47865ef306804dcb80dcfe6ebea136d"
     },
     {
         "slug": "costume-design-from-script-to-fitting",
@@ -455,8 +559,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/costume-design-from-script-to-fitting.pdf",
         "pages": 3,
         "words": 685,
-        "bytes": 6524,
-        "sha256": "05437db20e82671585ed94f1f6ced8d05ea0610496577ee50cbc6ad07fa2ccd2"
+        "bytes": 6525,
+        "sha256": "d61f5ff13eda2274a418bf408f0ea5b4ce6c26206810fc12d42dd76bc6e6a0ad"
     },
     {
         "slug": "wardrobe-the-plot-and-the-run",
@@ -467,9 +571,9 @@ export const THEATRE_SHELF = [
         "sourceId": null,
         "download_path": "/library/theatre/wardrobe-the-plot-and-the-run.pdf",
         "pages": 3,
-        "words": 628,
-        "bytes": 6222,
-        "sha256": "d726a60d230ab39a659638d54aea652ef292cadfe933a588db29879284dd7446"
+        "words": 726,
+        "bytes": 6718,
+        "sha256": "bdc29ff81a1cee93ed2a65fce8eee0773347b2a80e13ecc1d0e381f1ce0ec6fc"
     },
     {
         "slug": "sound-design-system-plot-and-cue",
@@ -482,7 +586,7 @@ export const THEATRE_SHELF = [
         "pages": 3,
         "words": 727,
         "bytes": 6475,
-        "sha256": "436505c84715fdd053ae8bcd7e5078bffdf55feccff6058ef04bf83cfaf4c9b4"
+        "sha256": "87793562d2005697c11d642f3078f749ae9666601ee146af3a7f81956cdf946c"
     },
     {
         "slug": "song-design-for-the-stage",
@@ -494,8 +598,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/song-design-for-the-stage.pdf",
         "pages": 3,
         "words": 722,
-        "bytes": 6613,
-        "sha256": "6b49f877fff65777600c3cf4081b487bda5d84fc6e8b9b841d429ba7156f8608"
+        "bytes": 6614,
+        "sha256": "07005cde2966b9464ba56cd09294900d2d5fe9fb2f7ea46653d93071cfc63e3a"
     },
     {
         "slug": "african-theatre-a-history",
@@ -507,8 +611,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/african-theatre-a-history.pdf",
         "pages": 3,
         "words": 660,
-        "bytes": 6695,
-        "sha256": "ed55c3fe5b1beed974c30aff94ec3f54f9fe7c8de55cfe68fa20c92275972899"
+        "bytes": 6696,
+        "sha256": "c54c29c6ba1e0c447f91abe4b85205c624b184f81ddcc0dfb3098b77c43ffd4a"
     },
     {
         "slug": "the-yoruba-travelling-theatre",
@@ -520,8 +624,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/the-yoruba-travelling-theatre.pdf",
         "pages": 3,
         "words": 681,
-        "bytes": 6617,
-        "sha256": "d7285b90b46d689326a7db4336a7e52a98eb83bc1a50f830eece8e72faa89a71"
+        "bytes": 6618,
+        "sha256": "dd95c4ee6c17a9471cd4008fa7dcea6223073c667b88c997e9217b7ced4d884c"
     },
     {
         "slug": "theatre-history-greeks-to-the-globe",
@@ -533,8 +637,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/theatre-history-greeks-to-the-globe.pdf",
         "pages": 3,
         "words": 698,
-        "bytes": 6668,
-        "sha256": "d4b29f8a22040fb299a54541848e9bd9980930cb343a3399b7c7313c800a7f90"
+        "bytes": 6669,
+        "sha256": "58c1af48677fd6ed0a5bddd9a3a14c00523e9c90fa8240e9152c7d1959b3cffd"
     },
     {
         "slug": "theatre-history-the-modern-stage",
@@ -547,7 +651,7 @@ export const THEATRE_SHELF = [
         "pages": 3,
         "words": 708,
         "bytes": 6788,
-        "sha256": "4284db205d1e8ebd70da59b76ae59409d747e030304c2cc43b3b6201da71250e"
+        "sha256": "bdfb68def1bbd8bb857ac55a72d3e7b8951524c7a81489072dee7bc0a40c641e"
     },
     {
         "slug": "theatre-management-running-a-company",
@@ -559,8 +663,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/theatre-management-running-a-company.pdf",
         "pages": 3,
         "words": 658,
-        "bytes": 6559,
-        "sha256": "e5882ca4c77c7fa359f534a483d5b1f6ab3d96b53ff5eb3976cce8ef47f7ba86"
+        "bytes": 6561,
+        "sha256": "35268896c67d2aaa8653d9bce9cf132dc59df915f571728c44a091a3b815ac69"
     },
     {
         "slug": "theatre-management-budget-and-marketing",
@@ -572,8 +676,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/theatre-management-budget-and-marketing.pdf",
         "pages": 3,
         "words": 679,
-        "bytes": 6556,
-        "sha256": "4c9af5f353565ca03044bc6a9e933947ed339d5d0da336cc24e1ffee533847e2"
+        "bytes": 6558,
+        "sha256": "2aee25cac633848af734c3eb0c137899a2f2b42183f7f0f08d1ed457f297c9eb"
     },
     {
         "slug": "pre-colonial-performance-in-nigeria",
@@ -585,8 +689,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/pre-colonial-performance-in-nigeria.pdf",
         "pages": 3,
         "words": 700,
-        "bytes": 6804,
-        "sha256": "5abb73223a3514cde2f185be7080dd50b8dbd99b756f8d79726506afeae122c6"
+        "bytes": 6805,
+        "sha256": "1d040d222cd3a0d7cf4d460000a7748d5034a140f986de839f5c8a9b09812656"
     },
     {
         "slug": "ritual-mask-and-festival",
@@ -598,8 +702,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/ritual-mask-and-festival.pdf",
         "pages": 3,
         "words": 688,
-        "bytes": 6739,
-        "sha256": "4ec84c1f029be1580126a7fcf74855454a7104bdbd5c9098a635228c04d55e37"
+        "bytes": 6740,
+        "sha256": "b4887b35366fbabb2aa1b0ab459d046129dfbb72f9d697284cc9467c690633fa"
     },
     {
         "slug": "colonial-theatre-in-nigeria",
@@ -611,8 +715,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/colonial-theatre-in-nigeria.pdf",
         "pages": 3,
         "words": 674,
-        "bytes": 6665,
-        "sha256": "bc82b739e565289462ed9b61630dad269761ab8ff053586065aae385cee30791"
+        "bytes": 6666,
+        "sha256": "2d0b6ab36d35c42066b86d8887106ba88e1ead71b803fc3c51f292ecf042b8c4"
     },
     {
         "slug": "church-school-and-concert",
@@ -623,9 +727,9 @@ export const THEATRE_SHELF = [
         "sourceId": null,
         "download_path": "/library/theatre/church-school-and-concert.pdf",
         "pages": 3,
-        "words": 631,
-        "bytes": 6434,
-        "sha256": "49cfdebce877ce7698082c5d45866fe4b697707b82873708b62b142e530c8644"
+        "words": 733,
+        "bytes": 6935,
+        "sha256": "e7354a1af92be20fe3dab1344325084d79ce571b0f2918a9f012547ead2b21cd"
     },
     {
         "slug": "post-colonial-nigerian-theatre",
@@ -637,8 +741,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/post-colonial-nigerian-theatre.pdf",
         "pages": 3,
         "words": 685,
-        "bytes": 6570,
-        "sha256": "f4be6403a9d1012cab2a30e84bfd91a07466b63f89f831bc95816c8c5384c603"
+        "bytes": 6571,
+        "sha256": "dc79aaeb2c4f74d051c3ce6954703a139de990e7ea3b7b1d8c999a44a5be12d8"
     },
     {
         "slug": "post-colonial-festival-and-fringe",
@@ -650,8 +754,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/post-colonial-festival-and-fringe.pdf",
         "pages": 3,
         "words": 692,
-        "bytes": 6524,
-        "sha256": "e0947c9c9666fb7f226b7fc100897cab2d68a082ca1cf7ec27813538bdc581d7"
+        "bytes": 6523,
+        "sha256": "ce4882576185f8cb5a74085050c7b588d5fba557ac6eb9d4bddaa289557c8d82"
     },
     {
         "slug": "criticism-how-to-review-a-play",
@@ -663,8 +767,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/criticism-how-to-review-a-play.pdf",
         "pages": 3,
         "words": 690,
-        "bytes": 6425,
-        "sha256": "48e64533023cfaa153f1c072ef9720322b5861d0feae2be744ce865127606b33"
+        "bytes": 6428,
+        "sha256": "fae72660eef3e2f3eafcb9ebe5cdf3e43a60208e1d71807ad22d831bd7e7ee50"
     },
     {
         "slug": "criticism-approaches-to-drama",
@@ -676,8 +780,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/criticism-approaches-to-drama.pdf",
         "pages": 3,
         "words": 662,
-        "bytes": 6703,
-        "sha256": "8d2eca885ec3ff9adc56591122ec4a0a982305d612780112f8fb9b0dac411b7a"
+        "bytes": 6702,
+        "sha256": "de4960db1379ba47ad81f392080dcea7374b2899ad7a15744587f3c105e9eccd"
     },
     {
         "slug": "speech-breath-voice-articulation",
@@ -690,7 +794,7 @@ export const THEATRE_SHELF = [
         "pages": 3,
         "words": 713,
         "bytes": 6654,
-        "sha256": "e85eaeb6f08f1600214ad096c9305341f6386f5fce805a22e3e4d395004d66ab"
+        "sha256": "0698aa96c4846cfb1c73caacc8a93b6eb6ded604cccdd5583d63ecb9ff26b112"
     },
     {
         "slug": "speech-nigerian-english-on-stage",
@@ -702,8 +806,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/speech-nigerian-english-on-stage.pdf",
         "pages": 3,
         "words": 691,
-        "bytes": 6637,
-        "sha256": "cdbf0a2817934b1c1fa352e951f4f7d4e17d91518cdf9e2315982f600a7bda91"
+        "bytes": 6639,
+        "sha256": "b9a544bc57c6a32f1be8d65063340e4055815008f4d7b547dd657b883324c069"
     },
     {
         "slug": "film-analysis-shot-cut-and-sound",
@@ -715,8 +819,8 @@ export const THEATRE_SHELF = [
         "download_path": "/library/theatre/film-analysis-shot-cut-and-sound.pdf",
         "pages": 3,
         "words": 680,
-        "bytes": 6540,
-        "sha256": "14d75e8b3e650a62650c6a58759e710afc50d048111e1947270a07f62511e738"
+        "bytes": 6541,
+        "sha256": "bce75a43581f2320a42ea9b3cf4660606c0dd0a66993631a06822e160a5d726e"
     },
     {
         "slug": "film-nollywood-a-critical-introduction",
@@ -729,6 +833,6 @@ export const THEATRE_SHELF = [
         "pages": 3,
         "words": 712,
         "bytes": 6833,
-        "sha256": "da36ee38e73f4aa88be1711e423d7f38a91f2610f6279ef1b844c6fce2759259"
+        "sha256": "38338dad5044fb2e8dc28f6b1467b0f412f9acf902b2b94e1f3ed5af2e2319a9"
     }
 ]

@@ -8,6 +8,7 @@
  * one place to change the design.
  */
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
+import { BUILD_DATE } from './reproducible.mjs'
 
 export const A4 = { width: 595.28, height: 841.89 }
 export const MARGIN = 56
@@ -118,6 +119,9 @@ export async function buildPlayPdf(play, options) {
     doc.setAuthor(play.author)
     doc.setSubject(`Translated by ${play.translator || 'an unrecorded translator'}; public domain`)
     doc.setProducer('ZikShare library')
+    // A fixed date, so a rebuild over the same text produces the same file.
+    doc.setCreationDate(BUILD_DATE)
+    doc.setModificationDate(BUILD_DATE)
 
     /* Cover */
     const cover = doc.addPage([A4.width, A4.height])

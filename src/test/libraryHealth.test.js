@@ -24,7 +24,9 @@ describe('Library health', { timeout: 30000 }, () => {
     it('holds exactly the documents it says it holds', () => {
         const counts = libraryCounts()
         expect(MATERIALS).toHaveLength(counts.total)
-        expect(counts.total).toBe(309)
+        // The library's real size, pinned so a document cannot quietly disappear.
+        // It was 309 before the eight dance books joined the Theatre Arts shelf.
+        expect(counts.total).toBe(317)
 
         // Every shelf's stated count is the number of documents actually on it.
         for (const shelf of FRESHER_LIBRARY_DOMAINS) {

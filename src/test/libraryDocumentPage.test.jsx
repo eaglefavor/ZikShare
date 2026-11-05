@@ -54,9 +54,9 @@ function renderDoc(slug) {
 }
 
 describe('Library addresses', { timeout: 20000 }, () => {
-  it('gives every one of the 309 documents its own address', () => {
+  it('gives every one of the 317 documents its own address', () => {
     const paths = MATERIALS.map(documentPath)
-    expect(MATERIALS).toHaveLength(309)
+    expect(MATERIALS).toHaveLength(317)
     expect(new Set(paths).size).toBe(MATERIALS.length)
     for (const p of paths) {
       expect(p).toMatch(/^\/library\/doc\/[a-z0-9-]+$/)

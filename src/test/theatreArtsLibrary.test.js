@@ -15,12 +15,13 @@ import {
     toTheatreCard,
 } from '../lib/theatreArtsLibrary'
 import { libraryCountLabel, libraryCounts, mergeLibraryMaterials } from '../lib/fresherLibrary'
+import { shelfGaps } from '../lib/shelfGuide'
 
 const PUBLIC_DIR = path.join(process.cwd(), 'public')
 
 describe('Theatre Arts shelf - the corpus', () => {
     it('covers every topic the department lists', () => {
-        expect(THEATRE_TOPICS).toHaveLength(17)
+        expect(THEATRE_TOPICS).toHaveLength(18)
         const expected = [
             'Directing',
             'Scriptwriting',
@@ -39,6 +40,7 @@ describe('Theatre Arts shelf - the corpus', () => {
             'Dramatic Criticism',
             'Speech Arts',
             'Film Analysis',
+            'Dance & Choreography',
         ]
         expect(THEATRE_TOPICS.map((topic) => topic.name)).toEqual(expected)
         expect(theatreTopics().map((topic) => topic.name)).toEqual(expected)
@@ -216,5 +218,53 @@ describe('Theatre Arts shelf - how it appears in the library', () => {
         expect(card.isDrama || card.isRoman || card.isMedieval || card.isRenaissance || card.isModern).toBe(
             false
         )
+    })
+})
+
+describe('Theatre Arts shelf - the dance books', () => {
+    const DANCE = THEATRE_TITLES.filter((item) => item.topic === 'Dance & Choreography')
+
+    it('holds the public-domain books on dancing, and says they are whole books', () => {
+        expect(DANCE).toHaveLength(8)
+        for (const item of DANCE) {
+            expect(item.kind, `${item.slug} is not a public-domain text`).toBe('classic')
+            expect(item.sourceId).toBeGreaterThan(0)
+            // A chapter or an extract would not be a book. Each of these is a
+            // complete Gutenberg text of at least fifteen thousand words.
+            const built = THEATRE_SHELF_BY_SLUG[item.slug]
+            expect(built.words, `${item.slug} is only ${built.words} words`).toBeGreaterThan(15000)
+            expect(built.pages).toBeGreaterThan(20)
+        }
+    })
+
+    it('does not use the same source twice', () => {
+        const ids = DANCE.map((item) => item.sourceId)
+        expect(new Set(ids).size).toBe(ids.length)
+        // Nor a book that is already on the shelf under another topic.
+        const everything = THEATRE_TITLES.map((item) => item.sourceId).filter(Boolean)
+        expect(new Set(everything).size).toBe(everything.length)
+    })
+
+    it('covers the history, the technique and the primary documents', () => {
+        const titles = DANCE.map((item) => item.title).join(' | ')
+        expect(titles).toMatch(/Modern Dancing and Dancers/)
+        expect(titles).toMatch(/The Russian Ballet/)
+        expect(titles).toMatch(/The Morris Book/)
+        expect(titles).toMatch(/Nine Daies Wonder/)
+
+        const centuries = DANCE.map((item) => Number(item.dateLabel))
+        expect(Math.min(...centuries)).toBeLessThan(1700) // a primary document
+        expect(Math.max(...centuries)).toBeGreaterThan(1900) // a modern history
+    })
+
+    it('names what it cannot host, instead of leaving the gap silent', () => {
+        const gaps = shelfGaps('Theatre Arts')
+        expect(gaps).toBeTruthy()
+        expect(gaps.items.length).toBeGreaterThanOrEqual(3)
+        for (const gap of gaps.items) {
+            expect(gap.label).toBeTruthy()
+            expect(gap.note.length).toBeGreaterThan(60)
+        }
+        expect(gaps.items.map((gap) => gap.label).join(' ')).toMatch(/African dance/)
     })
 })

@@ -8,6 +8,7 @@
  */
 import { PDFDocument, StandardFonts, rgb } from 'pdf-lib'
 import { A4, INK, MARGIN, MUTED, WIDTH, clean, wrap } from './play-pdf.mjs'
+import { BUILD_DATE } from './reproducible.mjs'
 
 const RULE = rgb(0.83, 0.84, 0.86)
 
@@ -27,6 +28,9 @@ export async function buildGuidePdf(guide, { accent }) {
     doc.setAuthor('ZikShare Theatre Arts')
     doc.setSubject(`ZikShare guide - ${guide.topic}`)
     doc.setProducer('ZikShare library')
+    // A fixed date, so a rebuild over the same text produces the same file.
+    doc.setCreationDate(BUILD_DATE)
+    doc.setModificationDate(BUILD_DATE)
 
     /* ── Cover ── */
     const cover = doc.addPage([A4.width, A4.height])

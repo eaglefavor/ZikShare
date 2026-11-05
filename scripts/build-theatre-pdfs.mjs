@@ -17,6 +17,7 @@ import { PDFDocument } from 'pdf-lib'
 import { ACCENTS, buildPlayPdf } from './lib/play-pdf.mjs'
 import { buildGuidePdf } from './lib/theatre-pdf.mjs'
 import { CLASSIC_TEXTS, GUIDES, THEATRE_TITLES } from '../src/lib/theatreArtsLibrary.js'
+import { reproducibleBuilds } from './lib/reproducible.mjs'
 
 const ROOT = process.cwd()
 const SOURCE = path.join(ROOT, 'library', 'theatre', 'source')
@@ -26,6 +27,9 @@ const OUT_JS = path.join(ROOT, 'src', 'lib', 'theatreArtsLibraryData.js')
 
 const START = /^\*\*\*\s*START OF (THE|THIS) PROJECT GUTENBERG/i
 const END = /^\*\*\*\s*END OF (THE|THIS) PROJECT GUTENBERG/i
+
+// Same text, same bytes: a rebuild only changes the books that changed.
+reproducibleBuilds()
 
 fs.mkdirSync(OUT_DIR, { recursive: true })
 

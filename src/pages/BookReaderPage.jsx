@@ -61,6 +61,10 @@ function BookReader({ doc, pdfPath, backPath, backLabel, nextDoc, nextPath, isBo
     const canvasRef = useRef(null)
     const stageRef = useRef(null)
     const docRef = useRef(null)
+    // Where a finger went down, and how big the page is when it fits the
+    // screen. A swipe larger than that is a scroll, not a page turn.
+    const touchStartRef = useRef(null)
+    const fitScaleRef = useRef(null)
     const renderChain = useRef(Promise.resolve())
 
     const [status, setStatus] = useState('loading')
@@ -105,6 +109,7 @@ function BookReader({ doc, pdfPath, backPath, backLabel, nextDoc, nextPath, isBo
                     const viewport = typeof window !== 'undefined' ? window.innerWidth - 24 : 640
                     const available = stageRef.current?.clientWidth || viewport
                     const fit = Math.max(MIN_SCALE, Math.min(MAX_SCALE, available / width))
+                    fitScaleRef.current = fit
                     setScale(Number(fit.toFixed(2)))
                     setStatus('ready')
                 })
@@ -152,6 +157,57 @@ function BookReader({ doc, pdfPath, backPath, backLabel, nextDoc, nextPath, isBo
         },
         [numPages]
     )
+
+    /**
+     * Swipe left for the next page, right for the one before.
+     *
+     * Every phone reader turns pages with a thumb, and this one could only be
+     * paged with two small buttons. The gesture is ignored when the page has
+     * been zoomed past the width of the screen, because then a sideways drag is
+     * how you read the right-hand side of the page.
+     */
+    const onTouchStart = useCallback((event) => {
+        const touch = event.touches?.[0]
+        touchStartRef.current = touch ? { x: touch.clientX, y: touch.clientY } : null
+    }, [])
+
+    const onTouchEnd = useCallback(
+        (event) => {
+            const start = touchStartRef.current
+            touchStartRef.current = null
+            const touch = event.changedTouches?.[0]
+            if (!start || !touch) return
+
+            const dx = touch.clientX - start.x
+            const dy = touch.clientY - start.y
+            // Half a page-level swipe, and clearly more sideways than up.
+            if (Math.abs(dx) < 48 || Math.abs(dx) < Math.abs(dy) * 1.5) return
+
+            const fit = fitScaleRef.current
+            if (fit && scale > fit * 1.05) return
+
+            goToPage(dx < 0 ? page + 1 : page - 1)
+        },
+        [goToPage, page, scale]
+    )
+
+    // The same thing for a reader with a keyboard: the arrow keys page.
+    useEffect(() => {
+        if (status !== 'ready') return undefined
+        const onKey = (event) => {
+            const tag = event.target?.tagName
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+            if (event.key === 'ArrowRight') {
+                event.preventDefault()
+                goToPage(page + 1)
+            } else if (event.key === 'ArrowLeft') {
+                event.preventDefault()
+                goToPage(page - 1)
+            }
+        }
+        window.addEventListener('keydown', onKey)
+        return () => window.removeEventListener('keydown', onKey)
+    }, [goToPage, page, status])
 
     const zoom = useCallback((direction) => {
         setScale((current) => {
@@ -278,7 +334,12 @@ function BookReader({ doc, pdfPath, backPath, backLabel, nextDoc, nextPath, isBo
 
             {status === 'ready' && (
                 <>
-                    <div ref={stageRef} style={{ display: 'flex', justifyContent: 'center', padding: '0.75rem 0.5rem 1rem', overflowX: 'auto' }}>
+                    <div
+                        ref={stageRef}
+                        onTouchStart={onTouchStart}
+                        onTouchEnd={onTouchEnd}
+                        style={{ display: 'flex', justifyContent: 'center', padding: '0.75rem 0.5rem 1rem', overflowX: 'auto', touchAction: 'pan-y' }}
+                    >
                         <canvas
                             ref={canvasRef}
                             aria-label={`Page ${page} of ${numPages} of ${doc.title}`}

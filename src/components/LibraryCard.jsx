@@ -1,6 +1,7 @@
 import { BookOpen, Download } from 'lucide-react'
 import { Tag } from './ui'
 import BookCover from './BookCover'
+import { useDataSaver } from '../hooks/useDataSaver'
 
 /**
  * The one card for a library document, used by Home, Library and Search.
@@ -11,6 +12,7 @@ import BookCover from './BookCover'
  * reader to another website to read it.
  */
 export default function LibraryCard({ item, onOpen }) {
+    const { saving } = useDataSaver()
     const href = item.isBook ? `/library/books/${item.slug}` : item.download_path
     const isPlay = Boolean(
         item.isDrama ||
@@ -23,7 +25,7 @@ export default function LibraryCard({ item, onOpen }) {
 
     return (
         <article className="zs-item-card" style={{ padding: 0, overflow: 'hidden' }}>
-            {item.isBook && (
+            {item.isBook && !saving && (
                 <div onClick={() => onOpen(item)} style={{ cursor: 'pointer', padding: '0.75rem 0.75rem 0' }}>
                     <BookCover
                         src={item.cover_path}

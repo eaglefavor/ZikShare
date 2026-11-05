@@ -8,6 +8,8 @@ import { countUnread } from '../lib/readStatus'
 import { getAnnouncements } from '../lib/database'
 import { getUnreadAnnouncementsCount } from '../lib/announcements'
 import useOnline from '../hooks/useOnline'
+import LightModeBar from './LightModeBar'
+import InstallBanner from './InstallBanner'
 
 const primaryNav = [
     { path: '/', label: 'Home', icon: Home, end: true },
@@ -144,6 +146,9 @@ export default function AppShell({ children }) {
                     </span>
                 </div>
             )}
+
+            <LightModeBar />
+            <InstallBanner />
 
             <main className="zs-main" id="main-content" tabIndex={-1}>
                 {children}

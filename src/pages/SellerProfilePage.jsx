@@ -8,6 +8,7 @@ import { getSellerPublicProfile, getSellerReviews, getSellerRatingSummary } from
 import { getOrCreateConversation } from '../lib/messaging'
 import { useAuth } from '../contexts/AuthContext'
 import { photoAtWidth } from '../lib/cloudinary'
+import { useDataSaver } from '../hooks/useDataSaver'
 
 function formatNaira(amount) {
     return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(amount || 0)
@@ -19,6 +20,7 @@ function formatDate(iso) {
 }
 
 export default function SellerProfilePage() {
+    const { saving } = useDataSaver()
     const { id } = useParams()
     const navigate = useNavigate()
     const { session, isAuthenticated } = useAuth()
@@ -273,7 +275,7 @@ export default function SellerProfilePage() {
                         {filteredListings.map(item => {
                             const placeholderColors = ['#DBEAFE', '#E0E7FF', '#D9F99D', '#FBCFE8', '#E9D5FF', '#FDE68A']
                             const bgColor = placeholderColors[(item.id?.charCodeAt?.(0) || 0) % placeholderColors.length]
-                            const imageUrl = item.images?.[0] || item.cover_image_url
+                            const imageUrl = saving ? null : item.images?.[0] || item.cover_image_url
 
                             return (
                                 <div

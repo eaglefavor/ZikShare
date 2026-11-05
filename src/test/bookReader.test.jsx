@@ -78,6 +78,54 @@ describe('Book reader', { timeout: 20000 }, () => {
     }
   })
 
+  it('turns the page with a swipe, the way a thumb expects', async () => {
+    pdfReader.openPdfDocument.mockResolvedValue({ numPages: 5 })
+
+    renderReader()
+    await screen.findByLabelText(/Page 1 of 5/)
+
+    const stage = screen.getByLabelText(/Page 1 of 5/).parentElement
+
+    // A leftward swipe on the page: next.
+    fireEvent.touchStart(stage, { touches: [{ clientX: 300, clientY: 400 }] })
+    fireEvent.touchEnd(stage, { changedTouches: [{ clientX: 120, clientY: 410 }] })
+    await waitFor(() => expect(screen.getByLabelText('Page number')).toHaveValue(2))
+
+    // And back again, rightward.
+    fireEvent.touchStart(stage, { touches: [{ clientX: 120, clientY: 400 }] })
+    fireEvent.touchEnd(stage, { changedTouches: [{ clientX: 320, clientY: 395 }] })
+    await waitFor(() => expect(screen.getByLabelText('Page number')).toHaveValue(1))
+  })
+
+  it('does not turn the page on a small movement or a vertical drag', async () => {
+    pdfReader.openPdfDocument.mockResolvedValue({ numPages: 5 })
+
+    renderReader()
+    await screen.findByLabelText(/Page 1 of 5/)
+    const stage = screen.getByLabelText(/Page 1 of 5/).parentElement
+
+    // A short flick, and a scroll down the page: neither is a page turn.
+    fireEvent.touchStart(stage, { touches: [{ clientX: 300, clientY: 400 }] })
+    fireEvent.touchEnd(stage, { changedTouches: [{ clientX: 280, clientY: 402 }] })
+    fireEvent.touchStart(stage, { touches: [{ clientX: 300, clientY: 400 }] })
+    fireEvent.touchEnd(stage, { changedTouches: [{ clientX: 180, clientY: 560 }] })
+
+    expect(screen.getByLabelText('Page number')).toHaveValue(1)
+  })
+
+  it('pages with the arrow keys on a keyboard', async () => {
+    pdfReader.openPdfDocument.mockResolvedValue({ numPages: 5 })
+
+    renderReader()
+    await screen.findByLabelText(/Page 1 of 5/)
+
+    fireEvent.keyDown(window, { key: 'ArrowRight' })
+    await waitFor(() => expect(screen.getByLabelText('Page number')).toHaveValue(2))
+
+    fireEvent.keyDown(window, { key: 'ArrowLeft' })
+    await waitFor(() => expect(screen.getByLabelText('Page number')).toHaveValue(1))
+  })
+
   it('asks again when the reader presses Try again', async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true })
     pdfReader.openPdfDocument.mockReturnValue(new Promise(() => {}))

@@ -21,6 +21,7 @@ import usePageMeta from '../hooks/usePageMeta'
 import FirstListingGuide from '../components/FirstListingGuide'
 import ConnectionNotice from '../components/ConnectionNotice'
 import { photoAtWidth } from '../lib/cloudinary'
+import { useDataSaver } from '../hooks/useDataSaver'
 
 /** How long the marketplace listing request may take before we say so. */
 const SEARCH_TIMEOUT_MS = 8000
@@ -32,7 +33,8 @@ function formatNaira(amount) {
 }
 
 function ListingCard({ listing, onOpen }) {
-    const image = listing.images?.[0]
+    const { saving } = useDataSaver()
+    const image = saving ? null : listing.images?.[0]
     return (
         <article className="zs-item-card" style={{ padding: 0, overflow: 'hidden' }}>
             <div

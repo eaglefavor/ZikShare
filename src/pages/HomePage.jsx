@@ -13,6 +13,7 @@ import FirstListingGuide from '../components/FirstListingGuide'
 import ConnectionNotice from '../components/ConnectionNotice'
 import usePageMeta from '../hooks/usePageMeta'
 import { photoAtWidth } from '../lib/cloudinary'
+import { useDataSaver } from '../hooks/useDataSaver'
 
 // What the page can say without the catalogue: the shelves themselves. The
 // counts arrive in their own chunk (see useLibraryDigest) and are never typed
@@ -30,7 +31,8 @@ function formatNaira(amount) {
 }
 
 function ListingCard({ listing, onOpen }) {
-    const image = listing.images?.[0]
+    const { saving } = useDataSaver()
+    const image = saving ? null : listing.images?.[0]
     return (
         <button type="button" className="zs-item-card" onClick={() => onOpen(listing)}>
             {image && (

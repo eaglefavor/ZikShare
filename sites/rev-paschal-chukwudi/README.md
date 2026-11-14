@@ -102,12 +102,20 @@ before adding a giving section, since public account numbers attract fraud.
 
 ### Photographs
 
-`assets/hero-portrait.jpg`, `assets/about-teaching.jpg`,
+`assets/hero-portrait.jpg`, `assets/about-teaching-hd.webp`,
 `assets/live-ministry.jpg` and `assets/portrait-avatar.jpg` are the four
 ministry photographs supplied. They are small originals (≈400–600 px wide) and
 have been upscaled for the page; if you have the full-resolution files, drop
-them in with the same filenames and the layout sharpens automatically.
+them in under a **new filename** (assets are cached for a week — see the
+hardening notes) and the layout sharpens automatically.
 `assets/og-cover.jpg` is the 1200×630 social card, built from the portrait.
+
+The about-section still came from a 399×501 original, so it was rebuilt from the
+raw file rather than from the old 748 px copy: crop `334x418+10+6`, Lanczos
+4-lobe resize to 1336×1672, `-unsharp 0x1.1+0.55+0.025`, encoded WebP q88
+(46 KB — 3.2× the pixels of the file it replaced, and 13 KB lighter). WebP is
+used for this one file only; it is inlined by `build.mjs` like the JPEGs and is
+supported by every browser the site targets.
 
 ### Forms
 

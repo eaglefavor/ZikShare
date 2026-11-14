@@ -102,20 +102,25 @@ before adding a giving section, since public account numbers attract fraud.
 
 ### Photographs
 
-`assets/hero-portrait.jpg`, `assets/about-teaching-hd.webp`,
-`assets/live-ministry.jpg` and `assets/portrait-avatar.jpg` are the four
-ministry photographs supplied. They are small originals (≈400–600 px wide) and
-have been upscaled for the page; if you have the full-resolution files, drop
-them in under a **new filename** (assets are cached for a week — see the
-hardening notes) and the layout sharpens automatically.
-`assets/og-cover.jpg` is the 1200×630 social card, built from the portrait.
+`assets/hero-portrait.jpg`, `assets/about-teaching.webp`,
+`assets/live-ministry.jpg` and `assets/portrait-avatar.jpg` are the ministry
+photographs supplied. They are small originals (≈400–600 px wide) and have been
+upscaled for the page; if you have the full-resolution files, drop them in under
+a **new filename** (assets are cached for a week — see the hardening notes) and
+the layout sharpens automatically. `assets/og-cover.jpg` is the 1200×630 social
+card, built from the portrait.
 
-The about-section still came from a 399×501 original, so it was rebuilt from the
-raw file rather than from the old 748 px copy: crop `334x418+10+6`, Lanczos
-4-lobe resize to 1336×1672, `-unsharp 0x1.1+0.55+0.025`, encoded WebP q88
-(46 KB — 3.2× the pixels of the file it replaced, and 13 KB lighter). WebP is
-used for this one file only; it is inlined by `build.mjs` like the JPEGs and is
-supported by every browser the site targets.
+`assets/about-teaching.webp` is the 2026 stage photograph the ministry supplied
+on 14 Nov 2026, replacing the soft video still that used to sit in the about
+section. The original is 466×657, which is under the ~1000 device pixels the
+card paints on a phone, so it is cropped to 4:5 (`448x560+9+0` — enough to drop
+the sliver of a head at the bottom edge), resized 259% with Lanczos 4-lobe,
+lightly unsharpened (`0x0.9+0.55+0.02`) and encoded as WebP q82: 1160×1450 at
+109 KB. WebP is used for this one file; it is inlined by `build.mjs` like the
+JPEGs and is supported by every browser the site targets.
+
+Note the `figcaption` now reads "Teaching in Agu-Awka" — the event is not
+recorded anywhere, so it stays neutral until someone confirms it.
 
 ### Forms
 

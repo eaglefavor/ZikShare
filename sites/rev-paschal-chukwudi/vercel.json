@@ -1,6 +1,4 @@
 {
   "cleanUrls": true,
-  "rewrites": [
-    { "source": "/probe-only-rootdir-check", "destination": "/index.html" }
-  ]
+  "trailingSlash": false
 }

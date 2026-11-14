@@ -1,0 +1,17 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Rev. Paschal Chukwudi//Gatherings//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Mentality Shift
+BEGIN:VEVENT
+UID:mentality-shift@rev-paschal-chukwudi
+DTSTAMP:20261114T000000Z
+DTSTART:20261118T160000Z
+DTEND:20261118T180000Z
+RRULE:FREQ=WEEKLY;BYDAY=WE
+SUMMARY:Mentality Shift — Rev. Paschal Chukwudi
+LOCATION:456 Zik Avenue, Agu-Awka, by Ring Road Roundabout, Anambra, Nigeria
+DESCRIPTION:Midweek class on renewed thinking — the Word taught plainly.
+END:VEVENT
+END:VCALENDAR

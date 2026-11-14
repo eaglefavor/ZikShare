@@ -1,0 +1,17 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Rev. Paschal Chukwudi//Gatherings//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Quivers Night of Prayer
+BEGIN:VEVENT
+UID:quivers-night-of-prayer@rev-paschal-chukwudi
+DTSTAMP:20261114T000000Z
+DTSTART:20261120T200000Z
+DTEND:20261120T220000Z
+RRULE:FREQ=WEEKLY;BYDAY=FR
+SUMMARY:Quivers Night of Prayer — Rev. Paschal Chukwudi
+LOCATION:456 Zik Avenue, Agu-Awka, by Ring Road Roundabout, Anambra, Nigeria
+DESCRIPTION:A night watch of prayer and intercession.
+END:VEVENT
+END:VCALENDAR

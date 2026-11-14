@@ -1,0 +1,17 @@
+BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Rev. Paschal Chukwudi//Gatherings//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Build Up Service
+BEGIN:VEVENT
+UID:build-up-service@rev-paschal-chukwudi
+DTSTAMP:20261114T000000Z
+DTSTART:20261115T140000Z
+DTEND:20261115T160000Z
+RRULE:FREQ=WEEKLY;BYDAY=SU
+SUMMARY:Build Up Service — Rev. Paschal Chukwudi
+LOCATION:456 Zik Avenue, Agu-Awka, by Ring Road Roundabout, Anambra, Nigeria
+DESCRIPTION:The weekly gathering of the house — worship, the Word, and the building up of every believer.
+END:VEVENT
+END:VCALENDAR

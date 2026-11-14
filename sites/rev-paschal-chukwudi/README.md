@@ -19,7 +19,8 @@ lightbox. Everything respects `prefers-reduced-motion`.
 index.html      markup + copy (all content lives here)
 styles.css      the whole design system
 main.js         interactions (progressive: the page reads fine without it)
-assets/         3 atmospheric photographs + og-cover.jpg (social share card)
+assets/         real ministry photographs + og-cover.jpg (social share card)
+assets/calendar/ three .ics files for the weekly gatherings
 build.mjs       bundles everything into one dist/index.html (optional)
 ```
 
@@ -45,33 +46,43 @@ accepts one HTML file.
 
 ---
 
-## Content — what to check before it goes public
+## Content
 
-All of the original site's copy was preserved: the bio, mission, belief,
-the pull quote, the three ministry offerings, all **11 worship videos**,
-the **live broadcast**, both **audio downloads**, email, address and
-Facebook link. New sections added around them:
+Everything from the original site was preserved: the bio, mission, belief, the
+pull quote, the three ministry offerings, all **11 worship videos**, the **live
+broadcast**, both **audio downloads**, email, address and Facebook link.
+Around them:
 
-| Section | Status |
+| Section | Source |
 | --- | --- |
 | Hero, About, Ministry, Sounds, Live, Connect | Real content, carried over |
-| **Resources** (audio, devotionals, prayer sounds, leader guides) | Written as an offer; each link opens an email request until you have real downloads |
-| **Gatherings** | *Placeholders.* Dates, venues and times say “TBC” on purpose — replace them with the real calendar |
+| **Gatherings** | The real weekly rhythm (see below) |
+| **Resources** | Written as an offer; each link opens an email request until you have real files |
 | **The Word** | Three scripture cards (John 4:23, Psalm 96:9, Psalm 34:1) |
-| **Moments** | Real video stills from the ministry's own YouTube videos |
+| **Moments** | Real ministry photographs + video stills |
 
-### Placeholders to replace (search for these)
+### Gatherings — every week
 
-1. **`Gatherings`** — the three `<article class="event">` blocks
-   (`#gatherings`): titles, “First Friday”, “Quarterly”, venues and times.
-2. **Hero stat “11”** — `data-count="11"`, the number of published sessions.
-3. **Footer year** — filled in automatically.
-4. **Photographs** — `assets/hero-worship.jpg`, `assets/about-bible.jpg`,
-   `assets/live-stage.jpg` are **AI-generated atmospheric imagery, not
-   photographs of Rev. Paschal**. Replace them with real ministry photos
-   (same filenames, or update the `<img>` paths) before launch.
-5. **Video lightbox** — plays through `youtube-nocookie.com`; all 11 IDs come
-   from the ministry's existing YouTube uploads.
+| Day | Time | Gathering | Calendar file |
+| --- | --- | --- | --- |
+| Wednesday | 5:00 PM | Mentality Shift | `assets/calendar/mentality-shift.ics` |
+| Friday | 9:00 PM | Quivers Night of Prayer | `assets/calendar/quivers-night-of-prayer.ics` |
+| Sunday | 3:00 PM | Build Up Service | `assets/calendar/build-up-service.ics` |
+
+Venue: **456 Zik Avenue, Agu-Awka, by Ring Road Roundabout**.
+Each `.ics` file repeats weekly (Nigeria time, UTC+1) and assumes a **two-hour
+meeting** — adjust `DTEND` if a gathering runs shorter or longer. Each card's
+"Add to calendar" link downloads its file, so a visitor's phone offers to save
+the weekly rhythm.
+
+### Photographs
+
+`assets/hero-portrait.jpg`, `assets/about-teaching.jpg`,
+`assets/live-ministry.jpg` and `assets/portrait-avatar.jpg` are the four
+ministry photographs supplied. They are small originals (≈400–600 px wide) and
+have been upscaled for the page; if you have the full-resolution files, drop
+them in with the same filenames and the layout sharpens automatically.
+`assets/og-cover.jpg` is the 1200×630 social card, built from the portrait.
 
 ### Forms
 

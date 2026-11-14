@@ -219,6 +219,22 @@ worth knowing:
 - The recordings themselves are untouched — all of them still exist on
   `watch.html` under **Worship** and **Prayer**.
 
+## Simplified: the Resources section (14 Nov 2026)
+
+The `#resources` block on the home page no longer lists the four resource
+categories (audio messages, devotionals, prayer sounds, study guides). It is now
+a single band: the `04 — Resources` heading, one line of copy, and the
+**Request a resource** button, which mails `rcnanambra@gmail.com`.
+
+- The button was promoted from `btn--line` to `btn--solid` — it is the only
+  action left in the section, so it carries the weight.
+- `.resources__grid` went from a 2-column aside/accordion split to
+  `1fr auto` (copy left, button right, baseline-aligned), collapsing to a
+  single left-aligned column at ≤1080px. The sticky-aside rule is gone.
+- The `.accordion` wrapper rule was deleted. `.acc*` styles stay: the
+  "Before you come" FAQ on the same page still uses them, and so does the
+  accordion handler in `main.js`.
+
 ## Hardening pass (14 Nov 2026)
 
 Fixes applied after a full audit — worth knowing so they are not undone:
@@ -244,7 +260,7 @@ Fixes applied after a full audit — worth knowing so they are not undone:
   rAF loop pauses in a hidden tab, `will-change` was removed from every button,
   and the covers were re-encoded from ~160 KB to ~95 KB each.
 - **Static assets cached a week** (`stale-while-revalidate`) plus nosniff /
-  referrer / frame headers in `vercel.json`. Filenames are not hashed, so a
+  referrer headers in `vercel.json`. Filenames are not hashed, so a
   replaced photo takes up to 7 days to appear for return visitors — rename the
   file when swapping artwork.
 - **Layout safety** — `min-width: 0` on grid text tracks and `overflow-wrap:

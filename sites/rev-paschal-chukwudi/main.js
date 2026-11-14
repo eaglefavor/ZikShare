@@ -35,12 +35,16 @@
     }, 95);
   };
 
-  if (document.readyState === 'complete') boot();
-  else window.addEventListener('load', boot, { once: true });
-  // Never let a slow image hold the page hostage.
+  // Start as soon as the markup is parsed — images must not hold the curtain.
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', boot, { once: true });
+  } else {
+    boot();
+  }
+  // Safety net: never let anything hold the page hostage.
   window.setTimeout(() => {
-    if (preloader && document.body.classList.contains('is-ready') === false) boot();
-  }, 3200);
+    if (preloader && !document.body.classList.contains('is-ready')) boot();
+  }, 2400);
 
   /* ── Sticky nav ──────────────────────────────────────────── */
   const nav = $('#nav');

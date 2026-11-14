@@ -276,6 +276,66 @@
     }
   });
 
+  /* ── Next gathering countdown (Nigeria time) ─────────────── */
+  const nextName = $('#nextName');
+  const nextWhen = $('#nextWhen');
+  const nextCount = $('#nextCount');
+  if (nextName && nextWhen && nextCount) {
+    const SCHEDULE = [
+      { name: 'Mentality Shift', day: 3, utcHour: 16, label: 'Wednesday · 5:00 PM (WAT)' },
+      { name: 'Quivers Night of Prayer', day: 5, utcHour: 20, label: 'Friday · 9:00 PM (WAT)' },
+      { name: 'Build Up Service', day: 0, utcHour: 14, label: 'Sunday · 3:00 PM (WAT)' },
+    ];
+    const upcoming = () => {
+      const now = new Date();
+      let best = null;
+      SCHEDULE.forEach((s) => {
+        const when = new Date(Date.UTC(
+          now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), s.utcHour, 0, 0
+        ));
+        while (when.getUTCDay() !== s.day || when.getTime() <= now.getTime()) {
+          when.setUTCDate(when.getUTCDate() + 1);
+        }
+        if (!best || when < best.when) best = { name: s.name, label: s.label, when };
+      });
+      return best;
+    };
+    const tick = () => {
+      const n = upcoming();
+      const ms = n.when - new Date();
+      const days = Math.floor(ms / 86400000);
+      const hours = Math.floor((ms % 86400000) / 3600000);
+      const mins = Math.floor((ms % 3600000) / 60000);
+      nextName.textContent = n.name;
+      nextWhen.textContent = n.label;
+      nextCount.textContent = days > 0 ? `${days}d ${hours}h` : hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+    };
+    tick();
+    window.setInterval(tick, 30000);
+  }
+
+  /* ── Copy to clipboard ──────────────────────────────────── */
+  $$('.copy-btn').forEach((btn) => {
+    const original = btn.textContent;
+    btn.addEventListener('click', async () => {
+      const text = btn.getAttribute('data-copy') || '';
+      const done = () => {
+        btn.textContent = 'Copied ✓';
+        btn.classList.add('is-copied');
+        window.setTimeout(() => {
+          btn.textContent = original;
+          btn.classList.remove('is-copied');
+        }, 2200);
+      };
+      try {
+        await navigator.clipboard.writeText(text);
+        done();
+      } catch {
+        window.prompt('Copy the account number:', text);
+      }
+    });
+  });
+
   /* ── Year ────────────────────────────────────────────────── */
   const year = $('#year');
   if (year) year.textContent = String(new Date().getFullYear());

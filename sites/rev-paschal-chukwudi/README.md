@@ -131,3 +131,35 @@ The site lives inside the `ZikShare` repository because that is the repo this
 session works in. It is entirely self-contained in this folder — if you'd
 rather give the ministry its own repository, copy `sites/rev-paschal-chukwudi`
 out and point the Vercel project at it; nothing here depends on ZikShare.
+
+## Pages
+
+| File | URL | What it is |
+|---|---|---|
+| `index.html` | `/` | One-page home: hero, ministry, sounds grid, live band, latest teaching strip, resources, gatherings + countdown, the Word, moments, invite form, giving, FAQ, connect tiles, subscribe band |
+| `watch.html` | `/watch` | The archive — 17 talks in four filterable categories (sermons, classes, worship, prayer), each opening in the on-page lightbox with a YouTube fallback |
+| `404.html` | any 404 | Served automatically by Vercel; links back to the house and the archive |
+| `robots.txt` | `/robots.txt` | Allows everything, points at the sitemap |
+| `sitemap.xml` | `/sitemap.xml` | Both public URLs, `lastmod` refreshed by `build.mjs`'s release date |
+
+`build.mjs` builds **every** page (CSS, `main.js`, `watch.js` and local images
+inlined, page by page) and copies `robots.txt` + `sitemap.xml` into `dist/`.
+The Vercel project ignores `dist/` — it serves the source folder as static
+files, so those pages deploy straight from the repository.
+
+## Giving — deliberately not printed
+
+The **Sow** section asks visitors to request the account details by email
+instead of printing a bank line. Two different accounts are currently in
+circulation:
+
+- personal channel bio — Guaranty Trust Bank · Ozoigboanugo Paschal · `0128969044`
+- RCN Anambra video descriptions — Access Bank Plc · Remnant Christian Network Anambra · `0826965262`
+
+Publishing the wrong one would send people's money to the wrong place, so the
+page says the details are shared on request until the ministry confirms which
+account is current. To publish them: replace the `.give__note` paragraph and
+the two buttons in `index.html` (search for `give__panel`) with the account
+rows — `.give__row`, `.give__key` and `.give__val` styles are already in
+`styles.css`, and `.copy-btn[data-copy="<number>"]` gives the copy-to-clipboard
+button for free.

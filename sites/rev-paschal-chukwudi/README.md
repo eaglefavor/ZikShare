@@ -75,6 +75,31 @@ meeting** — adjust `DTEND` if a gathering runs shorter or longer. Each card's
 "Add to calendar" link downloads its file, so a visitor's phone offers to save
 the weekly rhythm.
 
+### Channels & social
+
+Pulled from the ministry's own YouTube bios and wired through the site
+(Connect grid, Live section, Resources, footer and JSON-LD `sameAs`):
+
+| Platform | Handle / address |
+| --- | --- |
+| YouTube — his channel | [@ApostlePaschalChukwudi](https://www.youtube.com/@ApostlePaschalChukwudi) |
+| YouTube — ministry | [@rcnanambra](https://www.youtube.com/@rcnanambra) |
+| Instagram | [@revpaschalchukwudi](https://www.instagram.com/revpaschalchukwudi) |
+| TikTok | [@revpaschalchukwudi](https://www.tiktok.com/@revpaschalchukwudi) |
+| WhatsApp channel | [Join](https://whatsapp.com/channel/0029VajhZyA8PgsDYm6mEE1r) |
+| Telegram | [@RevPaschalChukwdi](https://t.me/RevPaschalChukwdi) |
+| Facebook | [Profile](https://www.facebook.com/profile.php?id=100070264503680) |
+| Email | rcnanambra@gmail.com |
+
+The Live section's "Watch live on YouTube" opens the ministry channel's live
+tab; "Live alerts on WhatsApp" opens the WhatsApp channel. The featured sound
+is *Mai Rahāma* from his channel, and *Mentality Shift* links to a recorded
+class.
+
+**Not published on purpose:** his channel bio includes bank details for
+sowing into the ministry. Those are deliberately left off the site — ask
+before adding a giving section, since public account numbers attract fraud.
+
 ### Photographs
 
 `assets/hero-portrait.jpg`, `assets/about-teaching.jpg`,

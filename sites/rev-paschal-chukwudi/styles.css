@@ -680,7 +680,8 @@ section[id] { scroll-margin-top: 88px; }
 .about__figure { margin: 0; }
 .about__figure img {
   width: 100%;
-  aspect-ratio: 4 / 5;
+  /* The photograph's own ratio (466 × 657), so the frame crops nothing. */
+  aspect-ratio: 466 / 657;
   object-fit: cover;
   border-radius: 6px;
 }

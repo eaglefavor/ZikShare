@@ -102,7 +102,7 @@ before adding a giving section, since public account numbers attract fraud.
 
 ### Photographs
 
-`assets/hero-portrait.jpg`, `assets/about-teaching.webp`,
+`assets/hero-portrait.jpg`, `assets/about-teaching-full.webp`,
 `assets/live-ministry.jpg` and `assets/portrait-avatar.jpg` are the ministry
 photographs supplied. They are small originals (≈400–600 px wide) and have been
 upscaled for the page; if you have the full-resolution files, drop them in under
@@ -110,13 +110,13 @@ a **new filename** (assets are cached for a week — see the hardening notes) an
 the layout sharpens automatically. `assets/og-cover.jpg` is the 1200×630 social
 card, built from the portrait.
 
-`assets/about-teaching.webp` is the 2026 stage photograph the ministry supplied
-on 14 Nov 2026, replacing the soft video still that used to sit in the about
-section. The original is 466×657, which is under the ~1000 device pixels the
-card paints on a phone, so it is cropped to 4:5 (`448x560+9+0` — enough to drop
-the sliver of a head at the bottom edge), resized 259% with Lanczos 4-lobe,
-lightly unsharpened (`0x0.9+0.55+0.02`) and encoded as WebP q82: 1160×1450 at
-109 KB. WebP is used for this one file; it is inlined by `build.mjs` like the
+`assets/about-teaching-full.webp` is the 2026 stage photograph the ministry
+supplied on 14 Nov 2026, replacing the soft video still that used to sit in the
+about section. It is **not cropped**: the whole 466×657 frame is resized 249%
+with Lanczos 4-lobe, lightly unsharpened (`0x0.9+0.5+0.02`) and encoded as WebP
+q82 — 1160×1636 at 111 KB. Because nothing is cut, `.about__figure img` uses
+`aspect-ratio: 466 / 657` instead of the old 4/5; if you swap in a photograph
+of a different shape, update that ratio to match or the frame will crop it. WebP is used for this one file; it is inlined by `build.mjs` like the
 JPEGs and is supported by every browser the site targets.
 
 Note the `figcaption` now reads "Teaching in Agu-Awka" — the event is not

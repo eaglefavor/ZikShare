@@ -55,6 +55,8 @@
     if (!menu || !navToggle) return;
     menu.classList.toggle('is-open', open);
     menu.setAttribute('aria-hidden', String(!open));
+    if (open) menu.removeAttribute('inert');
+    else menu.setAttribute('inert', '');
     navToggle.setAttribute('aria-expanded', String(open));
     navToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
     document.body.classList.toggle('is-locked', open);

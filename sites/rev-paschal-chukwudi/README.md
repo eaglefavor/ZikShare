@@ -19,7 +19,7 @@ lightbox. Everything respects `prefers-reduced-motion`.
 index.html      markup + copy (all content lives here)
 styles.css      the whole design system
 main.js         interactions (progressive: the page reads fine without it)
-assets/         3 atmospheric photographs
+assets/         3 atmospheric photographs + og-cover.jpg (social share card)
 build.mjs       bundles everything into one dist/index.html (optional)
 ```
 

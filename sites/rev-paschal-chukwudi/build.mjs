@@ -12,12 +12,13 @@ import { fileURLToPath } from 'node:url';
 const root = dirname(fileURLToPath(import.meta.url));
 const SITE = 'https://rev-paschal-chukwudi.vercel.app';
 const read = (p) => readFile(join(root, p), 'utf8');
-const PAGES = ['index.html', 'watch.html', '404.html'];
+const PAGES = ['index.html', 'watch.html', 'books.html', '404.html'];
 
 const css = await read('styles.css');
 const scripts = {
   'main.js': await read('main.js'),
   'watch.js': await read('watch.js'),
+  'books.js': await read('books.js'),
 };
 
 await mkdir(join(root, 'dist'), { recursive: true });

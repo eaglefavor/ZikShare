@@ -1069,29 +1069,6 @@ section[id] { scroll-margin-top: 88px; }
 .form__note { margin: 0; font-size: 0.75rem; color: rgba(244, 238, 227, 0.62); }
 .form__note.is-ok { color: var(--orange-2); }
 
-/* ── Connect ────────────────────────────────────────────────── */
-.connect { padding-bottom: clamp(3.5rem, 9vh, 7rem); }
-.connect__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: rgba(16, 15, 13, 0.14); }
-.connect__card {
-  position: relative;
-  background: var(--cream);
-  padding: clamp(1.5rem, 3vw, 2.3rem);
-  display: grid;
-  gap: 0.5rem;
-  min-height: 170px;
-  align-content: space-between;
-  transition: background 0.5s var(--ease), color 0.5s;
-  isolation: isolate;
-}
-.connect__card:hover { background: var(--orange); color: var(--ink); }
-.connect__card--static:hover { background: var(--cream); color: var(--ink); }
-.connect__label { font-size: 0.66rem; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted-2); transition: color 0.4s; }
-.connect__card:hover .connect__label { color: rgba(16, 15, 13, 0.65); }
-.connect__value { font-family: var(--serif); font-size: clamp(1.1rem, 1.5vw, 1.35rem); line-height: 1.25; letter-spacing: -0.01em; }
-.connect__arrow { position: absolute; top: 1.4rem; right: 1.4rem; width: 34px; height: 34px; border-radius: 50%; border: 1px solid rgba(16, 15, 13, 0.2); display: grid; place-items: center; transition: transform 0.5s var(--ease), border-color 0.4s; }
-.connect__arrow svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-.connect__card:hover .connect__arrow { transform: rotate(45deg); border-color: rgba(16, 15, 13, 0.4); }
-
 /* ── Footer ─────────────────────────────────────────────────── */
 .footer { background: var(--ink); color: var(--cream); padding: clamp(3rem, 8vh, 5rem) 0 1.6rem; overflow: hidden; position: relative; }
 .footer__word {
@@ -1211,7 +1188,6 @@ section[id] { scroll-margin-top: 88px; }
   .offer-grid { grid-template-columns: 1fr; }
   .offer { min-height: auto; }
   .verses { grid-template-columns: 1fr; }
-  .connect__grid { grid-template-columns: repeat(2, 1fr); }
   .event { grid-template-columns: 100px 1fr; }
   .event__actions { grid-column: 2; justify-items: start; }
   .cards2 { grid-template-columns: 1fr; }
@@ -1224,7 +1200,6 @@ section[id] { scroll-margin-top: 88px; }
   .event__actions { grid-column: 1; }
   .event__date { grid-template-columns: auto auto auto; align-items: baseline; }
   .event__big { grid-column: auto; font-size: 1.5rem; }
-  .connect__grid { grid-template-columns: 1fr; }
   .footer__base { flex-direction: column; align-items: flex-start; }
   .pullquote { padding-left: 1.2rem; }
 }
@@ -1437,7 +1412,6 @@ section[id] { scroll-margin-top: 88px; }
 }
 .map-link svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .map-link:hover { color: var(--orange); border-color: var(--orange); }
-.connect__card .map-link { color: inherit; border-color: rgba(16, 15, 13, 0.3); font-size: 0.74rem; margin-top: 0.2rem; }
 
 /* ── Watch page ─────────────────────────────────────────────── */
 .page-hero {
@@ -2047,8 +2021,7 @@ section[id] { scroll-margin-top: 88px; }
   /* Hover-only flourishes that would stick after a tap. */
   .event:hover { padding-left: 0; background: transparent; }
   .card-mini:hover,
-  .verse:hover,
-  .connect__card--static:hover { background: inherit; }
+  .verse:hover { background: inherit; }
 }
 
 /* ── Phones, including 5-inch and below (≤520px) ───────────────── */

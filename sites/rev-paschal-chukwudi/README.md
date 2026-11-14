@@ -219,6 +219,33 @@ worth knowing:
 - The recordings themselves are untouched — all of them still exist on
   `watch.html` under **Worship** and **Prayer**.
 
+## Removed: the Connect section (14 Nov 2026)
+
+The `11 — Connect` grid of nine link cards is gone. It was the last numbered
+section and it was almost entirely a repeat of things one scroll away:
+
+| Card | Where it already lived |
+|---|---|
+| Email | footer, invite form, FAQ |
+| YouTube · his channel | orange "Keep the fire close" band |
+| YouTube · ministry | footer |
+| WhatsApp channel | the band, and the live section |
+| Instagram | footer |
+| Telegram | the band |
+| Location | Gathering cards and FAQ 4 ("How do I get there?") |
+
+Only **TikTok** and **Facebook** were unique to the section, so they were moved
+into every footer, next to Instagram: `YouTube · Instagram · TikTok · Facebook ·
+Email`. `books.html` and `404.html` also gained the Instagram link they were
+missing, so all four footers now list the same set.
+
+Housekeeping: `#connect` had no inbound links anywhere, so nothing had to be
+retargeted and the numbered tags still run `01 – 10` (Before you come is last).
+All `.connect*` rules (15 blocks, media queries included) were deleted and the
+stylesheet was re-parsed with `tinycss2` — 504 top-level nodes, 0 errors. The
+JSON-LD `sameAs` list already carried TikTok and Facebook, so structured data is
+unchanged.
+
 ## Simplified: the Resources section (14 Nov 2026)
 
 The `#resources` block on the home page no longer lists the four resource

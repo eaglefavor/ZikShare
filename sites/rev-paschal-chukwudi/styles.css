@@ -17,7 +17,7 @@
   --orange-2: #ff6b2c;
   --orange-soft: #f7d9c9;
   --muted: #6d665c;
-  --muted-2: #8b8377;
+  --muted-2: #6f685d;   /* 4.7:1 on cream — was #8b8377 at 3.2:1 */
 
   --serif: "Fraunces", "Times New Roman", serif;
   --serif-alt: "Instrument Serif", Georgia, serif;
@@ -1131,7 +1131,7 @@ section[id] { scroll-margin-top: 88px; }
   gap: 1.1rem;
 }
 .field { display: grid; gap: 0.4rem; }
-.field label { font-size: 0.66rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(244, 238, 227, 0.55); }
+.field label { font-size: 0.66rem; letter-spacing: 0.2em; text-transform: uppercase; color: rgba(244, 238, 227, 0.68); }
 .field input,
 .field select,
 .field textarea {
@@ -1162,7 +1162,7 @@ section[id] { scroll-margin-top: 88px; }
 }
 .field select option { color: var(--ink); }
 .form .btn { margin-top: 0.4rem; --btn-bg: var(--cream); --btn-fg: var(--ink); }
-.form__note { margin: 0; font-size: 0.75rem; color: rgba(244, 238, 227, 0.45); }
+.form__note { margin: 0; font-size: 0.75rem; color: rgba(244, 238, 227, 0.62); }
 .form__note.is-ok { color: var(--orange-2); }
 
 /* ── Connect ────────────────────────────────────────────────── */
@@ -1223,7 +1223,7 @@ section[id] { scroll-margin-top: 88px; }
   padding-top: 1.4rem;
   border-top: var(--hair-light);
   font-size: 0.74rem;
-  color: rgba(244, 238, 227, 0.45);
+  color: rgba(244, 238, 227, 0.62);
 }
 .footer__top { display: inline-flex; align-items: center; gap: 0.4rem; transition: color 0.3s; }
 .footer__top svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
@@ -1509,7 +1509,7 @@ section[id] { scroll-margin-top: 88px; }
   max-width: 20ch;
 }
 .subscribe h2 em { font-family: var(--serif-alt); font-style: italic; }
-.subscribe p { margin: 0; font-size: 0.92rem; color: rgba(16, 15, 13, 0.72); max-width: 40ch; }
+.subscribe p { margin: 0; font-size: 0.92rem; color: rgba(16, 15, 13, 0.84); max-width: 40ch; }
 .subscribe__actions { display: flex; flex-wrap: wrap; gap: 0.7rem; }
 .subscribe .btn { --btn-bg: var(--ink); --btn-fg: var(--cream); }
 .subscribe .btn--line { --btn-bg: transparent; --btn-fg: var(--ink); border-color: rgba(16, 15, 13, 0.35); }

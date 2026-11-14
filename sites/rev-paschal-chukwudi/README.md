@@ -114,9 +114,15 @@ card, built from the portrait.
 supplied on 14 Nov 2026, replacing the soft video still that used to sit in the
 about section. It is **not cropped**: the whole 466×657 frame is resized 249%
 with Lanczos 4-lobe, lightly unsharpened (`0x0.9+0.5+0.02`) and encoded as WebP
-q82 — 1160×1636 at 111 KB. Because nothing is cut, `.about__figure img` uses
-`aspect-ratio: 466 / 657` instead of the old 4/5; if you swap in a photograph
-of a different shape, update that ratio to match or the frame will crop it. WebP is used for this one file; it is inlined by `build.mjs` like the
+q82 — 1160×1636 at 111 KB.
+
+The picture is 1.41× as tall as it is wide, which made the about column run very
+long. `.about__figure` is therefore a **4:5 mount** — shorter than the photo, on
+a `--cream-2` mat with a hairline border — and the image is centred inside it
+with `max-width/max-height: 100%` and `width/height: auto`. So the photo is
+never cropped or zoomed, the mats absorb the difference, and the column is
+shorter. Swap in a photo of another shape and only the mats change; nothing
+needs retuning. (The earlier `object-fit: cover` + fixed ratio did crop.) WebP is used for this one file; it is inlined by `build.mjs` like the
 JPEGs and is supported by every browser the site targets.
 
 Note the `figcaption` now reads "Teaching in Agu-Awka" — the event is not

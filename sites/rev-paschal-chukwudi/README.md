@@ -147,19 +147,21 @@ inlined, page by page) and copies `robots.txt` + `sitemap.xml` into `dist/`.
 The Vercel project ignores `dist/` — it serves the source folder as static
 files, so those pages deploy straight from the repository.
 
-## Giving — deliberately not printed
+## Giving — both accounts published
 
-The **Sow** section asks visitors to request the account details by email
-instead of printing a bank line. Two different accounts are currently in
-circulation:
+The **Sow** section prints two accounts, labelled so a visitor knows which is
+which (confirmed by the ministry on 14 Nov 2026):
 
-- personal channel bio — Guaranty Trust Bank · Ozoigboanugo Paschal · `0128969044`
-- RCN Anambra video descriptions — Access Bank Plc · Remnant Christian Network Anambra · `0826965262`
+| Panel | Bank | Account name | Number | Purpose |
+|---|---|---|---|---|
+| The house | Access Bank Plc | Remnant Christian Network Anambra | `0826965262` | Tithes, offerings, building the house |
+| His personal ministry | Guaranty Trust Bank | Ozoigboanugo Paschal | `0128969044` | Support for the man and the ministry he carries |
 
-Publishing the wrong one would send people's money to the wrong place, so the
-page says the details are shared on request until the ministry confirms which
-account is current. To publish them: replace the `.give__note` paragraph and
-the two buttons in `index.html` (search for `give__panel`) with the account
-rows — `.give__row`, `.give__key` and `.give__val` styles are already in
-`styles.css`, and `.copy-btn[data-copy="<number>"]` gives the copy-to-clipboard
-button for free.
+A warning line below both panels tells visitors these are the only two accounts
+and that the ministry never calls to request a transfer. Each number has a
+copy-to-clipboard button (`main.js` → "Copy to clipboard", driven by
+`data-copy`), with a `prompt()` fallback on browsers without the Clipboard API.
+
+**If either account changes**, edit the `.give__row` values *and* the
+`data-copy` attributes in `index.html` (search for `give__accounts`) together —
+they are not derived from each other. Update this table too.

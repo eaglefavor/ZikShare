@@ -1767,3 +1767,33 @@ section[id] { scroll-margin-top: 88px; }
 .notfound > .shell > p:not(.tag):not(.notfound__code) { color: var(--muted); max-width: 48ch; margin: 0; }
 .notfound__hint { margin-top: 1.6rem !important; font-size: 0.84rem; }
 .notfound__hint a { border-bottom: 1px solid var(--orange); padding-bottom: 1px; }
+
+/* Give — two labelled accounts */
+.give__accounts { display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(1rem, 2.2vw, 1.6rem); }
+.give__badge {
+  display: inline-block;
+  margin: 0 0 0.7rem;
+  padding: 0.3rem 0.65rem;
+  border: 1px solid rgba(225, 84, 31, 0.5);
+  border-radius: 999px;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--orange);
+}
+.give__title {
+  font-family: var(--serif);
+  font-weight: 400;
+  font-size: clamp(1.1rem, 1.6vw, 1.3rem);
+  letter-spacing: -0.015em;
+  color: var(--cream);
+  margin: 0 0 0.35rem;
+}
+.give__sub { margin: 0 0 1.4rem !important; font-size: 0.84rem !important; color: rgba(244, 238, 227, 0.55) !important; max-width: 30ch; }
+.give .give__warn {
+  margin-top: 1.7rem;
+  padding-top: 1.3rem;
+  border-top: 1px solid rgba(244, 238, 227, 0.14);
+  max-width: 68ch;
+}
+@media (max-width: 900px) { .give__accounts { grid-template-columns: 1fr; } }

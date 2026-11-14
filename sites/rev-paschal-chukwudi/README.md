@@ -172,7 +172,7 @@ soft copy — and either one can be ordered from the same card.
 
 | File | URL | What it is |
 |---|---|---|
-| `index.html` | `/` | One-page home: hero, ministry, sounds grid, live band, latest teaching strip, resources, gatherings + countdown, the Word, moments, invite form, giving, FAQ, connect tiles, subscribe band |
+| `index.html` | `/` | One-page home: hero, ministry, live band, latest teaching strip, resources, gatherings + countdown, the Word, moments, invite form, giving, FAQ, connect tiles, subscribe band |
 | `watch.html` | `/watch` | The archive — 17 talks in four filterable categories (sermons, classes, worship, prayer), each opening in the on-page lightbox with a YouTube fallback |
 | `books.html` | `/books` | The shelf — catalogue, prices, order sheet with hardcopy delivery or soft-copy delivery |
 | `404.html` | any 404 | Served automatically by Vercel; links back to the house and the archive |
@@ -202,6 +202,22 @@ copy-to-clipboard button (`main.js` → "Copy to clipboard", driven by
 **If either account changes**, edit the `.give__row` values *and* the
 `data-copy` attributes in `index.html` (search for `give__accounts`) together —
 they are not derived from each other. Update this table too.
+
+## Removed: the Sounds section (14 Nov 2026)
+
+The in-page **Sounds** block was removed at the ministry's request. Consequences
+worth knowing:
+
+- The numbered tags on the home page were re-sequenced (Live is now `03`,
+  Connect is `11`), and the nav, menu and footers lost their Sounds entries.
+- Three links that pointed at `#sounds` — the hero CTA, the "Hear the sessions"
+  offering and "Open the sounds" — now go to `watch.html?kind=worship`, so the
+  worship and prayer recordings are still reachable through the archive filter.
+- The dead `.sound*`, `.feature*` and `.download-card*` rules (31 blocks) were
+  deleted from `styles.css`; `.play` / `.play--sm` remain because the archive and
+  teaching cards use them.
+- The recordings themselves are untouched — all of them still exist on
+  `watch.html` under **Worship** and **Prayer**.
 
 ## Hardening pass (14 Nov 2026)
 

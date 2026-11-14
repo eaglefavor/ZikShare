@@ -147,7 +147,7 @@
       else raf = window.requestAnimationFrame(loop);
     });
 
-    const hot = 'a, button, .sound, .feature__frame, [data-magnetic]';
+    const hot = 'a, button, [data-magnetic]';
     document.addEventListener('mouseover', (e) => {
       if (e.target.closest(hot)) cursor.classList.add('is-active');
     });

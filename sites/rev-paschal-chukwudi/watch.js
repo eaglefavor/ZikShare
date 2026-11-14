@@ -21,9 +21,15 @@
       b.setAttribute('aria-pressed', on ? 'true' : 'false');
     });
     if (empty) empty.hidden = shown !== 0;
-    if (push && history.replaceState) {
-      const url = key === 'all' ? location.pathname + location.search : '?kind=' + key;
-      history.replaceState(null, '', url);
+    if (push) {
+      // Keep any other query parameters intact; only the filter is ours.
+      const params = new URLSearchParams(location.search);
+      if (key === 'all') params.delete('kind');
+      else params.set('kind', key);
+      const qs = params.toString();
+      try {
+        history.replaceState(null, '', location.pathname + (qs ? `?${qs}` : '') + location.hash);
+      } catch { /* file:// or sandboxed */ }
     }
   };
 

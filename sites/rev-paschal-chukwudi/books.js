@@ -90,7 +90,8 @@ const empty = document.getElementById('shelfEmpty');
 /* ── Render the shelf ─────────────────────────────────────────── */
 const coverMarkup = (book) => {
   if (book.cover) {
-    return `<img class="book__img" src="${esc(book.cover)}" alt="Cover of ${esc(book.title)}" loading="lazy" />`;
+    return `<img class="book__img" src="${esc(book.cover)}" alt="Cover of ${esc(book.title)}"
+      width="720" height="960" loading="lazy" decoding="async" />`;
   }
   const initials = book.title
     .split(/\s+/)
@@ -159,7 +160,10 @@ if (grid) {
     grid.innerHTML = BOOKS.map(card).join('');
     grid.classList.add('is-filled');
     if (empty) empty.hidden = true;
-    // Let the shared reveal observer pick up the freshly injected cards.
+    // The cards are injected after main.js has scanned the page, so without
+    // this they keep the [data-reveal] opacity: 0 and the shelf looks empty.
+    window.__revealScan?.(grid);
+    window.dispatchEvent(new CustomEvent('reveal:rescan', { detail: { scope: grid } }));
     document.dispatchEvent(new CustomEvent('books:rendered'));
   } else if (empty) {
     empty.hidden = false;
@@ -187,7 +191,7 @@ if (sheet && form && grid) {
     if (!current) return 0;
     const unit = format === 'hard' ? current.hard : current.soft;
     if (unit == null) return 0;
-    const qty = format === 'hard' ? Math.max(1, Number(qtyEl.value) || 1) : 1;
+    const qty = format === 'hard' ? Math.max(1, Number(qtyEl?.value) || 1) : 1;
     return unit * qty;
   };
 
@@ -222,7 +226,7 @@ if (sheet && form && grid) {
     titleEl.textContent = book.title;
     priceHardEl.textContent = book.hard == null ? 'Not sold' : priceText(book.hard);
     priceSoftEl.textContent = book.soft == null ? 'Not sold' : priceText(book.soft);
-    qtyEl.value = '1';
+    if (qtyEl) qtyEl.value = '1';
     repaint();
 
     if (format === 'soft' && book.softMode === 'download' && book.softFile) {
@@ -230,8 +234,11 @@ if (sheet && form && grid) {
       return;
     }
 
-    if (typeof sheet.showModal === 'function') sheet.showModal();
-    else sheet.setAttribute('open', '');
+    if (typeof sheet.showModal === 'function') {
+      if (!sheet.open) sheet.showModal();
+    } else {
+      sheet.setAttribute('open', '');
+    }
     document.body.classList.add('is-locked');
     window.setTimeout(() => document.getElementById('orderName')?.focus(), 60);
   };

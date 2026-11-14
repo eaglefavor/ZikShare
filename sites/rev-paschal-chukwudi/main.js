@@ -13,8 +13,14 @@
   const bar = $('#preloaderBar');
   const counter = $('#preloaderCount');
 
+  let visited = false;
+  try {
+    visited = sessionStorage.getItem('rpc-seen') === '1';
+    sessionStorage.setItem('rpc-seen', '1');
+  } catch { /* private mode — always show it */ }
+
   const boot = () => {
-    if (!preloader || reduceMotion) {
+    if (!preloader || reduceMotion || visited) {
       document.body.classList.add('is-ready');
       preloader?.remove();
       return;
@@ -55,38 +61,65 @@
   /* ── Mobile menu ─────────────────────────────────────────── */
   const navToggle = $('#navToggle');
   const menu = $('#menu');
+  // Body scroll lock is shared by the menu, the video lightbox and the book
+  // sheet — so it has to be derived from all three, never toggled blindly.
+  const lightboxEl = $('#lightbox');
+  const syncLock = () => {
+    const locked = !!menu?.classList.contains('is-open') ||
+      !!lightboxEl?.classList.contains('is-open') ||
+      !!document.querySelector('dialog.sheet[open]');
+    document.body.classList.toggle('is-locked', locked);
+  };
+
+  let lastFocus = null;
+
   const setMenu = (open) => {
     if (!menu || !navToggle) return;
+    if (open === menu.classList.contains('is-open')) return;
     menu.classList.toggle('is-open', open);
     menu.setAttribute('aria-hidden', String(!open));
-    if (open) menu.removeAttribute('inert');
-    else menu.setAttribute('inert', '');
+    if (open) {
+      menu.removeAttribute('inert');
+      lastFocus = document.activeElement;
+      window.setTimeout(() => menu.querySelector('.menu__link')?.focus(), 320);
+    } else {
+      menu.setAttribute('inert', '');
+      if (lastFocus && lastFocus !== document.body) lastFocus.focus?.();
+      lastFocus = null;
+    }
     navToggle.setAttribute('aria-expanded', String(open));
     navToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-    document.body.classList.toggle('is-locked', open);
     document.body.classList.toggle('menu-open', open);
+    syncLock();
   };
-  navToggle?.addEventListener('click', () => setMenu(!menu.classList.contains('is-open')));
+  navToggle?.addEventListener('click', () => setMenu(!menu?.classList.contains('is-open')));
   $$('.menu__link').forEach((a) => a.addEventListener('click', () => setMenu(false)));
   window.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') { setMenu(false); closeVideo(); }
   });
 
   /* ── Reveal on scroll ────────────────────────────────────── */
-  const revealables = $$('[data-reveal]');
-  if ('IntersectionObserver' in window && !reduceMotion) {
-    const io = new IntersectionObserver((entries) => {
+  const io = ('IntersectionObserver' in window && !reduceMotion)
+    ? new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           entry.target.classList.add('is-in');
           io.unobserve(entry.target);
         }
       });
-    }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' });
-    revealables.forEach((el) => io.observe(el));
-  } else {
-    revealables.forEach((el) => el.classList.add('is-in'));
-  }
+    }, { threshold: 0.12, rootMargin: '0px 0px -8% 0px' })
+    : null;
+
+  // Content rendered after load (the book shelf) must be able to ask for a
+  // rescan — otherwise it stays at opacity 0 forever.
+  const scanReveals = (scope = document) => {
+    const found = Array.from(scope.querySelectorAll('[data-reveal]:not(.is-in)'));
+    if (scope.matches?.('[data-reveal]:not(.is-in)')) found.push(scope);
+    found.forEach((el) => (io ? io.observe(el) : el.classList.add('is-in')));
+  };
+  scanReveals();
+  window.addEventListener('reveal:rescan', (e) => scanReveals(e.detail?.scope || document));
+  window.__revealScan = scanReveals;
 
   /* ── Custom cursor ───────────────────────────────────────── */
   const cursor = $('#cursor');
@@ -101,13 +134,18 @@
       dot.style.transform = `translate(${mx}px, ${my}px) translate(-50%, -50%)`;
     }, { passive: true });
 
+    let raf = 0;
     const loop = () => {
       rx += (mx - rx) * 0.16;
       ry += (my - ry) * 0.16;
       ring.style.transform = `translate(${rx}px, ${ry}px) translate(-50%, -50%)`;
-      window.requestAnimationFrame(loop);
+      raf = window.requestAnimationFrame(loop);
     };
     loop();
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) window.cancelAnimationFrame(raf);
+      else raf = window.requestAnimationFrame(loop);
+    });
 
     const hot = 'a, button, .sound, .feature__frame, [data-magnetic]';
     document.addEventListener('mouseover', (e) => {
@@ -153,8 +191,13 @@
   }
 
   /* ── Accordion ───────────────────────────────────────────── */
-  $$('.acc').forEach((acc) => {
+  $$('.acc').forEach((acc, i) => {
     const head = $('.acc__head', acc);
+    const body = $('.acc__body', acc);
+    if (head && body && !body.id) {
+      body.id = `acc-body-${i + 1}`;
+      head.setAttribute('aria-controls', body.id);
+    }
     head?.addEventListener('click', () => {
       const open = acc.classList.contains('is-open');
       $$('.acc').forEach((other) => {
@@ -169,18 +212,21 @@
   });
 
   /* ── Video lightbox ──────────────────────────────────────── */
-  const lightbox = $('#lightbox');
+  const lightbox = lightboxEl || $('#lightbox');
   const frame = $('#lightboxFrame');
   const closeBtn = $('#lightboxClose');
+
+  let videoTrigger = null;
 
   function openVideo(id) {
     if (!lightbox || !frame) return;
     frame.innerHTML = `<iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0&modestbranding=1"
       title="Worship video" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
       allowfullscreen></iframe>`;
+    videoTrigger = document.activeElement;
     lightbox.classList.add('is-open');
     lightbox.setAttribute('aria-hidden', 'false');
-    document.body.classList.add('is-locked');
+    syncLock();
     closeBtn?.focus();
   }
 
@@ -188,8 +234,10 @@
     if (!lightbox || !lightbox.classList.contains('is-open')) return;
     lightbox.classList.remove('is-open');
     lightbox.setAttribute('aria-hidden', 'true');
-    document.body.classList.remove('is-locked');
+    syncLock();
     window.setTimeout(() => { frame.innerHTML = ''; }, 380);
+    if (videoTrigger && videoTrigger !== document.body) videoTrigger.focus?.();
+    videoTrigger = null;
   }
 
   $$('[data-video]').forEach((el) => {
@@ -350,7 +398,7 @@
       e.preventDefault();
       const offset = Math.max(0, target.getBoundingClientRect().top + window.scrollY - 72);
       window.scrollTo({ top: offset, behavior: reduceMotion ? 'auto' : 'smooth' });
-      history.replaceState(null, '', id);
+      try { history.replaceState(null, '', id); } catch { /* file:// or sandboxed */ }
     });
   });
 })();

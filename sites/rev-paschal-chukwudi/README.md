@@ -202,3 +202,49 @@ copy-to-clipboard button (`main.js` → "Copy to clipboard", driven by
 **If either account changes**, edit the `.give__row` values *and* the
 `data-copy` attributes in `index.html` (search for `give__accounts`) together —
 they are not derived from each other. Update this table too.
+
+## Hardening pass (14 Nov 2026)
+
+Fixes applied after a full audit — worth knowing so they are not undone:
+
+- **Book cards were invisible.** `books.js` injects the shelf *after* `main.js`
+  has scanned for `[data-reveal]`, so the cards kept `opacity: 0`. `main.js` now
+  exposes `window.__revealScan()` / a `reveal:rescan` event, and `books.js`
+  calls it after rendering. Any new JS-rendered block with `data-reveal` must do
+  the same.
+- **Scroll lock is derived, not toggled.** `syncLock()` checks the menu, the
+  video lightbox and the book dialog together; before, closing the video could
+  unlock the page while the menu was still open.
+- **Portrait covers are never cropped.** The books grid used `aspect-ratio: 4/3`
+  under 620px, which sliced the title off the artwork. Now 3:4, card capped at
+  380px and centred.
+- **Preloader runs once per session** (`sessionStorage`), not on every page.
+- **iOS input zoom** — every field is 16px on phones (smaller values make Safari
+  zoom the whole page on focus).
+- **Touch targets** — 44px minimum on coarse pointers, and hover-only effects
+  (row padding shifts, card tints) no longer stick after a tap.
+- **Performance** — the full-screen multiply-blended grain stops animating under
+  760px, backdrop blurs drop from 14px to 8px on phones, the custom cursor's
+  rAF loop pauses in a hidden tab, `will-change` was removed from every button,
+  and the covers were re-encoded from ~160 KB to ~95 KB each.
+- **Static assets cached a week** (`stale-while-revalidate`) plus nosniff /
+  referrer / frame headers in `vercel.json`. Filenames are not hashed, so a
+  replaced photo takes up to 7 days to appear for return visitors — rename the
+  file when swapping artwork.
+- **Layout safety** — `min-width: 0` on grid text tracks and `overflow-wrap:
+  break-word` on headings and paragraphs, so a long email or account name can
+  never widen the page.
+
+### Breakpoints
+
+| Width | What changes |
+|---|---|
+| ≥2200px | shell 1560px, root 18.5px |
+| ≥1800px | shell 1440px, root 17.5px, larger hero portrait |
+| ≥1500px | shell 1340px |
+| ≤1080px | nav collapses to the full-screen menu |
+| ≤900px | hero stacks, 2-column grids collapse |
+| ≤620px | single-column, 16px inputs, compact spacing |
+| ≤520px | full-width buttons, stacked countdown, dialog edge-to-edge |
+| ≤380px | 4-inch class: smaller type scale, single-column prices |
+| height ≤620px | landscape phones: menu and 404 stop forcing full height |

@@ -5,6 +5,7 @@
    ══════════════════════════════════════════════════════════════ */
 
 :root {
+  color-scheme: light;
   --cream: #f4eee3;
   --cream-2: #efe7d8;
   --cream-3: #e6dbc7;
@@ -36,6 +37,7 @@
 
 html {
   scroll-behavior: smooth;
+  scroll-padding-top: 84px;
   -webkit-text-size-adjust: 100%;
 }
 
@@ -55,6 +57,7 @@ body {
 body.is-locked { overflow: hidden; }
 
 img { max-width: 100%; display: block; }
+h1, h2, h3, h4, p, li, blockquote, figcaption { overflow-wrap: break-word; }
 a { color: inherit; text-decoration: none; }
 button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
 ::selection { background: var(--orange); color: var(--cream); }
@@ -176,7 +179,6 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
   overflow: hidden;
   isolation: isolate;
   transition: color 0.45s var(--ease), border-color 0.45s var(--ease), transform 0.3s var(--ease);
-  will-change: transform;
 }
 .btn > * { position: relative; z-index: 1; }
 .btn::before {
@@ -194,6 +196,10 @@ button { font: inherit; color: inherit; background: none; border: 0; cursor: poi
 .btn--sm { padding: 0.7rem 1.2rem; font-size: 0.78rem; }
 .btn--full { width: 100%; }
 
+.btn--solid {
+  --btn-bg: var(--ink);
+  --btn-fg: var(--cream);
+}
 .btn--ghost {
   --btn-bg: transparent;
   --btn-fg: var(--ink);
@@ -375,6 +381,7 @@ body.menu-open .nav__toggle span { background: var(--cream); }
   position: fixed;
   inset: 0;
   z-index: 880;
+  overscroll-behavior: contain;
   background: var(--ink);
   color: var(--cream);
   clip-path: inset(0 0 100% 0);
@@ -1403,12 +1410,6 @@ section[id] { scroll-margin-top: 88px; }
 
 /* ── Giving ─────────────────────────────────────────────────── */
 .give { background: var(--ink); color: var(--cream); }
-.give__grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: clamp(2rem, 5vw, 4.5rem);
-  align-items: start;
-}
 .give .h-section { color: var(--cream); max-width: 16ch; }
 .give p { color: rgba(244, 238, 227, 0.68); max-width: 44ch; }
 .give__panel {
@@ -1584,7 +1585,7 @@ section[id] { scroll-margin-top: 88px; }
   padding: 1.6rem 0;
   border-bottom: var(--hair);
   position: sticky;
-  top: 62px;
+  top: 64px;
   background: rgba(244, 238, 227, 0.92);
   backdrop-filter: blur(12px);
   z-index: 500;
@@ -1653,7 +1654,7 @@ section[id] { scroll-margin-top: 88px; }
 }
 .arc-card:hover .arc-card__meta h3 { color: var(--orange); }
 .archive__empty {
-  display: none;
+  display: block;
   padding: 3rem 0;
   color: var(--muted);
   font-family: var(--serif-alt);
@@ -1684,7 +1685,7 @@ section[id] { scroll-margin-top: 88px; }
 /* ── Responsive for round two ───────────────────────────────── */
 @media (max-width: 1080px) {
   .archive__grid { grid-template-columns: repeat(2, 1fr); }
-  .filters { top: 58px; }
+  .filters { top: 60px; }
 }
 @media (max-width: 900px) {
   .give__grid, .faq__grid, .subscribe__grid { grid-template-columns: 1fr; }
@@ -1752,14 +1753,6 @@ section[id] { scroll-margin-top: 88px; }
   transform: translate(-50%, -50%) scale(1);
 }
 
-/* Give panel — request flow */
-.give__note {
-  margin: 1.1rem 0 0;
-  font-size: 0.88rem;
-  line-height: 1.6;
-  color: rgba(244, 238, 227, 0.62) !important;
-  max-width: 40ch;
-}
 
 /* 404 */
 .notfound { padding: clamp(6rem, 14vh, 10rem) 0 clamp(4rem, 9vh, 7rem); position: relative; overflow: hidden; }
@@ -2099,8 +2092,11 @@ section[id] { scroll-margin-top: 88px; }
   .how__item p { max-width: none; }
 }
 @media (max-width: 620px) {
-  .shelf__grid { grid-template-columns: 1fr; }
-  .book__cover { aspect-ratio: 4 / 3; }
+  /* One column, but keep the card a sane book width instead of stretching the
+     cover across a tablet. 3:4 — a landscape crop cuts the cover title. */
+  .shelf__grid { grid-template-columns: 1fr; justify-items: center; }
+  .book { width: 100%; max-width: 380px; }
+  .book__cover { aspect-ratio: 3 / 4; }
   .sheet__formats, .sheet__fields, .sheet__fields #hardFields { grid-template-columns: 1fr; }
   .book__prices { grid-template-columns: 1fr 1fr; }
 }
@@ -2124,3 +2120,154 @@ section[id] { scroll-margin-top: 88px; }
   margin-right: 0.45rem;
 }
 .shelf__notice a { border-bottom: 1px solid var(--orange); }
+
+/* ══════════════════════════════════════════════════════════════
+   Hardening pass — small phones, large desktops, input zoom,
+   touch targets and paint cost.
+   ══════════════════════════════════════════════════════════════ */
+
+/* iOS Safari zooms the page when a focused field is under 16px. */
+@media (max-width: 620px) {
+  .field input,
+  .field select,
+  .field textarea,
+  .sheet__fields input { font-size: 16px; }
+}
+
+/* Comfortable touch targets on anything without a precise pointer. */
+@media (pointer: coarse) {
+  .btn--sm { min-height: 44px; }
+  .filter { min-height: 40px; }
+  .footer__links a,
+  .inline-link,
+  .map-link,
+  .event__cta,
+  .acc__links a { min-height: 32px; display: inline-flex; align-items: center; }
+  /* Hover-only flourishes that would stick after a tap. */
+  .event:hover { padding-left: 0; background: transparent; }
+  .card-mini:hover,
+  .verse:hover,
+  .connect__card--static:hover { background: inherit; }
+}
+
+/* ── Phones, including 5-inch and below (≤520px) ───────────────── */
+@media (max-width: 520px) {
+  :root { --pad: 1.05rem; }
+
+  .section { padding: clamp(3.2rem, 9vh, 5rem) 0; }
+  .section-head { margin-bottom: clamp(1.8rem, 5vh, 2.6rem); }
+
+  .hero { padding-top: 6.5rem; padding-bottom: 2.6rem; }
+  .hero__stats { gap: 1rem; flex-wrap: wrap; }
+  .hero__stats dd { font-size: 1.15rem; }
+  .hero__caption { flex-wrap: wrap; gap: 0.2rem 0.8rem; }
+
+  .nextup { grid-template-columns: 1fr; gap: 0.55rem; padding: 0.95rem 1.1rem; }
+  .nextup__count { text-align: left; }
+  .nextup__count small { display: inline; margin: 0 0 0 0.35rem; text-align: left; }
+
+  .book__prices { gap: 0.5rem; }
+  .book__price-value { font-size: 1.05rem; }
+  .book__actions .btn { width: 100%; }
+
+  .give__actions .btn,
+  .subscribe__actions .btn,
+  .page-hero__actions .btn,
+  .hero__cta .btn { width: 100%; justify-content: center; }
+  .subscribe__actions { width: 100%; }
+
+  .acc__head { gap: 0.75rem; padding: 1.25rem 0; }
+  .acc__body p { font-size: 0.93rem; }
+
+  .filters { gap: 0.4rem; padding: 1.1rem 0; }
+  .filter { padding: 0.45rem 0.85rem; font-size: 0.74rem; }
+
+  .sheet { width: calc(100vw - 1rem); max-height: calc(100dvh - 1rem); }
+  .sheet__inner { padding: 1.15rem; border-radius: 12px; max-height: calc(100dvh - 1rem); }
+  .sheet__title { margin-right: 2.2rem; font-size: 1.25rem; }
+  .sheet__formats { gap: 0.5rem; }
+  .sheet__actions .btn { width: 100%; }
+  .sheet__pay { padding: 0.85rem 0.9rem; }
+
+  .shelf__notice { padding: 0.8rem 0.9rem; font-size: 0.78rem; }
+  .notfound { min-height: 92svh; padding: 6rem 0 4rem; }
+  .footer__links { gap: 0.4rem 1.1rem; }
+  .page-hero { padding-top: clamp(6rem, 13vh, 8rem); }
+}
+
+/* ── Very small phones (≤380px): 4-inch class ──────────────────── */
+@media (max-width: 380px) {
+  :root { --pad: 0.9rem; }
+  body { font-size: 0.97rem; }
+  .h-section { font-size: 1.7rem; }
+  .hero__title { font-size: 2.3rem; }
+  .page-hero h1 { font-size: 1.95rem; }
+  .hero__ghost { font-size: 30vw; }
+  .footer__word { font-size: 2.9rem; }
+  .book__prices { grid-template-columns: 1fr; }
+  .book__price-note { font-size: 0.66rem; }
+  .filter { font-size: 0.7rem; padding: 0.4rem 0.7rem; }
+  .btn { font-size: 0.8rem; padding: 0.85rem 1.2rem; }
+  .event__big { font-size: 1.35rem; }
+  .marquee__track span { font-size: 1rem; }
+  .menu__link { font-size: 1.55rem; }
+  .sheet__format { padding: 0.75rem 0.85rem; }
+}
+
+/* ── 15-inch desktops and up ───────────────────────────────────── */
+@media (min-width: 1500px) {
+  :root { --shell: 1340px; --pad: clamp(2rem, 3.2vw, 3.6rem); }
+}
+@media (min-width: 1800px) {
+  :root { --shell: 1440px; }
+  html { font-size: 17.5px; }
+}
+@media (min-width: 2200px) {
+  :root { --shell: 1560px; }
+  html { font-size: 18.5px; }
+}
+
+/* ── Paint cost on phones ──────────────────────────────────────── */
+@media (max-width: 760px) {
+  /* The full-screen multiply-blended grain is the single most expensive
+     thing on the page; on a phone it is a static texture. */
+  .grain { animation: none; opacity: 0.24; inset: 0; }
+  .nav.is-stuck {
+    backdrop-filter: blur(8px) saturate(120%);
+    background: rgba(244, 238, 227, 0.94);
+  }
+  .filters { backdrop-filter: none; background: rgba(244, 238, 227, 0.97); }
+  .hero__halo { filter: blur(20px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .grain { animation: none; }
+}
+
+/* Grid children default to min-width:auto — long words then force the track
+   wider than the viewport. Zero it out wherever text sits in a track. */
+.nextup > *,
+.event > *,
+.section-head > *,
+.faq__grid > *,
+.shelf__grid > *,
+.how__grid > *,
+.monthly__items > *,
+.teach-grid > *,
+.give__accounts > *,
+.footer__inner > * { min-width: 0; }
+
+/* Short landscape screens: the menu must not open taller than the phone. */
+@media (max-height: 620px) {
+  .menu { padding-top: 4.5rem; }
+  .menu__inner { min-height: auto; }
+  .menu__link { font-size: clamp(1.4rem, 4vh, 2rem); }
+  .menu__foot { margin-top: 1.5rem; }
+  .hero { min-height: auto; }
+  .notfound { min-height: auto; padding-top: 5rem; }
+}
+
+/* 15-inch+ : give the hero portrait room to grow with the wider shell. */
+@media (min-width: 1800px) {
+  .hero__arch { max-width: 560px; }
+  .hero__caption { max-width: 560px; }
+}

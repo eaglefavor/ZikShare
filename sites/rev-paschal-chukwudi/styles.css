@@ -2104,3 +2104,23 @@ section[id] { scroll-margin-top: 88px; }
   .sheet__formats, .sheet__fields, .sheet__fields #hardFields { grid-template-columns: 1fr; }
   .book__prices { grid-template-columns: 1fr 1fr; }
 }
+
+/* Preview shelf notice */
+.shelf__notice {
+  margin: -0.6rem 0 clamp(1.8rem, 4vh, 2.6rem);
+  padding: 0.85rem 1.1rem;
+  border-left: 2px solid var(--orange);
+  background: rgba(225, 84, 31, 0.06);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 72ch;
+}
+.shelf__notice span {
+  font-size: 0.6rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--orange);
+  margin-right: 0.45rem;
+}
+.shelf__notice a { border-bottom: 1px solid var(--orange); }

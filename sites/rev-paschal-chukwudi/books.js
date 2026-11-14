@@ -13,12 +13,61 @@
                                        // drawn when this is missing
      hard:  5000,                      // printed copy, naira. null = not sold
      soft:  1500,                      // soft copy, naira. null = not sold
-     softFree: false,                  // true = free download, no payment
-     softFile: 'https://…/book.pdf',   // direct link used only when softFree
+                                       // set soft: 0 for a free book
+     softMode: 'email',                // 'email'    → PDF emailed after payment
+                                       // 'drive'    → Drive link emailed after payment
+                                       // 'download' → opens softFile immediately
+     softFile: 'https://…/book.pdf',   // required only when softMode is 'download'
    }
    ------------------------------------------------------------------ */
 
-const BOOKS = [];
+/* ── PLACEHOLDER CATALOGUE ─────────────────────────────────────
+   These three are stand-ins so the page can be seen and tested. The titles
+   come from messages he has actually preached; the covers, page counts and
+   prices are placeholders. Replace the entries (or add to them) with the real
+   catalogue, and delete the .shelf__notice line in books.html when the list is
+   confirmed. */
+const BOOKS = [
+  {
+    id: 'operations-of-the-word',
+    title: 'The Operations of the Word',
+    sub: 'How the Word works in the hands of a believer',
+    blurb:
+      'The Word is not a slogan, it is an agent. This book follows how it moves — how it creates, cleanses, frames and finishes — and what happens in a life that gives it room.',
+    pages: 168,
+    year: 2026,
+    cover: 'assets/books/operations-of-the-word.jpg',
+    hard: 5000,
+    soft: 2000,
+    softMode: 'email',
+  },
+  {
+    id: 'understanding-spiritual-warfare',
+    title: 'Understanding Spiritual Warfare',
+    sub: "The believer's fight, fought from the place of victory",
+    blurb:
+      'The fight is not for victory but from it. A plain teaching on the adversary\u2019s schemes, the armour of God, and the authority that already belongs to the saints.',
+    pages: 144,
+    year: 2026,
+    cover: 'assets/books/understanding-spiritual-warfare.jpg',
+    hard: 4500,
+    soft: 1500,
+    softMode: 'email',
+  },
+  {
+    id: 'forces-responsible-for-purpose',
+    title: 'Forces Responsible for Materialization of Purpose',
+    sub: 'What moves a God-given design from the invisible to the visible',
+    blurb:
+      'Purpose does not fall into place by wishing. Here are the forces — divine and human — that move a design from the unseen to the seen, and the obedience each one asks of you.',
+    pages: 192,
+    year: 2026,
+    cover: 'assets/books/forces-responsible-for-purpose.jpg',
+    hard: 6000,
+    soft: 2500,
+    softMode: 'email',
+  },
+];
 
 /* Price formatting ─────────────────────────────────────────────── */
 const NAIRA = new Intl.NumberFormat('en-NG', {
@@ -63,6 +112,12 @@ const priceRow = (label, value, note) => `
     <small class="book__price-note">${note}</small>
   </div>`;
 
+const softNote = (book) => {
+  if (book.softMode === 'download') return book.soft === 0 ? 'PDF · free download' : 'PDF · instant download';
+  if (book.softMode === 'drive') return 'PDF · Drive link by email';
+  return 'PDF · sent by email';
+};
+
 const card = (book) => {
   const hard = priceText(book.hard);
   const soft = priceText(book.soft);
@@ -78,7 +133,7 @@ const card = (book) => {
 
   const softAction = soft
     ? `<button class="btn btn--line btn--sm book__btn" type="button" data-order="${esc(book.id)}" data-format="soft">
-         ${book.softFree ? 'Download soft copy' : 'Get soft copy'}
+         ${book.softMode === 'download' ? 'Download soft copy' : 'Get soft copy'}
        </button>`
     : '';
 
@@ -92,7 +147,7 @@ const card = (book) => {
         ${book.blurb ? `<p class="book__blurb">${esc(book.blurb)}</p>` : ''}
         <div class="book__prices">
           ${hard ? priceRow('Hardcopy', hard, 'Printed · delivered to you') : ''}
-          ${soft ? priceRow('Soft copy', soft, book.softFree ? 'PDF · free download' : 'PDF · sent by email') : ''}
+          ${soft ? priceRow('Soft copy', soft, softNote(book)) : ''}
         </div>
         <div class="book__actions">${hardAction}${softAction}</div>
       </div>
@@ -153,9 +208,11 @@ if (sheet && form && grid) {
     totalEl.textContent = t ? money(t) : '—';
     hintEl.textContent = format === 'hard'
       ? 'Delivery is charged separately and confirmed by the office before dispatch.'
-      : (current.softFree
-        ? 'This one is free — the download link opens straight away.'
-        : 'The soft copy is emailed once payment is confirmed.');
+      : (current.softMode === 'download'
+        ? 'The download opens straight away.'
+        : (current.softMode === 'drive'
+          ? 'A Google Drive link is emailed to you once payment is confirmed.'
+          : 'The soft copy is emailed to you once payment is confirmed.'));
   };
 
   const open = (book, wanted) => {
@@ -168,7 +225,7 @@ if (sheet && form && grid) {
     qtyEl.value = '1';
     repaint();
 
-    if (format === 'soft' && book.softFree && book.softFile) {
+    if (format === 'soft' && book.softMode === 'download' && book.softFile) {
       window.location.href = book.softFile;
       return;
     }
@@ -250,16 +307,14 @@ if (sheet && form && grid) {
       lines.push(`Address: ${address}`, `City / State: ${city}`);
       lines.push('', 'Delivery fee to be confirmed by the office before dispatch.');
     } else {
-      lines.push('', 'Please email the soft copy to the address above once payment is confirmed.');
+      const ask = current.softMode === 'drive'
+        ? 'Please send the Google Drive link for the soft copy to the address above once payment is confirmed.'
+        : 'Please email the soft copy to the address above once payment is confirmed.';
+      lines.push('', ask);
     }
     lines.push('', 'Payment made to: Access Bank Plc · Remnant Christian Network Anambra · 0826965262', `Transfer reference: ${name}`);
 
     const href = `mailto:rcnanambra@gmail.com?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(lines.join('\n'))}`;
-
-    if (current.softFree && format === 'soft' && current.softFile) {
-      window.location.href = current.softFile;
-      return;
-    }
 
     window.location.href = href;
     hintEl.textContent = 'Your email app should now be open with the order — send it and the office will reply.';

@@ -132,12 +132,49 @@ session works in. It is entirely self-contained in this folder — if you'd
 rather give the ministry its own repository, copy `sites/rev-paschal-chukwudi`
 out and point the Vercel project at it; nothing here depends on ZikShare.
 
+## Books — /books
+
+A shelf page where each title shows **two prices** — the printed copy and the
+soft copy — and either one can be ordered from the same card.
+
+- **`books.js` holds the entire catalogue.** Edit the `BOOKS` array at the top;
+  nothing else needs to change. Each entry takes `title`, `sub`, `blurb`,
+  `pages`, `year`, `cover`, `hard`, `soft`, `softMode` and `softFile`.
+  Set `hard: null` or `soft: null` to stop selling that format for a title.
+- **Covers**: `assets/books/*.jpg`, 900×1200 (3:4). A title with no `cover`
+  gets a typographic cover drawn in CSS instead, so nothing breaks.
+- **Ordering**: the sheet composes a `mailto:` to `rcnanambra@gmail.com` with
+  the title, format, quantity, total, buyer details and the ministry account
+  as the payment reference. No card data is collected and nothing is charged
+  on the page — the office confirms payment, then ships or emails.
+- **Soft copies**, three modes per book:
+  - `softMode: 'email'` — PDF emailed once payment is confirmed (default).
+  - `softMode: 'drive'` — Google Drive link emailed once payment is confirmed.
+  - `softMode: 'download'` — the button opens `softFile` immediately; use with
+    `soft: 0` for a free download.
+
+> **The three books currently on the shelf are placeholders.** The titles are
+> real message titles he has preached, but the covers, page counts and prices
+> are stand-ins so the page could be built and reviewed. The page carries a
+> visible "Preview shelf" notice saying so. When the real list arrives: replace
+> the `BOOKS` entries, delete the `.shelf__notice` paragraph in `books.html`,
+> and update the table below.
+
+### Placeholder catalogue
+
+| Title | Hardcopy | Soft copy |
+|---|---|---|
+| The Operations of the Word | ₦5,000 | ₦2,000 |
+| Understanding Spiritual Warfare | ₦4,500 | ₦1,500 |
+| Forces Responsible for Materialization of Purpose | ₦6,000 | ₦2,500 |
+
 ## Pages
 
 | File | URL | What it is |
 |---|---|---|
 | `index.html` | `/` | One-page home: hero, ministry, sounds grid, live band, latest teaching strip, resources, gatherings + countdown, the Word, moments, invite form, giving, FAQ, connect tiles, subscribe band |
 | `watch.html` | `/watch` | The archive — 17 talks in four filterable categories (sermons, classes, worship, prayer), each opening in the on-page lightbox with a YouTube fallback |
+| `books.html` | `/books` | The shelf — catalogue, prices, order sheet with hardcopy delivery or soft-copy delivery |
 | `404.html` | any 404 | Served automatically by Vercel; links back to the house and the archive |
 | `robots.txt` | `/robots.txt` | Allows everything, points at the sitemap |
 | `sitemap.xml` | `/sitemap.xml` | Both public URLs, `lastmod` refreshed by `build.mjs`'s release date |

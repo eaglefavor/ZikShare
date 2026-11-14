@@ -252,11 +252,11 @@
   $$('[data-count]').forEach((el) => {
     const target = Number(el.getAttribute('data-count'));
     if (!Number.isFinite(target) || reduceMotion) return;
-    el.textContent = '0';
     let started = false;
     const run = () => {
       if (started) return;
       started = true;
+      el.textContent = '0';
       const start = performance.now();
       const dur = 1200;
       const step = (now) => {

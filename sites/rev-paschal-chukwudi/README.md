@@ -238,6 +238,22 @@ worth knowing:
 - The recordings themselves are untouched — all of them still exist on
   `watch.html` under **Worship** and **Prayer**.
 
+## Home page: Teachings strip out, Books band in (14 Nov 2026)
+
+- **The "Teaching / Fresh from the pulpit" strip is gone** (`section.teach`,
+  `#teach`, three cards). Nothing linked to `#teach`, and the three messages it
+  showed — *Manifestations of the Church*, *The Furnishings of Supernatural
+  Encounters*, *Take Root* — are all still in the archive on `/watch`. Removing
+  it also drops three `img.youtube.com` thumbnail requests from the home page.
+  All `.teach*` rules went with it; `.play--sm` stays because the archive cards
+  use it.
+- **A Books band now sits directly under Live**, where the strip was — one row:
+  `Books` tag, "The Word, in print.", a one-line note and a solid **Open the
+  books page** button to `books.html`. It mirrors the nav order (… Watch ·
+  Books · Gatherings). It is **unnumbered** on purpose, so the section tags
+  still run 01–10 and nothing had to be renumbered. CSS: `.books-band*`, which
+  collapses to one column at ≤1080px.
+
 ## Removed: the Connect section (14 Nov 2026)
 
 The `11 — Connect` grid of nine link cards is gone. It was the last numbered
